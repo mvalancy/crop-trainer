@@ -1,4 +1,4 @@
-import {DENSITY_HISTORY_KEY, densitySnapshot, pairDensityScores} from './density.js';
+import {DENSITY_HISTORY_KEY, HEIGHT_HISTORY_KEY, densitySnapshot, pairDensityScores} from './density.js?v=peakpair2';
 import {buildDataset, validateModel, compareMatchedBoxes, coverageAtDistance, PEAK_HEIGHTS} from '../trainer/data.js?v=height1';
 import {trainNetworkCPU, trainNetworkGPU, predictNetwork} from '../trainer/neural.js';
 import {trainCPU, MAX_EPOCHS} from '../trainer/model.js';
@@ -156,29 +156,47 @@ function displayDensityStudy() {
   if (sampledCountChanged) {
     try { localStorage.setItem('crop-trainer-ray-scout', 'earned'); } catch {}
   }
+  $('densityStudy').hidden = false;
+}
+function displayValidationComparison() {
+  const heights = report.comparison === 'heights';
+  const key = heights ? HEIGHT_HISTORY_KEY : DENSITY_HISTORY_KEY;
   const snapshot = densitySnapshot(report);
-  $('densityRepeatHelp').textContent = snapshot
+  const help = $(heights ? 'heightRepeatHelp' : 'densityRepeatHelp');
+  help.textContent = snapshot
     ? 'Run the other validation budget in this tab to compare each fit on sparse and dense scans.'
     : 'Run both fixed validation budgets below in this tab to compare each fit on sparse and dense scans.';
   let paired = [];
   if (snapshot) {
     try {
-      const saved = sessionStorage.getItem(DENSITY_HISTORY_KEY);
+      const otherBudget = snapshot.budget === 12000 ? 60000 : 12000;
+      const saved = sessionStorage.getItem(key+'-'+otherBudget) ?? sessionStorage.getItem(key);
       if (saved) paired = pairDensityScores(snapshot, JSON.parse(saved));
     } catch {}
-    try { sessionStorage.setItem(DENSITY_HISTORY_KEY, JSON.stringify(snapshot)); } catch {}
+    try {
+      sessionStorage.setItem(key+'-'+snapshot.budget, JSON.stringify(snapshot));
+    } catch {
+      help.textContent = 'This tab could not save the scores. Download each benchmark JSON to compare the budgets.';
+    }
   }
+  if (paired.length) {
+    report.pairedValidation = {rayBudgets:[12000, 60000], rows:paired};
+    $(heights ? 'heightStudy' : 'densityStudy').after($('robustnessTable'));
+    help.textContent = 'Both budgets are in the comparison table below and in the JSON download.';
+  }
+  $('fitSetting').textContent = heights ? 'Minimum peak height' : 'Training rays';
   const pairedRows = $('robustnessRows');
   pairedRows.replaceChildren();
   for (const row of paired) {
     const tr = pairedRows.insertRow();
-    const budget = row.trainingRayBudget === ALTERNATING_BUDGET ? 'Alternating' : row.trainingRayBudget.toLocaleString();
-    for (const value of [row.seed, budget, row.sparse.toFixed(4), row.dense.toFixed(4), row.lower.toFixed(4)]) {
+    let setting;
+    if (heights) setting = (row.minimumHeight * 100).toFixed(1)+' cm';
+    else setting = row.trainingRayBudget === ALTERNATING_BUDGET ? 'Alternating' : row.trainingRayBudget.toLocaleString();
+    for (const value of [row.seed, setting, row.sparse.toFixed(4), row.dense.toFixed(4), row.lower.toFixed(4)]) {
       tr.insertCell().textContent = value;
     }
   }
   $('robustnessTable').hidden = !paired.length;
-  $('densityStudy').hidden = false;
 }
 function displayHeightStudy() {
   const seed = report.settings.seed;
@@ -459,6 +477,7 @@ $('benchForm').onsubmit = async event => {
   const thresholds = comparison === 'cutoffs' ? [.35, .5, .65] : [.5];
   const rows=[],datasets=[];
   $('replay').hidden = true;
+  $('robustnessTable').hidden = true;
   $('heightStudy').hidden = true;
   $('densityStudy').hidden = true;
   $('cutoffChanges').hidden = true;
@@ -541,6 +560,7 @@ $('benchForm').onsubmit = async event => {
     report={schema:1,domain:'synthetic',comparison,thresholds,settings,replayUrl:replay.href,datasets,rows};
     if (comparison === 'heights') displayHeightStudy();
     if (comparison === 'density') displayDensityStudy();
+    if (comparison === 'heights' || comparison === 'density') displayValidationComparison();
     if (comparison === 'models' || comparison === 'heights') {
       const heights = comparison === 'heights';
       $('pairTitle').textContent = heights ? 'Which plants changed match when the peak height dropped?' : 'Which plants did each model find?';

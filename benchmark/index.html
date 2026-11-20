@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Benchmark · Crop Trainer</title>
-<link rel="stylesheet" href="../farm.css?v=pairheights1"></head>
+<link rel="stylesheet" href="../farm.css?v=fieldpresets1"></head>
 <body class="benchmark"><a class="skip" href="#main">Skip to content</a>
 <header class="siteBar">
 <div class="barInner"><a class="brand" href="../"><span class="mark" aria-hidden="true"><i></i></span>Crop Trainer</a>
@@ -17,7 +17,14 @@
 <h2>Set up a comparison</h2>
 <p id="comparisonHelp"></p>
 <dl class="scopeStats"><div><dt>Seeds</dt><dd>2</dd></div><div><dt>Train fields / seed</dt><dd>6</dd></div><div><dt>Held-out / seed</dt><dd>3</dd></div></dl>
-<p class="hint">Each field is scanned with and without soil. The second seed reverses the comparison order.</p></div>
+<p class="hint">Each field is scanned with and without soil. The second seed reverses the comparison order.</p>
+<nav id="experiments" aria-labelledby="experimentTitle">
+<h3 id="experimentTitle">Try an experiment</h3>
+<ul>
+<li><a href="?comparison=heights&amp;crop=tomato&amp;seed=2221&amp;sensor=mixed&amp;validationSensor=os1-64&amp;validationRayBudget=12000">Test shorter peaks on sparse tomatoes</a></li>
+<li><a href="?comparison=heights&amp;crop=lettuce&amp;seed=2121&amp;sensor=mixed&amp;validationSensor=os1-64&amp;validationRayBudget=12000&amp;pairSeed=2122&amp;pairTile=39c12665d375fbb9&amp;pairDistance=7.5&amp;pairBox=1#modelBoxes">Inspect a missed lettuce plant in 3D</a></li>
+<li><a href="?comparison=models&amp;crop=artichoke&amp;seed=1551&amp;sensor=mixed&amp;validationSensor=os1-64&amp;validationRayBudget=12000&amp;fieldMetric=meanAbsolute">Compare artichoke counts by model</a></li>
+</ul></nav></div>
 <form id="benchForm" class="benchForm">
 <fieldset><legend>Detector settings</legend><div class="benchFields">
 <label class="comparisonChoice">Comparison<select id="comparison"><option value="backend">CPU vs WebGPU · neural</option><option value="models">Logistic vs neural · CPU</option><option value="heights">Minimum peak height · 6.5 vs 3.5 cm</option><option value="epochs">Training duration · 10, 40, 100 epochs · neural CPU</option><option value="density">Training scan density · 12k vs 60k rays</option><option value="cutoffs">Detection score cutoffs · neural CPU</option></select></label>
@@ -59,7 +66,7 @@
 <fieldset><legend id="heightQuestion">Which height produced fewer extra pins?</legend>
 <div class="action" id="heightAnswers"><button type="button" value="0.065">6.5 cm</button><button type="button" value="0.035">3.5 cm</button><button type="button" value="tie">Equal counts</button></div>
 <p class="hint" role="status" id="heightAnswer"></p></fieldset>
-<p class="hint">To test the effect of scan density, keep the training fields and change the validation ray budget.</p>
+<p class="hint" id="heightRepeatHelp"></p>
 <div class="action" id="heightRepeats"></div>
 </section>
 <details id="modelBoxes" hidden>
@@ -84,11 +91,11 @@
 <p id="densityCapNote" hidden>Both ray requests reached the layout’s sampling limit on every training scan. Choose a layout with a higher capacity, such as OS1-64, to compare different training densities.</p>
 <p class="hint" id="densityRepeatHelp"></p>
 <div class="action" id="densityRepeats"></div>
-<div id="robustnessTable" hidden>
-<h3>How well did each fit handle both densities?</h3>
-<p class="hint">Each row combines this run with the preceding matching benchmark in this tab. The lower F1 shows how the fit performed at its harder validation density.</p>
-<div class="tableScroll"><table><thead><tr><th>Seed</th><th>Training rays</th><th>F1 at 12k rays</th><th>F1 at 60k rays</th><th>Lower F1</th></tr></thead><tbody id="robustnessRows"></tbody></table></div>
-</div>
+</section>
+<section id="robustnessTable" hidden aria-labelledby="robustnessTitle">
+<h3 id="robustnessTitle">How well did each fit handle both densities?</h3>
+<p class="hint">Each row combines this run with the most recent run at the other budget in this tab, using the same fit settings and plantings. Each F1 averages the three matching distances across both soil settings. The last column gives the lower of the two values. Ray counts are requested budgets. Some layouts cap the number sampled.</p>
+<div class="tableScroll"><table><thead><tr><th>Seed</th><th id="fitSetting">Training rays</th><th>F1 at 12k rays</th><th>F1 at 60k rays</th><th>Lower F1</th></tr></thead><tbody id="robustnessRows"></tbody></table></div>
 </section>
 <details id="cutoffChanges" hidden="">
 <summary>What changes from the 0.50 cutoff?</summary>
@@ -128,6 +135,6 @@
 </main>
 <footer class="siteFoot"><span>Crop Trainer</span>
 <div><a href="../AGENTS.md">Agent quickstart</a><a href="https://github.com/mvalancy/crop-trainer">GitHub</a><a href="../LICENSE">MIT license</a></div></footer>
-<script type="module" src="main.js?v=pairheights1"></script>
+<script type="module" src="main.js?v=peakpair2"></script>
 </body>
 </html>

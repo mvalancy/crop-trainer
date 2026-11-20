@@ -39,3 +39,23 @@ test('pair only the same training scans, held-out plantings and fit settings', (
     assert.deepEqual(pairDensityScores(sparse, densitySnapshot(other)), []);
   }
 });
+
+test('pair peak heights across ray budgets only for the same fit', () => {
+  function heightRun(budget, height) {
+    const report = experiment(budget);
+    report.comparison = 'heights';
+    delete report.settings.minimumHeight;
+    Object.assign(report.rows[0], {minimumHeight:height, model:'neural', backend:'CPU', trainingRayBudget:0});
+    return report;
+  }
+  const sparse = densitySnapshot(heightRun(12000, .035));
+  const dense = densitySnapshot(heightRun(60000, .035));
+  const [result] = pairDensityScores(dense, sparse);
+  assert.equal(result.minimumHeight, .035);
+  assert.deepEqual([result.sparse, result.dense, result.lower], [.65, .79, .65]);
+  assert.deepEqual(pairDensityScores(sparse, densitySnapshot(heightRun(60000, .065))), []);
+  assert.deepEqual(pairDensityScores(sparse, densitySnapshot(experiment(60000))), []);
+  const otherBackend = heightRun(60000, .035);
+  otherBackend.rows[0].backend = 'WebGPU';
+  assert.deepEqual(pairDensityScores(sparse, densitySnapshot(otherBackend)), []);
+});

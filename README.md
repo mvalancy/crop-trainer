@@ -13,6 +13,18 @@ Grow a virtual plot of lettuce, globe artichokes or young tomatoes, scan it with
 3. Inspect the lowest-recall field. Switch the map between all height peaks, score-passing peaks and final detections. Green rings mark labels and red dots mark the selected detector stage.
 4. Export the benchmark, then change one setting. Complete a mixed scan run, try another seed, and finish a cutoff benchmark to earn farm journal stamps. Progress is stored in this browser.
 
+### Choose a first experiment
+
+Open a question and select **Run benchmark**. Each preset fills in the crop, scanner, seed and comparison. All three run on a local CPU.
+
+| Question | What to inspect |
+| --- | --- |
+| [Do shorter peaks find more tomatoes in a sparse scan?](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=heights&crop=tomato&seed=2221&sensor=mixed&validationSensor=os1-64&validationRayBudget=12000) | Compare matches and extra pins. Repeat at 60,000 validation rays in the same tab to see the F1 scores side by side. |
+| [Which lettuce plant changed match?](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=heights&crop=lettuce&seed=2121&sensor=mixed&validationSensor=os1-64&validationRayBudget=12000&pairSeed=2122&pairTile=39c12665d375fbb9&pairDistance=7.5&pairBox=1#modelBoxes) | Open the selected box in 3D and use **Focus plant** to orbit its center. |
+| [Which model counted the artichokes more accurately?](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=models&crop=artichoke&seed=1551&sensor=mixed&validationSensor=os1-64&validationRayBudget=12000&fieldMetric=meanAbsolute) | Compare absolute count error per planting, then check whether pins landed near the labeled centers. |
+
+For a custom run, see [how training works](#what-the-model-learns), [scanner settings](#crops-and-scanners), [benchmark scoring](#benchmark), [local setup](#local-play-and-agent-experiments) and [dataset licenses](#datasets-and-research).
+
 ## What the model learns
 
 A LiDAR return is a 3D point. A cluster of tall returns might be lettuce, a weed or clutter. The generator knows where it planted each plant, so it can provide an answer key. Training adjusts numerical weights to give likely plant centers a higher score. One epoch is one pass over the balanced set of training candidates.
@@ -303,6 +315,21 @@ Lettuce seed 2121 lost 74 plant matches and gained 52. The other three seeds eac
 For tomato seed 2121 across both soil settings, neural F1 at 7.5 / 10 / 15 cm changed from 0.3377 / 0.4132 / 0.4557 to 0.4096 / 0.5225 / 0.5747. Node CPU generation, training and validation took 995 / 42 / 21 ms at 6.5 cm and 944 / 113 / 14 ms at 3.5 cm. For research on analyzing the individual errors behind an aggregate detection score, see Bolya and colleagues. [TIDE, ECCV 2020](https://dbolya.com/tide/)
 
 **Does the gain hold on denser scans?** Repeating the same synthetic plantings at 60,000 validation rays reduced the benefit of shorter peaks. At 15 cm the neural tomato fit gained 18 plant matches, lost 9 and added 71 extra pins. At 12,000 rays it had gained 379 and lost 10 with 68 extra pins. On dense lettuce the fits gained 109 and lost 56 (+159 extra pins), and on dense artichoke they gained 2 and lost 5 (+9 extra pins). Each comparison uses the same height-specific training examples at both ray budgets. Use the validation-ray links under the Peak scout question to repeat this check on other seeds. [Replay the dense tomato fields](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=heights&crop=tomato&seed=2121&sensor=mixed&validationSensor=os1-64&validationRayBudget=60000)
+
+#### Repeat the peak-height test at both ray budgets
+
+In the peak-height benchmark, follow **Repeat with 60,000 validation rays** after a 12,000-ray run and run the benchmark again in the same tab. **How well did each fit handle both densities?** shows mean F1 at each requested budget and the lower score for each fit. The JSON download includes these paired values. The comparison uses the same training scans and held-out plantings at both budgets.
+
+On fresh dataset seeds 2221 and 2222, lowering the peak height from 6.5 to 3.5 cm improved sparse-scan neural mean F1 on both seeds for all three crops. At 60,000 validation rays, the lower height reduced mean F1 on both lettuce and both tomato seeds. Artichoke mean F1 rose slightly on both. Each fit used six mixed-layout training fields, three held-out OS1-64 plantings per seed, 40 epochs and a 0.50 detection cutoff. Qi and colleagues found that uneven point density can change the performance of point-cloud networks. This experiment measures that sensitivity for Crop Trainer’s local height features. [PointNet++, 2017](https://arxiv.org/abs/1706.02413)
+
+| Tomato seed | Peak height | Mean F1 at 12k rays | Mean F1 at 60k rays | Lower mean F1 |
+| --- | ---: | ---: | ---: | ---: |
+| 2221 | 6.5 cm | 0.4935 | 0.8541 | 0.4935 |
+| 2221 | 3.5 cm | 0.7409 | 0.7998 | 0.7409 |
+| 2222 | 6.5 cm | 0.4668 | 0.8091 | 0.4668 |
+| 2222 | 3.5 cm | 0.6026 | 0.7719 | 0.6026 |
+
+For the 3.5 cm tomato fit on seed 2221, F1 at 7.5 / 10 / 15 cm was 0.6187 / 0.7594 / 0.8445 on sparse scans and 0.7378 / 0.8177 / 0.8439 on dense scans. Node CPU generation, training and validation took 671 / 81 / 28 ms and 906 / 78 / 25 ms respectively. Timings describe these runs. [Replay both budgets](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=heights&crop=tomato&seed=2221&sensor=mixed&validationSensor=os1-64&validationRayBudget=12000)
 
 ### Could changing the cutoff help this missed plant?
 
