@@ -179,6 +179,9 @@ progress { width: 100%; height: .6rem; accent-color: var(--forest); }
 #fieldRows .seedAverage > * { padding-block: .5rem; background: var(--wash); color: var(--forest); font-weight: 680; }
 #fieldRows .seedAverage + tr > * { padding-top: 1.1rem; }
 .benchResults details label { max-width: 32rem; margin-bottom: .7rem; }
+#coverageRows meter { display: block; width: 100%; max-width: 5rem; height: .55rem; margin-top: .2rem; }
+#coverageRows th, #coverageFoot th { text-align: left; }
+#coverageFoot > tr > * { border-top: 1px solid var(--line); font-weight: 650; }
 .tableScroll { overflow-x: auto; margin-block: .75rem; }
 table { width: 100%; border-collapse: collapse; font-size: .88rem; font-variant-numeric: tabular-nums; }
 th, td { text-align: left; padding: .65rem .55rem; border-bottom: 1px solid var(--line); }

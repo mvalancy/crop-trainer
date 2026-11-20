@@ -37,6 +37,8 @@ To isolate the score cutoff, select **Detection score cutoffs**. This fits one C
 
 For the cutoff, model and backend comparisons, **Epochs per fit** sets the training budget for every contender. Links without an epoch setting use 40. For example, open `/benchmark/?comparison=cutoffs&crop=artichoke&seed=621&epochs=100`. Under **What changes from the 0.50 cutoff?**, change the match distance to see the differences in matched plants and extra pins. Click a cutoff in Results to replay that CPU fit in the Training Shed. The replay preserves the cutoff, epoch count, crop, seed and scan layouts.
 
+To compare plant coverage, use `cutoffDistance=7.5`, `10` or `15` on the cutoff benchmark URL. The return-count table pools both dataset seeds, using one soil-present scan per validation planting. For a local replay, group the exported rows by threshold, flatten their soil-present tiles, and call `coverageAtDistance(tiles, cm)` from `trainer/data.js`. Each group reports its labeled and matched plant counts. The helper also returns the number of extra pins across the selected scans. Tile order can differ between runs. Check the tile ID sets across cutoffs, divide matched by labeled plants for recall, and leave an empty group’s rate undefined. Earlier reports without `missedByCoverage` require a replay for this table.
+
 To compare cutoffs at two training durations, run the same seed pair at 10 and 100 epochs. Check that both reports have the same tile IDs and field seeds. Within each report, all three cutoff rows for one seed share their fit and training time. Compare the change from 0.50 to 0.65 separately at each duration. Use a fresh seed pair to see whether the result repeats.
 
 ### Pair scanner layouts on identical plantings

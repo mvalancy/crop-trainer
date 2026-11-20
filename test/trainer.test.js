@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {buildDataset,validateModel,matchedCount,compareMatchedBoxes} from '../trainer/data.js';
+import {buildDataset,validateModel,matchedCount,compareMatchedBoxes,coverageAtDistance} from '../trainer/data.js';
 import {trainNetworkCPU,predictNetwork} from '../trainer/neural.js';
 import {trainCPU} from '../trainer/model.js';
 
@@ -175,7 +175,7 @@ test('missed box IDs follow the final one-to-one assignment at each tolerance', 
   // so the second pin, which can only reach box 0, also receives a match.
   const tile = {
     seed:4, ground:true, tile_id:'assignment', recipe:{crop:'lettuce', sampling:{key:'reference'}},
-    truth:[[0,0],[.22,0],[2,2]], plantReturns:[5,0,3],
+    truth:[[0,0],[.22,0],[2,2]], plantReturns:[5,0,3], coverage:{zero:1,oneToFour:1,fiveOrMore:1},
     pos:[[.11,0],[-.04,0]], X:new Float32Array(2)
   };
   const set = {dims:1, validation:[tile]};
@@ -191,6 +191,13 @@ test('missed box IDs follow the final one-to-one assignment at each tolerance', 
     assert.equal(group.boxIndices.length, row.byTolerance[i].fn);
   }
   const none = await validateModel(set, [], {predictScores:() => [0,0]});
+  const both = [row, none.tiles[0]];
+  for (const [cm, zeroMatches, extraPins] of [[7.5,0,1],[15,1,0]]) {
+    assert.deepEqual(coverageAtDistance(both, cm), {
+      groups:{zero:{plants:2,matched:zeroMatches},oneToFour:{plants:2,matched:0},fiveOrMore:{plants:2,matched:1}},
+      extraPins
+    });
+  }
   for (const group of none.tiles[0].missesByTolerance) {
     assert.deepEqual(group.boxIndices, [0,1,2]);
     assert.equal(group.withCropReturns, 2);

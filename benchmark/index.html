@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Benchmark · Crop Trainer</title>
-<link rel="stylesheet" href="../farm.css?v=count1"></head>
+<link rel="stylesheet" href="../farm.css?v=cutcoverage1"></head>
 <body class="benchmark"><a class="skip" href="#main">Skip to content</a>
 <header class="siteBar">
 <div class="barInner"><a class="brand" href="../"><span class="mark" aria-hidden="true"><i></i></span>Crop Trainer</a>
@@ -62,13 +62,18 @@
 </section>
 <details id="cutoffChanges" hidden="">
 <summary>What changes from the 0.50 cutoff?</summary>
-<p>Compare each cutoff with 0.50 on the same planting set. A positive number means more plants matched or more extra pins appeared.</p>
+<p>This table pools both scans of each planting. Compare each cutoff with 0.50. A positive number means more plants matched or more extra pins appeared.</p>
 <label>Matching distance<select id="cutoffDistance"><option value="7.5">7.5 cm</option><option value="10">10 cm</option><option value="15" selected="">15 cm</option></select></label>
 <div class="tableScroll">
 <table aria-label="Changes relative to the 0.50 cutoff">
 <thead>
 <tr><th>Seed</th><th>Cutoff</th><th>Change in matched plants</th><th>Change in extra pins</th></tr></thead>
-<tbody id="cutoffRows"></tbody></table></div></details>
+<tbody id="cutoffRows"></tbody></table></div>
+<h3>Which plants benefit from a lower cutoff?</h3>
+<p>Each column shows how many labeled plants received a matching pin. The bars show the fraction matched within each group. This table counts each planting once, with soil present. Extra pins are counted across the same scans.</p>
+<div class="tableScroll"><table aria-label="Matched plants by crop returns and score cutoff">
+<thead><tr><th scope="col">Crop returns per plant</th><th scope="col">Plants</th><th scope="col">At 0.35</th><th scope="col">At 0.50</th><th scope="col">At 0.65</th></tr></thead>
+<tbody id="coverageRows"></tbody><tfoot id="coverageFoot"></tfoot></table></div></details>
 <details id="scoreDetails" hidden="">
 <summary>Scores at each matching distance</summary>
 <div class="tableScroll">
@@ -105,6 +110,6 @@
 </main>
 <footer class="siteFoot"><span>Crop Trainer</span>
 <div><a href="../AGENTS.md">Agent quickstart</a><a href="https://github.com/mvalancy/crop-trainer">GitHub</a><a href="../LICENSE">MIT license</a></div></footer>
-<script type="module" src="main.js?v=missbands1"></script>
+<script type="module" src="main.js?v=cutcoverage1"></script>
 </body>
 </html>

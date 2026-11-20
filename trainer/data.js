@@ -254,6 +254,25 @@ export async function validateModel(set,weights,{threshold=.5,predictScores=pred
  return {...summarizeTiles(tiles), byGround, byField, preview:previews.values().next().value, previews, tiles};
 }
 
+// Pool labeled plants before computing recall. Callers choose the soil variants.
+export function coverageAtDistance(tiles, cm) {
+ if (![7.5,10,15].includes(cm)) throw new Error('Choose a matching distance of 7.5, 10 or 15 cm.');
+ const groups = {
+  zero:{plants:0, matched:0}, oneToFour:{plants:0, matched:0}, fiveOrMore:{plants:0, matched:0}
+ };
+ let extraPins = 0;
+ for (const tile of tiles) {
+  const misses = tile.missesByTolerance?.find(row => row.cm === cm)?.missedByCoverage;
+  if (!misses || !tile.coverage) throw new Error('Replay this tile to obtain crop return counts for missed plants.');
+  for (const [band, group] of Object.entries(groups)) {
+   group.plants += tile.coverage[band];
+   group.matched += tile.coverage[band] - misses[band];
+  }
+  extraPins += tile.byTolerance.find(row => row.cm === cm).fp;
+ }
+ return {groups, extraPins};
+}
+
 // Box indices refer to one exact scan and its ordered label array.
 export function compareMatchedBoxes(first, second, cm) {
  if (!first.tile_id || first.tile_id !== second.tile_id) throw new Error('Choose results for the same tile.');

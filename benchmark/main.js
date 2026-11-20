@@ -1,5 +1,5 @@
 import {DENSITY_HISTORY_KEY, densitySnapshot, pairDensityScores} from './density.js';
-import {buildDataset, validateModel, compareMatchedBoxes} from '../trainer/data.js?v=missbands1';
+import {buildDataset, validateModel, compareMatchedBoxes, coverageAtDistance} from '../trainer/data.js?v=cutcoverage1';
 import {trainNetworkCPU, trainNetworkGPU, predictNetwork} from '../trainer/neural.js';
 import {trainCPU, MAX_EPOCHS} from '../trainer/model.js';
 import {cropProfile} from '../trainer/crops.js';
@@ -12,7 +12,7 @@ sensorOptions($('sensor'), true);
 validationSensorOptions($('validationSensor'));
 const requested = new URLSearchParams(location.search);
 $('includeMixed').checked = requested.get('includeMixed') === '1';
-for (const id of ['comparison', 'crop', 'sensor', 'validationSensor', 'fieldMetric']) {
+for (const id of ['comparison', 'crop', 'sensor', 'validationSensor', 'fieldMetric', 'cutoffDistance']) {
   const value = requested.get(id);
   if ([...$(id).options].some(option => option.value === value)) $(id).value = value;
 }
@@ -171,10 +171,51 @@ function displayDensityStudy() {
   $('robustnessTable').hidden = !paired.length;
   $('densityStudy').hidden = false;
 }
+function displayCutoffCoverage(cm) {
+  const summaries = report.thresholds.map(threshold => {
+    const tiles = report.rows.filter(row => row.threshold === threshold)
+      .flatMap(row => row.tiles.filter(tile => tile.ground));
+    return coverageAtDistance(tiles, cm);
+  });
+  const body = $('coverageRows');
+  body.replaceChildren();
+  for (const [band, label] of [['zero','0 returns'], ['oneToFour','1–4 returns'], ['fiveOrMore','5 or more returns']]) {
+    const tr = body.insertRow();
+    const th = document.createElement('th');
+    th.scope = 'row';
+    th.textContent = label;
+    tr.append(th);
+    const total = summaries[0].groups[band].plants;
+    tr.insertCell().textContent = total;
+    for (const result of summaries) {
+      const cell = tr.insertCell();
+      const matched = result.groups[band].matched;
+      cell.textContent = total ? matched : '—';
+      if (total) {
+        const meter = document.createElement('meter');
+        meter.max = total;
+        meter.value = matched;
+        meter.setAttribute('aria-label', label + ' matched');
+        meter.setAttribute('aria-valuetext', matched + ' of ' + total + ' plants');
+        meter.title = (100 * matched / total).toFixed(1) + '% matched';
+        cell.append(meter);
+      }
+    }
+  }
+  $('coverageFoot').replaceChildren();
+  const tr = $('coverageFoot').insertRow();
+  const th = document.createElement('th');
+  th.scope = 'row';
+  th.colSpan = 2;
+  th.textContent = 'Extra pins';
+  tr.append(th);
+  for (const result of summaries) tr.insertCell().textContent = result.extraPins;
+}
 function displayCutoffChanges() {
   const cm = Number($('cutoffDistance').value);
   const signed = count => count > 0 ? '+'+count : String(count);
   const scoreAtDistance = row => row.scores.find(score => score.cm === cm);
+  displayCutoffCoverage(cm);
   $('cutoffRows').replaceChildren();
   for (const dataset of report.datasets) {
     const rows = report.rows.filter(row => row.seed === dataset.seed);
@@ -189,7 +230,13 @@ function displayCutoffChanges() {
     }
   }
 }
-$('cutoffDistance').addEventListener('change', displayCutoffChanges);
+$('cutoffDistance').addEventListener('change', () => {
+  if (report?.comparison !== 'cutoffs') return;
+  displayCutoffChanges();
+  const url = new URL(report.replayUrl);
+  url.searchParams.set('cutoffDistance', $('cutoffDistance').value);
+  report.replayUrl = $('replay').href = url.href;
+});
 function displayFields() {
   const {comparison, datasets, rows, settings} = report;
   const contender = row => contenderLabel(row, comparison);
@@ -398,6 +445,7 @@ $('benchForm').onsubmit = async event => {
     if (validationRayBudget) replay.searchParams.set('validationRayBudget', validationRayBudget);
     if (validationSensorMode) replay.searchParams.set('validationSensor', validationSensorMode);
     if (settings.epochs !== undefined && settings.epochs !== 40) replay.searchParams.set('epochs', settings.epochs);
+    if (comparison === 'cutoffs') replay.searchParams.set('cutoffDistance', $('cutoffDistance').value);
     $('replay').href = replay.href;
     $('replay').hidden = false;
     report={schema:1,domain:'synthetic',comparison,thresholds,settings,replayUrl:replay.href,datasets,rows};
@@ -417,6 +465,7 @@ $('benchForm').onsubmit = async event => {
     if (comparison === 'cutoffs') {
       displayCutoffChanges();
       $('cutoffChanges').hidden = false;
+      $('cutoffChanges').open = requested.has('cutoffDistance');
       try {
         localStorage.setItem('crop-trainer-cutoff-scout', 'earned');
         stamp = ' Cutoff scout stamp earned.';
