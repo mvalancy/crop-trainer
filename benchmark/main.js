@@ -1,5 +1,7 @@
+import {benchmarkView} from './watch.js';
+import {scanSession} from '../trainer/scan-session.js';
 import {DENSITY_HISTORY_KEY, HEIGHT_HISTORY_KEY, densitySnapshot, pairDensityScores} from './density.js?v=peakpair2';
-import {buildDataset, validateModel, compareMatchedBoxes, coverageAtDistance, PEAK_HEIGHTS} from '../trainer/data.js?v=dense1';
+import {buildDataset, validateModel, compareMatchedBoxes, coverageAtDistance, PEAK_HEIGHTS} from '../trainer/data.js?v=live1';
 import {trainNetworkCPU, trainNetworkGPU, predictNetwork} from '../trainer/neural.js';
 import {trainCPU, MAX_EPOCHS} from '../trainer/model.js';
 import {cropProfile} from '../trainer/crops.js?v=systems1';
@@ -7,10 +9,13 @@ import {sensorOptions, validationSensorOptions, rayBudgetOptions, trainingRayOpt
 
 const $ = id => document.getElementById(id);
 const formatTime = ms => (ms/1000).toFixed(2)+' s';
+const watch=benchmarkView($('benchWatch'));
+$('watchCancel').onclick=()=>controller?.abort();
 let controller, report, gpuAvailable = false;
 sensorOptions($('sensor'), true);
 validationSensorOptions($('validationSensor'));
 const requested = new URLSearchParams(location.search);
+$('livePreview').checked=requested.get('live')!=='off';
 $('includeMixed').checked = requested.get('includeMixed') === '1';
 for (const id of ['comparison', 'crop', 'sensor', 'validationSensor', 'minimumHeight', 'fieldMetric', 'cutoffDistance']) {
   const value = requested.get(id);
@@ -476,6 +481,11 @@ $('benchForm').onsubmit = async event => {
   const contenders = comparisons[comparison];
   const thresholds = comparison === 'cutoffs' ? [.35, .5, .65] : [.5];
   const rows=[],datasets=[];
+  const livePreview=$('livePreview').checked;
+  const view=livePreview ? watch : null;
+  const labels=contenders.flatMap(c=>thresholds.map(threshold=>contenderLabel({...settings,...c,threshold},comparison)));
+  watch.start(seed,labels,livePreview);
+  const scans=livePreview ? scanSession(signal) : null;
   $('replay').hidden = true;
   $('robustnessTable').hidden = true;
   $('heightStudy').hidden = true;
@@ -500,8 +510,10 @@ $('benchForm').onsubmit = async event => {
         const {model, backend, train, epochs = settings.epochs, minimumHeight = settings.minimumHeight, trainingRayBudget = settings.trainingRayBudget} = contender;
         if (!set || comparison === 'density' || comparison === 'heights') {
           $('status').textContent='Growing fields for seed '+runSeed+'…';
+          view?.growing(runSeed);
           const start=performance.now();
-          set=await buildDataset({...settings,seed:runSeed,trainingRayBudget,minimumHeight,signal});
+          set=await buildDataset({...settings,seed:runSeed,trainingRayBudget,minimumHeight,signal,
+            ...(view?{generate:recipe=>scans.generate(recipe),onScan:view.scan}:{})});
           generationMs=performance.now()-start;
           const pairedScans = comparison === 'heights' ? set.manifest : set.validation;
           const ids = pairedScans.map(tile => tile.tile_id);
@@ -513,23 +525,27 @@ $('benchForm').onsubmit = async event => {
           datasets.push({seed:runSeed,stats:set.stats,recipeManifest:set.manifest});
         }
         $('status').textContent='Training '+model+' on '+backend+' · '+epochs+' epochs · seed '+runSeed;
+        const label=comparison==='cutoffs'?'Shared neural fit':contenderLabel({...settings,...contender,epochs},comparison);
+        view?.fitting(label,epochs);
         const before=performance.now();
-        const fit=await train(set.X,set.Y,{dims:set.dims,epochs,lr:.25,signal});
+        const fit=await train(set.X,set.Y,{dims:set.dims,epochs,lr:.25,signal,onEpoch:view?p=>view.epoch(p,epochs):undefined});
         const trained=performance.now();
         const trainingMs = trained - before;
         const cuts = offset ? [...thresholds].reverse() : thresholds;
         for (const threshold of cuts) {
           signal.throwIfAborted();
           $('status').textContent = 'Scoring seed '+runSeed+' at cutoff '+threshold+'…';
+          view?.scoring(contenderLabel({...settings,...contender,epochs,threshold},comparison));
           const scoringStart = performance.now();
           const result = await validateModel(set, fit.weights, {
-            threshold, predictScores:model === 'neural' ? predictNetwork : undefined, signal
+            threshold, predictScores:model === 'neural' ? predictNetwork : undefined, signal,onProgress:view?.tile
           });
           const row = {
             model, backend:fit.backend, datasetIndex, minimumHeight, trainingRayBudget, epochs, trainingLoss:fit.loss.at(-1), threshold, seed:runSeed, generationMs, trainingMs,
             scoringMs:performance.now()-scoringStart, adapter:fit.adapter,
             meanF1:result.meanF1, scores:result.scores, countError:result.countError, byGround:result.byGround, byField:result.byField, tiles:result.tiles
           };
+          view?.score(contenderLabel(row,comparison),row,result.preview);
           rows.push(row);
           appendRow(row, comparison, settings);
         }
@@ -547,6 +563,7 @@ $('benchForm').onsubmit = async event => {
     $('summary').textContent='Average mean F1 across both seeds: '+means.join(' · ')+'.'+device;
     const replay = new URL(location.pathname, location.origin);
     replay.search = new URLSearchParams({comparison, crop, sensor:sensorMode, seed});
+    if(!livePreview)replay.searchParams.set('live','off');
     if ($('fieldMetric').value !== 'mean') replay.searchParams.set('fieldMetric', $('fieldMetric').value);
     if (comparison !== 'heights' && $('minimumHeight').value !== 'default') replay.searchParams.set('minimumHeight', settings.minimumHeight);
     if (includeMixed) replay.searchParams.set('includeMixed', '1');
@@ -557,7 +574,7 @@ $('benchForm').onsubmit = async event => {
     if (comparison === 'cutoffs') replay.searchParams.set('cutoffDistance', $('cutoffDistance').value);
     $('replay').href = replay.href;
     $('replay').hidden = false;
-    report={schema:1,domain:'synthetic',comparison,thresholds,settings,replayUrl:replay.href,datasets,rows};
+    report={schema:1,livePreview,domain:'synthetic',comparison,thresholds,settings,replayUrl:replay.href,datasets,rows};
     if (comparison === 'heights') displayHeightStudy();
     if (comparison === 'density') displayDensityStudy();
     if (comparison === 'heights' || comparison === 'density') displayValidationComparison();
@@ -603,10 +620,13 @@ $('benchForm').onsubmit = async event => {
         stamp = ' Cutoff scout stamp earned.';
       } catch {}
     }
+    view?.end('Benchmark complete');
     $('status').textContent='Benchmark complete · '+rows.length+' scored results.'+stamp;
   }catch(error){
+    view?.end(signal.aborted?'Benchmark canceled':'Benchmark interrupted');
     $('status').textContent=signal.aborted?'Canceled. Completed rows remain in Results.':'Benchmark failed. '+error.message;
   }finally{
+    scans?.close();
     for(const input of $('benchForm').elements)input.disabled=input.id==='cancel';
     explainComparison();
     controller=null;

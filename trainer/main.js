@@ -9,9 +9,7 @@ import {allProfiles, sensorOptions, validationSensorOptions, sensorDetails, rayB
 if(new URLSearchParams(location.search).has('embed'))document.body.classList.add('embed');
 const $=id=>document.getElementById(id);
 const sceneHost=$('trainingScene'),live=createLiveScene(sceneHost,{zoomControl:true});
-const narrow=matchMedia('(max-width:740px)');
-function placeScene(){ $(narrow.matches?'mobileSceneSlot':'desktopSceneSlot').append(sceneHost); }
-placeScene();narrow.addEventListener('change',placeScene);
+const narrow=matchMedia('(max-width: 54rem)');
 const params = new URLSearchParams(location.search);
 trainingRayOptions($('trainingRayBudget'), params.get('trainingRayBudget'));
 rayBudgetOptions($('validationRayBudget'), params.get('validationRayBudget'));
@@ -219,7 +217,7 @@ $('pairedScan').addEventListener('click', () => {
  showStages();
 });
 function clear(){
- $('firstRun').hidden=true;$('scored').hidden=true;
+ $('firstRun').hidden=true;$('scored').hidden=true;$('runReview').hidden=true;$('reviewLink').hidden=true;
  $('charts').hidden = false;
  $('groundStudy').hidden = true;
  $('groundStudy').open = false;
@@ -355,7 +353,7 @@ $('soilMetric').addEventListener('change', () => {
  if (lastRun) displayGroundStudy(lastRun);
 });
 function display(v,threshold,validationRayBudget){
- $('scored').hidden=false;
+ $('runReview').hidden=false;$('reviewLink').hidden=false;$('scored').hidden=false;
  auditRayBudget=validationRayBudget;
  auditThreshold=threshold;
  displayGroundStudy(v);

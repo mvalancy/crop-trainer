@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Benchmark · Crop Trainer</title>
-<link rel="stylesheet" href="../farm.css?v=systems1"></head>
+<link rel="stylesheet" href="../farm.css?v=layout2"></head>
 <body class="benchmark"><a class="skip" href="#main">Skip to content</a>
 <header class="siteBar">
 <div class="barInner"><a class="brand" href="../"><span class="mark" aria-hidden="true"><i></i></span>Crop Trainer</a>
@@ -44,12 +44,20 @@
 <label>Validation ray budget<select id="validationRayBudget"></select></label>
 </div></fieldset>
 <div class="action">
+<label class="check"><input type="checkbox" id="livePreview" checked> Live view</label>
 <button id="run" class="primary" disabled="">Run benchmark</button>
 <button type="button" id="cancel" disabled="">Cancel</button></div>
 </form>
 <output aria-live="polite" id="status" class="benchStatus">Checking WebGPU…</output>
 </section>
-<section class="panel benchResults">
+<section id="benchWatch" tabindex="-1" class="panel benchWatch" aria-labelledby="watchTitle" hidden>
+<div class="watchHead"><h2 id="watchTitle">Benchmark live</h2><ol class="watchSteps" aria-label="Benchmark stages"><li>Grow</li><li>Train</li><li>Score</li></ol></div>
+<div class="watchGrid"><figure class="liveScene" hidden></figure>
+<div class="scoreboard"><h3>Mean F1 by seed</h3><table><thead><tr><th scope="col">Contender</th><th scope="col"></th><th scope="col"></th></tr></thead><tbody></tbody></table>
+<p class="hint inspectHelp" hidden>Select a score to view that detector’s pins on the first field for its seed.</p>
+<p class="watchCount"></p><div class="watchActions"><button type="button" class="watchCancel" id="watchCancel">Cancel benchmark</button><a href="#benchResults">Detailed results ↓</a></div></div></div>
+</section>
+<section class="panel benchResults" id="benchResults">
 <h2>Results</h2>
 <p id="summary"></p>
 <p id="emptyResults">Run a comparison to see timing, precision, recall and F1 for both seeds.</p>
@@ -135,6 +143,6 @@
 </main>
 <footer class="siteFoot"><span>Created by Matthew Valancy</span>
 <div><a href="../AGENTS.md">Agent quickstart</a><a href="../#missions">Farm journal</a><a href="../LICENSE">MIT license</a></div></footer>
-<script type="module" src="main.js?v=dense1"></script>
+<script type="module" src="main.js?v=layout2"></script>
 </body>
 </html>

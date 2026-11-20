@@ -22,7 +22,7 @@ Browser settings exports include `hiddenLayers`, `activation`, `initSeed`, `opti
 
 Open the Training shed with the run’s settings. During fitting, the gold rings use the first soil-present validation scan. To check a ring layout at a particular epoch, use the epoch shown **beside the predicted count**. Replay that many epochs from the same initialization, score the first validation tile at the same threshold and compare its selected XY centers. The loss readout can advance between pin updates. Browser previews sample up to 9,000 returns for drawing. Fitting and scoring use the full feature arrays.
 
-For timing comparisons, run both contenders through the same Benchmark entry point. The Training shed also samples model weights and draws a preview during the fit, so its elapsed time includes that work.
+For timing comparisons, run both contenders through the same Benchmark entry point with **Live view** off. The exported report records this setting and its replay URL includes `live=off`. The Training shed also samples model weights and draws a preview during the fit, so its elapsed time includes that work.
 
 ## Test a detector outside the generator
 

@@ -446,3 +446,141 @@ tbody tr:nth-child(even) { background: #f6f8f0; }
   color:#e1efda;border:1px solid #668879;background:#132d25;font-size:.75rem;
 }
 .liveScene .sceneLens[aria-pressed=true] {background:#d2eea9;color:#183422;border-color:#bcdb94;}
+
+/* Shared workspaces: controls and instrument above, inspection below. */
+.pageIntro {display:grid;grid-template-columns:minmax(0,1fr) minmax(18rem,.85fr);align-items:center;gap:.45rem 2rem;}
+.pageIntro h1 {grid-row:1/span 2;}
+.introLinks {grid-column:2;display:flex;flex-wrap:wrap;gap:.25rem 1rem;font-size:.88rem;}
+.introLinks a {padding:.3rem 0;}
+.scanSummary {grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:1.5rem 2rem;}
+.scanFiles {border-left:1px solid var(--line);padding-left:2rem;}
+.scanFiles .downloads,.scanFiles .shareActions {margin:.75rem 0;}
+.scanFiles .formatHelp {border:0;padding:.3rem 0;background:transparent;}
+.scanFiles .trainLink {display:inline-block;margin-top:.65rem;font-weight:650;}
+.scanSummary dt {line-height:1.3;}
+.trainingWorkspace {grid-template-columns:minmax(20rem,.88fr) minmax(0,1.25fr);}
+.trainingWorkspace .setupPanel {container-type:inline-size;}
+.trainingWorkspace .advancedPanel {grid-column:1/-1;}
+.settingsGrid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.65rem;align-items:start;}
+#controls .settingsGrid > details {margin:0;}
+.monitorPanel .firstRun {margin:0 0 1rem;}
+.monitorPanel .firstRun figcaption {margin:.85rem 0;}
+#trainingScene:not([hidden]) + #firstRun {display:none;}
+.runReview {margin-top:1.25rem;}
+.runReview > h2 {margin-bottom:.8rem;}
+.runReview .downloads,.runReview .export {margin-top:.8rem;}
+.setupPanel .action {display:grid;grid-template-columns:1fr 1fr;}
+.setupPanel .action .primary {grid-column:1/-1;}
+@container (min-width:24rem) {
+  .modelCard {display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center;gap:.65rem 1rem;}
+  .modelCard h3,.modelCard details {grid-column:1/-1;margin:0;}
+  .modelCard .networkFigure {margin:0;}
+  .networkFigure figcaption {font-size:.73rem;}
+}
+@media(min-width:741px){
+  main,.barInner,.siteFoot {width:min(calc(100% - 2 * var(--gutter)),90rem);}
+  .barInner {min-height:3.8rem;gap:clamp(2rem,6vw,6rem);}
+  .pageIntro {padding-block:clamp(1.6rem,3vw,2.5rem) 1.1rem;margin-bottom:1.15rem;}
+  .pageIntro h1 {font-size:clamp(2.7rem,4.15vw,4.1rem);}
+  .hero {margin-top:1.1rem;}
+  .heroCopy {width:56%;padding:clamp(1.4rem,2.2vw,2rem) clamp(1.7rem,3.2vw,3.2rem);}
+  .hero h1 {font-size:clamp(2.65rem,3.8vw,3.75rem);}
+  .heroCopy p {max-width:48ch;margin:.7rem 0 1rem;}
+  #field {margin-top:1.7rem;}
+  .lab {grid-template-columns:minmax(17rem,.85fr) minmax(0,2fr);}
+  #grow fieldset:first-child {grid-template-columns:minmax(0,1.7fr) minmax(4.2rem,1fr);}
+  #grow fieldset:first-child legend {grid-column:1/-1;}
+  #generationStatus:empty {display:none;}
+  .viewer #map {height:clamp(20rem,46vh,34rem);}
+  .sectionHead p {max-width:49ch;}
+  .benchContext {align-self:stretch;padding:1.35rem;background:#19392d;color:var(--surface);border:0;border-radius:.65rem;}
+  .benchContext p,.benchContext dt {color:#d9e4d6;}
+  .benchContext dd {color:var(--lime);}
+  .benchContext a {color:#e0efbd;}
+  .benchContext #experiments {border-color:#486353;}
+  .benchSetup {grid-template-columns:minmax(16rem,.85fr) minmax(0,1.65fr);gap:1rem clamp(1.4rem,2.6vw,2.5rem);}
+}
+@media(min-width:1180px){
+  .benchForm {grid-template-columns:repeat(2,minmax(0,1fr));align-content:start;}
+  .benchForm > :first-child,.benchForm .action {grid-column:1/-1;}
+  .benchForm > fieldset:not(:first-child) .benchFields {grid-template-columns:1fr;}
+  .benchForm > fieldset:first-child .benchFields {grid-template-columns:repeat(4,minmax(0,1fr));}
+  .viewer #map {height:clamp(22rem,48vh,36rem);}
+}
+@media(min-width:741px) and (max-width:54rem){
+  .lab,.benchSetup {grid-template-columns:minmax(0,1fr);}
+  .lab > .plot,.lab > aside {grid-column:1;grid-row:auto;}
+  #grow {grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;}
+  #grow fieldset:nth-child(2){grid-column:2;grid-row:1/span 3;}
+  .benchContext {grid-row:auto;}
+  .benchContext #experiments ul {grid-template-columns:repeat(2,minmax(0,1fr));}
+}
+@media(max-width:54rem){
+  .trainingWorkspace {grid-template-columns:minmax(0,1fr);}
+  .setupPanel .action {max-width:100%;}
+}
+@media(max-width:740px){
+  .pageIntro {display:block;}
+  .introLinks {margin-top:.3rem;}
+  .introLinks a {display:inline-flex;align-items:center;min-height:44px;}
+  .scanSummary,.settingsGrid {grid-template-columns:minmax(0,1fr);}
+  .scanSummary {grid-row:2;}
+  .lab > aside {grid-row:3;}
+  .scanFiles {border-left:0;border-top:1px solid var(--line);padding:1rem 0 0;}
+  .scanFiles .downloads {display:grid;grid-template-columns:1fr 1fr;gap:.5rem;}
+  .scanFiles #ply {grid-column:1/-1;}
+}
+.benchWatch {margin-top:1.25rem;}
+.watchHead,.watchActions {display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.6rem 1rem;}
+.watchHead h2 {font:500 clamp(1.7rem,3vw,2.25rem)/1.1 var(--serif);letter-spacing:-.035em;}
+.watchSteps {list-style:none;display:flex;gap:.25rem;padding:.25rem;margin:0;background:var(--wash);border-radius:2rem;}
+.watchSteps li {padding:.25rem .7rem;border-radius:2rem;font-size:.83rem;color:var(--muted);}
+.watchSteps [aria-current] {background:var(--forest);color:white;}
+.watchGrid {display:grid;grid-template-columns:minmax(0,1.6fr) minmax(18rem,1fr);gap:1.2rem;align-items:start;margin-top:1rem;}
+.watchGrid .liveScene {margin:0;}
+.scoreboard {padding:1.1rem;background:#f5f7ef;border:1px solid var(--line);border-radius:.65rem;}
+.scoreboard table {table-layout:fixed;margin-top:.8rem;}
+.scoreboard th,.scoreboard td {padding:.65rem .35rem;vertical-align:top;overflow-wrap:anywhere;}
+.scoreboard th:first-child {width:39%;}
+.scoreboard th {background:transparent;}
+.watchScore {font:600 .9rem var(--mono);}
+.scoreBar {display:block;margin-top:.4rem;height:.4rem;border-radius:.3rem;background:linear-gradient(to right,#53764b var(--score),#dbe2d2 var(--score));}
+.pendingScore,.watchCount {font-size:.8rem;color:var(--muted);}
+.watchActions {justify-content:start;font-size:.88rem;}
+.benchForm .action .check {margin-right:auto;}
+@media(max-width:54rem){.watchGrid {grid-template-columns:1fr;}}
+@media(max-width:740px){.benchForm .action .check {grid-column:1/-1;}}
+.scorePick {display:block;width:100%;min-height:44px;padding:.45rem;border:1px solid transparent;text-align:left;background:#eaf0e3;font:600 .86rem var(--mono);}
+.scorePick:disabled {opacity:1;background:transparent;}
+.scorePick[aria-pressed=true]{border-color:#608549;background:#daeac9;}
+@media(min-width:741px) and (max-width:54rem) and (orientation:landscape) and (max-height:34rem){
+  .lab,.trainingWorkspace {grid-template-columns:minmax(15.5rem,.85fr) minmax(0,1.45fr);}
+  .lab > aside {grid-column:1;grid-row:1;}
+  .lab > .plot {grid-column:2;grid-row:1;}
+  #grow {grid-template-columns:1fr;}
+  #grow fieldset:nth-child(2){grid-column:auto;grid-row:auto;}
+  .viewer #map,.watchGrid .liveScene canvas {height:14rem;}
+}
+@media(min-width:865px){
+  .trainingWorkspace {align-items:stretch;}
+  .monitorPanel {display:flex;flex-direction:column;}
+  .monitorPanel .method {margin-top:auto;padding-top:.8rem;}
+  .monitorPanel .stage {margin-bottom:1rem;}
+  .setupPanel .action {display:flex;}
+  .setupPanel .action .primary {flex:1 1 10rem;}
+}
+@media(min-width:865px){
+  .lab > .plot {align-self:stretch;display:flex;flex-direction:column;}
+  .plot .viewer {flex:1;min-height:clamp(20rem,46vh,36rem);}
+  .plot .viewer #map {position:absolute;inset:0;height:100%;}
+}
+@media(min-width:741px) and (max-width:54rem) and (orientation:portrait){
+  .trainingWorkspace .setupPanel {display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start;gap:.7rem 1.2rem;}
+  .setupPanel > h2,.setupPanel .adapter,.setupPanel .formPair,.setupPanel .estimate,.setupPanel #workload {margin:0;}
+  .setupPanel .modelCard {grid-column:1;grid-row:2/span 4;display:block;}
+  .setupPanel .modelCard .networkFigure {margin:.65rem 0;}
+  .setupPanel .modelCard details {margin-top:.65rem;}
+  .setupPanel .formPair,.setupPanel .action,.setupPanel .workloadLine,.setupPanel .estimate {grid-column:2;}
+}
+.reviewLink {display:inline-flex;align-items:center;min-height:44px;align-self:start;font-size:.9rem;font-weight:630;}
+@media(min-width:865px){.benchContext{grid-row:1/span 2;}}
