@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 195" role="img" aria-labelledby="title desc">
+  <title id="title">Which examples teach the model?</title>
+  <desc id="desc">Three candidate distances fall in the positive, skipped and negative bands.</desc>
+  <style>
+    text {font-family:system-ui,sans-serif}
+    @media (prefers-reduced-motion: no-preference) {
+      .mark {animation: glow 3.5s ease-in-out infinite alternate} @keyframes glow {from {opacity:.48} to {opacity:1}}
+    }
+  </style>
+  <rect width="500" height="195" rx="14" fill="#fff8e2"/>
+  <text x="250" y="31" text-anchor="middle" fill="#173e32" font-size="21" font-weight="700">Distance from a labeled plant center</text>
+  <rect x="36" y="74" width="166" height="25" rx="0" fill="#a5c181"/>
+  <rect x="202" y="74" width="96" height="25" rx="0" fill="#e7ce8c"/>
+  <rect x="298" y="74" width="165" height="25" rx="0" fill="#e6b6a4"/>
+  <text x="123" y="63" text-anchor="middle" fill="#173e32" font-size="18" font-weight="700">5 cm</text>
+  <circle cx="123" cy="86" r="5" fill="#173e32" stroke="none" stroke-width="2" />
+  <text x="123" y="169" text-anchor="middle" fill="#173e32" font-size="18" font-weight="700">Learn yes</text>
+  <text x="245" y="63" text-anchor="middle" fill="#173e32" font-size="18" font-weight="700">12 cm</text>
+  <circle cx="245" cy="86" r="5" fill="#173e32" stroke="none" stroke-width="2" />
+  <text x="245" y="169" text-anchor="middle" fill="#173e32" font-size="18" font-weight="700">Skip</text>
+  <text x="385" y="63" text-anchor="middle" fill="#173e32" font-size="18" font-weight="700">20 cm</text>
+  <circle cx="385" cy="86" r="5" fill="#173e32" stroke="none" stroke-width="2" />
+  <text x="385" y="169" text-anchor="middle" fill="#173e32" font-size="18" font-weight="700">Learn no</text>
+  <line x1="36" y1="100" x2="36" y2="109" stroke="#173e32" stroke-width="2" />
+  <text x="36" y="132" text-anchor="middle" fill="#173e32" font-size="15" font-weight="500">0 cm</text>
+  <line x1="202" y1="100" x2="202" y2="109" stroke="#173e32" stroke-width="2" />
+  <text x="202" y="132" text-anchor="middle" fill="#173e32" font-size="15" font-weight="500">9.5 cm</text>
+  <line x1="298" y1="100" x2="298" y2="109" stroke="#173e32" stroke-width="2" />
+  <text x="298" y="132" text-anchor="middle" fill="#173e32" font-size="15" font-weight="500">15 cm</text>
+  <path d="M36 84v-14" fill="none" stroke="#a54434" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="mark"/>
+</svg>

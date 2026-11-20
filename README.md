@@ -6,6 +6,8 @@ Can you teach a computer to spot a head of lettuce? Grow a virtual field, scan i
 
 **[Train your first lettuce detector →](https://mvalancy.github.io/crop-trainer/trainer/)**
 
+Curious how the model learns? [Follow one lettuce through five illustrated lessons.](docs/first-steps/README.md)
+
 ## Earn your first harvest 🌱
 
 1. **Plant lettuce.** Open the training shed and leave the starter settings as they are.

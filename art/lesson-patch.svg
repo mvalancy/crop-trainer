@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 195" role="img" aria-labelledby="title desc">
+  <title id="title">How high is the neighborhood?</title>
+  <desc id="desc">Darker squares have taller returns. The model compares the center with bands around a possible peak.</desc>
+  <style>
+    text {font-family:system-ui,sans-serif}
+    @media (prefers-reduced-motion: no-preference) {
+      .mark {animation: glow 3.5s ease-in-out infinite alternate} @keyframes glow {from {opacity:.48} to {opacity:1}}
+    }
+  </style>
+  <rect width="500" height="195" rx="14" fill="#fff8e2"/>
+  <text x="128" y="32" text-anchor="middle" fill="#173e32" font-size="20" font-weight="700">Height grid</text>
+  <text x="365" y="32" text-anchor="middle" fill="#173e32" font-size="20" font-weight="700">Around the peak</text>
+  <rect x="71" y="42" width="15" height="15" rx="2" fill="#f1ecd3"/>
+  <rect x="87" y="42" width="15" height="15" rx="2" fill="#f1ecd3"/>
+  <rect x="103" y="42" width="15" height="15" rx="2" fill="#f1ecd3"/>
+  <rect x="119" y="42" width="15" height="15" rx="2" fill="#dbe5bc"/>
+  <rect x="135" y="42" width="15" height="15" rx="2" fill="#f1ecd3"/>
+  <rect x="151" y="42" width="15" height="15" rx="2" fill="#f1ecd3"/>
+  <rect x="167" y="42" width="15" height="15" rx="2" fill="#f1ecd3"/>
+  <rect x="71" y="58" width="15" height="15" rx="2" fill="#f1ecd3"/>
+  <rect x="87" y="58" width="15" height="15" rx="2" fill="#dbe5bc"/>
+  <rect x="103" y="58" width="15" height="15" rx="2" fill="#b8cf95"/>
+  <rect x="119" y="58" width="15" height="15" rx="2" fill="#b8cf95"/>
+  <rect x="135" y="58" width="15" height="15" rx="2" fill="#b8cf95"/>
+  <rect x="151" y="58" width="15" height="15" rx="2" fill="#dbe5bc"/>
+  <rect x="167" y="58" width="15" height="15" rx="2" fill="#f1ecd3"/>
+  <rect x="71" y="74" width="15" height="15" rx="2" fill="#f1ecd3"/>
+  <rect x="87" y="74" width="15" height="15" rx="2" fill="#b8cf95"/>
+  <rect x="103" y="74" width="15" height="15" rx="2" fill="#86aa70"/>
+  <rect x="119" y="74" width="15" height="15" rx="2" fill="#86aa70"/>
+  <rect x="135" y="74" width="15" height="15" rx="2" fill="#86aa70"/>
+  <rect x="151" y="74" width="15" height="15" rx="2" fill="#b8cf95"/>
+  <rect x="167" y="74" width="15" height="15" rx="2" fill="#f1ecd3"/>
+  <rect x="71" y="90" width="15" height="15" rx="2" fill="#dbe5bc"/>
+  <rect x="87" y="90" width="15" height="15" rx="2" fill="#b8cf95"/>
+  <rect x="103" y="90" width="15" height="15" rx="2" fill="#86aa70"/>
+  <rect x="119" y="90" width="15" height="15" rx="2" fill="#345e44"/>
+  <rect x="135" y="90" width="15" height="15" rx="2" fill="#86aa70"/>
+  <rect x="151" y="90" width="15" height="15" rx="2" fill="#b8cf95"/>
+  <rect x="167" y="90" width="15" height="15" rx="2" fill="#dbe5bc"/>
+  <rect x="71" y="106" width="15" height="15" rx="2" fill="#f1ecd3"/>
+  <rect x="87" y="106" width="15" height="15" rx="2" fill="#b8cf95"/>
+  <rect x="103" y="106" width="15" height="15" rx="2" fill="#86aa70"/>
+  <rect x="119" y="106" width="15" height="15" rx="2" fill="#86aa70"/>
+  <rect x="135" y="106" width="15" height="15" rx="2" fill="#86aa70"/>
+  <rect x="151" y="106" width="15" height="15" rx="2" fill="#b8cf95"/>
+  <rect x="167" y="106" width="15" height="15" rx="2" fill="#f1ecd3"/>
+  <rect x="71" y="122" width="15" height="15" rx="2" fill="#f1ecd3"/>
+  <rect x="87" y="122" width="15" height="15" rx="2" fill="#dbe5bc"/>
+  <rect x="103" y="122" width="15" height="15" rx="2" fill="#b8cf95"/>
+  <rect x="119" y="122" width="15" height="15" rx="2" fill="#b8cf95"/>
+  <rect x="135" y="122" width="15" height="15" rx="2" fill="#b8cf95"/>
+  <rect x="151" y="122" width="15" height="15" rx="2" fill="#dbe5bc"/>
+  <rect x="167" y="122" width="15" height="15" rx="2" fill="#f1ecd3"/>
+  <rect x="71" y="138" width="15" height="15" rx="2" fill="#f1ecd3"/>
+  <rect x="87" y="138" width="15" height="15" rx="2" fill="#f1ecd3"/>
+  <rect x="103" y="138" width="15" height="15" rx="2" fill="#f1ecd3"/>
+  <rect x="119" y="138" width="15" height="15" rx="2" fill="#dbe5bc"/>
+  <rect x="135" y="138" width="15" height="15" rx="2" fill="#f1ecd3"/>
+  <rect x="151" y="138" width="15" height="15" rx="2" fill="#f1ecd3"/>
+  <rect x="167" y="138" width="15" height="15" rx="2" fill="#f1ecd3"/>
+  <path d="M212 94h54m-9-7 9 7-9 7" fill="none" stroke="#b27031" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="365" cy="97" r="56" fill="#b8cf95" stroke="#fff8e2" stroke-width="2" />
+  <circle cx="365" cy="97" r="38" fill="#86aa70" stroke="#fff8e2" stroke-width="2" />
+  <circle cx="365" cy="97" r="18" fill="#517d51" stroke="#fff8e2" stroke-width="2" />
+  <circle cx="365" cy="97" r="5" fill="#fff8e2" stroke="none" stroke-width="2" class="mark"/>
+  <text x="126" y="179" text-anchor="middle" fill="#173e32" font-size="18" font-weight="500">5 cm cells</text>
+  <text x="365" y="179" text-anchor="middle" fill="#173e32" font-size="16" font-weight="500">Inner · middle · outer</text>
+</svg>

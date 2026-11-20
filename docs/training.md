@@ -1,5 +1,7 @@
 # How a crop detector learns
 
+For a first introduction, [follow one lettuce from its scan to its final pin](first-steps/README.md).
+
 The orchard, vineyard, bench lettuce and high-wire tomato profiles teach one XY planting position per plant. Their labels preserve the base when the canopy leans. See [growing-system targets and fixtures](scanners.md) and the [physical vineyard test](field-datasets.md#replay-the-vineyard-test).
 
 ![Plant labels teach a model to find crop centers in a new scan](../art/scan-learn-find.svg)

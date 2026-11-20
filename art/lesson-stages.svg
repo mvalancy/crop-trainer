@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 195" role="img" aria-labelledby="title desc">
+  <title id="title">Where did the misses enter?</title>
+  <desc id="desc">558 peaks could cover all 199 plants. The score cutoff leaves 161 peaks covering 141 plants. The final 146 pins still cover 141.</desc>
+  <style>
+    text {font-family:system-ui,sans-serif}
+    @media (prefers-reduced-motion: no-preference) {
+      .trace {stroke-dasharray:4 8; animation: travel 3s linear infinite} @keyframes travel {to {stroke-dashoffset:-36}}
+    }
+  </style>
+  <rect width="500" height="195" rx="14" fill="#fff8e2"/>
+  <text x="250" y="27" text-anchor="middle" fill="#173e32" font-size="20" font-weight="700">One lettuce field · 15 cm tolerance</text>
+  <text x="188" y="54" text-anchor="start" fill="#173e32" font-size="15" font-weight="500">Plants with a match</text>
+  <text x="476" y="54" text-anchor="end" fill="#173e32" font-size="15" font-weight="500">Candidates / pins</text>
+  <text x="16" y="83" text-anchor="start" fill="#173e32" font-size="16" font-weight="500">Find peaks</text>
+  <rect x="144" y="67" width="200" height="18" rx="3" fill="#e1e6cf"/>
+  <rect x="144" y="67" width="199" height="18" rx="3" fill="#507e50"/>
+  <text x="349" y="81" text-anchor="start" fill="#173e32" font-size="16" font-weight="700">199</text>
+  <text x="450" y="82" text-anchor="middle" fill="#173e32" font-size="18" font-weight="700">558</text>
+  <text x="16" y="128" text-anchor="start" fill="#173e32" font-size="16" font-weight="500">Apply cutoff</text>
+  <rect x="144" y="112" width="200" height="18" rx="3" fill="#e1e6cf"/>
+  <rect x="144" y="112" width="141" height="18" rx="3" fill="#507e50"/>
+  <text x="291" y="126" text-anchor="start" fill="#173e32" font-size="16" font-weight="700">141</text>
+  <text x="450" y="127" text-anchor="middle" fill="#173e32" font-size="18" font-weight="700">161</text>
+  <text x="16" y="173" text-anchor="start" fill="#173e32" font-size="16" font-weight="500">Apply spacing</text>
+  <rect x="144" y="157" width="200" height="18" rx="3" fill="#e1e6cf"/>
+  <rect x="144" y="157" width="141" height="18" rx="3" fill="#507e50"/>
+  <text x="291" y="171" text-anchor="start" fill="#173e32" font-size="16" font-weight="700">141</text>
+  <text x="450" y="172" text-anchor="middle" fill="#173e32" font-size="18" font-weight="700">146</text>
+  <line x1="144" y1="183" x2="285" y2="183" stroke="#b27031" stroke-width="2" class="trace"/>
+</svg>

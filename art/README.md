@@ -13,4 +13,6 @@ The little farm on the front page lives here. Open an SVG to see it move or open
 | [Two rows from the same seed](seed-replay.svg) | [Test plot](../test/README.md) |
 | [The sprout animation strip](sprout-strip.svg) | This illustration patch |
 
+The [illustrated beginner course](../docs/first-steps/README.md) adds ten diagrams, including a [weighted sum you can work out by hand](lesson-weights.svg), the [measured training loss](lesson-loss.svg) and a [pin-matching puzzle](lesson-matches.svg).
+
 The [lettuce study](lettuce-study.webp) is the still image used on the field generator’s welcome screen. For a new diagram, give the SVG a title, describe what changes, and make its still frame readable. [Crop Trainer home](../README.md)

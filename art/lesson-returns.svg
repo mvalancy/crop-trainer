@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 195" role="img" aria-labelledby="title desc">
+  <title id="title">What a scan samples</title>
+  <desc id="desc">Sample positions intersect two leaves and the soil. Dots show where a surface was measured.</desc>
+  <style>
+    text {font-family:system-ui,sans-serif}
+    @media (prefers-reduced-motion: no-preference) {
+      .trace {stroke-dasharray:4 8; animation: travel 3s linear infinite} @keyframes travel {to {stroke-dashoffset:-36}}
+    }
+  </style>
+  <rect width="500" height="195" rx="14" fill="#fff8e2"/>
+  <path d="M22 151Q106 146 145 150T329 150T477 149" fill="none" stroke="#b27031" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M73 147Q79 113 111 122Q120 94 145 98Q173 108 187 148Z" fill="#dce8bf" stroke="#507e50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M280 149Q296 119 325 125Q352 96 369 117Q390 129 401 149Z" fill="#dce8bf" stroke="#507e50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+  <line x1="39" y1="50" x2="39" y2="150" stroke="#507e50" stroke-width="1.8" class="trace"/>
+  <circle cx="39" cy="150" r="4.7" fill="#173e32" stroke="none" stroke-width="2" />
+  <line x1="82" y1="50" x2="82" y2="130" stroke="#507e50" stroke-width="1.8" class="trace"/>
+  <circle cx="82" cy="130" r="4.7" fill="#173e32" stroke="none" stroke-width="2" />
+  <line x1="125" y1="50" x2="125" y2="105" stroke="#507e50" stroke-width="1.8" class="trace"/>
+  <circle cx="125" cy="105" r="4.7" fill="#173e32" stroke="none" stroke-width="2" />
+  <line x1="168" y1="50" x2="168" y2="120" stroke="#507e50" stroke-width="1.8" class="trace"/>
+  <circle cx="168" cy="120" r="4.7" fill="#173e32" stroke="none" stroke-width="2" />
+  <line x1="211" y1="50" x2="211" y2="150" stroke="#507e50" stroke-width="1.8" class="trace"/>
+  <circle cx="211" cy="150" r="4.7" fill="#173e32" stroke="none" stroke-width="2" />
+  <line x1="254" y1="50" x2="254" y2="151" stroke="#507e50" stroke-width="1.8" class="trace"/>
+  <circle cx="254" cy="151" r="4.7" fill="#173e32" stroke="none" stroke-width="2" />
+  <line x1="297" y1="50" x2="297" y2="133" stroke="#507e50" stroke-width="1.8" class="trace"/>
+  <circle cx="297" cy="133" r="4.7" fill="#173e32" stroke="none" stroke-width="2" />
+  <line x1="340" y1="50" x2="340" y2="114" stroke="#507e50" stroke-width="1.8" class="trace"/>
+  <circle cx="340" cy="114" r="4.7" fill="#173e32" stroke="none" stroke-width="2" />
+  <line x1="383" y1="50" x2="383" y2="128" stroke="#507e50" stroke-width="1.8" class="trace"/>
+  <circle cx="383" cy="128" r="4.7" fill="#173e32" stroke="none" stroke-width="2" />
+  <line x1="426" y1="50" x2="426" y2="150" stroke="#507e50" stroke-width="1.8" class="trace"/>
+  <circle cx="426" cy="150" r="4.7" fill="#173e32" stroke="none" stroke-width="2" />
+  <line x1="469" y1="50" x2="469" y2="149" stroke="#507e50" stroke-width="1.8" class="trace"/>
+  <circle cx="469" cy="149" r="4.7" fill="#173e32" stroke="none" stroke-width="2" />
+  <text x="250" y="31" text-anchor="middle" fill="#173e32" font-size="21" font-weight="700">Each return locates one surface</text>
+  <text x="250" y="180" text-anchor="middle" fill="#173e32" font-size="17" font-weight="500">Side view of two plants and the soil</text>
+</svg>

@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 195" role="img" aria-labelledby="title desc">
+  <title id="title">Adding clues with weights</title>
+  <desc id="desc">One times 1.5, plus zero times 0.4, plus a bias of minus 0.5 equals one. Its sigmoid is about 0.73.</desc>
+  <style>
+    text {font-family:system-ui,sans-serif}
+    @media (prefers-reduced-motion: no-preference) {
+      .mark {animation: glow 3.5s ease-in-out infinite alternate} @keyframes glow {from {opacity:.48} to {opacity:1}}
+    }
+  </style>
+  <rect width="500" height="195" rx="14" fill="#fff8e2"/>
+  <text x="250" y="32" text-anchor="middle" fill="#173e32" font-size="21" font-weight="700">Two clues in a pocket-size model</text>
+  <rect x="18" y="57" width="100" height="70" rx="8" fill="#dce8bf"/>
+  <text x="68" y="86" text-anchor="middle" fill="#173e32" font-size="21" font-weight="700">1 × 1.5</text>
+  <text x="68" y="110" text-anchor="middle" fill="#173e32" font-size="15" font-weight="500">Height</text>
+  <rect x="145" y="57" width="100" height="70" rx="8" fill="#dce8bf"/>
+  <text x="195" y="86" text-anchor="middle" fill="#173e32" font-size="21" font-weight="700">0 × 0.4</text>
+  <text x="195" y="110" text-anchor="middle" fill="#173e32" font-size="15" font-weight="500">Coverage</text>
+  <rect x="272" y="57" width="100" height="70" rx="8" fill="#dce8bf"/>
+  <text x="322" y="86" text-anchor="middle" fill="#173e32" font-size="21" font-weight="700">−0.5</text>
+  <text x="322" y="110" text-anchor="middle" fill="#173e32" font-size="15" font-weight="500">Bias</text>
+  <text x="131" y="98" text-anchor="middle" fill="#173e32" font-size="18" font-weight="500">+</text>
+  <text x="257" y="98" text-anchor="middle" fill="#173e32" font-size="18" font-weight="500">+</text>
+  <text x="388" y="98" text-anchor="middle" fill="#173e32" font-size="18" font-weight="500">=</text>
+  <rect x="407" y="57" width="70" height="70" rx="8" fill="#173e32"/>
+  <text x="442" y="99" text-anchor="middle" fill="#fff8e2" font-size="25" font-weight="700">1</text>
+  <text x="250" y="165" text-anchor="middle" fill="#173e32" font-size="18" font-weight="500">Sigmoid turns the total into a score of 0.73</text>
+  <line x1="430" y1="119" x2="453" y2="119" stroke="#dbea96" stroke-width="3" class="mark"/>
+</svg>

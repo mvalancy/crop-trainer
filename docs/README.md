@@ -2,7 +2,15 @@
 
 ![An open field notebook pairs a mapped crop row with a magnified sketch of one plant.](../art/field-notebook.svg)
 
-[Train your first crop](https://mvalancy.github.io/crop-trainer/trainer/) or choose a guide for your next experiment.
+## New to machine learning?
+
+**[Start the illustrated tour · Follow one lettuce from scan to score →](first-steps/README.md)**
+
+See what a laser measures, try a two-clue model by hand, and check whether a pin landed on a plant. Five short lessons use one recorded starter run and end with a real vineyard test.
+
+[What is a model?](first-steps/models.md) · [How does it learn?](first-steps/learning.md) · [Was the pin any good?](first-steps/scoring.md) · [Would it work on a farm?](first-steps/fieldwork.md)
+
+## Guides for your own experiments
 
 | I want to… | Open |
 | --- | --- |
