@@ -1,4 +1,4 @@
-import {buildDataset, validateModel} from '../trainer/data.js?v=rays1';
+import {buildDataset, validateModel} from '../trainer/data.js?v=coverage1';
 import {trainNetworkCPU, trainNetworkGPU, predictNetwork} from '../trainer/neural.js';
 import {trainCPU, MAX_EPOCHS} from '../trainer/model.js';
 import {cropProfile} from '../trainer/crops.js';

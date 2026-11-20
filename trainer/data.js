@@ -1,5 +1,5 @@
 import {cropProfile} from './crops.js';
-import {field} from './field.js?v=rays1';
+import {field} from './field.js?v=coverage1';
 import {predict} from './model.js';
 
 export const FIELD_LIMITS={train:256,validation:128};
@@ -84,7 +84,7 @@ export async function buildDataset({seed=27,crop='lettuce',trainFields=6,valFiel
    if (!trainingField && validationRayBudget) recipe.points = validationRayBudget;
    const t=field(recipe), f=features(t,minimumHeight), truth=centers(t.labels.boxes), points=[];
    if(!trainingField){const n=t.xyz.length/3,inc=Math.max(1,Math.ceil(n/1500));for(let i=0;i<n;i+=inc)points.push([t.xyz[3*i],t.xyz[3*i+1]]);}
-   const item={...f,truth,seed:id,ground:v===0,recipe:t.p,sampledRays:t.sampledRays,tile_id:t.labels.tile_id,returnCount:t.labels.num_points,points};
+   const item={...f,truth,coverage:t.coverage,seed:id,ground:v===0,recipe:t.p,sampledRays:t.sampledRays,tile_id:t.labels.tile_id,returnCount:t.labels.num_points,points};
    (trainingField?training:validation).push(item);
    onProgress({done:2*k+v+1,total,stage:'data'});await pause();
   }
@@ -184,7 +184,7 @@ export async function validateModel(set,weights,{threshold=.5,predictScores=pred
    const tp = matchedCount(predictions, t.truth, radius);
    return {cm: 100 * radius, tp, fp: predictions.length - tp, fn: t.truth.length - tp};
   });
-  tiles.push({seed:t.seed,ground:t.ground,tile_id:t.tile_id,crop:t.recipe.crop,requestedRays:t.recipe.points,sampledRays:t.sampledRays,returnCount:t.returnCount,sensor:t.recipe.sampling.key,byTolerance,stages15cm:measureStages(stages,t.truth,byTolerance[2].tp)});
+  tiles.push({seed:t.seed,ground:t.ground,tile_id:t.tile_id,crop:t.recipe.crop,requestedRays:t.recipe.points,sampledRays:t.sampledRays,returnCount:t.returnCount,sensor:t.recipe.sampling.key,coverage:t.coverage,byTolerance,stages15cm:measureStages(stages,t.truth,byTolerance[2].tp)});
   previews.set(t.tile_id,{truth:t.truth,predictions,ground:t.ground,seed:t.seed,points:t.points,stages});
   onProgress({done:i+1,total:set.validation.length,stage:'validation'});await pause();
  }

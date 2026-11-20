@@ -61,6 +61,12 @@ Use `validationRayBudget` in CLI settings or browser trainer and benchmark URLs.
 
 Check training tile IDs, CPU weights and scaling before comparing the runs. Match held-out tiles by field seed and ground flag. The manifest's `recipe.points` is the request, `sampledRays` is the number sampled before scan noise, and `returnCount` is the final XYZ count. Stray returns can increase the final count. Capped layouts can produce identical scans and tile IDs for two requests above capacity. The OS1-32 preset caps a 100000-ray request at 16384 samples. Use the per-tolerance scores and stage audit to tell a missing peak from a rejected candidate.
 
+### Audit missing crop returns
+
+In each validation tile, `coverage.zero`, `coverage.oneToFour` and `coverage.fiveOrMore` count plants by their surviving crop returns. The values sum to the number of labeled plants. For per-plant detail, open the exact tile in the generator and download Labels. Entry `crop_returns_per_box[i]` counts returns from `boxes[i]`. Earlier label files omit this array. Regenerate their recipe to compute coverage.
+
+For a paired run, start with tomato seed 921, mixed training and OS1-64 validation. Compare budgets 12000 and 60000 and repeat at seed 922. Group by field seed, using soil-present tiles to count each planting once. Soil removal drops only soil and leaves these counts intact. At 15 cm, `max(0, fn - coverage.zero)` is a lower bound on misses that had crop returns. The scorer matches coordinates, so the counts alone cannot identify the individual misses. Coverage comes exclusively from generator bookkeeping and is excluded from all 13 detector inputs.
+
 ### Compare the same field with and without soil
 
 Each completed Training Shed or CLI report includes `byGround`. Each benchmark row includes it too. Select the group by its boolean `ground` flag and the score by its `cm` value. The scorer pools matched plants, extra pins and misses across that group's tiles before computing precision, recall and F1. Earlier reports contain the underlying counts in `tiles[].byTolerance`.

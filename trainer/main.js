@@ -38,7 +38,7 @@ function updateBenchmarkLinks() {
 for (const id of ['crop','scanner','validationSensor','validationRayBudget','seed','epochs']) $(id).addEventListener('input', updateBenchmarkLinks);
 let controller=null,losses=[],lastPreview=null,backendReady=false,deps,webgpuAvailable=false,lastRun=null,lastPaint=0;
 try {
- deps=await Promise.all([import('./data.js?v=rays1'),import('./model.js?v=benchmark1'),import('./neural.js')]);
+ deps=await Promise.all([import('./data.js?v=coverage1'),import('./model.js?v=benchmark1'),import('./neural.js')]);
  $('epochs').max=deps[1].MAX_EPOCHS;
  const epochsParam = params.get('epochs');
  if (/^\d+$/.test(epochsParam) && Number(epochsParam) >= 1 && Number(epochsParam) <= deps[1].MAX_EPOCHS) {
@@ -90,6 +90,8 @@ function showStages(){
  if (auditRayBudget) scanQuery.set('budget', auditRayBudget);
  $('inspectScan').href = '../?'+scanQuery+'#field';
  $('scanCounts').textContent = tile.requestedRays.toLocaleString()+' rays requested · '+tile.sampledRays.toLocaleString()+' sampled · '+tile.returnCount.toLocaleString()+' scan returns · '+labels+' labeled plants · tile '+tile.tile_id;
+ const {zero, oneToFour, fiveOrMore} = tile.coverage;
+ $('plantCoverage').textContent = 'Of '+labels+' labeled plants, '+zero+' had no crop returns, '+oneToFour+' had 1–4, and '+fiveOrMore+' had at least 5.';
  const names={proposals:'Height peaks',accepted:'Score ≥ '+auditThreshold,selected:'After spacing filter'};
  const rows=tile.stages15cm.map(({stage,count,matched})=>{
   const row=document.createElement('tr');

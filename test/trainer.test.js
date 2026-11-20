@@ -143,3 +143,29 @@ test('validation ray budgets change scan density while preserving plants and tra
   }
   await assert.rejects(buildDataset({...settings, validationRayBudget:-1}), /ray budget/);
 });
+
+test('plant coverage follows final crop returns through occlusion, dropout and clustered copies', async () => {
+  const {field} = await import('../trainer/field.js');
+  const {makeRecipe} = await import('../trainer/data.js');
+  const {getSensor} = await import('../trainer/sensors.js');
+  const recipe = makeRecipe(921, true, getSensor('os1-64'), 'tomato');
+  const clean = {...recipe, points:12000, boards:false, scanNoise:undefined};
+  const clear = field(clean);
+  const blocked = field({...clean, boards:true});
+  assert.ok(blocked.plantReturns.some((count,i) => count < clear.plantReturns[i]));
+  assert.ok(blocked.plantReturns.every((count,i) => count <= clear.plantReturns[i]));
+  const noisy = {...clean, boards:true, scanNoise:{seed:27, xy:1, z:1, density:24, gaps:4, stray:.35, cluster:18}};
+  const scan = field(noisy);
+  const bare = field({...noisy, ground:false});
+  assert.deepEqual(scan.plantReturns, bare.plantReturns);
+  for (const tile of [clear, blocked, scan, bare]) {
+    const counts = tile.plantReturns;
+    assert.equal(counts.length, tile.labels.boxes.length);
+    assert.equal(counts.reduce((a,b) => a+b, 0), tile.counts[1]);
+    assert.deepEqual(tile.coverage, {
+      zero:counts.filter(n => n === 0).length,
+      oneToFour:counts.filter(n => n > 0 && n < 5).length,
+      fiveOrMore:counts.filter(n => n >= 5).length
+    });
+  }
+});

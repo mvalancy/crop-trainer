@@ -51,18 +51,18 @@ rays(x,y,R*1.2,(i,dx,dy)=>{for(let a of L){let u=(dx*a.c+dy*a.s)/a.len;if(u<=0||
 for(let j=0;j<profile.rows;j++){let y=crop==='lettuce'?1.5+(j>>1)*2.1+(j%2)*.36:(j+.5)*sz/profile.rows,ph=r()*tau;
 const edge = crop==='lettuce' ? .25 : p.radius*1.45;
 for(let x=edge+r()*.12;x<(crop==='lettuce'?9.74:sz-edge);x+=p.spacing){if(r()<.05)continue;plant(x+(r()-.5)*.04,y+.035*Math.sin(x+ph)+(r()-.5)*.024,p.radius*(.8+.4*r()),false)}}
-let before=cls.slice(),oldIds=ids.slice();
+let before=cls.slice();
 if(p.weeds)for(let j=0;j<64;j++)plant(.2+o()*9.6,.2+o()*9.6,.08+.13*o(),true);
 if(p.sticks)for(let j=0;j<30;j++){let x=o()*10,y=o()*10,a=o()*tau,c=Math.cos(a),s=Math.sin(a),l=.15+.30*o(),w=.012+.018*o();rays(x,y,l+w,(i,dx,dy)=>{let u=c*dx+s*dy,v=-s*dx+c*dy;if(Math.abs(u)<l&&Math.abs(v)<w)hit(i,terrain(x+dx,y+dy)+w+Math.sqrt(w*w-v*v),3,0)})}
 if(p.boards)for(let j=0;j<9;j++){let [x,y]=centers[Math.floor(o()*centers.length)],a=o()*tau,c=Math.cos(a),s=Math.sin(a),l=.28+.30*o(),w=.09+.1*o();rays(x,y,l+w,(i,dx,dy)=>{let u=c*dx+s*dy,v=-s*dx+c*dy;if(Math.abs(u)<l&&Math.abs(v)<w)hit(i,terrain(x,y)+.34+.025*u,4,0)})}
-let lost=0,counts=[0,0,0,0,0];for(let i=0;i<n;i++){lost+=before[i]===1&&cls[i]!==1;counts[cls[i]]++;xyz[3*i+2]+=noise[i]}let outXYZ=xyz,outCls=cls, outputN=n;
+let lost=0,counts=[0,0,0,0,0];for(let i=0;i<n;i++){lost+=before[i]===1&&cls[i]!==1;counts[cls[i]]++;xyz[3*i+2]+=noise[i]}let outXYZ=xyz,outCls=cls,outIds=ids, outputN=n;
 let q=p.scanNoise, noiseActive=q&&['xy','z','density','gaps','stray','cluster'].some(k=>q[k]>0);
 if(noiseActive){
  const base=q.seed>>>0, stream=(salt)=>rng(base^salt), xy=stream(0x948765bc), zz=stream(0x35f620e4), den=stream(0x7caaf129), gap=stream(0xb910cd71), stray=stream(0xdab3a018);
  const cluster=stream(0x1f035610);
  const norm=(r)=>Math.sqrt(-2*Math.log(Math.max(1e-12,r())))*Math.cos(tau*r()), clip=(x)=>Math.min(9.99999,Math.max(0,x)), outliers=Math.round(n*q.stray/100);
  const ds=[den()*tau,den()*tau], centersGap=Array.from({length:4},()=>[gap()*sz,gap()*sz]), stripAt=1+8*gap(), stripAngle=gap()*tau, stripWave=gap()*tau, gc=Math.cos(stripAngle), gs=Math.sin(stripAngle), gapFraction=q.gaps/100, stripW=gapFraction*1.35, gapRadius=Math.sqrt(gapFraction*sz*sz*.72/(centersGap.length*Math.PI));
- outXYZ=new Float32Array((n+outliers)*3);outCls=new Uint8Array(n+outliers);outputN=0;counts=[0,0,0,0,0,0];
+ outXYZ=new Float32Array((n+outliers)*3);outCls=new Uint8Array(n+outliers);outIds=new Uint16Array(n+outliers);outputN=0;counts=[0,0,0,0,0,0];
  for(let i=0;i<n;i++){
    const x=xyz[i*3],y=xyz[i*3+1],z=xyz[i*3+2], coarse=(1+Math.sin(.76*x+.51*y+ds[0])*Math.sin(.39*x-.84*y+ds[1]))/2;
    const dx=q.xy?norm(xy)*q.xy/100:0,dy=q.xy?norm(xy)*q.xy/100:0,dz=q.z?norm(zz)*q.z/100:0;
@@ -72,7 +72,7 @@ if(noiseActive){
    outXYZ[v]=q.xy?clip(x+dx):x;
    outXYZ[v+1]=q.xy?clip(y+dy):y;
    outXYZ[v+2]=q.z?z+dz:z;
-   outCls[outputN-1]=cls[i];counts[cls[i]]++;
+   outIds[outputN-1]=ids[i];outCls[outputN-1]=cls[i];counts[cls[i]]++;
  }
  if(q.cluster&&outputN>1){
    const index=Uint32Array.from({length:outputN},(_,i)=>i), moved=Math.min(outputN-1,Math.round(outputN*q.cluster/100));
@@ -82,6 +82,7 @@ if(noiseActive){
      outXYZ[to*3]=clip(outXYZ[from*3]+Math.cos(a)*rad);
      outXYZ[to*3+1]=clip(outXYZ[from*3+1]+Math.sin(a)*rad);
      outXYZ[to*3+2]=outXYZ[from*3+2]+.002*(2*cluster()-1);
+     outIds[to]=outIds[from];
      counts[outCls[to]]--;outCls[to]=outCls[from];counts[outCls[to]]++;
    }
  }
@@ -90,6 +91,17 @@ if(noiseActive){
    outXYZ.set([x,y,terrain(x,y)+offset],3*outputN);outCls[outputN++]=5;counts[5]++;
  }
  outXYZ=outXYZ.slice(0,outputN*3);outCls=outCls.slice(0,outputN);
+}
+// Positive IDs follow the originating plant through dropout and clustered copies.
+const plantReturns = Array(boxes.length).fill(0);
+for (let i = 0; i < outputN; i++) {
+  if (outIds[i]) plantReturns[outIds[i] - 1]++;
+}
+const coverage = {zero: 0, oneToFour: 0, fiveOrMore: 0};
+for (const count of plantReturns) {
+  if (count === 0) coverage.zero++;
+  else if (count < 5) coverage.oneToFour++;
+  else coverage.fiveOrMore++;
 }
 let groundRemoved=0;
 if(p.ground===false){
@@ -102,4 +114,4 @@ if(p.ground===false){
  }
  outputN=keep;outXYZ=outXYZ.slice(0,3*keep);outCls=outCls.slice(0,keep);counts[0]=0;
 }
-let canonical=JSON.stringify(['crop-trainer-v1',...(crop==='lettuce'?[]:['crop-shape-v1',crop]),seed,n,sz,p.spacing,p.radius,8,.36,2.1,.04,.024,.05,.012,.004,!!p.weeds,!!p.sticks,!!p.boards,...(p.ground===false?['ground-removed-v1']:[]),...(active?['sensor-v1',sensor.key,sensor.pattern,nx,ny,sensor.along,sensor.across]:[]),...(noiseActive?['noise-v1',q.seed,q.xy,q.z,q.density,q.gaps,q.stray,...(q.cluster?['cluster-v1',q.cluster]:[])]:[])]);let hash=14695981039346656037n;for(let i=0;i<canonical.length;i++)hash=BigInt.asUintN(64,(hash^BigInt(canonical.charCodeAt(i)))*1099511628211n);let tile_id=hash.toString(16).padStart(16,'0');return {xyz:outXYZ,cls:outCls,counts,lost,groundRemoved,sampledRays:n,labels:{tile_id,crop,tile_size_m:[10,10],num_points:outputN,boxes},p}}
+let canonical=JSON.stringify(['crop-trainer-v1',...(crop==='lettuce'?[]:['crop-shape-v1',crop]),seed,n,sz,p.spacing,p.radius,8,.36,2.1,.04,.024,.05,.012,.004,!!p.weeds,!!p.sticks,!!p.boards,...(p.ground===false?['ground-removed-v1']:[]),...(active?['sensor-v1',sensor.key,sensor.pattern,nx,ny,sensor.along,sensor.across]:[]),...(noiseActive?['noise-v1',q.seed,q.xy,q.z,q.density,q.gaps,q.stray,...(q.cluster?['cluster-v1',q.cluster]:[])]:[])]);let hash=14695981039346656037n;for(let i=0;i<canonical.length;i++)hash=BigInt.asUintN(64,(hash^BigInt(canonical.charCodeAt(i)))*1099511628211n);let tile_id=hash.toString(16).padStart(16,'0');return {xyz:outXYZ,cls:outCls,counts,plantReturns,coverage,lost,groundRemoved,sampledRays:n,labels:{tile_id,crop,tile_size_m:[10,10],num_points:outputN,boxes},p}}

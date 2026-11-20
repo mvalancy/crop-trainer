@@ -10,7 +10,7 @@ Grow a virtual plot of lettuce, globe artichokes or young tomatoes, scan it with
 
 ## First harvest
 
-1. Open the farm and grow seed 27. Choose a crop and scanner. Drag the 3D scan to orbit, Shift-drag to pan, and scroll or pinch to zoom. The red rings mark the planted centers. Download the synthetic XYZ scan as a PLY file and its boxes as JSON.
+1. Open the farm and grow seed 27. Choose a crop and scanner. Drag the 3D scan to orbit, Shift-drag to pan, and scroll or pinch to zoom. Coral rings mark plants with crop returns. Gold crosses mark plants with none. Download the synthetic XYZ scan as a PLY file and its boxes as JSON.
 2. Enter the training shed and choose **Generate, train & score**. The defaults train a small neural net on six fields and check it on three unseen fields. Each field is scanned with and without ground. Auto uses WebGPU when the browser finds an adapter. CPU works locally too.
 3. Inspect the lowest-recall field. Switch the map between all height peaks, score-passing peaks and final detections. Green rings mark labels and red dots mark the selected detector stage.
 4. Export the benchmark, then change one setting. Complete a mixed scan run, try another seed, and finish a cutoff benchmark to earn farm journal stamps. Progress is stored in this browser.
@@ -102,6 +102,32 @@ On tomato seed 721, more rays raised the number of labeled plant instances match
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | 12,000 | 1,746 ms | 78 ms | 30 ms | 0.4158 | 0.4929 | 0.4970 |
 | 60,000 | 2,260 ms | 95 ms | 36 ms | 0.8865 | 0.9335 | 0.9375 |
+
+### Did the scan see the plants the detector missed?
+
+The generator records which plant supplied each surviving crop return. In the 3D viewer, turn on **Label centers** to see gold crosses on plants with zero crop returns. The Training Shed shows the same coverage counts beside the detection stages for each field. A return can land on a leaf far from the center. Conversely, a nearby weed can produce a peak within the scoring distance of a plant that supplied no returns.
+
+```mermaid
+flowchart LR
+  A[Sample the tallest surface on each ray] --> B[Apply dropout, jitter, clustered copies and strays]
+  B --> C[Count surviving crop returns by planted instance]
+  B --> D[Extract peaks from XYZ]
+  D --> E[Score peaks and filter nearby pins]
+  C --> F[Inspect coverage beside matches for this field]
+  E --> F
+```
+
+We grew three validation fields at each of two dataset seeds, 921 and 922, and scanned each planting at both ray budgets on the simulated OS1-64. The table counts each plant once using soil-present scans. Each crop and seed used the same mixed training fields and fitted weights at both budgets. Matches use the neural detector at 15 cm after 40 CPU epochs and a 0.50 cutoff.
+
+| Crop | Planted | Plants with zero returns, 12k → 60k rays | Plants with 1–4 returns, 12k → 60k | Final matches, 12k → 60k |
+| --- | ---: | ---: | ---: | ---: |
+| Lettuce | 1,352 | 35 → 21 | 308 → 18 | 1,023 → 1,309 |
+| Globe artichoke | 200 | 0 → 0 | 1 → 0 | 168 → 195 |
+| Young tomato | 658 | 23 → 15 | 210 → 8 | 343 → 628 |
+
+At 12,000 rays the tomato detector missed 315 plants. At least 292 of those misses had one or more crop returns. The score cutoff reduced matched plants from 580 candidate matches to 345, and spacing reduced that to 343. Coverage describes this synthetic overhead renderer. Pheno4D reports missing surface measurements from occlusion even when its operators scanned individual plants from several views. [Inspect tomato seed 921](https://mvalancy.github.io/crop-trainer/trainer/?crop=tomato&seed=921&sensor=mixed&validationSensor=os1-64&validationRayBudget=12000&engine=cpu) · [Pheno4D measurement study](https://doi.org/10.1371/journal.pone.0256340)
+
+On seed 921 the browser CPU and software WebGPU backends produced the same tomato F1 scores across both soil settings at 12,000 rays. F1 was 0.5606 at 7.5 cm, 0.6655 at 10 cm and 0.7251 at 15 cm. Shared generation took 1,685 ms. CPU training and validation took 134 and 43 ms. SwiftShader training and CPU validation took 1,502 and 10 ms in this run. Physical GPU timing requires a hardware adapter. [Replay the backend comparison](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=backend&crop=tomato&seed=921&sensor=mixed&validationSensor=os1-64&validationRayBudget=12000)
 
 ### Which model finds plants in a sparse scan?
 

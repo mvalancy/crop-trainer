@@ -1,7 +1,7 @@
-import {field} from './trainer/field.js?v=rays1';
-import {makeRecipe} from './trainer/data.js?v=rays1';
+import {field} from './trainer/field.js?v=coverage1';
+import {makeRecipe} from './trainer/data.js?v=coverage1';
 import {getSensor, sensorOptions, sensorDetails, rayBudgetOptions} from './trainer/sensors.js?v=rays1';
-import {createViewer} from './viewer.js';
+import {createViewer} from './viewer.js?v=coverage1';
 
 const $ = id => document.getElementById(id);
 const viewer = createViewer($('map'), {
@@ -76,6 +76,8 @@ function grow() {
   previousRayTrial = {key:trialKey, sampledRays:scan.sampledRays};
   $('count').textContent = scan.labels.boxes.length+' '+crop+' plants · '+recipe.points.toLocaleString()+' rays requested · '+scan.sampledRays.toLocaleString()+' sampled · '+scan.cls.length.toLocaleString()+' returns · seed '+recipe.seed;
   $('scanId').textContent = scan.labels.tile_id;
+  const {zero, oneToFour, fiveOrMore} = scan.coverage;
+  $('plantCoverage').textContent = zero+' plants with zero crop returns · '+oneToFour+' with 1–4 · '+fiveOrMore+' with 5 or more';
   const bins=['Soil','Crop','Weeds','Sticks','Boards','Stray'];
   $('readouts').replaceChildren(...bins.map((name,i)=>{
     const entry=document.createElement('div'), term=document.createElement('dt'), count=document.createElement('dd');
@@ -91,7 +93,7 @@ function download(parts, extension) {
   const link=document.createElement('a'),url=URL.createObjectURL(new Blob(parts));
   link.href=url;link.download=scan.labels.tile_id+extension;link.click();setTimeout(()=>URL.revokeObjectURL(url),10000);
 }
-$('labels').onclick=()=>download([JSON.stringify(scan.labels,null,2)],'.labels.json');
+$('labels').onclick=()=>download([JSON.stringify({...scan.labels, crop_returns_per_box:scan.plantReturns},null,2)],'.labels.json');
 $('recipe').onclick=()=>download([JSON.stringify({generator:'crop-trainer-v1',tile_id:scan.labels.tile_id,recipe:scan.p},null,2)],'.recipe.json');
 $('ply').onclick=()=>{
   const bytes=new DataView(new ArrayBuffer(scan.xyz.byteLength));

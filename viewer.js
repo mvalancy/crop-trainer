@@ -68,10 +68,20 @@ export function createViewer(canvas, controls) {
       context.fillRect(ox+projected[j]*scale,oy+projected[j+1]*scale,size,size);
     }
     if(controls.pins.checked){
-      context.strokeStyle='#ff8769';context.lineWidth=1.5;
-      for(const {min,max} of scan.labels.boxes){
+      context.lineWidth=1.5;
+      for(const [index, {min,max}] of scan.labels.boxes.entries()){
         const [px,py]=project((min[0]+max[0])/2,(min[1]+max[1])/2,max[2]);
-        context.beginPath();context.arc(ox+px*scale,oy+py*scale,clamp(scale*.07,2,6),0,2*Math.PI);context.stroke();
+        const x = ox+px*scale, y = oy+py*scale, radius = clamp(scale*.07,2,6);
+        context.beginPath();
+        if (scan.plantReturns[index] === 0) {
+          context.strokeStyle = '#ffdd75';
+          context.moveTo(x-radius, y-radius); context.lineTo(x+radius, y+radius);
+          context.moveTo(x-radius, y+radius); context.lineTo(x+radius, y-radius);
+        } else {
+          context.strokeStyle = '#ff8769';
+          context.arc(x, y, radius, 0, 2*Math.PI);
+        }
+        context.stroke();
       }
     }
     if(spinning)schedule();
