@@ -264,3 +264,27 @@ test('count error measures each scan before averaging and is independent of pin 
   assert.equal(exact.meanF1, 0);
   assert.equal(exact.byGround[1].countError, null);
 });
+
+test('the soil pair preserves each surviving non-soil return in acquisition order', async () => {
+  const {field} = await import('../trainer/field.js');
+  const {makeRecipe} = await import('../trainer/data.js');
+  const {getSensor} = await import('../trainer/sensors.js');
+  const recipe = makeRecipe(1652, true, getSensor('os1-64'), 'tomato');
+  Object.assign(recipe, {points:12000, weeds:true, boards:true, sticks:true});
+  Object.assign(recipe.scanNoise, {xy:1, z:1, density:12, gaps:2, stray:.2, cluster:14});
+  const full = field(recipe);
+  const bare = field({...recipe, ground:false});
+  assert.notEqual(full.labels.tile_id, bare.labels.tile_id);
+  assert.deepEqual(full.labels.boxes, bare.labels.boxes);
+  assert.deepEqual(full.plantReturns, bare.plantReturns);
+  assert.ok(bare.groundRemoved > 0);
+  assert.equal(full.cls.length - bare.cls.length, bare.groundRemoved);
+  let kept = 0;
+  for (const [i, type] of full.cls.entries()) {
+    if (type === 0) continue;
+    assert.equal(bare.cls[kept], type);
+    for (let axis = 0; axis < 3; axis++) assert.equal(bare.xyz[3*kept+axis], full.xyz[3*i+axis]);
+    kept++;
+  }
+  assert.equal(kept, bare.cls.length);
+});

@@ -113,14 +113,17 @@ $('missBox').addEventListener('change', () => {
 });
 $('missDistance').addEventListener('change',showField);
 $('overlayStage').addEventListener('change',showField);
+function scanViewerLink(tile) {
+ const scanQuery = new URLSearchParams({crop:tile.crop, seed:tile.seed, sensor:tile.sensor, ground:tile.ground, tile:tile.tile_id});
+ if (auditRayBudget) scanQuery.set('budget', auditRayBudget);
+ return '../?'+scanQuery+'#field';
+}
 function showStages(){
  const tile=auditTiles[Number($('auditField').value)];
  if(!tile)return;
  const totals=tile.byTolerance.at(-1);
  const labels=totals.tp+totals.fn;
- const scanQuery = new URLSearchParams({crop:tile.crop, seed:tile.seed, sensor:tile.sensor, ground:tile.ground, tile:tile.tile_id});
- if (auditRayBudget) scanQuery.set('budget', auditRayBudget);
- $('inspectScan').href = '../?'+scanQuery+'#field';
+ $('inspectScan').href = scanViewerLink(tile);
  $('scanCounts').textContent = tile.requestedRays.toLocaleString()+' rays requested · '+tile.sampledRays.toLocaleString()+' sampled · '+tile.returnCount.toLocaleString()+' scan returns · '+labels+' labeled plants · tile '+tile.tile_id;
  const pins = totals.tp + totals.fp;
  const delta = pins - labels;
@@ -149,7 +152,7 @@ function clear(){
  $('charts').hidden = false;
  $('groundStudy').hidden = true;
  $('groundStudy').open = false;
- $('soilMetric').value = 'recall';
+
  $('missControls').hidden = true; $('missDistance').value = '15'; $('missBox').replaceChildren();
  $('harvest').textContent='';auditTiles=[];fieldViews.clear();$('overlayStage').value='selected';$('stageAudit').hidden=true;
  losses=[];lastPreview=null;lastRun=null;lastPaint=0;$('downloadRun').hidden=true;$('downloadSettings').hidden=true;$('benchmark').hidden=true;$('exportText').hidden=true;$('exportText').open=false;$('reportText').value='';$('copyReport').textContent='Copy JSON';
@@ -221,43 +224,73 @@ function pickScore(scores,key,index){
  const x=Array.isArray(scores)?scores[index]:scores?.[key]??scores?.[String(key*100)]??scores?.[String(key*100)+'cm'];
  return typeof x==='number'?x:x?.f1??x?.fScore;
 }
-function displayGroundStudy(byGround) {
+const requestedSoilMetric = params.get('soilMetric');
+if ([...$('soilMetric').options].some(option => option.value === requestedSoilMetric)) {
+ $('soilMetric').value = requestedSoilMetric;
+}
+
+function displayGroundStudy({byGround, tiles}) {
  const present = byGround.find(group => group.ground);
  const removed = byGround.find(group => !group.ground);
  const count = present.tileCount;
  $('groundSummary').textContent = 'Both columns use the same fitted model and the same '+count+' held-out '+(count === 1 ? 'field' : 'fields')+'.';
  const metric = $('soilMetric').value;
+ const isCount = metric === 'meanAbsolute' || metric === 'meanSigned';
  const descriptions = {
   recall: 'Recall measures the share of labeled plants the detector found.',
   precision: 'Precision measures the share of predicted centers that matched a plant.',
-  f1: 'F1 is the harmonic mean of precision and recall.'
+  f1: 'F1 is the harmonic mean of precision and recall.',
+  meanAbsolute: 'Distance between the final pin count and the labeled plant count. A negative change means removing soil improved the count.',
+  meanSigned: 'Final pins minus labeled plants. A positive number means overcounting. The change shows how many pins soil removal added or removed per scan.'
  };
  $('soilMetricHelp').textContent = descriptions[metric];
- const rows = present.scores.map((score, index) => {
-  const other = removed.scores[index];
-  const change = (other[metric] - score[metric]) * 100;
-  const row = document.createElement('tr');
-  const distance = document.createElement('th');
-  distance.scope = 'row';
-  distance.textContent = score.cm+' cm';
-  row.append(distance);
-  for (const value of [(score[metric]*100).toFixed(1)+'%', (other[metric]*100).toFixed(1)+'%', (change > 0 ? '+' : '')+change.toFixed(1)+' pp']) {
-   const cell = document.createElement('td');
-   cell.textContent = value;
-   row.append(cell);
+ $('soilRowHeading').textContent = isCount ? 'Field seed' : 'Match distance';
+ const values = [];
+ if (isCount) {
+  const bareBySeed = new Map(tiles.filter(tile => !tile.ground).map(tile => [tile.seed, tile]));
+  const error = tile => {
+   const {fp, fn} = tile.byTolerance[0];
+   return metric === 'meanAbsolute' ? Math.abs(fp - fn) : fp - fn;
+  };
+  for (const tile of tiles.filter(tile => tile.ground)) {
+   values.push([String(tile.seed), error(tile), error(bareBySeed.get(tile.seed)), tile]);
   }
-  return row;
- });
- $('groundRows').replaceChildren(...rows);
+  values.push(['Mean per scan', present.countError[metric], removed.countError[metric]]);
+ } else {
+  present.scores.forEach((score, i) => values.push([score.cm+' cm', 100*score[metric], 100*removed.scores[i][metric]]));
+ }
+ const body = $('groundRows');
+ body.replaceChildren();
+ for (const [label, withSoil, withoutSoil, tile] of values) {
+  const row = body.insertRow();
+  const heading = document.createElement('th');
+  heading.scope = 'row';
+  if (tile) {
+   const link = document.createElement('a');
+   link.href = scanViewerLink(tile);
+   link.textContent = label;
+   link.target = '_blank';
+   link.rel = 'noopener';
+   link.setAttribute('aria-label', 'Inspect planting '+label+' in 3D (new tab)');
+   heading.append(link);
+  } else heading.textContent = label;
+  row.append(heading);
+  const change = withoutSoil - withSoil;
+  const digits = isCount && label !== 'Mean per scan' ? 0 : 1;
+  for (const value of [withSoil, withoutSoil]) row.insertCell().textContent = value.toFixed(digits)+(isCount ? '' : '%');
+  row.insertCell().textContent = (change > 0 ? '+' : '')+change.toFixed(digits)+(isCount ? '' : ' pp');
+ }
+ $('soilUnits').textContent = isCount ? 'Counts are in plants per scan. Select a field seed to compare its scans in the 3D viewer.' : 'Changes are in percentage points.';
  $('groundStudy').hidden = false;
 }
 $('soilMetric').addEventListener('change', () => {
- if (lastRun) displayGroundStudy(lastRun.byGround);
+ if (lastRun) displayGroundStudy(lastRun);
 });
 function display(v,threshold,validationRayBudget){
  auditRayBudget=validationRayBudget;
  auditThreshold=threshold;
- displayGroundStudy(v.byGround);
+ displayGroundStudy(v);
+ if (requestedSoilMetric === $('soilMetric').value) $('groundStudy').open = true;
  for(const [i,k,id] of [[0,.075,'s75'],[1,.10,'s10'],[2,.15,'s15']]){
   const x=pickScore(v?.scores??v?.metrics??v,i===0?.075:k,i);
   if(Number.isFinite(x))$(id).textContent=(x*100).toFixed(1)+'%';

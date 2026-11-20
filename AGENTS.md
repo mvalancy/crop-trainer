@@ -89,6 +89,10 @@ Each completed Training Shed or CLI report includes `byGround`. Each benchmark r
 
 For an example, train artichoke on seed 308 with the defaults. Subtract ground-present recall from ground-removed recall at 15 cm and multiply by 100 for percentage points. Check the false positives at the same distance. To investigate a specific field, pair tiles by seed and switch soil settings in the field audit. Each pair shares one planting, its labels, scan layout and fitted weights. Report the number of distinct validation fields. Synthetic soil removal uses generator class labels.
 
+To compare counts, open the Training Shed with `soilMetric=meanAbsolute` or `meanSigned`. An explicit selection opens the soil table after training. Choose a planting seed to open its soil-present scan. **View without soil** generates the paired tile from the applied recipe, keeps the camera and box selection, and updates the download and sharing controls. Pending edits to other generator settings take effect with **Grow and scan**. Toggle back to verify the original tile ID.
+
+In reports, compare `byGround[].countError.meanAbsolute` for the two ground flags. A negative change (removed minus present) means more accurate counts. For a planting, pair the two tiles by field seed and compute `abs(fp - fn)` per tile at any tolerance. Use signed error to distinguish an undercount from an overcount. Keep model and dataset seed in the grouping key when comparing exported runs. [Replay lettuce seed 1652](https://mvalancy.github.io/crop-trainer/trainer/?crop=lettuce&seed=1652&sensor=mixed&validationSensor=os1-64&validationRayBudget=12000&engine=cpu&soilMetric=meanAbsolute)
+
 ### Check whether a model gain holds across plantings
 
 Open the CPU model benchmark, choose a crop and seed, then expand **Compare contenders on each planting**. For automation, each benchmark row includes `byField`. Match rows by dataset seed and model name, then match their field groups by field seed. Contender execution order reverses on the second dataset seed. Check that the two sets of tile IDs are identical before comparing models.

@@ -29,19 +29,6 @@ if (requested.get('ground') === 'false') $('ground').checked = false;
 $('scan').onchange = () => { $('sensorInfo').textContent = sensorDetails($('scan').value); };
 $('scan').onchange();
 
-function updateScanLink() {
-  const url = new URL('./', location.href);
-  for (const [id, key] of replaySelects) url.searchParams.set(key, $(id).value);
-  url.searchParams.set('seed', scan.p.seed);
-  url.searchParams.set('ground', scan.p.ground);
-  url.searchParams.set('budget', $('budget').value);
-  url.searchParams.set('tile', scan.labels.tile_id);
-  url.hash = 'field';
-  $('scanLink').href = url.href;
-  $('copyScan').disabled = false;
-  $('shareStatus').textContent = '';
-}
-
 $('copyScan').onclick = async () => {
   const href = $('scanLink').href;
   let message;
@@ -63,7 +50,7 @@ function updateBoxLink() {
 }
 $('highlight').addEventListener('change', updateBoxLink);
 
-function grow(initialBox) {
+function grow() {
   const crop = $('crop').value;
   const sensor = getSensor($('scan').value);
   const recipe = makeRecipe(Number($('seed').value), $('ground').checked, sensor, crop);
@@ -74,19 +61,30 @@ function grow(initialBox) {
   } else if ($('noise').value === 'rough') {
     Object.assign(recipe.scanNoise,{xy:1.1,z:1.2,density:24,gaps:4,stray:.35,cluster:18});
   }
-  const previousTile = scan?.labels.tile_id;
-  const previousBox = $('highlight').value;
+  const url = new URL('./', location.href);
+  for (const [id, key] of replaySelects) url.searchParams.set(key, $(id).value);
+  url.searchParams.set('budget', $('budget').value);
+  const previous = scan ? new URL($('scanLink').href) : new URL(location.href);
+  showScan(recipe, url, previous.searchParams.get('box'), previous.searchParams.get('tile'));
+}
+
+// The URL carries the applied scan settings, even while the form has pending edits.
+function showScan(recipe, url, selectedBox, expectedTile) {
   scan = field(recipe);
   const choices = scan.plantReturns.map((returns, box) => new Option('Box '+box+' · '+returns+' crop returns', String(box)));
   $('highlight').replaceChildren(new Option('None', ''), ...choices);
-  const matchesRequestedTile = !requested.has('tile') || requested.get('tile') === scan.labels.tile_id;
-  let selectedBox = previousTile === scan.labels.tile_id ? previousBox : '';
-  if (initialBox != null && matchesRequestedTile) selectedBox = initialBox;
-  if (/^\d+$/.test(selectedBox) && Number(selectedBox) < choices.length) {
+  if ((!expectedTile || expectedTile === scan.labels.tile_id) && /^\d+$/.test(selectedBox) && Number(selectedBox) < choices.length) {
     $('highlight').value = String(Number(selectedBox));
   }
   viewer.setScan(scan);
-  updateScanLink();
+  url.searchParams.set('seed', recipe.seed);
+  url.searchParams.set('ground', recipe.ground);
+  url.searchParams.set('tile', scan.labels.tile_id);
+  url.hash = 'field';
+  $('scanLink').href = url.href;
+  $('copyScan').disabled = false;
+  $('switchSoil').disabled = false;
+  $('switchSoil').textContent = recipe.ground ? 'View without soil' : 'View with soil';
   updateBoxLink();
   const trialKey = JSON.stringify({...recipe, points:undefined});
   if (previousRayTrial?.key === trialKey && previousRayTrial.sampledRays !== scan.sampledRays) {
@@ -94,7 +92,7 @@ function grow(initialBox) {
     journal();
   }
   previousRayTrial = {key:trialKey, sampledRays:scan.sampledRays};
-  $('count').textContent = scan.labels.boxes.length+' '+crop+' plants · '+recipe.points.toLocaleString()+' rays requested · '+scan.sampledRays.toLocaleString()+' sampled · '+scan.cls.length.toLocaleString()+' returns · seed '+recipe.seed;
+  $('count').textContent = scan.labels.boxes.length+' '+recipe.crop+' plants · '+recipe.points.toLocaleString()+' rays requested · '+scan.sampledRays.toLocaleString()+' sampled · '+scan.cls.length.toLocaleString()+' returns · '+(recipe.ground ? 'soil included' : 'soil removed')+' · seed '+recipe.seed;
   $('scanId').textContent = scan.labels.tile_id;
   const {zero, oneToFour, fiveOrMore} = scan.coverage;
   $('plantCoverage').textContent = zero+' plants with zero crop returns · '+oneToFour+' with 1–4 · '+fiveOrMore+' with 5 or more';
@@ -103,11 +101,17 @@ function grow(initialBox) {
     const entry=document.createElement('div'), term=document.createElement('dt'), count=document.createElement('dd');
     term.textContent=name; count.textContent=(scan.counts[i]||0).toLocaleString();entry.append(term,count);return entry;
   }));
-  const training = new URLSearchParams({crop,sensor:sensor.key});
-  if (Number($('budget').value)) training.set('validationRayBudget', $('budget').value);
+  const training = new URLSearchParams({crop:recipe.crop,sensor:recipe.sampling.key});
+  const budget = url.searchParams.get('budget');
+  if (Number(budget)) training.set('validationRayBudget', budget);
   $('trainLayout').href = 'trainer/?'+training;
   $('ply').disabled=$('labels').disabled=$('recipe').disabled=false;
 }
+$('switchSoil').onclick = () => {
+  const recipe = {...scan.p, ground:!scan.p.ground};
+  $('ground').checked = recipe.ground;
+  showScan(recipe, new URL($('scanLink').href), $('highlight').value);
+};
 $('grow').onsubmit = event => { event.preventDefault(); grow(); };
 function download(parts, extension) {
   const link=document.createElement('a'),url=URL.createObjectURL(new Blob(parts));
@@ -130,7 +134,7 @@ function journal(){
 }
 window.addEventListener('pageshow', journal);
 window.addEventListener('storage', journal);
-grow(requested.get('box'));
+grow();
 const expectedTile = requested.get('tile');
 if (/^[0-9a-f]{16}$/.test(expectedTile) && scan.labels.tile_id !== expectedTile) {
   $('shareStatus').textContent = 'This link expected tile ' + expectedTile + '. These settings generated ' + scan.labels.tile_id + '.';

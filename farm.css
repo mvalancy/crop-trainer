@@ -104,7 +104,7 @@ fieldset { min-width: 0; border: 0; padding: 0; margin: 0; }
 .plot > :not(.viewer, .plotHead) { margin-inline: clamp(.9rem, 1.8vw, 1.45rem); }
 .viewTools { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); align-items: end; gap: .6rem; padding-block: 1rem .6rem; }
 .viewTools label { font-size: .8rem; }
-.viewTools .check { grid-column: 1/-1; }
+.scanLayers { grid-column: 1/-1; display: flex; flex-wrap: wrap; align-items: center; gap: .65rem 1.25rem; }
 .cameraHelp { border: 0; border-bottom: 1px solid var(--line); border-radius: 0; padding: .4rem 0 1rem; }
 #count { font-size: .92rem; font-weight: 590; }
 .readouts, .bench, .cards { display: grid; grid-template-columns: repeat(6,minmax(0,1fr)); gap: .45rem; font-variant-numeric: tabular-nums; }

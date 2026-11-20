@@ -278,6 +278,29 @@ flowchart LR
 
 On four fresh seeds (307, 308, 337 and 338), removing soil increased lettuce recall at 15 cm by 2.5 to 15.1 percentage points. Each run used mixed layouts, six training fields, three held-out plantings and 40 neural epochs. On artichoke seed 308, removing soil recovered four more plants (77 of 95 versus 73 of 95) and produced 50 additional false positives (54 versus 4). Precision fell from 94.8% to 58.8%. The generator knows which points are soil. A real ground filter must estimate that from measurements and can discard crop returns. [Repeat the artichoke experiment](https://mvalancy.github.io/crop-trainer/trainer/?crop=artichoke&seed=308) · [Zhang et al., cloth simulation for airborne LiDAR filtering](https://doi.org/10.3390/rs8060501)
 
+#### Does soil removal improve the plant count?
+
+Choose **Plant count · absolute error** in the Training Shed’s soil comparison. Each row compares final pin counts against the same planting’s labels with soil present and removed. Select a field seed, then use **View without soil** or **View with soil** in the 3D viewer. The camera and highlighted plant stay in place. The scan link, PLY, labels and recipe follow the displayed version. [Replay the lettuce count comparison](https://mvalancy.github.io/crop-trainer/trainer/?crop=lettuce&seed=1652&sensor=mixed&validationSensor=os1-64&validationRayBudget=12000&engine=cpu&soilMetric=meanAbsolute)
+
+With simulated OS1-64 validation scans at 12,000 rays, removing soil reduced mean absolute counting error in 19 of 24 comparisons. Each crop used four dataset seeds (1621, 1622, 1651 and 1652), six mixed-layout training fields, three held-out plantings per seed, and both logistic and neural CPU fits at 40 epochs and cutoff 0.50. Each fit scored both soil variants. The two models share the same fields, so each crop contributes 12 distinct validation plantings.
+
+| Crop | Comparisons with lower count error after soil removal | Comparisons with higher error |
+| --- | ---: | ---: |
+| Lettuce | 5 | 3 |
+| Globe artichoke | 6 | 2 |
+| Young tomato | 8 | 0 |
+
+On lettuce seed 1652, neural counting error rose from **35.3 to 92.3 plants per scan**. In the first planting, removing soil recovered 17 additional matches at 15 cm and added 50 extra pins. F1 across the three plantings at 7.5, 10 and 15 cm was 0.573, 0.697 and 0.767 with soil, and 0.574, 0.709 and 0.763 without soil. The CPU run spent 2,955 ms generating, 100 ms fitting and 71 ms validating both variants. The simulator drops points with known soil labels. A field scanner would need an estimated ground surface. [Inspect this planting](https://mvalancy.github.io/crop-trainer/?crop=lettuce&sensor=os1-64&budget=12000&seed=3334967749&ground=true&tile=643c5ba37dabe474#field)
+
+```mermaid
+flowchart LR
+  A[One labeled planting] --> B[Scan with soil]
+  B --> C[Remove soil returns by class]
+  B --> D[Apply the fitted detector]
+  C --> D
+  D --> E[Compare pin counts with the same plant labels]
+```
+
 ## Benchmark
 
 Open **Benchmark** to compare CPU and WebGPU on the same neural model, or compare logistic and neural models on CPU. Both comparisons use two seeds and reverse contender order for the second seed. Two more modes compare detection cutoffs on one fit or compare independent 10-, 40- and 100-epoch fits. The results include generation, training and scoring time, F1, and precision and recall. Download JSON for per-tolerance counts and per-field stages. Expand the distance table to see exact matches, extra pins and missed plants. Each WebGPU row in the JSON includes the adapter information exposed by the browser. To repeat the benchmark on another device, use the same app revision, crop, scanner and first seed. [Open Benchmark](https://mvalancy.github.io/crop-trainer/benchmark/)

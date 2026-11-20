@@ -78,14 +78,14 @@
 <details id="groundStudy" class="peakHelp" hidden="">
 <summary>Compare scans with and without soil</summary>
 <p id="groundSummary"></p>
-<label>Metric <select id="soilMetric"><option value="recall">Recall</option><option value="precision">Precision</option><option value="f1">F1</option></select></label>
+<label>Metric <select id="soilMetric"><option value="recall">Recall</option><option value="precision">Precision</option><option value="f1">F1</option><option value="meanAbsolute">Plant count · absolute error</option><option value="meanSigned">Plant count · signed error</option></select></label>
 <p id="soilMetricHelp" class="fine"></p>
 <div class="tableScroll">
 <table>
 <thead>
-<tr><th scope="col">Match distance</th><th scope="col">With soil</th><th scope="col">Soil removed</th><th scope="col">Change</th></tr></thead>
+<tr><th scope="col" id="soilRowHeading">Match distance</th><th scope="col">With soil</th><th scope="col">Soil removed</th><th scope="col">Change</th></tr></thead>
 <tbody id="groundRows"></tbody></table></div>
-<p>The generator removes known soil points from each scan. The change is measured in percentage points. A positive value means the selected metric rose after removal.</p>
+<p>The generator removes known soil points from each scan. <span id="soilUnits">Changes are in percentage points.</span></p>
 </details>
 <div id="stageAudit" hidden="">
 <h2>Where centers disappear</h2>
@@ -120,6 +120,6 @@
 </main>
 <footer class="siteFoot"><span>Crop Trainer</span>
 <div><a href="../AGENTS.md">Agent quickstart</a><a href="https://github.com/mvalancy/crop-trainer">GitHub</a><a href="../LICENSE">MIT license</a></div></footer>
-<script type="module" src="./main.js?v=count1"></script>
+<script type="module" src="./main.js?v=soilpair2"></script>
 </body>
 </html>

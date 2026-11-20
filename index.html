@@ -4,7 +4,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Crop Trainer · The procedural farm</title>
 <meta name="description" content="Generate crop LiDAR scans, explore them in 3D, and train crop detectors locally with CPU or WebGPU.">
-<link rel="stylesheet" href="farm.css?v=fieldstudio1"></head>
+<link rel="stylesheet" href="farm.css?v=soilpair2"></head>
 <body class="farm"><a class="skip" href="#main">Skip to content</a>
 <header class="siteBar">
 <div class="barInner"><a class="brand" href="./"><span class="mark" aria-hidden="true"><i></i></span>Crop Trainer</a>
@@ -38,7 +38,7 @@
 <label>Camera<select id="view"><option value="oblique">Oblique</option><option value="top">Top down</option><option value="side">Side</option><option value="custom" disabled="">Free orbit</option></select></label>
 <label>Color by<select id="color"><option value="class">Return class</option><option value="height">Elevation</option></select></label>
 <label>Highlight plant<select id="highlight"><option value="">None</option></select></label>
-<label class="check"><input id="pins" type="checkbox" checked=""> Label centers</label></div>
+<div class="scanLayers"><label class="check"><input id="pins" type="checkbox" checked=""> Label centers</label><button type="button" id="switchSoil" disabled>View without soil</button></div></div>
 <details class="cameraHelp">
 <summary>Camera controls</summary>
 <p class="hint" id="cameraHelp">Drag to orbit. Shift-drag or right-drag to pan. Scroll to zoom. On touch, use two fingers to pan and pinch. With the canvas focused, arrow keys rotate, Shift + arrows pan, + / − zoom, and R resets.</p></details>
@@ -102,6 +102,6 @@
 </main>
 <footer class="siteFoot"><span>Crop Trainer</span>
 <div><a href="AGENTS.md">Agent quickstart</a><a href="https://github.com/mvalancy/crop-trainer">GitHub</a><a href="LICENSE">MIT license</a></div></footer>
-<script type="module" src="farm.js?v=fieldstudio1"></script>
+<script type="module" src="farm.js?v=soilpair2"></script>
 </body>
 </html>
