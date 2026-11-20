@@ -23,17 +23,17 @@ $('scanner').addEventListener('change', describeScanner);
 describeScanner();
 function updateBenchmarkLinks() {
  const seed = $('seed').valueAsNumber;
- const query = new URLSearchParams({crop:$('crop').value, sensor:$('scanner').value, seed});
- if ($('validationSensor').value !== 'follow') query.set('validationSensor', $('validationSensor').value);
+ const validSeed = Number.isInteger(seed) && seed >= 0 && seed < 0xffffffff;
  for (const [id, comparison] of [['cutoffBench', 'cutoffs'], ['epochBench', 'epochs']]) {
+  const query = new URLSearchParams({comparison, crop:$('crop').value, sensor:$('scanner').value, seed});
+  if ($('validationSensor').value !== 'follow') query.set('validationSensor', $('validationSensor').value);
   const link = $(id);
-  link.hidden = !Number.isInteger(seed) || seed < 0 || seed >= 0xffffffff;
-  query.set('comparison', comparison);
+  link.hidden = !validSeed || (comparison === 'cutoffs' && !$('epochs').validity.valid);
+  if (comparison === 'cutoffs') query.set('epochs', $('epochs').value);
   link.href = '../benchmark/?'+query;
  }
 }
-for (const id of ['crop','scanner','validationSensor','seed']) $(id).addEventListener('input', updateBenchmarkLinks);
-updateBenchmarkLinks();
+for (const id of ['crop','scanner','validationSensor','seed','epochs']) $(id).addEventListener('input', updateBenchmarkLinks);
 let controller=null,losses=[],lastPreview=null,backendReady=false,deps,webgpuAvailable=false,lastRun=null,lastPaint=0;
 try {
  deps=await Promise.all([import('./data.js?v=soil1'),import('./model.js?v=benchmark1'),import('./neural.js')]);
@@ -42,6 +42,11 @@ try {
  if (/^\d+$/.test(epochsParam) && Number(epochsParam) >= 1 && Number(epochsParam) <= deps[1].MAX_EPOCHS) {
   $('epochs').value = Number(epochsParam);
  }
+ const thresholdParam = params.get('threshold');
+ if (thresholdParam?.trim() && Number.isFinite(Number(thresholdParam)) && Number(thresholdParam) >= 0 && Number(thresholdParam) <= 1) {
+  $('threshold').value = Number(thresholdParam);
+ }
+ updateBenchmarkLinks();
  if (params.get('engine') === 'cpu') $('engine').value = 'cpu';
  $('train').max=deps[0].FIELD_LIMITS.train;
  $('validation').max=deps[0].FIELD_LIMITS.validation;
