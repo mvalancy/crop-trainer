@@ -244,3 +244,23 @@ test('alternating training budgets keep soil variants together and leave validat
   }
   await assert.rejects(buildDataset({validationRayBudget:'alternating'}), /validation ray budget/);
 });
+
+test('count error measures each scan before averaging and is independent of pin assignment', async () => {
+  const scan = {
+    seed:1, ground:true, tile_id:'over', recipe:{crop:'lettuce', sampling:{key:'reference'}},
+    truth:[[0,0]], pos:[[1,1],[2,2]], X:new Float32Array(2)
+  };
+  const bare = {...scan, ground:false, tile_id:'under', pos:[], X:new Float32Array(0)};
+  const result = await validateModel({dims:1, validation:[scan,bare]}, [], {
+    predictScores:x => new Float32Array(x.length).fill(1)
+  });
+  assert.deepEqual(result.countError, {meanAbsolute:1, meanSigned:0});
+  assert.deepEqual(result.byField[0].countError, result.countError);
+  assert.deepEqual(result.byGround.map(group => group.countError.meanSigned), [1,-1]);
+  const exact = await validateModel({dims:1, validation:[{...scan, truth:[[3,3],[4,4]]}]}, [], {
+    predictScores:() => [1,1]
+  });
+  assert.deepEqual(exact.countError, {meanAbsolute:0, meanSigned:0});
+  assert.equal(exact.meanF1, 0);
+  assert.equal(exact.byGround[1].countError, null);
+});

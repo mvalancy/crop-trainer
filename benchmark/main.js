@@ -1,5 +1,5 @@
 import {DENSITY_HISTORY_KEY, densitySnapshot, pairDensityScores} from './density.js';
-import {buildDataset, validateModel, compareMatchedBoxes} from '../trainer/data.js?v=densitymix1';
+import {buildDataset, validateModel, compareMatchedBoxes} from '../trainer/data.js?v=count1';
 import {trainNetworkCPU, trainNetworkGPU, predictNetwork} from '../trainer/neural.js';
 import {trainCPU, MAX_EPOCHS} from '../trainer/model.js';
 import {cropProfile} from '../trainer/crops.js';
@@ -12,7 +12,7 @@ sensorOptions($('sensor'), true);
 validationSensorOptions($('validationSensor'));
 const requested = new URLSearchParams(location.search);
 $('includeMixed').checked = requested.get('includeMixed') === '1';
-for (const id of ['comparison', 'crop', 'sensor', 'validationSensor']) {
+for (const id of ['comparison', 'crop', 'sensor', 'validationSensor', 'fieldMetric']) {
   const value = requested.get(id);
   if ([...$(id).options].some(option => option.value === value)) $(id).value = value;
 }
@@ -203,9 +203,16 @@ function displayFields() {
   }));
   $('fieldRows').replaceChildren();
   const metric = $('fieldMetric').value;
+  const countMetric = metric === 'meanAbsolute' || metric === 'meanSigned';
+  $('countHelp').hidden = !countMetric;
+  $('countHelp').textContent = metric === 'meanAbsolute'
+    ? 'Average number of plants the count is off by per scan. Lower is better. Each planting contributes a scan with soil and one without.'
+    : 'Final pins minus labeled plants, averaged per scan. Positive values mean overcounting. Overcounts and undercounts can cancel.';
+  const formatCount = value => (metric === 'meanSigned' && value > 0 ? '+' : '') + value.toFixed(1);
   const seedDatasets = new Map(datasets.map(dataset => [dataset.seed, dataset]));
   for (const dataset of seedDatasets.values()) {
-    const contenders = new Map(rows.filter(row => row.seed === dataset.seed).map(row =>
+    const group = rows.filter(row => row.seed === dataset.seed);
+    const contenders = new Map(group.map(row =>
       [contender(row), new Map(row.byField.map(field => [field.seed, field]))]));
     for (const seed of dataset.stats.fieldSeeds.validation) {
       const tr = $('fieldRows').insertRow();
@@ -221,13 +228,42 @@ function displayFields() {
       tr.insertCell().textContent = field.sensor;
       for (const column of columns) {
         const result = contenders.get(column).get(seed);
-        const value = metric === 'mean' ? result.meanF1 : result.scores.find(score => score.cm === Number(metric)).f1;
-        tr.insertCell().textContent = value.toFixed(4);
+        if (countMetric) tr.insertCell().textContent = formatCount(result.countError[metric]);
+        else {
+          const f1 = metric === 'mean' ? result.meanF1 : result.scores.find(score => score.cm === Number(metric)).f1;
+          tr.insertCell().textContent = f1.toFixed(4);
+        }
+      }
+    }
+    if (countMetric) {
+      const total = $('fieldRows').insertRow();
+      total.className = 'seedAverage';
+      const label = document.createElement('th');
+      label.scope = 'row';
+      label.colSpan = 3;
+      label.textContent = 'Seed '+dataset.seed+' · all '+dataset.stats.valTiles+' scans';
+      total.append(label);
+      for (const column of columns) {
+        const row = group.find(row => contender(row) === column);
+        total.insertCell().textContent = formatCount(row.countError[metric]);
       }
     }
   }
 }
-$('fieldMetric').addEventListener('change', displayFields);
+$('fieldMetric').addEventListener('change', () => {
+  if (!report) return;
+  displayFields();
+  const url = new URL(report.replayUrl);
+  if ($('fieldMetric').value === 'mean') url.searchParams.delete('fieldMetric');
+  else url.searchParams.set('fieldMetric', $('fieldMetric').value);
+  report.replayUrl = url.href;
+  $('replay').href = url.href;
+  for (const link of $('densityRepeats').querySelectorAll('a')) {
+    const repeat = new URL(url);
+    repeat.searchParams.set('validationRayBudget', new URL(link.href).searchParams.get('validationRayBudget'));
+    link.href = repeat.href;
+  }
+});
 function displayModelBoxes() {
   const [seed, tileId] = JSON.parse($('pairScan').value);
   const rows = report.rows.filter(row => row.seed === seed);
@@ -337,7 +373,7 @@ $('benchForm').onsubmit = async event => {
           const row = {
             model, backend:fit.backend, datasetIndex, trainingRayBudget, epochs, trainingLoss:fit.loss.at(-1), threshold, seed:runSeed, generationMs, trainingMs,
             scoringMs:performance.now()-scoringStart, adapter:fit.adapter,
-            meanF1:result.meanF1, scores:result.scores, byGround:result.byGround, byField:result.byField, tiles:result.tiles
+            meanF1:result.meanF1, scores:result.scores, countError:result.countError, byGround:result.byGround, byField:result.byField, tiles:result.tiles
           };
           rows.push(row);
           appendRow(row, comparison, settings);
@@ -356,6 +392,7 @@ $('benchForm').onsubmit = async event => {
     $('summary').textContent='Average mean F1 across both seeds: '+means.join(' · ')+'.'+device;
     const replay = new URL(location.pathname, location.origin);
     replay.search = new URLSearchParams({comparison, crop, sensor:sensorMode, seed});
+    if ($('fieldMetric').value !== 'mean') replay.searchParams.set('fieldMetric', $('fieldMetric').value);
     if (includeMixed) replay.searchParams.set('includeMixed', '1');
     if (trainingRayBudget) replay.searchParams.set('trainingRayBudget', trainingRayBudget);
     if (validationRayBudget) replay.searchParams.set('validationRayBudget', validationRayBudget);
@@ -373,6 +410,7 @@ $('benchForm').onsubmit = async event => {
       $('modelBoxes').hidden = false;
     }
     displayFields();
+    $('fieldDetails').open = $('fieldMetric').value !== 'mean';
     $('fieldDetails').hidden = false;
     $('export').disabled=false;
     let stamp = '';

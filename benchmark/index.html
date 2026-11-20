@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Benchmark · Crop Trainer</title>
-<link rel="stylesheet" href="../farm.css?v=densitymix1"></head>
+<link rel="stylesheet" href="../farm.css?v=count1"></head>
 <body class="benchmark"><a class="skip" href="#main">Skip to content</a>
 <header class="siteBar">
 <div class="barInner"><a class="brand" href="../"><span class="mark" aria-hidden="true"><i></i></span>Crop Trainer</a>
@@ -79,9 +79,10 @@
 <details id="fieldDetails" hidden="">
 <summary>Compare contenders on each planting</summary>
 <p>Each row combines the scans with and without soil from one held-out planting. Select a field seed to inspect its soil-present scan in 3D.</p>
-<label>Field score<select id="fieldMetric"><option value="mean">Mean F1 across distances</option><option value="7.5">F1 at 7.5 cm</option><option value="10">F1 at 10 cm</option><option value="15">F1 at 15 cm</option></select></label>
+<label>Field metric<select id="fieldMetric"><option value="mean">Mean F1 across distances</option><option value="7.5">F1 at 7.5 cm</option><option value="10">F1 at 10 cm</option><option value="15">F1 at 15 cm</option><option value="meanAbsolute">Count error · absolute</option><option value="meanSigned">Count error · signed</option></select></label>
+<p id="countHelp" class="hint" hidden></p>
 <div class="tableScroll">
-<table aria-label="Paired field scores">
+<table aria-label="Paired field metrics">
 <thead>
 <tr id="fieldHeading"></tr></thead>
 <tbody id="fieldRows"></tbody></table></div></details>
@@ -104,6 +105,6 @@
 </main>
 <footer class="siteFoot"><span>Crop Trainer</span>
 <div><a href="../AGENTS.md">Agent quickstart</a><a href="https://github.com/mvalancy/crop-trainer">GitHub</a><a href="../LICENSE">MIT license</a></div></footer>
-<script type="module" src="main.js?v=densitymix1"></script>
+<script type="module" src="main.js?v=count1"></script>
 </body>
 </html>

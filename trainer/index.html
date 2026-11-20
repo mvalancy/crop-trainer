@@ -92,6 +92,7 @@
 <label for="auditField">Validation field and ground setting</label><select id="auditField"></select>
 <button type="button" id="pairedScan">Switch soil setting for this field</button> <a id="inspectScan" target="_blank" rel="noopener">Open this scan in the 3D viewer (new tab)</a>
 <p class="fine" id="scanCounts"></p>
+<p id="scanPlantCount"></p>
 <p id="plantCoverage"></p>
 <p class="fine">Coverage counts the surviving returns from each simulated plant. The detector only sees XYZ. Nearby clutter can still create a matching peak.</p>
 <p class="fine">Each row counts how many labeled plants can be matched to one center within 15 cm. The field with the lowest final recall appears first.</p>
@@ -119,6 +120,6 @@
 </main>
 <footer class="siteFoot"><span>Crop Trainer</span>
 <div><a href="../AGENTS.md">Agent quickstart</a><a href="https://github.com/mvalancy/crop-trainer">GitHub</a><a href="../LICENSE">MIT license</a></div></footer>
-<script type="module" src="./main.js?v=densitymix1"></script>
+<script type="module" src="./main.js?v=count1"></script>
 </body>
 </html>

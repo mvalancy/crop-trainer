@@ -171,6 +171,33 @@ On the simulated OS1-64, sparse-only training had the best worst-case F1 on both
 
 On artichoke seed 1451, alternating training improved dense-scan mean F1 from 0.7015 to 0.7876 over sparse-only training, while sparse-scan mean F1 fell from 0.6512 to 0.5440. For the alternating fit on dense scans, F1 at 7.5, 10 and 15 cm was 0.685, 0.816 and 0.862. One Node CPU run spent 2.01 s generating, 52 ms training and 25 ms validating. Different ray budgets also produce different numbers of training examples. These measurements apply to this synthetic layout. Domain randomization has been studied for image-based object localization. Here the varied property is the number of simulated LiDAR rays. [Replay the repeat seeds](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=density&crop=artichoke&sensor=os1-64&seed=1451&includeMixed=1&validationRayBudget=12000) · [Tobin et al., 2017](https://arxiv.org/abs/1703.06907)
 
+## Which detector gives a better plant count?
+
+Open **Compare contenders on each planting** in the benchmark and select **Count error · absolute**. A value of 4 means the predicted count differed from the label count by four plants per scan on average. Select **Count error · signed** to see the direction. For a single scan, the Training shed’s field audit shows the final pins, labeled plants, extra pins and misses together. [Try the artichoke count comparison](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=models&crop=artichoke&seed=1551&sensor=mixed&validationSensor=os1-64&validationRayBudget=12000&fieldMetric=meanAbsolute)
+
+```mermaid
+flowchart LR
+  A[Final pins and plant labels] --> B[Subtract label count from pin count]
+  B --> C[Average signed differences to see bias]
+  B --> D[Average absolute differences to see typical count error]
+  A --> E[Match nearby centers to score localization with F1]
+```
+
+We compared logistic and neural CPU models on lettuce, globe artichoke and young tomato at dataset seeds 1521, 1522, 1551 and 1552. Both fits saw identical training examples from six mixed-layout fields and the same three held-out plantings, scanned with and without soil at 12,000 simulated OS1-64 rays. All fits used 40 epochs and a 0.50 cutoff. The higher-F1 model had lower mean absolute count error in 11 of 12 comparisons. The other pair tied on counting error.
+
+| Crop and seed | Model | Mean F1 | Absolute error (plants/scan) | Signed error (plants/scan) |
+| --- | --- | ---: | ---: | ---: |
+| Lettuce 1551 | Logistic | 0.6263 | 78.50 | +40.50 |
+| Lettuce 1551 | Neural | 0.6164 | 79.50 | +38.17 |
+| Artichoke 1552 | Logistic | 0.6849 | 4.33 | +3.00 |
+| Artichoke 1552 | Neural | 0.6748 | 4.33 | +4.00 |
+| Tomato 1521 | Logistic | 0.5125 | 63.00 | −63.00 |
+| Tomato 1521 | Neural | 0.3979 | 79.17 | −79.17 |
+
+On artichoke seed 1552, logistic F1 at 7.5, 10 and 15 cm was 0.478, 0.677 and 0.900. Neural F1 was 0.466, 0.662 and 0.897. The separate Node CPU runs took 1,278 / 40 / 26 ms for logistic and 1,078 / 58 / 22 ms for neural to generate, train and validate. These absolute counts depend on field size and synthetic planting density.
+
+The browser CPU and SwiftShader WebGPU neural fits produced identical counts and per-distance scores on both artichoke seeds 1551 and 1552. On seed 1552 they shared 755 ms of generation. CPU training and scoring took 86 and 28 ms, and software WebGPU took 954 and 14 ms. SwiftShader ran on the CPU. Physical GPU and DGX Spark timings require a run on the target hardware.
+
 ## Did the scan see the plants the detector missed?
 
 The generator records which plant supplied each surviving crop return. In the 3D viewer, turn on **Label centers** to see gold crosses on plants with zero crop returns. The Training Shed shows the same coverage counts beside the detection stages for each field. A return can land on a leaf far from the center. Conversely, a nearby weed can produce a peak within the scoring distance of a plant that supplied no returns.
@@ -368,10 +395,11 @@ Across fresh synthetic seeds 621, 622, 651 and 652 at 100 epochs, the higher cut
 
 ## Datasets and research
 
-- **Lettuce.** Vázquez Gálvez and colleagues describe 387 RGB-D reconstructions and three augmentations of each, covering four lettuce varieties. The metadata lists CC BY 4.0. These individual-plant clouds can inform canopy shape. Keep all augmentations of an original together when splitting examples. [Dataset and license record](https://doi.org/10.21227/5xsx-hq86)
+- **Lettuce.** Vázquez Gálvez and colleagues describe 387 RGB-D reconstructions and three augmentations of each, covering four lettuce varieties. The metadata lists CC BY 4.0. These individual-plant clouds can inform canopy shape. Keep all augmentations of an original together when splitting examples. [Dataset and license record](https://doi.org/10.21227/5xsx-hq86) · [Machine-readable license](https://api.datacite.org/dois/10.21227/5xsx-hq86)
 - **Tomato.** Pheno4D provides scans of seven tomato plants over 20 days, including 77 annotated point clouds. Its point labels and repeated plant identities support organ-geometry studies. Split by plant for an unseen-plant test, and confirm redistribution terms with the provider. The download page does not state a dataset license. [Dataset](https://www.ipb.uni-bonn.de/data/pheno4d/) · [Schunck et al., 2021](https://doi.org/10.1371/journal.pone.0256340)
 - **Globe artichoke.** NC State Extension describes the fern-like leaves and unopened flower heads that informed the procedural silhouette. We have yet to verify a freely licensed field-scale artichoke point cloud with plant-center annotations. The starter scores one plant per rosette, including in the bud-bearing form. [Botanical reference](https://plants.ces.ncsu.edu/plants/cynara-cardunculus-scolymus-group/)
 - **Changing LiDAR sensors.** Yi and colleagues studied changes in point-cloud segmentation across LiDAR sensors, including learning to reconstruct sparsely sampled surfaces. Crop Trainer can isolate the effect of a projected scan layout on plant-center detection. Comparisons with a physical scanner require measurements from that device. [Complete & Label, CVPR 2021](https://openaccess.thecvf.com/content/CVPR2021/html/Yi_Complete__Label_A_Domain_Adaptation_Approach_to_Semantic_Segmentation_CVPR_2021_paper.html)
+- **Counting objects.** Lempitsky and Zisserman learn an image density whose integral estimates an object count. Crop Trainer counts discrete plant-center predictions, which also lets you inspect individual misses and extra pins. [Oxford Visual Geometry Group](https://www.robots.ox.ac.uk/~vgg/research/counting/)
 - **Grouped evaluation.** Roberts and colleagues explain how spatial and hierarchical structure affects validation. Crop Trainer holds out entire field seeds and keeps the two soil variants together. Additional scans of one planting share its labels and geometry. [Roberts et al., Ecography, 2017](https://doi.org/10.1111/ecog.02881)
 - **Training duration.** Prechelt compares validation-based stopping criteria and their tradeoff between training time and generalization. The epoch benchmark measures three fixed durations. To estimate performance after choosing a duration, repeat it on fresh field seeds. [Prechelt, Early Stopping — But When?](https://doi.org/10.1007/3-540-49430-8_3)
 - **Choosing a cutoff.** Lipton and colleagues study how a classifier’s score distribution affects the decision threshold that maximizes F1. Crop Trainer measures the tradeoff on held-out fields after spacing and spatial matching. [Lipton et al., 2014](https://doi.org/10.1007/978-3-662-44851-9_15)

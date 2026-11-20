@@ -95,6 +95,12 @@ Open the CPU model benchmark, choose a crop and seed, then expand **Compare cont
 
 For each planting, the scorer adds TP, FP and FN from both soil variants at each distance, computes F1, then averages the three F1 values for `meanF1`. The overall score pools counts across all validation scans first. Count field-level wins, losses and ties using the exported precision, and report the pooled score separately. The CLI and Training Shed also export `byField`; older reports can be reconstructed from `tiles`.
 
+### Measure plant-count error
+
+For a paired counting experiment, open `/benchmark/?comparison=models&crop=artichoke&seed=1551&sensor=mixed&validationSensor=os1-64&validationRayBudget=12000&fieldMetric=meanAbsolute`. Under **Compare contenders on each planting**, choose absolute or signed error. The table shows the average for each planting’s two scans and the average for each dataset seed. The settings link remembers the displayed metric.
+
+Read `countError.meanAbsolute` and `countError.meanSigned` in each benchmark row, CLI or Training shed result. The same object appears in each `byField` and `byGround` group. Units are plants per scan. For older reports, reconstruct each scan's signed difference as `fp - fn` from any entry in `tiles[].byTolerance`. Average the absolute differences for mean absolute error. Taking the absolute value after averaging lets overcounts and undercounts cancel. Compare scorers on identical tile IDs and include per-distance F1 to assess localization.
+
 ### Trace a model disagreement to a plant
 
 Run `/benchmark/?comparison=models&crop=lettuce&seed=1121&sensor=mixed&validationSensor=os1-64&validationRayBudget=12000`. Open **Which plants did each model find?** The scan picker includes both soil variants for each dataset seed. Choose a distance and one of the boxes exclusive to either model. Follow the 3D link to inspect the highlighted center.

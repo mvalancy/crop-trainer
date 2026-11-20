@@ -200,7 +200,15 @@ function summarizeTiles(tiles) {
    f1: 2 * tp / (2 * tp + fp + fn || 1)
   };
  });
- return {scores, meanF1: scores.reduce((sum, score) => sum + score.f1, 0) / scores.length};
+ // Each final pin and each label contributes once at every matching distance.
+ let absolute = 0, signed = 0;
+ for (const tile of tiles) {
+  const {fp, fn} = tile.byTolerance[0];
+  signed += fp - fn;
+  absolute += Math.abs(fp - fn);
+ }
+ const countError = tiles.length ? {meanAbsolute:absolute / tiles.length, meanSigned:signed / tiles.length} : null;
+ return {scores, countError, meanF1: scores.reduce((sum, score) => sum + score.f1, 0) / scores.length};
 }
 
 export async function validateModel(set,weights,{threshold=.5,predictScores=predict,signal,onProgress=()=>{}}={}){

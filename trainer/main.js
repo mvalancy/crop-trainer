@@ -43,7 +43,7 @@ function updateBenchmarkLinks() {
 for (const id of ['crop','scanner','validationSensor','trainingRayBudget','validationRayBudget','seed','epochs']) $(id).addEventListener('input', updateBenchmarkLinks);
 let controller=null,losses=[],lastPreview=null,backendReady=false,deps,webgpuAvailable=false,lastRun=null,lastPaint=0;
 try {
- deps=await Promise.all([import('./data.js?v=densitymix1'),import('./model.js?v=benchmark1'),import('./neural.js')]);
+ deps=await Promise.all([import('./data.js?v=count1'),import('./model.js?v=benchmark1'),import('./neural.js')]);
  $('epochs').max=deps[1].MAX_EPOCHS;
  const epochsParam = params.get('epochs');
  if (/^\d+$/.test(epochsParam) && Number(epochsParam) >= 1 && Number(epochsParam) <= deps[1].MAX_EPOCHS) {
@@ -122,6 +122,10 @@ function showStages(){
  if (auditRayBudget) scanQuery.set('budget', auditRayBudget);
  $('inspectScan').href = '../?'+scanQuery+'#field';
  $('scanCounts').textContent = tile.requestedRays.toLocaleString()+' rays requested · '+tile.sampledRays.toLocaleString()+' sampled · '+tile.returnCount.toLocaleString()+' scan returns · '+labels+' labeled plants · tile '+tile.tile_id;
+ const pins = totals.tp + totals.fp;
+ const delta = pins - labels;
+ const difference = delta === 0 ? 'exact total' : Math.abs(delta)+' too '+(delta > 0 ? 'many' : 'few');
+ $('scanPlantCount').textContent = pins+' final pins for '+labels+' plants ('+difference+'). At 15 cm, '+totals.fp+' pins were extra and '+totals.fn+' plants were missed.';
  const {zero, oneToFour, fiveOrMore} = tile.coverage;
  $('plantCoverage').textContent = 'Of '+labels+' labeled plants, '+zero+' had no crop returns, '+oneToFour+' had 1–4, and '+fiveOrMore+' had at least 5.';
  const names={proposals:'Height peaks',accepted:'Score ≥ '+auditThreshold,selected:'After spacing filter'};
@@ -266,7 +270,7 @@ function display(v,threshold,validationRayBudget){
  $('auditField').replaceChildren(...auditTiles.map((t,i)=>new Option(
   t.seed+' · '+t.sensor+' · ground '+(t.ground?'present':'removed'),String(i))));
  showStages();$('stageAudit').hidden=false;
- $('resultNote').textContent='F1 across held-out synthetic fields only. Not a score on real scans.';draw();
+ $('resultNote').textContent='Across '+v.tiles.length+' held-out synthetic scans, the final pin count differed from the labeled plant count by '+v.countError.meanAbsolute.toFixed(1)+' plants per scan on average (absolute error).';draw();
 }
 const reportJSON=()=>JSON.stringify(lastRun,null,2)+'\n';
 function downloadJSON(data, filename) {
@@ -341,7 +345,7 @@ $('controls').onsubmit=async e=>{
   const timings={generationMs:generated-start,trainingMs:trained-generated,validationMs:finished-trained,totalMs:finished-start};
   displayBenchmark(timings,fit.backend,epochs,set.stats.samples);
   const settings = {crop, seed, trainFields, valFields, epochs, model: neural ? 'neural' : 'linear', sensorMode, validationSensorMode, trainingRayBudget, validationRayBudget, minimumHeight, threshold};
-  lastRun={schema:3,settings,trainer:neural?'crop-mlp-v1':'crop-peak-logistic-v1',domain:'synthetic',backend:fit.backend,adapter:fit.adapter,requestedBackend,webgpuAvailable,sensorMode,samplePasses:epochs*set.stats.samples,timings,epochsPerSecond:timings.trainingMs>0?epochs*1000/timings.trainingMs:null,seed,epochs,learningRate:.25,threshold,minimumHeight,stats:set.stats,recipeManifest:set.manifest,scaling:set.scaling,weights:Array.from(fit.weights),loss:fit.loss,meanF1:scores.meanF1,scores:scores.scores,byGround:scores.byGround, byField:scores.byField, tiles:scores.tiles};
+  lastRun={schema:3,settings,trainer:neural?'crop-mlp-v1':'crop-peak-logistic-v1',domain:'synthetic',backend:fit.backend,adapter:fit.adapter,requestedBackend,webgpuAvailable,sensorMode,samplePasses:epochs*set.stats.samples,timings,epochsPerSecond:timings.trainingMs>0?epochs*1000/timings.trainingMs:null,seed,epochs,learningRate:.25,threshold,minimumHeight,stats:set.stats,recipeManifest:set.manifest,scaling:set.scaling,weights:Array.from(fit.weights),loss:fit.loss,meanF1:scores.meanF1,scores:scores.scores,countError:scores.countError,byGround:scores.byGround, byField:scores.byField, tiles:scores.tiles};
   let earned=[];
   try{
    const farm=JSON.parse(localStorage.getItem('crop-trainer-farm-v1')||'{"seeds":[],"mixed":false}');
