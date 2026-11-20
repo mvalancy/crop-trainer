@@ -1,6 +1,6 @@
-import {field} from './trainer/field.js';
-import {makeRecipe} from './trainer/data.js';
-import {getSensor, sensorOptions, sensorDetails} from './trainer/sensors.js';
+import {field} from './trainer/field.js?v=rays1';
+import {makeRecipe} from './trainer/data.js?v=rays1';
+import {getSensor, sensorOptions, sensorDetails, rayBudgetOptions} from './trainer/sensors.js?v=rays1';
 import {createViewer} from './viewer.js';
 
 const $ = id => document.getElementById(id);
@@ -8,12 +8,13 @@ const viewer = createViewer($('map'), {
   mode:$('mode'), view:$('view'), color:$('color'), pins:$('pins'), spin:$('spin'),
   zoomIn:$('zoomIn'), zoomOut:$('zoomOut'), reset:$('fit')
 });
-let scan;
+let scan, previousRayTrial;
 sensorOptions($('scan'));
 const requested = new URLSearchParams(location.search);
 for (const [id, value] of [['crop', requested.get('crop')], ['scan', requested.get('sensor')]]) {
   if ([...$(id).options].some(option => option.value === value)) $(id).value = value;
 }
+rayBudgetOptions($('budget'), requested.get('budget'));
 const requestedSeed = requested.get('seed');
 if (/^\d+$/.test(requestedSeed) && Number(requestedSeed) <= 0xffffffff) {
   $('seed').value = String(Number(requestedSeed));
@@ -39,14 +40,22 @@ function grow() {
   }
   scan = field(recipe);
   viewer.setScan(scan);
-  $('count').textContent = scan.labels.boxes.length+' '+crop+' plants · '+scan.cls.length.toLocaleString()+' returns · seed '+recipe.seed;
+  const trialKey = JSON.stringify({...recipe, points:undefined});
+  if (previousRayTrial?.key === trialKey && previousRayTrial.sampledRays !== scan.sampledRays) {
+    try { localStorage.setItem('crop-trainer-ray-scout', 'earned'); } catch {}
+    journal();
+  }
+  previousRayTrial = {key:trialKey, sampledRays:scan.sampledRays};
+  $('count').textContent = scan.labels.boxes.length+' '+crop+' plants · '+recipe.points.toLocaleString()+' rays requested · '+scan.sampledRays.toLocaleString()+' sampled · '+scan.cls.length.toLocaleString()+' returns · seed '+recipe.seed;
   $('scanId').textContent = scan.labels.tile_id;
   const bins=['Soil','Crop','Weeds','Sticks','Boards','Stray'];
   $('readouts').replaceChildren(...bins.map((name,i)=>{
     const entry=document.createElement('div'), term=document.createElement('dt'), count=document.createElement('dd');
     term.textContent=name; count.textContent=(scan.counts[i]||0).toLocaleString();entry.append(term,count);return entry;
   }));
-  $('trainLayout').href='trainer/?'+new URLSearchParams({crop,sensor:sensor.key});
+  const training = new URLSearchParams({crop,sensor:sensor.key});
+  if (Number($('budget').value)) training.set('validationRayBudget', $('budget').value);
+  $('trainLayout').href = 'trainer/?'+training;
   $('ply').disabled=$('labels').disabled=$('recipe').disabled=false;
 }
 $('grow').onsubmit = event => { event.preventDefault(); grow(); };
@@ -64,7 +73,7 @@ $('ply').onclick=()=>{
 function journal(){
   try{
     const history=JSON.parse(localStorage.getItem('crop-trainer-farm-v1')||'{}');
-    for(const [key,done] of [['first',history.seeds?.length],['scout',history.mixed],['saver',history.seeds?.length>=2],['cutoffScout',localStorage.getItem('crop-trainer-cutoff-scout')==='earned']]){
+    for(const [key,done] of [['first',history.seeds?.length],['scout',history.mixed],['saver',history.seeds?.length>=2],['rayScout',localStorage.getItem('crop-trainer-ray-scout')==='earned'],['cutoffScout',localStorage.getItem('crop-trainer-cutoff-scout')==='earned']]){
       const el=$(key);el.textContent=done?'Stamp earned':'Open';el.parentElement.classList.toggle('earned',Boolean(done));
     }
   }catch{}

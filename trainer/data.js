@@ -1,9 +1,9 @@
 import {cropProfile} from './crops.js';
-import {field} from './field.js';
+import {field} from './field.js?v=rays1';
 import {predict} from './model.js';
 
 export const FIELD_LIMITS={train:256,validation:128};
-import {mixedProfiles as SENSORS, getSensor} from './sensors.js';
+import {mixedProfiles as SENSORS, getSensor, RAY_BUDGETS} from './sensors.js?v=rays1';
 const SIZE=200, STEP=.05, DIMS=13, TOL=[.075,.1,.15];
 const at=(x,y)=>y*SIZE+x, clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const pause=()=>new Promise(r=>setTimeout(r,0));
@@ -64,9 +64,10 @@ export function features(tile, minimumHeight=.065){
  }
  return{X:Float32Array.from(vec),pos};
 }
-export async function buildDataset({seed=27,crop='lettuce',trainFields=6,valFields=3,sensorMode='reference',validationSensorMode=sensorMode,minimumHeight=.065,onProgress=()=>{},signal}={}){
+export async function buildDataset({seed=27,crop='lettuce',trainFields=6,valFields=3,sensorMode='reference',validationSensorMode=sensorMode,validationRayBudget=0,minimumHeight=.065,onProgress=()=>{},signal}={}){
  if(![.035,.065].includes(minimumHeight))throw new Error('Choose a supported minimum peak height.');
  if(!Number.isInteger(seed)||seed<0||seed>0xffffffff||!Number.isInteger(trainFields)||trainFields<2||trainFields>FIELD_LIMITS.train||!Number.isInteger(valFields)||valFields<1||valFields>FIELD_LIMITS.validation)throw new Error('Use a valid seed and the available field count limits.');
+ if (validationRayBudget !== 0 && !RAY_BUDGETS.includes(validationRayBudget)) throw new Error('Choose a supported validation ray budget.');
  const fixedSensors = [sensorMode, validationSensorMode].map(mode => mode === 'mixed' ? null : getSensor(mode));
  const total=2*(trainFields+valFields), training=[],validation=[], trainSeeds=[],valSeeds=[];
  const orders=[sensorOrder(seed^0xe50d735b),sensorOrder(seed^0x75a89521)];
@@ -79,9 +80,11 @@ export async function buildDataset({seed=27,crop='lettuce',trainFields=6,valFiel
   const profile = fixedSensors[split] ?? orders[split][idx % SENSORS.length];
   for(let v=0;v<2;v++){
    check(signal);
-   const t=field(makeRecipe(id,v===0,profile,crop)), f=features(t,minimumHeight), truth=centers(t.labels.boxes), points=[];
+   const recipe = makeRecipe(id, v === 0, profile, crop);
+   if (!trainingField && validationRayBudget) recipe.points = validationRayBudget;
+   const t=field(recipe), f=features(t,minimumHeight), truth=centers(t.labels.boxes), points=[];
    if(!trainingField){const n=t.xyz.length/3,inc=Math.max(1,Math.ceil(n/1500));for(let i=0;i<n;i+=inc)points.push([t.xyz[3*i],t.xyz[3*i+1]]);}
-   const item={...f,truth,seed:id,ground:v===0,recipe:t.p,tile_id:t.labels.tile_id,returnCount:t.labels.num_points,points};
+   const item={...f,truth,seed:id,ground:v===0,recipe:t.p,sampledRays:t.sampledRays,tile_id:t.labels.tile_id,returnCount:t.labels.num_points,points};
    (trainingField?training:validation).push(item);
    onProgress({done:2*k+v+1,total,stage:'data'});await pause();
   }
@@ -118,8 +121,8 @@ export async function buildDataset({seed=27,crop='lettuce',trainFields=6,valFiel
  const normalize=a=>{for(let i=0;i<a.length;i++){const j=i%DIMS;a[i]=(a[i]-means[j])/std[j];}};
  normalize(X);for(const t of validation)normalize(t.X);
  return{X,Y,dims:DIMS,validation,scaling:{means:Array.from(means),std:Array.from(std)},
-  stats:{crop,trainFields,valFields,trainTiles:training.length,valTiles:validation.length,minimumHeight,samples:Y.length,sampleLimit:48000,sensorMode,validationSensorMode,fieldSeeds:{training:trainSeeds,validation:valSeeds},generator:'crop-trainer-v1'},
-  manifest:[...training,...validation].map((t,i)=>({split:i<training.length?'train':'validation',seed:t.seed,tile_id:t.tile_id,returnCount:t.returnCount,recipe:t.recipe}))};
+  stats:{crop,trainFields,valFields,trainTiles:training.length,valTiles:validation.length,minimumHeight,samples:Y.length,sampleLimit:48000,sensorMode,validationSensorMode,validationRayBudget,fieldSeeds:{training:trainSeeds,validation:valSeeds},generator:'crop-trainer-v1'},
+  manifest:[...training,...validation].map((t,i)=>({split:i<training.length?'train':'validation',seed:t.seed,tile_id:t.tile_id,returnCount:t.returnCount,sampledRays:t.sampledRays,recipe:t.recipe}))};
 }
 export function matchedCount(pred,truth,radius){
  const r2=radius**2, adj=pred.map(([x,y])=>{const a=[];for(let j=0;j<truth.length;j++){const [tx,ty]=truth[j];if((tx-x)**2+(ty-y)**2<=r2+1e-12)a.push(j);}return a;});
@@ -181,7 +184,7 @@ export async function validateModel(set,weights,{threshold=.5,predictScores=pred
    const tp = matchedCount(predictions, t.truth, radius);
    return {cm: 100 * radius, tp, fp: predictions.length - tp, fn: t.truth.length - tp};
   });
-  tiles.push({seed:t.seed,ground:t.ground,tile_id:t.tile_id,crop:t.recipe.crop,returnCount:t.returnCount,sensor:t.recipe.sampling.key,byTolerance,stages15cm:measureStages(stages,t.truth,byTolerance[2].tp)});
+  tiles.push({seed:t.seed,ground:t.ground,tile_id:t.tile_id,crop:t.recipe.crop,requestedRays:t.recipe.points,sampledRays:t.sampledRays,returnCount:t.returnCount,sensor:t.recipe.sampling.key,byTolerance,stages15cm:measureStages(stages,t.truth,byTolerance[2].tp)});
   previews.set(t.tile_id,{truth:t.truth,predictions,ground:t.ground,seed:t.seed,points:t.points,stages});
   onProgress({done:i+1,total:set.validation.length,stage:'validation'});await pause();
  }

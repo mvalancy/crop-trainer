@@ -124,3 +124,22 @@ test('planting scores use both scans even when the validation order changes', as
     assert.equal(field.meanF1, field.scores.reduce((sum, score) => sum + score.f1, 0) / 3);
   }
 });
+
+test('validation ray budgets change scan density while preserving plants and training inputs', async () => {
+  const settings = {crop:'tomato', seed:721, trainFields:2, valFields:1, sensorMode:'mixed', validationSensorMode:'os1-32'};
+  const sparse = await buildDataset({...settings, validationRayBudget:12000});
+  const capped = await buildDataset({...settings, validationRayBudget:60000});
+  assert.deepEqual(sparse.X, capped.X);
+  assert.deepEqual(sparse.Y, capped.Y);
+  assert.deepEqual(sparse.scaling, capped.scaling);
+  assert.deepEqual(sparse.manifest.filter(t => t.split === 'train'), capped.manifest.filter(t => t.split === 'train'));
+  for (const [i, tile] of capped.validation.entries()) {
+    const original = sparse.validation[i];
+    assert.deepEqual(tile.truth, original.truth);
+    assert.deepEqual(tile.recipe, {...original.recipe, points:60000});
+    assert.equal(original.sampledRays, 12000);
+    assert.equal(tile.sampledRays, 512 * 32);
+    assert.notEqual(tile.tile_id, original.tile_id);
+  }
+  await assert.rejects(buildDataset({...settings, validationRayBudget:-1}), /ray budget/);
+});

@@ -50,3 +50,11 @@ export function sensorDetails(key) {
     ? 'Parallel tracks spaced about ' + profile.across + ' cm apart, with about ' + profile.along + ' cm between samples along a track.'
     : 'Offset sweeps distribute rays across the plot using an anisotropic repeating pattern.';
 }
+
+export const RAY_BUDGETS = [12000, 30000, 60000, 100000];
+
+export function rayBudgetOptions(select, requested) {
+  select.replaceChildren(new Option('Seeded · 26–42k rays', '0'));
+  for (const rays of RAY_BUDGETS) select.add(new Option(rays.toLocaleString(), String(rays)));
+  if (RAY_BUDGETS.includes(Number(requested))) select.value = String(Number(requested));
+}

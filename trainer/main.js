@@ -1,8 +1,9 @@
 import {cropProfile} from './crops.js';
-import {allProfiles, sensorOptions, validationSensorOptions, sensorDetails} from './sensors.js';
+import {allProfiles, sensorOptions, validationSensorOptions, sensorDetails, rayBudgetOptions} from './sensors.js?v=rays1';
 if(new URLSearchParams(location.search).has('embed'))document.body.classList.add('embed');
 const $=id=>document.getElementById(id);
 const params = new URLSearchParams(location.search);
+rayBudgetOptions($('validationRayBudget'), params.get('validationRayBudget'));
 const seedParam = params.get('seed');
 if (/^\d+$/.test(seedParam) && Number(seedParam) <= 0xffffffff) $('seed').value = String(Number(seedParam));
 const cropParam = params.get('crop');
@@ -26,6 +27,7 @@ function updateBenchmarkLinks() {
  const validSeed = Number.isInteger(seed) && seed >= 0 && seed < 0xffffffff;
  for (const [id, comparison] of [['cutoffBench', 'cutoffs'], ['epochBench', 'epochs']]) {
   const query = new URLSearchParams({comparison, crop:$('crop').value, sensor:$('scanner').value, seed});
+  if (Number($('validationRayBudget').value)) query.set('validationRayBudget', $('validationRayBudget').value);
   if ($('validationSensor').value !== 'follow') query.set('validationSensor', $('validationSensor').value);
   const link = $(id);
   link.hidden = !validSeed || (comparison === 'cutoffs' && !$('epochs').validity.valid);
@@ -33,10 +35,10 @@ function updateBenchmarkLinks() {
   link.href = '../benchmark/?'+query;
  }
 }
-for (const id of ['crop','scanner','validationSensor','seed','epochs']) $(id).addEventListener('input', updateBenchmarkLinks);
+for (const id of ['crop','scanner','validationSensor','validationRayBudget','seed','epochs']) $(id).addEventListener('input', updateBenchmarkLinks);
 let controller=null,losses=[],lastPreview=null,backendReady=false,deps,webgpuAvailable=false,lastRun=null,lastPaint=0;
 try {
- deps=await Promise.all([import('./data.js?v=soil1'),import('./model.js?v=benchmark1'),import('./neural.js')]);
+ deps=await Promise.all([import('./data.js?v=rays1'),import('./model.js?v=benchmark1'),import('./neural.js')]);
  $('epochs').max=deps[1].MAX_EPOCHS;
  const epochsParam = params.get('epochs');
  if (/^\d+$/.test(epochsParam) && Number(epochsParam) >= 1 && Number(epochsParam) <= deps[1].MAX_EPOCHS) {
@@ -68,7 +70,7 @@ function status(stage,detail,value){
  $('stage').textContent=stage;$('status').textContent=detail||'';
  if(Number.isFinite(value))$('progress').value=Math.min(100,Math.max(0,value));else $('progress').removeAttribute('value');
 }
-let auditTiles=[],fieldViews=new Map(),auditThreshold=.5;
+let auditTiles=[],fieldViews=new Map(),auditThreshold=.5, auditRayBudget=0;
 function showField(){
  const field=auditTiles[Number($('auditField').value)];
  lastPreview=fieldViews.get(field?.tile_id);
@@ -85,8 +87,9 @@ function showStages(){
  const totals=tile.byTolerance.at(-1);
  const labels=totals.tp+totals.fn;
  const scanQuery = new URLSearchParams({crop:tile.crop, seed:tile.seed, sensor:tile.sensor, ground:tile.ground});
+ if (auditRayBudget) scanQuery.set('budget', auditRayBudget);
  $('inspectScan').href = '../?'+scanQuery+'#field';
- $('scanCounts').textContent = tile.returnCount.toLocaleString()+' scan returns · '+labels+' labeled plants · tile '+tile.tile_id;
+ $('scanCounts').textContent = tile.requestedRays.toLocaleString()+' rays requested · '+tile.sampledRays.toLocaleString()+' sampled · '+tile.returnCount.toLocaleString()+' scan returns · '+labels+' labeled plants · tile '+tile.tile_id;
  const names={proposals:'Height peaks',accepted:'Score ≥ '+auditThreshold,selected:'After spacing filter'};
  const rows=tile.stages15cm.map(({stage,count,matched})=>{
   const row=document.createElement('tr');
@@ -192,7 +195,8 @@ function displayGroundStudy(byGround) {
 $('soilMetric').addEventListener('change', () => {
  if (lastRun) displayGroundStudy(lastRun.byGround);
 });
-function display(v,threshold){
+function display(v,threshold,validationRayBudget){
+ auditRayBudget=validationRayBudget;
  auditThreshold=threshold;
  displayGroundStudy(v.byGround);
  for(const [i,k,id] of [[0,.075,'s75'],[1,.10,'s10'],[2,.15,'s15']]){
@@ -234,7 +238,7 @@ $('copyReport').onclick=async()=>{
  catch{$('reportText').focus();$('reportText').select();$('reportText').setSelectionRange(0,$('reportText').value.length);$('copyReport').textContent='Selected. Use Copy.'}
 };
 $('cancel').onclick=()=>{if(controller){controller.abort();$('cancel').disabled=true;status('Canceling…','Waiting for the current operation to stop.')}};
-const runInputs=['crop','seed','train','validation','epochs','scanner','validationSensor','peakHeight','architecture','threshold','engine','stress'];
+const runInputs=['crop','seed','train','validation','epochs','scanner','validationSensor','validationRayBudget','peakHeight','architecture','threshold','engine','stress'];
 function workload(){
  const n=+$('train').value,v=+$('validation').value,e=+$('epochs').value;
  $('workload').textContent=(2*(n+v)).toLocaleString()+' scan variants · '+e.toLocaleString()+' epochs'+(n+v>=64?' · Large run; keep this tab in the foreground.':'.');
@@ -250,6 +254,7 @@ $('controls').onsubmit=async e=>{
  const crop=$('crop').value;
  const neural=$('architecture').value==='neural';
  const threshold=$('threshold').valueAsNumber;
+ const validationRayBudget = Number($('validationRayBudget').value);
  const validationSensorMode = $('validationSensor').value === 'follow' ? undefined : $('validationSensor').value;
  const requestedBackend=$('engine').value,sensorMode=$('scanner').value,minimumHeight=Number($('peakHeight').value);
  const backend=requestedBackend==='webgpu'||(requestedBackend==='auto'&&webgpuAvailable)?'WebGPU':'CPU';
@@ -258,7 +263,7 @@ $('controls').onsubmit=async e=>{
  $('run').disabled=true;$('cancel').disabled=false;runInputs.forEach(id=>$(id).disabled=true);clear();status('Generating fields','Building separate training and validation fields.',0);
  try{
   const start=performance.now();
-  const set=await buildDataset({crop,seed,trainFields,valFields,sensorMode,validationSensorMode,minimumHeight,signal,onProgress:(a,b)=>{
+  const set=await buildDataset({crop,seed,trainFields,valFields,sensorMode,validationSensorMode,validationRayBudget,minimumHeight,signal,onProgress:(a,b)=>{
    if(signal.aborted)return;
    if(a.stage==='labels'){status('Labeling training examples',a.done+' / '+a.total+' training scans labeled',27+3*a.done/a.total);return;}
    const current=typeof a==='object'?a.current??a.completed??a.done:a,total=typeof a==='object'?a.total:b;
@@ -276,10 +281,10 @@ $('controls').onsubmit=async e=>{
    if(a?.total)status('Validating held-out fields',a.done+' / '+a.total+' scan variants scored',88+11*a.done/a.total);
   }});
   const finished=performance.now();
-  signal.throwIfAborted();display(scores,threshold);
+  signal.throwIfAborted();display(scores,threshold,validationRayBudget);
   const timings={generationMs:generated-start,trainingMs:trained-generated,validationMs:finished-trained,totalMs:finished-start};
   displayBenchmark(timings,fit.backend,epochs,set.stats.samples);
-  const settings = {crop, seed, trainFields, valFields, epochs, model: neural ? 'neural' : 'linear', sensorMode, validationSensorMode, minimumHeight, threshold};
+  const settings = {crop, seed, trainFields, valFields, epochs, model: neural ? 'neural' : 'linear', sensorMode, validationSensorMode, validationRayBudget, minimumHeight, threshold};
   lastRun={schema:3,settings,trainer:neural?'crop-mlp-v1':'crop-peak-logistic-v1',domain:'synthetic',backend:fit.backend,adapter:fit.adapter,requestedBackend,webgpuAvailable,sensorMode,samplePasses:epochs*set.stats.samples,timings,epochsPerSecond:timings.trainingMs>0?epochs*1000/timings.trainingMs:null,seed,epochs,learningRate:.25,threshold,minimumHeight,stats:set.stats,recipeManifest:set.manifest,scaling:set.scaling,weights:Array.from(fit.weights),loss:fit.loss,meanF1:scores.meanF1,scores:scores.scores,byGround:scores.byGround, byField:scores.byField, tiles:scores.tiles};
   let earned=[];
   try{

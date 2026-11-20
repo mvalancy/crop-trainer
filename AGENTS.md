@@ -49,6 +49,12 @@ Set `sensorMode` to the training layout and `validationSensorMode` to the layout
 
 The browser benchmark exports both layout selections when validation is overridden. Its replay link restores the selection. The training shed’s field audit opens each scored validation tile in the 3D viewer with the original crop, scanner, field seed and ground setting.
 
+### Change held-out ray density
+
+Use `validationRayBudget` in CLI settings or browser trainer and benchmark URLs. Omit it or set it to 0 for the original seeded budget. Fixed values are 12000, 30000, 60000 and 100000. Training recipes retain their original budgets. To repeat the density experiment, choose mixed training, `validationSensorMode: "os1-64"`, seed 721 and compare validation budgets 12000 and 60000. Repeat at seed 722.
+
+Check training tile IDs, CPU weights and scaling before comparing the runs. Match held-out tiles by field seed and ground flag. The manifest's `recipe.points` is the request, `sampledRays` is the number sampled before scan noise, and `returnCount` is the final XYZ count. Stray returns can increase the final count. Capped layouts can produce identical scans and tile IDs for two requests above capacity. The OS1-32 preset caps a 100000-ray request at 16384 samples. Use the per-tolerance scores and stage audit to tell a missing peak from a rejected candidate.
+
 ### Compare the same field with and without soil
 
 Each completed Training Shed or CLI report includes `byGround`. Each benchmark row includes it too. Select the group by its boolean `ground` flag and the score by its `cm` value. The scorer pools matched plants, extra pins and misses across that group's tiles before computing precision, recall and F1. Earlier reports contain the underlying counts in `tiles[].byTolerance`.
