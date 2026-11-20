@@ -35,7 +35,7 @@ for (const id of ['crop','scanner','validationSensor','seed']) $(id).addEventLis
 updateCutoffLink();
 let controller=null,losses=[],lastPreview=null,backendReady=false,deps,webgpuAvailable=false,lastRun=null,lastPaint=0;
 try {
- deps=await Promise.all([import('./data.js?v=peak2'),import('./model.js?v=benchmark1'),import('./neural.js')]);
+ deps=await Promise.all([import('./data.js?v=soil1'),import('./model.js?v=benchmark1'),import('./neural.js')]);
  $('epochs').max=deps[1].MAX_EPOCHS;
  $('train').max=deps[0].FIELD_LIMITS.train;
  $('validation').max=deps[0].FIELD_LIMITS.validation;
@@ -87,7 +87,16 @@ function showStages(){
  $('auditRows').replaceChildren(...rows);showField();
 }
 $('auditField').addEventListener('change',showStages);
+$('pairedScan').addEventListener('click', () => {
+ const current = auditTiles[Number($('auditField').value)];
+ const pairedIndex = auditTiles.findIndex(tile => tile.seed === current.seed && tile.ground !== current.ground);
+ $('auditField').value = String(pairedIndex);
+ showStages();
+});
 function clear(){
+ $('groundStudy').hidden = true;
+ $('groundStudy').open = false;
+ $('soilMetric').value = 'recall';
  $('harvest').textContent='';auditTiles=[];fieldViews.clear();$('overlayStage').value='selected';$('stageAudit').hidden=true;
  losses=[];lastPreview=null;lastRun=null;lastPaint=0;$('downloadRun').hidden=true;$('downloadSettings').hidden=true;$('benchmark').hidden=true;$('exportText').hidden=true;$('exportText').open=false;$('reportText').value='';$('copyReport').textContent='Copy JSON';
  for(const id of ['s75','s10','s15']){$(id).textContent='—';$('d'+id.slice(1)).textContent=''}
@@ -139,8 +148,42 @@ function pickScore(scores,key,index){
  const x=Array.isArray(scores)?scores[index]:scores?.[key]??scores?.[String(key*100)]??scores?.[String(key*100)+'cm'];
  return typeof x==='number'?x:x?.f1??x?.fScore;
 }
+function displayGroundStudy(byGround) {
+ const present = byGround.find(group => group.ground);
+ const removed = byGround.find(group => !group.ground);
+ const count = present.tileCount;
+ $('groundSummary').textContent = 'Both columns use the same fitted model and the same '+count+' held-out '+(count === 1 ? 'field' : 'fields')+'.';
+ const metric = $('soilMetric').value;
+ const descriptions = {
+  recall: 'Recall measures the share of labeled plants the detector found.',
+  precision: 'Precision measures the share of predicted centers that matched a plant.',
+  f1: 'F1 is the harmonic mean of precision and recall.'
+ };
+ $('soilMetricHelp').textContent = descriptions[metric];
+ const rows = present.scores.map((score, index) => {
+  const other = removed.scores[index];
+  const change = (other[metric] - score[metric]) * 100;
+  const row = document.createElement('tr');
+  const distance = document.createElement('th');
+  distance.scope = 'row';
+  distance.textContent = score.cm+' cm';
+  row.append(distance);
+  for (const value of [(score[metric]*100).toFixed(1)+'%', (other[metric]*100).toFixed(1)+'%', (change > 0 ? '+' : '')+change.toFixed(1)+' pp']) {
+   const cell = document.createElement('td');
+   cell.textContent = value;
+   row.append(cell);
+  }
+  return row;
+ });
+ $('groundRows').replaceChildren(...rows);
+ $('groundStudy').hidden = false;
+}
+$('soilMetric').addEventListener('change', () => {
+ if (lastRun) displayGroundStudy(lastRun.byGround);
+});
 function display(v,threshold){
  auditThreshold=threshold;
+ displayGroundStudy(v.byGround);
  for(const [i,k,id] of [[0,.075,'s75'],[1,.10,'s10'],[2,.15,'s15']]){
   const x=pickScore(v?.scores??v?.metrics??v,i===0?.075:k,i);
   if(Number.isFinite(x))$(id).textContent=(x*100).toFixed(1)+'%';
@@ -226,7 +269,7 @@ $('controls').onsubmit=async e=>{
   const timings={generationMs:generated-start,trainingMs:trained-generated,validationMs:finished-trained,totalMs:finished-start};
   displayBenchmark(timings,fit.backend,epochs,set.stats.samples);
   const settings = {crop, seed, trainFields, valFields, epochs, model: neural ? 'neural' : 'linear', sensorMode, validationSensorMode, minimumHeight, threshold};
-  lastRun={schema:3,settings,trainer:neural?'crop-mlp-v1':'crop-peak-logistic-v1',domain:'synthetic',backend:fit.backend,adapter:fit.adapter,requestedBackend,webgpuAvailable,sensorMode,samplePasses:epochs*set.stats.samples,timings,epochsPerSecond:timings.trainingMs>0?epochs*1000/timings.trainingMs:null,seed,epochs,learningRate:.25,threshold,minimumHeight,stats:set.stats,recipeManifest:set.manifest,scaling:set.scaling,weights:Array.from(fit.weights),loss:fit.loss,meanF1:scores.meanF1,scores:scores.scores,tiles:scores.tiles};
+  lastRun={schema:3,settings,trainer:neural?'crop-mlp-v1':'crop-peak-logistic-v1',domain:'synthetic',backend:fit.backend,adapter:fit.adapter,requestedBackend,webgpuAvailable,sensorMode,samplePasses:epochs*set.stats.samples,timings,epochsPerSecond:timings.trainingMs>0?epochs*1000/timings.trainingMs:null,seed,epochs,learningRate:.25,threshold,minimumHeight,stats:set.stats,recipeManifest:set.manifest,scaling:set.scaling,weights:Array.from(fit.weights),loss:fit.loss,meanF1:scores.meanF1,scores:scores.scores,byGround:scores.byGround, tiles:scores.tiles};
   let earned=[];
   try{
    const farm=JSON.parse(localStorage.getItem('crop-trainer-farm-v1')||'{"seeds":[],"mixed":false}');

@@ -82,3 +82,26 @@ test('changing only the validation scanner preserves training samples and held-o
   }
   await assert.rejects(buildDataset({...settings, validationSensorMode:'missing'}), /Unknown scanner/);
 });
+
+test('soil groups pool counts at every tolerance and recombine into overall scores', async () => {
+  const set = await buildDataset({crop:'lettuce', seed:307, trainFields:2, valFields:2});
+  const result = await validateModel(set, [], {predictScores:X => Array(X.length / set.dims).fill(1)});
+  for (const group of result.byGround) {
+    const tiles = result.tiles.filter(tile => tile.ground === group.ground);
+    assert.equal(group.tileCount, 2);
+    for (const [i, score] of group.scores.entries()) {
+      for (const key of ['tp','fp','fn']) {
+        assert.equal(score[key], tiles.reduce((sum, tile) => sum + tile.byTolerance[i][key], 0));
+      }
+      assert.equal(score.recall, score.tp / (score.tp + score.fn));
+      assert.equal(score.precision, score.tp / (score.tp + score.fp || 1));
+      assert.equal(score.f1, 2 * score.tp / (2 * score.tp + score.fp + score.fn));
+    }
+  }
+  assert.deepEqual(result.byGround.map(group => group.ground), [true, false]);
+  for (const [i, score] of result.scores.entries()) {
+    for (const key of ['tp','fp','fn']) {
+      assert.equal(score[key], result.byGround.reduce((sum, group) => sum + group.scores[i][key], 0));
+    }
+  }
+});

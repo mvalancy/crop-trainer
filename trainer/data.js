@@ -151,18 +151,43 @@ export function checkScoreThreshold(value) {
   throw new RangeError('The detection score cutoff must be a number between 0 and 1.');
  }
 }
+function summarizeTiles(tiles) {
+ const scores = TOL.map((radius, index) => {
+  let tp = 0, fp = 0, fn = 0;
+  for (const tile of tiles) {
+   const counts = tile.byTolerance[index];
+   tp += counts.tp;
+   fp += counts.fp;
+   fn += counts.fn;
+  }
+  return {
+   cm: radius * 100, tp, fp, fn,
+   precision: tp / (tp + fp || 1),
+   recall: tp / (tp + fn || 1),
+   f1: 2 * tp / (2 * tp + fp + fn || 1)
+  };
+ });
+ return {scores, meanF1: scores.reduce((sum, score) => sum + score.f1, 0) / scores.length};
+}
+
 export async function validateModel(set,weights,{threshold=.5,predictScores=predict,signal,onProgress=()=>{}}={}){
  checkScoreThreshold(threshold);
- const totals=TOL.map(()=>[0,0,0]),tiles=[],previews=new Map();
+ const tiles=[],previews=new Map();
  for(const [i,t] of set.validation.entries()){
   check(signal);
   const stages=detectionStages(t,predictScores(t.X,weights,set.dims),threshold);
   const predictions=stages.selected;
-  const byTolerance=TOL.map((radius,j)=>{const tp=matchedCount(predictions,t.truth,radius),fp=predictions.length-tp,fn=t.truth.length-tp;totals[j][0]+=tp;totals[j][1]+=fp;totals[j][2]+=fn;return{cm:100*radius,tp,fp,fn};});
+  const byTolerance = TOL.map(radius => {
+   const tp = matchedCount(predictions, t.truth, radius);
+   return {cm: 100 * radius, tp, fp: predictions.length - tp, fn: t.truth.length - tp};
+  });
   tiles.push({seed:t.seed,ground:t.ground,tile_id:t.tile_id,crop:t.recipe.crop,returnCount:t.returnCount,sensor:t.recipe.sampling.key,byTolerance,stages15cm:measureStages(stages,t.truth,byTolerance[2].tp)});
   previews.set(t.tile_id,{truth:t.truth,predictions,ground:t.ground,seed:t.seed,points:t.points,stages});
   onProgress({done:i+1,total:set.validation.length,stage:'validation'});await pause();
  }
- const scores=TOL.map((r,i)=>{const [tp,fp,fn]=totals[i];return{cm:r*100,tp,fp,fn,f1:2*tp/(2*tp+fp+fn||1),precision:tp/(tp+fp||1),recall:tp/(tp+fn||1)};});
- return{scores,meanF1:scores.reduce((a,b)=>a+b.f1,0)/scores.length,preview:previews.values().next().value,previews,tiles};
+ const byGround = [true, false].map(ground => {
+  const subset = tiles.filter(tile => tile.ground === ground);
+  return {ground, tileCount: subset.length, ...summarizeTiles(subset)};
+ });
+ return {...summarizeTiles(tiles), byGround, preview:previews.values().next().value, previews, tiles};
 }

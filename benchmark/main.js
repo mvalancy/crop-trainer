@@ -105,7 +105,7 @@ $('benchForm').onsubmit = async event => {
           const row = {
             model, backend:fit.backend, threshold, seed:runSeed, generationMs, trainingMs,
             scoringMs:performance.now()-scoringStart, adapter:fit.adapter,
-            meanF1:result.meanF1, scores:result.scores, tiles:result.tiles
+            meanF1:result.meanF1, scores:result.scores, byGround:result.byGround, tiles:result.tiles
           };
           rows.push(row);
           appendRow(row);
