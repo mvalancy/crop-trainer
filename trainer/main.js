@@ -1,3 +1,5 @@
+import {initSandbox, modelSettings, duration, trainInWorker, inspectWeights, featureNames} from './sandbox.js';
+import {MAX_SANDBOX_EPOCHS, trainerId} from './network.js';
 import {returnBand} from './field.js?v=missbands1';
 import {cropProfile} from './crops.js';
 import {allProfiles, sensorOptions, validationSensorOptions, sensorDetails, rayBudgetOptions, trainingRayOptions, trainingRayValue, ALTERNATING_BUDGET} from './sensors.js?v=densitymix1';
@@ -39,19 +41,21 @@ function updateBenchmarkLinks() {
   if (Number($('validationRayBudget').value)) query.set('validationRayBudget', $('validationRayBudget').value);
   if ($('validationSensor').value !== 'follow') query.set('validationSensor', $('validationSensor').value);
   const link = $(id);
-  link.hidden = !validSeed || (comparison !== 'epochs' && !$('epochs').validity.valid);
+  link.hidden = !validSeed || (comparison !== 'epochs' && (!$('epochs').validity.valid || $('epochs').valueAsNumber>5000 || $('stopMode').value==='time'));
   if (comparison !== 'epochs') query.set('epochs', $('epochs').value);
   link.href = '../benchmark/?'+query;
  }
 }
 $('crop').addEventListener('change', updateBenchmarkLinks);
-for (const id of ['peakHeight','scanner','validationSensor','trainingRayBudget','validationRayBudget','seed','epochs']) $(id).addEventListener('input', updateBenchmarkLinks);
+for (const id of ['peakHeight','scanner','validationSensor','trainingRayBudget','validationRayBudget','seed','epochs','stopMode']) $(id).addEventListener('input', updateBenchmarkLinks);
+initSandbox(params);
+let finishTraining=null, calibration=null;
 let controller=null,losses=[],lastPreview=null,backendReady=false,deps,webgpuAvailable=false,lastRun=null,lastPaint=0;
 try {
- deps=await Promise.all([import('./data.js?v=peaktrace1'),import('./model.js?v=benchmark1'),import('./neural.js')]);
- $('epochs').max=deps[1].MAX_EPOCHS;
+ deps=await Promise.all([import('./data.js?v=peaktrace1'),import('./model.js?v=benchmark1'),import('./neural.js?v=sandbox1')]);
+ $('epochs').max=MAX_SANDBOX_EPOCHS;
  const epochsParam = params.get('epochs');
- if (/^\d+$/.test(epochsParam) && Number(epochsParam) >= 1 && Number(epochsParam) <= deps[1].MAX_EPOCHS) {
+ if (/^\d+$/.test(epochsParam) && Number(epochsParam) >= 1 && Number(epochsParam) <= MAX_SANDBOX_EPOCHS) {
   $('epochs').value = Number(epochsParam);
  }
  const thresholdParam = params.get('threshold');
@@ -65,19 +69,22 @@ try {
  let gpuStatus='WebGPU unavailable · browser API missing';
  try{
   if(navigator.gpu){
-   webgpuAvailable=!!(await navigator.gpu.requestAdapter());
-   gpuStatus=webgpuAvailable?'WebGPU available · adapter found':'WebGPU unavailable · no adapter';
+   const adapter=await navigator.gpu.requestAdapter();
+   webgpuAvailable=!!adapter;
+   gpuStatus=adapter?'WebGPU available · '+deps[1].describeAdapter(adapter).kind:'WebGPU unavailable · no adapter';
   }
  }catch{gpuStatus='WebGPU unavailable · adapter check failed'}
  $('engine').querySelector('[value="webgpu"]').disabled=!webgpuAvailable;
+ if(webgpuAvailable && params.get('engine')==='webgpu')$('engine').value='webgpu';
  $('gpu').textContent=gpuStatus;
- backendReady=true;$('run').disabled=false;
- $('status').textContent='Ready. Field generation and validation always run on the CPU.';
+ backendReady=true;$('run').disabled=false;$('estimate').disabled=false;
+ $('status').textContent='Start with the preset, or open Design the model to change its layers.';
 }catch(e){
  $('gpu').textContent='Training unavailable';$('stage').textContent='Training not ready';$('status').textContent=e.message;
 }
 function status(stage,detail,value){
- $('stage').textContent=stage;$('status').textContent=detail||'';
+ if($('stage').textContent!==stage)$('stage').textContent=stage;
+ $('status').textContent=detail||'';
  if(Number.isFinite(value))$('progress').value=Math.min(100,Math.max(0,value));else $('progress').removeAttribute('value');
 }
 const requestedBand = params.get('missBand');
@@ -205,13 +212,14 @@ $('pairedScan').addEventListener('click', () => {
  showStages();
 });
 function clear(){
+ $('firstRun').hidden=true;$('scored').hidden=true;
  $('charts').hidden = false;
  $('groundStudy').hidden = true;
  $('groundStudy').open = false;
 
  $('peakTrace').hidden = true; $('missControls').hidden = true; $('missDistance').value = '15'; $('missBand').value = replayMisses ? requestedBand : 'all'; $('missBox').replaceChildren();
  $('harvest').textContent='';auditTiles=[];fieldViews.clear();$('overlayStage').value=replayMisses ? 'misses' : 'selected';$('stageAudit').hidden=true;
- losses=[];lastPreview=null;lastRun=null;lastPaint=0;$('downloadRun').hidden=true;$('downloadSettings').hidden=true;$('benchmark').hidden=true;$('exportText').hidden=true;$('exportText').open=false;$('reportText').value='';$('copyReport').textContent='Copy JSON';
+ losses=[];$('weightInspector').hidden=true;$('weightInspector').open=false;$('downloadWeights').hidden=true;lastPreview=null;lastRun=null;lastPaint=0;$('downloadRun').hidden=true;$('downloadSettings').hidden=true;$('benchmark').hidden=true;$('exportText').hidden=true;$('exportText').open=false;$('reportText').value='';$('copyReport').textContent='Copy JSON';
  for(const id of ['s75','s10','s15']){$(id).textContent='—';$('d'+id.slice(1)).textContent=''}
  $('resultNote').textContent='Run in progress. Validation uses synthetic fields only.';
  $('lossText').textContent='No epochs yet.';
@@ -226,7 +234,14 @@ function coords(x){if(Array.isArray(x)||ArrayBuffer.isView(x))return x;if(x?.cen
 function draw(){
  let [g,w,h]=frame('loss'),b=12;
  g.strokeStyle='#c5d0c0';for(let i=1;i<4;i++){let y=i*h/4;g.beginPath();g.moveTo(b,y);g.lineTo(w-b,y);g.stroke()}
- if(losses.length){const hi=Math.max(...losses,1e-9);let sx=i=>b+i*(w-2*b)/Math.max(1,losses.length-1),sy=v=>h-b-v/hi*(h-2*b);g.strokeStyle='#2d5738';g.lineWidth=2;g.beginPath();losses.forEach((v,i)=>i?g.lineTo(sx(i),sy(v)):g.moveTo(sx(i),sy(v)));g.stroke();g.fillStyle='#2d5738';g.beginPath();g.arc(sx(losses.length-1),sy(losses.at(-1)),3,0,2*Math.PI);g.fill()}
+ if (losses.length) {
+  const hi = Math.max(1e-9,...losses.map(p=>p.loss));
+  const x = epoch => b+(epoch-1)*(w-2*b)/Math.max(1,losses.at(-1).epoch-1);
+  const y = loss => h-b-loss/hi*(h-2*b);
+  g.strokeStyle='#2d5738';g.lineWidth=2;g.beginPath();
+  losses.forEach((p,i)=>i?g.lineTo(x(p.epoch),y(p.loss)):g.moveTo(x(p.epoch),y(p.loss)));g.stroke();
+  const last=losses.at(-1);g.fillStyle='#2d5738';g.beginPath();g.arc(x(last.epoch),y(last.loss),3,0,2*Math.PI);g.fill();
+ }
  [g,w,h]=frame('preview');
  const side=Math.max(1,Math.min(w-18,h-18)), left=(w-side)/2,top=(h-side)/2;
  g.strokeStyle='#c5d0c0';g.strokeRect(left,top,side,side);
@@ -255,16 +270,6 @@ function draw(){
  }
 }
 new ResizeObserver(draw).observe(document.querySelector('.viz'));draw();
-function updateEpoch({epoch,loss},epochs,backend){
- if(!Number.isFinite(loss))return;
- losses.push(loss);
- const now=performance.now();
- if(epoch!==1&&epoch!==epochs&&now-lastPaint<150)return;
- lastPaint=now;
- $('lossText').textContent='Latest: '+loss.toPrecision(4);
- status('Training on '+backend,'Epoch '+epoch+' / '+epochs,30+55*epoch/epochs);
- draw();
-}
 function displayBenchmark(t,backend,epochs,samples){
  const format=ms=>ms<1000?ms.toFixed(1)+' ms':(ms/1000).toFixed(2)+' s';
  $('bEngine').textContent=backend;
@@ -343,6 +348,7 @@ $('soilMetric').addEventListener('change', () => {
  if (lastRun) displayGroundStudy(lastRun);
 });
 function display(v,threshold,validationRayBudget){
+ $('scored').hidden=false;
  auditRayBudget=validationRayBudget;
  auditThreshold=threshold;
  displayGroundStudy(v);
@@ -376,6 +382,15 @@ function downloadJSON(data, filename) {
 $('downloadRun').onclick = () => {
  if (lastRun) downloadJSON(lastRun, 'crop-trainer-' + lastRun.backend.toLowerCase() + '-' + lastRun.epochs + 'ep-seed' + lastRun.seed + '.json');
 };
+$('downloadWeights').onclick = () => {
+ if (!lastRun) return;
+ const {settings, scaling, weights, trainer, epochs} = lastRun;
+ downloadJSON({format:'crop-trainer-weights-v1',trainer,featureSchema:'crop-peak-13-v1',inputs:13,featureNames,
+   hiddenLayers:settings.hiddenLayers,activation:settings.activation,output:'sigmoid',
+   layout:'layer-major, neuron-major, incoming weights then bias',crop:settings.crop,
+   minimumHeight:settings.minimumHeight,threshold:settings.threshold,pinSeparation:cropProfile(settings.crop).pinSeparation,
+   scaling,weights,epochs}, 'crop-weights-'+settings.crop+'-'+settings.seed+'.json');
+};
 $('downloadSettings').onclick = () => {
  if (lastRun) downloadJSON(lastRun.settings, 'crop-settings-' + lastRun.seed + '.json');
 };
@@ -386,33 +401,70 @@ $('copyReport').onclick=async()=>{
  catch{$('reportText').focus();$('reportText').select();$('reportText').setSelectionRange(0,$('reportText').value.length);$('copyReport').textContent='Selected. Use Copy.'}
 };
 $('cancel').onclick=()=>{if(controller){controller.abort();$('cancel').disabled=true;status('Canceling…','Waiting for the current operation to stop.')}};
-const runInputs=['crop','seed','train','validation','epochs','scanner','validationSensor','trainingRayBudget','validationRayBudget','peakHeight','architecture','threshold','engine','stress'];
-function workload(){
- const n=+$('train').value,v=+$('validation').value,e=+$('epochs').value;
- $('workload').textContent=(2*(n+v)).toLocaleString()+' scan variants · '+e.toLocaleString()+' epochs'+(n+v>=64?' · Large run; keep this tab in the foreground.':'.');
+function readSettings() {
+ const model = modelSettings();
+ return {...model,crop:$('crop').value,seed:$('seed').valueAsNumber,
+  trainFields:$('train').valueAsNumber,valFields:$('validation').valueAsNumber,sensorMode:$('scanner').value,
+  validationSensorMode:$('validationSensor').value === 'follow' ? undefined : $('validationSensor').value,
+  trainingRayBudget:trainingRayValue($('trainingRayBudget')),validationRayBudget:Number($('validationRayBudget').value),
+  minimumHeight:Number($('peakHeight').value),threshold:$('threshold').valueAsNumber};
 }
-for(const id of ['train','validation','epochs'])$(id).addEventListener('input',workload);
+function selectedBackend() {
+ return $('engine').value==='webgpu' || ($('engine').value==='auto' && webgpuAvailable) ? 'WebGPU' : 'CPU';
+}
+function workload() {
+ const settings=readSettings(), backend=selectedBackend(), timed=$('stopMode').value==='time';
+ const epochs=$('epochs').valueAsNumber, ms=$('minutes').valueAsNumber*60000;
+ if (![settings.trainFields,settings.valFields,timed?ms:epochs].every(n=>Number.isFinite(n)&&n>0)) {
+  $('workload').textContent='';$('estimateText').textContent='Enter field counts and a run length to estimate the time.';return;
+ }
+ $('workload').textContent=(2*(settings.trainFields+settings.valFields)).toLocaleString()+' scan variants · '+
+   (timed?duration(ms)+' of training':epochs.toLocaleString()+' epochs');
+ const key=JSON.stringify([settings,backend]);
+ if(calibration?.key === key){
+  const fit=timed?ms:epochs*calibration.perEpoch;
+  $('estimateText').textContent='Estimated total '+duration(calibration.overhead+fit)+' on '+backend+
+    ' · '+duration(calibration.overhead)+' setup and scoring. Based on this device’s last measurement.';
+ }else{
+  $('estimateText').textContent=timed?'Time a trial to include field generation and scoring in the estimate.':
+    'Time a 16-epoch trial to estimate this run on your device.';
+ }
+}
+function setStopMode(){
+ const timed=$('stopMode').value==='time';
+ $('epochsLabel').hidden=timed;$('epochs').disabled=timed;
+ $('minutesLabel').hidden=!timed;$('minutes').disabled=!timed;
+}
+$('stopMode').addEventListener('input',setStopMode);
+$('controls').addEventListener('input',workload);
+$('controls').addEventListener('invalid',event=>{
+ for(let node=event.target.parentElement;node;node=node.parentElement)if(node.tagName==='DETAILS')node.open=true;
+},true);
 $('stress').onclick=()=>{
- $('train').value=128;$('validation').value=64;$('epochs').value=5000;$('scanner').value='mixed';describeScanner();updateBenchmarkLinks();workload();
+ $('train').value=128;$('validation').value=64;$('epochs').value=5000;$('stopMode').value='epochs';
+ setStopMode();$('scanner').value='mixed';describeScanner();updateBenchmarkLinks();workload();
 };
+$('finish').onclick=()=>{finishTraining?.();$('finish').disabled=true;};
+$('estimate').onclick=()=>{if($('controls').reportValidity()) runFit(true);};
+$('controls').onsubmit=e=>{e.preventDefault();runFit(false);};
 workload();
-$('controls').onsubmit=async e=>{
- e.preventDefault();if(controller||!backendReady)return;
- const [{buildDataset,validateModel},{trainGPU,trainCPU},{trainNetworkCPU,trainNetworkGPU,predictNetwork}]=deps;
- const crop=$('crop').value;
- const neural=$('architecture').value==='neural';
- const threshold=$('threshold').valueAsNumber;
- const trainingRayBudget = trainingRayValue($('trainingRayBudget'));
- const validationRayBudget = Number($('validationRayBudget').value);
- const validationSensorMode = $('validationSensor').value === 'follow' ? undefined : $('validationSensor').value;
- const requestedBackend=$('engine').value,sensorMode=$('scanner').value,minimumHeight=Number($('peakHeight').value);
- const backend=requestedBackend==='webgpu'||(requestedBackend==='auto'&&webgpuAvailable)?'WebGPU':'CPU';
+async function runFit(trial){
+ if(controller||!backendReady)return;
+ const [{buildDataset,validateModel},,{trainNetworkGPU,predictNetwork}]=deps;
+ const settings=readSettings(), backend=selectedBackend(), requestedBackend=$('engine').value;
+ const {crop,seed,threshold,validationRayBudget,minimumHeight,sensorMode}=settings;
+ const targetEpochs=trial?16:$('epochs').valueAsNumber;
+ const timeLimitMs=!trial && $('stopMode').value==='time'?$('minutes').valueAsNumber*60000:0;
+ const key=JSON.stringify([settings,backend]);
  controller=new AbortController();const {signal}=controller;
- const seed=+$('seed').value,trainFields=+$('train').value,valFields=+$('validation').value,epochs=+$('epochs').value;
- $('run').disabled=true;$('cancel').disabled=false;runInputs.forEach(id=>$(id).disabled=true);clear();status('Generating fields','Building separate training and validation fields.',0);
+ const locked=[...$('controls').querySelectorAll('input,select,button')].filter(el=>!el.disabled);
+ locked.forEach(el=>el.disabled=true);
+ $('cancel').disabled=false;
+ if(!trial)clear();
+ status(trial?'Timing a trial':'Generating fields','Building separate training and validation fields.',0);
  try{
   const start=performance.now();
-  const set=await buildDataset({crop,seed,trainFields,valFields,sensorMode,validationSensorMode,trainingRayBudget,validationRayBudget,minimumHeight,signal,onProgress:(a,b)=>{
+  const set=await buildDataset({...settings,signal,onProgress:(a,b)=>{
    if(signal.aborted)return;
    if(a.stage==='labels'){status('Labeling training examples',a.done+' / '+a.total+' training scans labeled',27+3*a.done/a.total);return;}
    const current=typeof a==='object'?a.current??a.completed??a.done:a,total=typeof a==='object'?a.total:b;
@@ -420,21 +472,64 @@ $('controls').onsubmit=async e=>{
   }});
   const generated=performance.now();
   signal.throwIfAborted();status('Training on '+backend,'Starting '+backend+' training…',30);
-  const train=neural?(backend==='WebGPU'?trainNetworkGPU:trainNetworkCPU):(backend==='WebGPU'?trainGPU:trainCPU);
-  const fit=await train(set.X,set.Y,{dims:set.dims,epochs,signal,onEpoch:(a)=>{if(!signal.aborted)updateEpoch(a,epochs,backend)}});
+  let finish=false, warm=null, latest=null;
+  const options={...settings,dims:set.dims,lr:settings.learningRate,epochs:timeLimitMs?40:targetEpochs,timeLimitMs};
+  const ready=fn=>{finishTraining=fn;$('finish').hidden=trial;$('finish').disabled=trial;};
+  const progress=p=>{
+   latest=p;
+   if(p.epoch===4)warm=p;
+   if(signal.aborted || (!p.done && p.epoch!==1 && performance.now()-lastPaint<180))return;
+   lastPaint=performance.now();
+   const rate=warm && p.epoch>warm.epoch?(p.elapsedMs-warm.elapsedMs)/(p.epoch-warm.epoch):p.elapsedMs/p.epoch;
+   const remaining=timeLimitMs?Math.max(0,timeLimitMs-p.elapsedMs):Math.max(0,targetEpochs-p.epoch)*rate;
+   const fraction=timeLimitMs?p.elapsedMs/timeLimitMs:p.epoch/targetEpochs;
+   status(trial?'Timing '+backend+' trial':'Training on '+backend,'Epoch '+p.epoch.toLocaleString()+
+    (timeLimitMs?'':' / '+targetEpochs.toLocaleString())+' · '+duration(p.elapsedMs)+' elapsed · '+
+    (p.epoch<4 && !timeLimitMs?'measuring speed…':'about '+duration(remaining)+' of training left'),30+55*Math.min(1,fraction));
+   if(!trial){
+    losses.push({epoch:p.epoch,loss:p.loss});
+    if(losses.length>1024)losses=losses.filter((_,i)=>i%2===0);
+    $('lossText').textContent='Epoch '+p.epoch.toLocaleString()+' · loss '+p.loss.toPrecision(4);
+    draw();
+   }
+  };
+  let fit;
+  if(backend==='WebGPU'){
+   ready(()=>{finish=true;});
+   fit=await trainNetworkGPU(set.X,set.Y,{...options,signal,onEpoch:progress,shouldFinish:()=>finish});
+  }else{
+   fit=await trainInWorker(set.X,set.Y,options,signal,progress,ready);
+  }
+  const epochs=fit.epochsCompleted;
+  finishTraining=null;$('finish').hidden=true;
   const trained=performance.now();
   signal.throwIfAborted();status('Validating held-out fields','Matching predicted centers to ground truth…',88);
   await new Promise(r=>setTimeout(r,0));
-  const scores=await validateModel(set,fit.weights,{threshold,signal,predictScores:neural?predictNetwork:undefined,onProgress:(a)=>{
+  const scores=await validateModel(set,fit.weights,{threshold,signal,predictScores:(x,w,d)=>predictNetwork(x,w,d,settings.hiddenLayers,settings.activation),onProgress:(a)=>{
    if(signal.aborted)return;
    if(a?.total)status('Validating held-out fields',a.done+' / '+a.total+' scan variants scored',88+11*a.done/a.total);
   }});
   const finished=performance.now();
-  signal.throwIfAborted();display(scores,threshold,validationRayBudget);
+  signal.throwIfAborted();
+  const perEpoch=warm && epochs>warm.epoch?(latest.elapsedMs-warm.elapsedMs)/(epochs-warm.epoch):latest.elapsedMs/epochs;
+  calibration={key,perEpoch,overhead:Math.max(0,finished-start-latest.elapsedMs)};
+  if(trial){
+   status('Trial complete','Timed 16 training epochs and scored the validation fields. See the estimate in Run setup.',100);
+   return;
+  }
+  losses=fit.loss.map((loss,i)=>({epoch:fit.lossEpochs[i],loss}));
+  if(losses.length>1024){const skip=Math.ceil(losses.length/1024);losses=losses.filter((_,i)=>i%skip===0||i===losses.length-1);}
+  display(scores,threshold,validationRayBudget);
   const timings={generationMs:generated-start,trainingMs:trained-generated,validationMs:finished-trained,totalMs:finished-start};
   displayBenchmark(timings,fit.backend,epochs,set.stats.samples);
-  const settings = {crop, seed, trainFields, valFields, epochs, model: neural ? 'neural' : 'linear', sensorMode, validationSensorMode, trainingRayBudget, validationRayBudget, minimumHeight, threshold};
-  lastRun={schema:3,settings,trainer:neural?'crop-mlp-v1':'crop-peak-logistic-v1',domain:'synthetic',backend:fit.backend,adapter:fit.adapter,requestedBackend,webgpuAvailable,sensorMode,samplePasses:epochs*set.stats.samples,timings,epochsPerSecond:timings.trainingMs>0?epochs*1000/timings.trainingMs:null,seed,epochs,learningRate:.25,threshold,minimumHeight,stats:set.stats,recipeManifest:set.manifest,scaling:set.scaling,weights:Array.from(fit.weights),loss:fit.loss,meanF1:scores.meanF1,scores:scores.scores,countError:scores.countError,byGround:scores.byGround, byField:scores.byField, tiles:scores.tiles};
+  settings.epochs=epochs;
+  const trainer=trainerId(settings);
+  lastRun={schema:3,settings,trainer,domain:'synthetic',backend:fit.backend,adapter:fit.adapter,requestedBackend,webgpuAvailable,sensorMode,
+   runPlan:timeLimitMs?{mode:'time',minutes:timeLimitMs/60000}:{mode:'epochs',epochs:targetEpochs},
+   samplePasses:epochs*set.stats.samples,timings,epochsPerSecond:epochs*1000/timings.trainingMs,seed,epochs,
+   learningRate:settings.learningRate,threshold,minimumHeight,stats:set.stats,recipeManifest:set.manifest,scaling:set.scaling,
+   weights:Array.from(fit.weights),loss:fit.loss,lossEpochs:fit.lossEpochs,meanF1:scores.meanF1,scores:scores.scores,
+   countError:scores.countError,byGround:scores.byGround,byField:scores.byField,tiles:scores.tiles};
   let earned=[];
   try{
    const farm=JSON.parse(localStorage.getItem('crop-trainer-farm-v1')||'{"seeds":[],"mixed":false}');
@@ -443,10 +538,11 @@ $('controls').onsubmit=async e=>{
    earned=['First harvest',...(farm.mixed?['Field scout']:[]),...(farm.seeds.length>=2?['Seed saver']:[])];
   }catch{}
   $('harvest').textContent=earned.length?'Farm journal · '+earned.join(' / '):'Harvest complete';
-  $('downloadRun').hidden=false;$('downloadSettings').hidden=false;$('exportText').hidden=false;
+  inspectWeights(lastRun.weights,settings.hiddenLayers);
+  $('downloadWeights').hidden=false;$('downloadRun').hidden=false;$('downloadSettings').hidden=false;$('exportText').hidden=false;
   status('Run complete',backend+' training · '+(scores.meanF1*100).toFixed(1)+'% mean F1 on held-out synthetic scans.',100);
  }catch(err){
-  if(signal.aborted){status('Canceled','No validation result was produced.',0);$('resultNote').textContent='This run was canceled.'}
-  else{status('Run failed',String(err?.message||err)+(backend==='WebGPU'?' Choose CPU to retry without WebGPU.':''),0);$('resultNote').textContent='No validation result was produced.'}
- }finally{controller=null;$('run').disabled=!backendReady;$('cancel').disabled=true;runInputs.forEach(id=>$(id).disabled=false)}
+  if(signal.aborted){status('Canceled',trial?'Timing trial stopped.':'Training stopped.',0);if(!trial)$('resultNote').textContent='This run was canceled.'}
+  else{status('Run failed',String(err?.message||err)+(backend==='WebGPU'?' Choose CPU to retry.':''),0);if(!trial)$('resultNote').textContent='No validation result was produced.'}
+ }finally{controller=null;finishTraining=null;locked.forEach(el=>el.disabled=false);$('cancel').disabled=true;$('finish').hidden=true;workload()}
 };

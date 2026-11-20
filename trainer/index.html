@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Train &amp; validate · Crop Trainer</title>
-<link rel="stylesheet" href="../farm.css?v=mobile-actions1"></head>
+<link rel="stylesheet" href="../farm.css?v=model-sandbox1"></head>
 <body class="shed"><a class="skip" href="#main">Skip to content</a>
 <header class="siteBar">
 <div class="barInner"><a class="brand" href="../"><span class="mark" aria-hidden="true"><i></i></span>Crop Trainer</a>
@@ -11,24 +11,47 @@
 <main id="main">
 <header class="pageIntro">
 <h1>Training shed</h1>
-<p>Fit a detector on synthetic crops, then see where it places pins on new fields. Training and scoring run on this device.</p></header>
+<p>Teach a model to find plants in laser scans. Try the starter, or build a network of your own and see which plants it finds.</p></header>
 <div class="grid">
 <aside>
 <h2>Run setup</h2>
 <p id="gpu" class="adapter" role="status">Checking WebGPU…</p>
 <form id="controls">
+<section class="modelCard" aria-labelledby="modelTitle">
+<h3 id="modelTitle">Your detector</h3>
+<figure class="networkFigure"><svg viewBox="0 0 320 122" role="img" aria-labelledby="netTitle shapeSummary"><title id="netTitle">Detector layers, from scan measurements to a plant score</title><g id="diagramLayers"></g></svg><figcaption id="shapeSummary"></figcaption></figure>
+<label>Model family<select id="architecture"><option value="neural">Dense neural network</option><option value="linear">Logistic regression</option></select></label>
+<details id="modelOptions"><summary id="designTitle">Design the model</summary>
+<fieldset id="hiddenEditor"><legend>Hidden layers</legend>
+<label>Number of hidden layers<select id="depth"><option>1</option><option>2</option><option>3</option><option>4</option></select></label>
+<div id="widths" class="unitFields"></div>
+<label>Hidden activation<select id="activation"><option value="tanh">Tanh</option><option value="relu">ReLU</option></select></label></fieldset>
+<p class="hint">Each input describes the shape around a peak. The output scores each possible plant center from 0 to 1. Counts show the full layer widths.</p></details></section>
 <div class="formPair">
 <label>Crop<select id="crop"><option value="lettuce">Lettuce</option><option value="artichoke">Globe artichoke</option><option value="tomato">Young tomato</option></select></label>
-<label>Dataset seed<input id="seed" type="number" min="0" max="4294967295" step="1" value="27" required=""></label>
-<label>Training fields<input id="train" type="number" min="2" max="256" step="1" value="6" required=""></label>
-<label>Validation fields<input id="validation" type="number" min="1" max="128" step="1" value="3" required=""></label>
-<label>Epochs<input id="epochs" type="number" min="1" max="5000" step="1" value="40" required=""></label>
 <label>Training backend<select id="engine"><option value="auto">Automatic</option><option value="cpu">CPU</option><option value="webgpu" disabled="">WebGPU (experimental)</option></select></label></div>
 <div class="action">
 <button type="submit" class="primary" id="run" disabled="">Generate, train &amp; score</button>
 <button type="button" id="cancel" disabled="">Cancel</button>
-<button type="button" id="stress">Load stress settings</button></div>
+<button type="button" id="estimate" disabled>Time a trial</button>
+<button type="button" id="finish" hidden>Finish &amp; score now</button></div>
 <div class="workloadLine"><p class="fine" id="workload"></p><a class="mobileShortcut" href="#resultsTitle">View results ↓</a></div>
+<p class="hint estimate" id="estimateText"></p>
+<details id="fitOptions"><summary>Training schedule and optimizer</summary>
+<div class="detailFields">
+<label>Stop after<select id="stopMode"><option value="epochs">Number of epochs</option><option value="time">Training time</option></select></label>
+<label id="epochsLabel">Epochs<input id="epochs" type="number" min="1" max="100000000" step="1" value="40" required><span>One epoch uses every training example once.</span></label>
+<label id="minutesLabel" hidden>Training minutes<input id="minutes" type="number" min="1" max="1440" step="1" value="30" required disabled><span>1 minute to 24 hours. The timer starts with the first training epoch. Keep this tab open and the device awake.</span></label>
+<label>Optimizer<select id="optimizer"><option value="sgd">Gradient descent</option><option value="momentum">Gradient descent with momentum</option></select></label>
+<label>Update weights after<select id="batchSize"><option value="0">All training examples</option><option value="32">32 examples</option><option value="128">128 examples</option><option value="512">512 examples</option></select><span>Smaller batches update more often during each epoch.</span></label>
+<label>Learning rate<input id="learningRate" type="number" min="0.000001" max="2" step="any" value="0.25" required><span>How far each update moves the weights. When combining small batches with momentum, try 0.025 first.</span></label>
+<label id="momentumLabel" hidden>Momentum<input id="momentum" type="number" min="0" max="0.9999" step="any" value="0.9" required></label>
+<label id="initLabel">Weight initialization seed<input id="initSeed" type="number" min="0" max="4294967295" value="12345" required><span>Neural weights start from this seed. Logistic weights start at zero.</span></label>
+</div></details>
+<details id="datasetOptions"><summary>Fields and dataset seed</summary><div class="detailFields"><label>Dataset seed<input id="seed" type="number" min="0" max="4294967295" step="1" value="27" required=""></label>
+<label>Training fields<input id="train" type="number" min="2" max="256" step="1" value="6" required=""></label>
+<label>Validation fields<input id="validation" type="number" min="1" max="128" step="1" value="3" required=""></label>
+<button type="button" id="stress">Load stress settings</button></div></details>
 <details id="scanOptions">
 <summary>Scanner and ray budgets</summary>
 <div class="detailFields">
@@ -38,9 +61,9 @@
 <label>Validation ray budget<select id="validationRayBudget"></select><span>Each budget requests rays per scan. The selected layout can cap the sampled count.</span></label>
 <a id="densityBench" href="../benchmark/?comparison=density">Compare 12k and 60k training rays</a></div></details>
 <details id="detectorOptions">
-<summary>Detector settings</summary>
+<summary>Peak detection and scoring</summary>
 <div class="detailFields">
-<label>Detector<select id="architecture"><option value="neural">Neural net · 4 hidden units</option><option value="linear">Logistic baseline</option></select></label>
+
 <label>Minimum peak height<select id="peakHeight"><option value="0.065">6.5 cm · standard</option><option value="0.035" selected="">3.5 cm · include lower peaks</option></select><span>Find peaks at this height during training and validation. The 3.5 cm setting includes shorter and more sparsely sampled plants.</span></label>
 <label>Detection score cutoff<input id="threshold" type="number" min="0" max="1" step="any" value="0.5" required=""><span>A lower cutoff keeps more candidate pins before spacing. Use the cutoff benchmark to compare extra pins and missed plants.</span></label>
 <details class="peakHelp">
@@ -52,13 +75,17 @@
 <p class="fine">Each planting is scanned with and without soil. Both scans stay in the same split.</p></aside>
 <section aria-labelledby="resultsTitle">
 <h2 id="resultsTitle">Run results</h2>
-<div class="stage"><strong id="stage">Ready to start</strong>
-<div id="status" role="status" aria-live="polite">Set up a run to see training loss and validation scores.</div><progress id="progress" aria-label="Run progress" value="0" max="100"></progress></div>
-<h3 class="scoreHeading">F1 by matching distance</h3>
+<div class="stage"><strong id="stage" role="status">Ready to start</strong>
+<div id="status">Set up a run to see training loss and validation scores.</div><progress id="progress" aria-label="Run progress" value="0" max="100"></progress></div>
+<figure id="firstRun" class="firstRun">
+<img src="../art/scan-learn-find.svg" width="620" height="206" alt="A laser scans a head of lettuce, a network learns from labeled peaks, and two pins land on plants in a new field.">
+<figcaption>During practice the model gets an answer key. At harvest it sees only the laser dots. Look for a labeled plant it missed on the results map.</figcaption></figure>
+<div id="scored" hidden><h3 class="scoreHeading">F1 by matching distance</h3>
 <div class="cards" aria-label="Synthetic validation scores">
 <div><small>7.5 cm</small><b id="s75">—</b><span class="fine" id="d75"></span></div>
 <div><small>10 cm</small><b id="s10">—</b><span class="fine" id="d10"></span></div>
 <div><small>15 cm</small><b id="s15">—</b><span class="fine" id="d15"></span></div></div>
+</div>
 <dl id="benchmark" class="bench" hidden="">
 <div><dt>Backend used</dt><dd id="bEngine"></dd></div>
 <div><dt>Field generation</dt><dd id="bGenerate"></dd></div>
@@ -68,8 +95,14 @@
 <div><dt>Training speed</dt><dd id="bSpeed"></dd></div>
 <div><dt>Training examples</dt><dd id="bSamples"></dd></div></dl>
 <div class="downloads">
+<button type="button" id="downloadWeights" hidden>Download model weights</button>
 <button type="button" id="downloadRun" hidden="">Download benchmark JSON</button>
 <button type="button" id="downloadSettings" hidden="">Download run settings</button></div>
+<details id="weightInspector" hidden><summary>Explore learned weights</summary>
+<div class="formPair"><label>Layer<select id="weightLayer"></select></label><label>Unit<select id="weightUnit"></select></label></div>
+<p class="hint">Each weight scales one input. Bias shifts the total before activation. Bar lengths are relative to the largest magnitude in this unit.</p>
+<div class="tableScroll"><table><thead><tr><th scope="col">Input</th><th scope="col">Weight</th></tr></thead><tbody id="weightRows"></tbody></table></div>
+</details>
 <details id="exportText" class="export" hidden="">
 <summary>Copy benchmark JSON instead</summary><textarea id="reportText" aria-label="Benchmark JSON" rows="4" readonly="" spellcheck="false"></textarea>
 <button type="button" id="copyReport">Copy JSON</button></details>
@@ -123,16 +156,13 @@
 <figcaption id="peakLegend">The cross marks the plant center. The circle marks the matching distance. Dots are peaks, squares passed the cutoff, and rings are final pins.</figcaption></figure>
 <div><dl><div><dt>Height peaks</dt><dd id="nearProposals"></dd></div><div><dt>Passed cutoff</dt><dd id="nearAccepted"></dd></div><div><dt>Final pins</dt><dd id="nearSelected"></dd></div></dl>
 <p id="traceText" role="status"></p></div></div></section></article></div>
-<figure class="trainingFlow">
-<figcaption>How a run works</figcaption>
-<ol><li><strong>Grow fields</strong><span>XYZ scans and plant centers</span></li><li><strong>Fit the detector</strong><span>Learn from labeled peaks</span></li><li><strong>Score new fields</strong><span>Match pins to plant centers</span></li></ol>
-</figure>
+
 <details class="method">
-<summary>How generation, training and validation work</summary><ol><li>Generate separate seeded fields for training and validation. Each is scanned with ground included and removed.</li><li>Project XYZ into a 5 cm grid. Measure 13 features at each candidate height peak. Nearby labeled centers supply positive examples and far-away peaks supply negatives.</li><li>Balance training examples and normalize them using training statistics. Fit a four-unit neural network or a logistic model by minimizing binary cross-entropy.</li><li>Score peaks on unseen fields and retain those at or above the selected detection cutoff. Keep the higher-confidence pin when candidates fall inside the crop’s spacing filter. Match remaining pins to planted centers at three distances.</li><li>Field generation and scoring use the CPU. Model fitting uses your selected backend. An epoch is one pass over the training examples.</li></ol></details>
+<summary>How generation, training and validation work</summary><ol><li>Generate separate seeded fields for training and validation. Each is scanned with ground included and removed.</li><li>Project XYZ into a 5 cm grid. Measure 13 features at each candidate height peak. Nearby labeled centers supply positive examples and far-away peaks supply negatives.</li><li>Balance training examples and normalize them using training statistics. Fit the selected network or logistic model by minimizing binary cross-entropy.</li><li>Score peaks on unseen fields and retain those at or above the selected detection cutoff. Keep the higher-confidence pin when candidates fall inside the crop’s spacing filter. Match remaining pins to planted centers at three distances.</li><li>Field generation and scoring use the CPU. Model fitting uses your selected backend. An epoch is one pass over the training examples.</li></ol><p><a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/training.md">Training controls and weight-file guide →</a></p></details>
 </section></div>
 </main>
 <footer class="siteFoot"><span>Crop Trainer</span>
 <div><a href="../AGENTS.md">Agent quickstart</a><a href="https://github.com/mvalancy/crop-trainer">GitHub</a><a href="../LICENSE">MIT license</a></div></footer>
-<script type="module" src="./main.js?v=height1"></script>
+<script type="module" src="./main.js?v=model-sandbox1"></script>
 </body>
 </html>
