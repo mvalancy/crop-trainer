@@ -327,3 +327,22 @@ test('the soil pair preserves each surviving non-soil return in acquisition orde
   }
   assert.equal(kept, bare.cls.length);
 });
+
+test('row previews sample actual returns and preserve the exported scan', async () => {
+ const {field,sampleCloud}=await import('../trainer/field.js');
+ const {makeRecipe}=await import('../trainer/data.js');
+ const {getSensor}=await import('../trainer/sensors.js');
+ const recipe=makeRecipe(725,false,getSensor('reference'),'lettuce');
+ const control=field(recipe),frames=[];
+ const live=field(recipe,frame=>frames.push(frame));
+ assert.deepEqual(live,control);
+ assert.deepEqual(frames.map(f=>f.row),Array.from({length:8},(_,i)=>i+1));
+ for(const {cloud} of frames){
+   assert.ok(cloud.length>0 && cloud.length<=9000*4);
+   for(let i=3;i<cloud.length;i+=4)assert.equal(cloud[i],1);
+ }
+ assert.ok(frames.at(-1).cloud.length>frames[0].cloud.length);
+ const xyz=Float32Array.of(1,2,3,4,5,6);
+ assert.deepEqual([...sampleCloud(xyz,Uint8Array.of(1,0))],[1,2,3,1,4,5,6,0]);
+ assert.deepEqual([...sampleCloud(xyz,Uint8Array.of(1,0),false)],[1,2,3,1]);
+});

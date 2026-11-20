@@ -4,7 +4,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Crop Trainer · The procedural farm</title>
 <meta name="description" content="Generate crop LiDAR scans, explore them in 3D, and train crop detectors locally with CPU or WebGPU.">
-<link rel="stylesheet" href="farm.css?v=systems1"></head>
+<link rel="stylesheet" href="farm.css?v=live1"></head>
 <body class="farm"><a class="skip" href="#main">Skip to content</a>
 <header class="siteBar">
 <div class="barInner"><a class="brand" href="./"><span class="mark" aria-hidden="true"><i></i></span>Crop Trainer</a>
@@ -28,6 +28,7 @@
 <div class="plotHead">
 <h3>3D scan viewer</h3><span id="scanId"></span><a class="mobileShortcut" href="#scan-settings">Settings ↓</a></div>
 <div class="viewer"><canvas id="map" width="860" height="530" tabindex="0" aria-label="Interactive 3D point cloud" aria-describedby="cameraHelp"></canvas>
+<figure class="liveScene" id="scanScene" hidden></figure>
 <div class="cameraButtons">
 <button id="zoomIn" aria-label="Zoom in">+</button>
 <button id="zoomOut" aria-label="Zoom out">−</button>
@@ -111,6 +112,6 @@
 </main>
 <footer class="siteFoot"><span>Created by Matthew Valancy</span>
 <div><a href="AGENTS.md">Agent quickstart</a><a href="#missions">Farm journal</a><a href="LICENSE">MIT license</a></div></footer>
-<script type="module" src="farm.js?v=dense1"></script>
+<script type="module" src="farm.js?v=live1"></script>
 </body>
 </html>

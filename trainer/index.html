@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Train &amp; validate · Crop Trainer</title>
-<link rel="stylesheet" href="../farm.css?v=systems1"></head>
+<link rel="stylesheet" href="../farm.css?v=live1"></head>
 <body class="shed"><a class="skip" href="#main">Skip to content</a>
 <header class="siteBar">
 <div class="barInner"><a class="brand" href="../"><span class="mark" aria-hidden="true"><i></i></span>Crop Trainer</a>
@@ -35,6 +35,7 @@
 <button type="button" id="cancel" disabled="">Cancel</button>
 <button type="button" id="estimate" disabled>Time a trial</button>
 <button type="button" id="finish" hidden>Finish &amp; score now</button></div>
+<div id="mobileSceneSlot"></div>
 <div class="workloadLine"><p class="fine" id="workload"></p><a class="mobileShortcut" href="#resultsTitle">View results ↓</a></div>
 <p class="hint estimate" id="estimateText"></p>
 <details id="fitOptions"><summary>Training schedule and optimizer</summary>
@@ -75,6 +76,7 @@
 <p class="fine">Each planting is scanned with and without soil. Both scans stay in the same split.</p></aside>
 <section aria-labelledby="resultsTitle">
 <h2 id="resultsTitle">Run results</h2>
+<div id="desktopSceneSlot"><figure class="liveScene" id="trainingScene" hidden></figure></div>
 <div class="stage"><strong id="stage" role="status">Ready to start</strong>
 <div id="status">Set up a run to see training loss and validation scores.</div><progress id="progress" aria-label="Run progress" value="0" max="100"></progress></div>
 <figure id="firstRun" class="firstRun">
@@ -197,6 +199,6 @@
 </main>
 <footer class="siteFoot"><span>Created by Matthew Valancy</span>
 <div><a href="../AGENTS.md">Agent quickstart</a><a href="../#missions">Farm journal</a><a href="../LICENSE">MIT license</a></div></footer>
-<script type="module" src="./main.js?v=dense1"></script>
+<script type="module" src="./main.js?v=live1"></script>
 </body>
 </html>

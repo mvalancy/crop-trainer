@@ -404,3 +404,45 @@ tbody tr:nth-child(even) { background: #f6f8f0; }
   .testView { grid-template-columns: 1fr; }
   .testFrame .testInputs { grid-template-columns: repeat(2,minmax(0,1fr)); }
 }
+
+/* Live field instrument, shared by the generator and training shed. */
+.liveScene {
+  display: grid; grid-template-rows: auto minmax(0,1fr) auto auto 3px; isolation: isolate;
+  margin: .75rem 0; border: 1px solid #36554a; border-radius: .8rem; overflow: hidden;
+  color: #eaf7e5; background: radial-gradient(ellipse at 54% 54%,#254337,#10251f 74%);
+  font-variant-numeric: tabular-nums;
+}
+.liveScene[hidden], .sceneLoss[hidden] {display:none}
+.liveScene figcaption {grid-row:1;}
+.liveScene canvas {grid-row:2;}
+.sceneLoss {grid-row:3;display:flex;align-items:center;gap:1rem;padding:.3rem 1rem;color:#d5f5a3;font-size:.75rem;}
+.sceneLoss svg {width:50%;height:24px;flex:1;}
+.sceneLoss polyline {fill:none;stroke:#b7e888;stroke-width:1.6;vector-effect:non-scaling-stroke;}
+.sceneFooter {grid-row:4;}
+.sceneTrack {grid-row:5;}
+@media(prefers-reduced-motion:no-preference){.sceneTrack i{transition:width .16s ease-out;}}
+.liveScene figcaption, .sceneFooter {
+  display:flex; align-items:center; justify-content:space-between; gap:.25rem 1rem; flex-wrap:wrap;
+  padding:.75rem 1rem; margin:0; color:inherit;
+}
+.liveScene figcaption {background:#122b24; border-bottom:1px solid #385447;}
+.liveScene strong {font-size:1.1rem; font-weight:650; letter-spacing:-.02em;}
+.sceneMetric {color:#d5f5a3;font: .8rem/1.4 var(--mono);}
+.liveScene canvas {display:block;width:100%;height:clamp(12rem,26vw,22rem);}
+.sceneFooter {font-size:.78rem;line-height:1.45;color:#c7d7c9;background:#112820;}
+.sceneLegend {color:#efdeaf;}
+.sceneTrack {background:#395548;}
+.sceneTrack i {display:block;height:3px;background:#c5ed87;}
+.viewer .liveScene {position:absolute;inset:0;margin:0;border:0;border-radius:0;z-index:2;}
+.viewer .liveScene canvas {height:100%;min-height:0;}
+@media(max-width:700px){
+  .liveScene figcaption,.sceneFooter {padding:.55rem .75rem;}
+  .liveScene strong {font-size:1rem;}
+}
+.liveScene > * {grid-column:1;}
+.liveScene .sceneLens {
+  grid-row:2;justify-self:end;align-self:start;z-index:1;margin:.4rem;
+  padding:.25rem .65rem;min-height:2.35rem;border-radius:1.25rem;
+  color:#e1efda;border:1px solid #668879;background:#132d25;font-size:.75rem;
+}
+.liveScene .sceneLens[aria-pressed=true] {background:#d2eea9;color:#183422;border-color:#bcdb94;}

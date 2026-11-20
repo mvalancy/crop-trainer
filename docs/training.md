@@ -8,6 +8,12 @@ The orchard, vineyard, bench lettuce and high-wire tomato profiles teach one XY 
 
 A LiDAR return is a 3D point. A cluster of tall returns might be lettuce, a weed or clutter. The generator knows where it planted each plant, so it can provide an answer key. Training adjusts numerical weights to give likely plant centers a higher score. One epoch is one pass over the balanced set of training candidates.
 
+## Watch a run
+
+Press **Generate, train & score**. As each new field arrives, the display shows a sample of its laser returns. When training starts, the camera stays on one held-out field. Gold rings show where the current model would place plant centers. Select **Close-up** to follow a few plants as the model learns. The loss trace underneath measures errors on its training examples.
+
+Each pin update gives the epoch that produced it. The CPU or WebGPU trainer can finish several more epochs before the next picture. At validation the view switches overhead. Rings show the final predictions and pink crosses show reference plants missed at 15 cm. The final mean F1 combines all validation scans at three distances.
+
 ## Follow one plant through training
 
 1. **Scan it.** The generator records a cloud of XYZ points and saves the planted centers separately. It divides the scan into 5 cm squares and looks for local height peaks.

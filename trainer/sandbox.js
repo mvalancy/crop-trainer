@@ -67,22 +67,23 @@ export function initSandbox(params) {
   $('depth').addEventListener('input',renderWidths);
   for(const id of ['depth','widths','architecture','optimizer','activation']) $(id).addEventListener('input',renderNetwork);
 }
-export function trainInWorker(x,y,options,signal,onEpoch,onReady) {
+export function trainInWorker(x,y,options,signal,onEpoch,onReady,onCheckpoint) {
   return new Promise((resolve,reject)=>{
     signal.throwIfAborted();
-    const worker = new Worker(new URL('./fit-worker.js',import.meta.url),{type:'module'});
+    const worker = new Worker(new URL('./fit-worker.js?v=live1',import.meta.url),{type:'module'});
     function close() {signal.removeEventListener('abort',abort);worker.terminate();}
     function abort() {close();reject(signal.reason);}
     signal.addEventListener('abort',abort,{once:true});
     worker.onerror = event => {close();reject(Error(event.message));};
     worker.onmessage = ({data}) => {
+      if (data.weights) {onCheckpoint?.(data.epoch,data.weights);return;}
       if (data.progress) {onEpoch(data.progress);return;}
       close();
       if (data.error) reject(Error(data.error)); else resolve(data.result);
     };
     onReady(()=>worker.postMessage({finish:true}));
     // Validation has its own feature arrays. Transfer the training split only.
-    worker.postMessage({x,y,options},[x.buffer,y.buffer]);
+    worker.postMessage({x,y,options,preview:!!onCheckpoint},[x.buffer,y.buffer]);
   });
 }
 

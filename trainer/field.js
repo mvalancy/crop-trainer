@@ -6,7 +6,22 @@ export function returnBand(count) {
  return count < 5 ? 'oneToFour' : 'fiveOrMore';
 }
 
-export function field(p){
+// One actual return from each index interval. Sampling never consumes the field RNG.
+export function sampleCloud(xyz, classes, ground = true) {
+ const bins = Math.min(classes.length, 9000), sample = new Float32Array(bins * 4);
+ let used = 0;
+ for (let bin = 0; bin < bins; bin++) {
+  const first = Math.floor(bin * classes.length / bins);
+  const end = Math.floor((bin + 1) * classes.length / bins);
+  const i = first + (Math.imul(bin + 1, 2654435761) >>> 0) % (end - first);
+  if (!ground && classes[i] === 0) continue;
+  sample[used++] = xyz[3*i]; sample[used++] = xyz[3*i+1];
+  sample[used++] = xyz[3*i+2]; sample[used++] = classes[i];
+ }
+ return sample.subarray(0, used);
+}
+
+export function field(p,onRow){
 const crop = p.crop ?? 'lettuce';
 const profile = cropProfile(crop);
 let seed=p.seed>>>0;function rng(s){return ()=>{s=(s+0x6d2b79f5)>>>0;let a=Math.imul(s^(s>>>15),1|s);a^=a+Math.imul(a^(a>>>7),61|a);return ((a^(a>>>14))>>>0)/4294967296}}
@@ -64,7 +79,9 @@ if(!weed){boxes.push({min:aabb.slice(0,3).map(v=>v-.002),max:aabb.slice(3).map(v
 rays(x,y,R*1.2,(i,dx,dy)=>{for(let a of L){let u=(dx*a.c+dy*a.s)/a.len;if(u<=0||u>=1)continue;let [w,b]=sample(a,u),v=((-dx*a.s+dy*a.c)/a.len-b)/w;if(Math.abs(v)<=1)hit(i,height(a,u,v),weed?2:1,id)}})}
 for(let j=0;j<profile.rows;j++){let y=crop==='lettuce'?1.5+(j>>1)*2.1+(j%2)*.36:(j+.5)*sz/profile.rows,ph=r()*tau;
 const edge = crop==='lettuce' ? .25 : p.radius*1.45;
-for(let x=edge+r()*.12;x<(crop==='lettuce'?9.74:sz-edge);x+=p.spacing){if(r()<.05)continue;plant(x+(r()-.5)*.04,y+.035*Math.sin(x+ph)+(r()-.5)*.024,p.radius*(.8+.4*r()),false)}}
+for(let x=edge+r()*.12;x<(crop==='lettuce'?9.74:sz-edge);x+=p.spacing){if(r()<.05)continue;plant(x+(r()-.5)*.04,y+.035*Math.sin(x+ph)+(r()-.5)*.024,p.radius*(.8+.4*r()),false)}
+ if (onRow) onRow({cloud:sampleCloud(xyz,cls,p.ground),row:j+1,rows:profile.rows});
+}
 let before=cls.slice();
 if(profile.fixtures && p.infrastructure!==false) scanFixtures(crop,profile.rows,terrain,rays,hit);
 if(p.weeds)for(let j=0;j<64;j++)plant(.2+o()*9.6,.2+o()*9.6,.08+.13*o(),true);

@@ -66,7 +66,7 @@ export function features(tile, minimumHeight=.065){
  }
  return{X:Float32Array.from(vec),pos};
 }
-export async function buildDataset({seed=27,crop='lettuce',trainFields=6,valFields=3,sensorMode='reference',validationSensorMode=sensorMode,trainingRayBudget=0,validationRayBudget=0,minimumHeight=.065,onProgress=()=>{},signal}={}){
+export async function buildDataset({seed=27,crop='lettuce',trainFields=6,valFields=3,sensorMode='reference',validationSensorMode=sensorMode,trainingRayBudget=0,validationRayBudget=0,minimumHeight=.065,generate,onScan,onProgress=()=>{},signal}={}){
  if(!PEAK_HEIGHTS.includes(minimumHeight))throw new Error('Choose a supported minimum peak height.');
  if(!Number.isInteger(seed)||seed<0||seed>0xffffffff||!Number.isInteger(trainFields)||trainFields<2||trainFields>FIELD_LIMITS.train||!Number.isInteger(valFields)||valFields<1||valFields>FIELD_LIMITS.validation)throw new Error('Use a valid seed and the available field count limits.');
  if (trainingRayBudget !== ALTERNATING_BUDGET && trainingRayBudget !== 0 && !RAY_BUDGETS.includes(trainingRayBudget)) throw new Error('Choose a supported training ray budget.');
@@ -87,7 +87,10 @@ export async function buildDataset({seed=27,crop='lettuce',trainFields=6,valFiel
    check(signal);
    const recipe = makeRecipe(id, v === 0, profile, crop);
    if (rayBudget) recipe.points = rayBudget;
-   const t=field(recipe), f=features(t,minimumHeight), truth=centers(t.labels.boxes), points=[];
+   const step={split:trainingField?'Training':'Validation',done:2*k+v+1,total,firstValidation:k===trainFields && v===0};
+   const t=generate ? await generate(recipe,step) : field(recipe);
+   const f=features(t,minimumHeight), truth=centers(t.labels.boxes), points=[];
+   if(onScan) onScan(t,step);
    if(!trainingField){const n=t.xyz.length/3,inc=Math.max(1,Math.ceil(n/1500));for(let i=0;i<n;i+=inc)points.push([t.xyz[3*i],t.xyz[3*i+1]]);}
    const item={...f,truth,coverage:t.coverage,seed:id,ground:v===0,recipe:t.p,sampledRays:t.sampledRays,tile_id:t.labels.tile_id,returnCount:t.labels.num_points,points};
    if (!trainingField) item.plantReturns = t.plantReturns;
@@ -257,7 +260,7 @@ export async function validateModel(set,weights,{threshold=.5,predictScores=pred
   });
   tiles.push({seed:t.seed,ground:t.ground,tile_id:t.tile_id,crop:t.recipe.crop,requestedRays:t.recipe.points,sampledRays:t.sampledRays,returnCount:t.returnCount,sensor:t.recipe.sampling.key,coverage:t.coverage,byTolerance,missesByTolerance,stages15cm:measureStages(stages,t.truth,byTolerance[2].tp)});
   previews.set(t.tile_id,{truth:t.truth,proposalScores,plantReturns:t.plantReturns,missesByTolerance,predictions,ground:t.ground,seed:t.seed,points:t.points,stages});
-  onProgress({done:i+1,total:set.validation.length,stage:'validation'});await pause();
+  onProgress({done:i+1,total:set.validation.length,stage:'validation',tile:t,predictions,missed:missesByTolerance[2].boxIndices});await pause();
  }
  const byGround = [true, false].map(ground => {
   const subset = tiles.filter(tile => tile.ground === ground);

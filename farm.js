@@ -1,7 +1,8 @@
 import {cropProfile} from './trainer/crops.js?v=systems1';
-import {field} from './trainer/field.js?v=dense1';
+import {scanSession} from './trainer/scan-session.js';
 import {makeRecipe} from './trainer/data.js?v=dense1';
 import {getSensor, sensorOptions, sensorDetails, rayBudgetOptions, layoutCapacity, DEFAULT_GENERATOR_RAYS} from './trainer/sensors.js?v=dense1';
+import {createLiveScene} from './trainer/live-scene.js';
 import {createViewer} from './viewer.js?v=dense1';
 
 const $ = id => document.getElementById(id);
@@ -9,6 +10,7 @@ const viewer = createViewer($('map'), {
   mode:$('mode'), view:$('view'), highlight:$('highlight'), color:$('color'), pins:$('pins'), spin:$('spin'),
   zoomIn:$('zoomIn'), zoomOut:$('zoomOut'), reset:$('fit'), focus:$('focusPlant')
 });
+const live=createLiveScene($('scanScene'));
 let scan, previousRayTrial;
 function showSystemControls() {
   const profile=cropProfile($('crop').value);
@@ -98,36 +100,34 @@ function grow(checkReplay = false) {
 }
 
 // The URL carries the applied scan settings, even while the form has pending edits.
-let fieldWorker;
-function showScan(recipe, url, selectedBox, expectedTile, checkReplay = false) {
-  fieldWorker?.terminate();
-  fieldWorker = undefined;
-  const apply = value => {
+let scanController;
+async function showScan(recipe, url, selectedBox, expectedTile, checkReplay = false) {
+  scanController?.abort();
+  scanController=new AbortController();
+  const {signal}=scanController, session=scanSession(signal);
+  live.reset();
+  const name=cropProfile(recipe.crop).name;
+  const scene={title:name+' canopy',metric:'Preparing terrain',legend:'Sampled canopy and terrain',detail:'Seed '+recipe.seed,fraction:0};
+  live.show(scene);
+  $('generationStatus').textContent = 'Building the scan…';
+  if(!checkReplay && matchMedia('(max-width:740px)').matches) $('scan-viewer').scrollIntoView({block:'start'});
+  try {
+    const value=await session.generate(recipe,frame=>{
+      live.show({cloud:frame.cloud,metric:'Row '+frame.row+' / '+frame.rows,
+        detail:frame.row===frame.rows?'Applying scan settings':'Seed '+recipe.seed,fraction:frame.row/frame.rows});
+    });
+    if(signal.aborted)return;
+    live.reset();
     applyScan(value, recipe, url, selectedBox, expectedTile);
     $('generationStatus').textContent = '';
     if (checkReplay && /^[0-9a-f]{16}$/.test(expectedTile) && expectedTile !== value.labels.tile_id) {
       $('shareStatus').textContent = 'This link expected tile '+expectedTile+'. These settings generated '+value.labels.tile_id+'.';
     }
-  };
-  if (Math.min(recipe.points, layoutCapacity(recipe.sampling)) <= 100000 || typeof Worker === 'undefined') {
-    apply(field(recipe));
-    return;
-  }
-  $('generationStatus').textContent = 'Generating dense scan…';
-  const worker = fieldWorker = new Worker(new URL('./trainer/generate-worker.js?v=dense1',import.meta.url),{type:'module'});
-  worker.onmessage = event => {
-    if (worker !== fieldWorker) return;
-    worker.terminate();
-    fieldWorker = undefined;
-    apply(event.data);
-  };
-  worker.onerror = () => {
-    if (worker !== fieldWorker) return;
-    worker.terminate();
-    fieldWorker = undefined;
-    $('generationStatus').textContent = 'Scan generation failed. Choose a smaller ray budget and try again.';
-  };
-  worker.postMessage(recipe);
+  }catch(error){
+    if(signal.aborted)return;
+    live.reset();
+    $('generationStatus').textContent = error.message+'. Try another ray budget.';
+  }finally{session.close();}
 }
 
 function applyScan(value, recipe, url, selectedBox, expectedTile) {

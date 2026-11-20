@@ -9,6 +9,7 @@ export async function trainNetworkCPU(x, y, options) {
   const values = new Float64Array(units), deltas = new Float64Array(units);
   const gradient = new Float64Array(weights.length), velocity = new Float64Array(weights.length);
   const history = trackFit(plan,options,'CPU');
+  let nextPreview = 0;
   let lastYield = performance.now();
   for (let epoch = 1; ; epoch++) {
     options.signal?.throwIfAborted();
@@ -40,6 +41,10 @@ export async function trainNetworkCPU(x, y, options) {
         velocity[k] = decay*velocity[k] + gradient[k]/(end-first);
         weights[k] -= lr*velocity[k];
       }
+    }
+    if (options.onCheckpoint && performance.now() >= nextPreview) {
+      options.onCheckpoint(epoch,weights);
+      nextPreview = performance.now() + 400;
     }
     if (history.record(epoch,total/y.length)) break;
     if (performance.now()-lastYield >= 20) { await new Promise(resolve => setTimeout(resolve,0)); lastYield = performance.now(); }
@@ -143,15 +148,17 @@ export async function trainNetworkGPU(x,y,options) {
     const buffers = [buffer(x.byteLength,U.STORAGE,x),buffer(y.byteLength,U.STORAGE,y),
       buffer(count*8,U.STORAGE|U.COPY_SRC,plan.weights),buffer(stateBytes,U.STORAGE),
       buffer(partialBytes,U.STORAGE),buffer(batches*4,U.STORAGE|U.COPY_SRC),buffer(params.byteLength,U.UNIFORM,new Uint8Array(params))];
-    const staging = buffer(Math.max(count,batches)*4,U.COPY_DST|U.MAP_READ);
+    const staging = buffer((options.onCheckpoint ? count+batches : Math.max(count,batches))*4,U.COPY_DST|U.MAP_READ);
     const layout = device.createBindGroupLayout({entries:buffers.map((_,i)=>({binding:i,visibility:GPUShaderStage.COMPUTE,buffer:{hasDynamicOffset:i===6,type:i<2?'read-only-storage':i===6?'uniform':'storage'}}))});
     const bindings = device.createBindGroup({layout,entries:buffers.map((b,i)=>({binding:i,resource:i===6?{buffer:b,size:32}:{buffer:b}}))});
     const pipelineLayout = device.createPipelineLayout({bindGroupLayouts:[layout]});
     const module = device.createShaderModule({code:shaderFor(plan.shape)});
     const pipes = await Promise.all(['forwardPass','gradient','update'].map(entryPoint=>device.createComputePipelineAsync({layout:pipelineLayout,compute:{module,entryPoint}})));
     const history = trackFit(plan,options,'WebGPU');
+    let nextPreview = 0;
     for (let epoch = 1; ; epoch++) {
       options.signal?.throwIfAborted();
+      const preview = options.onCheckpoint && performance.now() >= nextPreview;
       // Limit command buffers for long epochs on small batches and software adapters.
       for (let start=0; start<batches; start+=32) {
         options.signal?.throwIfAborted();
@@ -164,13 +171,19 @@ export async function trainNetworkGPU(x,y,options) {
             pass.dispatchWorkgroups(n,m);pass.end();
           }
         }
-        if (end===batches) enc.copyBufferToBuffer(buffers[5],0,staging,0,batches*4);
+        if (end === batches) {
+          enc.copyBufferToBuffer(buffers[5],0,staging,0,batches*4);
+          if (preview) enc.copyBufferToBuffer(buffers[2],0,staging,batches*4,count*4);
+        }
         device.queue.submit([enc.finish()]);
         if (end<batches) await device.queue.onSubmittedWorkDone();
       }
       await staging.mapAsync(GPUMapMode.READ);
-      const loss = new Float32Array(staging.getMappedRange(),0,batches).reduce((sum,v)=>sum+v,0)/y.length;
+      const mapped = staging.getMappedRange();
+      const snapshot = preview ? new Float32Array(mapped,batches*4,count).slice() : null;
+      const loss = new Float32Array(mapped,0,batches).reduce((sum,v)=>sum+v,0)/y.length;
       staging.unmap();
+      if (snapshot) { options.onCheckpoint(epoch,snapshot); nextPreview=performance.now()+400; }
       if (history.record(epoch,loss)) break;
     }
     const enc = device.createCommandEncoder(); enc.copyBufferToBuffer(buffers[2],0,staging,0,count*4);

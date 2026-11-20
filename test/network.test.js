@@ -62,3 +62,16 @@ test('exported scaling and weights score unnormalized feature rows',()=>{
   assert(Math.abs(score-1/(1+Math.exp(-1)))<1e-6);
   assert.throws(()=>scoreSavedWeights([],{}));
 });
+
+test('live checkpoint pins use weights after the reported training update', async () => {
+ const options={dims:2,hiddenLayers:[4],epochs:3,lr:.2};
+ const control=await trainNetworkCPU(x,y,options);
+ const first=await trainNetworkCPU(x,y,{...options,epochs:1});
+ let snapshot;
+ const live=await trainNetworkCPU(x,y,{...options,onCheckpoint(epoch,weights){
+   if(epoch===1)snapshot=weights.slice();
+ }});
+ assert.deepEqual(snapshot,first.weights);
+ assert.deepEqual(live.weights,control.weights);
+ assert.deepEqual(live.loss,control.loss);
+});

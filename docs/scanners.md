@@ -16,6 +16,8 @@ For these four growing systems, each label includes the planted base in metres (
 
 Try the [vineyard](https://mvalancy.github.io/crop-trainer/?crop=grapevine&seed=32137#field) or [high-wire greenhouse](https://mvalancy.github.io/crop-trainer/?crop=high-wire-tomato&seed=32137#field). Each projected ray samples the highest surface at its XY location. Orbiting the viewer rotates those returns. Physical side views, glass reflections, fruit counts and yield require additional measurements. See the [field dataset guide](field-datasets.md) for sources to compare against.
 
+During generation, each completed canopy row appears in the viewer. The preview samples up to 9,000 current returns. The completed scan includes the selected clutter, noise and soil settings. You can orbit it and download every surviving return.
+
 In the **Field generator**, choose a scanner, ray budget, soil, noise and obstacles. Export the XYZ scan, bounding boxes and exact recipe. **Train this crop and layout** carries the crop and scanner into the training shed. Training generates separate fields with seeded noise and clutter. A fixed generator budget carries into validation, and the training budget defaults to seeded variation. The OS1 layouts reproduce selected channel and angular-column counts using a projected ring lattice. Real scanners also have beam angles, intensity response, timing and return-selection behavior. [Ouster sensor data reference](https://static.ouster.dev/sensor-docs/image_route1/image_route2/sensor_data/sensor-data.html)
 
 ## How fine can I scan a leaf?

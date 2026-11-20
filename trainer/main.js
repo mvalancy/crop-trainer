@@ -1,11 +1,17 @@
+import {scanSession} from './scan-session.js';
+import {createLiveScene} from './live-scene.js';
 import {initFieldTest} from './field-test-ui.js?v=systems1';
-import {initSandbox, modelSettings, duration, trainInWorker, inspectWeights} from './sandbox.js?v=field-test1';
+import {initSandbox, modelSettings, duration, trainInWorker, inspectWeights} from './sandbox.js?v=live1';
 import {MAX_SANDBOX_EPOCHS, trainerId, weightArtifact} from './network.js?v=systems1';
-import {returnBand} from './field.js?v=dense1';
+import {returnBand,sampleCloud} from './field.js?v=live1';
 import {cropProfile} from './crops.js?v=systems1';
 import {allProfiles, sensorOptions, validationSensorOptions, sensorDetails, rayBudgetOptions, trainingRayOptions, trainingRayValue, ALTERNATING_BUDGET} from './sensors.js?v=dense1';
 if(new URLSearchParams(location.search).has('embed'))document.body.classList.add('embed');
 const $=id=>document.getElementById(id);
+const sceneHost=$('trainingScene'),live=createLiveScene(sceneHost,{zoomControl:true});
+const narrow=matchMedia('(max-width:740px)');
+function placeScene(){ $(narrow.matches?'mobileSceneSlot':'desktopSceneSlot').append(sceneHost); }
+placeScene();narrow.addEventListener('change',placeScene);
 const params = new URLSearchParams(location.search);
 trainingRayOptions($('trainingRayBudget'), params.get('trainingRayBudget'));
 rayBudgetOptions($('validationRayBudget'), params.get('validationRayBudget'));
@@ -53,7 +59,7 @@ initSandbox(params);
 let finishTraining=null, calibration=null;
 let controller=null,losses=[],lastPreview=null,backendReady=false,deps,webgpuAvailable=false,lastRun=null,lastPaint=0;
 try {
- deps=await Promise.all([import('./data.js?v=dense1'),import('./model.js?v=benchmark1'),import('./neural.js?v=sandbox1')]);
+ deps=await Promise.all([import('./data.js?v=live1'),import('./model.js?v=benchmark1'),import('./neural.js?v=live1')]);
  $('epochs').max=MAX_SANDBOX_EPOCHS;
  const epochsParam = params.get('epochs');
  if (/^\d+$/.test(epochsParam) && Number(epochsParam) >= 1 && Number(epochsParam) <= MAX_SANDBOX_EPOCHS) {
@@ -446,28 +452,55 @@ $('controls').onsubmit=e=>{e.preventDefault();runFit(false);};
 workload();
 async function runFit(trial){
  if(controller||!backendReady)return;
- const [{buildDataset,validateModel},,{trainNetworkGPU,predictNetwork}]=deps;
+ const [{buildDataset,validateModel,detectionStages},,{trainNetworkGPU,predictNetwork}]=deps;
  const settings=readSettings(), backend=selectedBackend(), requestedBackend=$('engine').value;
  const {crop,seed,threshold,validationRayBudget,minimumHeight,sensorMode}=settings;
  const targetEpochs=trial?16:$('epochs').valueAsNumber;
  const timeLimitMs=!trial && $('stopMode').value==='time'?$('minutes').valueAsNumber*60000:0;
  const key=JSON.stringify([settings,backend]);
  controller=new AbortController();const {signal}=controller;
- const locked=[...$('controls').querySelectorAll('input,select,button')].filter(el=>!el.disabled);
+ const locked=[...$('controls').querySelectorAll('input,select,button')].filter(el=>!el.disabled && !sceneHost.contains(el));
  locked.forEach(el=>el.disabled=true);
  $('cancel').disabled=false;
  if(!trial)clear();
+ live.reset();
+ live.show({title:'Growing '+cropProfile(crop).name,metric:'Preparing terrain',detail:'Seed '+seed,legend:'Sampled laser returns',fraction:0});
+ if(narrow.matches && sceneHost.getBoundingClientRect().bottom>innerHeight)sceneHost.scrollIntoView({block:'end'});
+ let previewCloud, lastFrame=-Infinity;
+
  status(trial?'Timing a trial':'Generating fields','Building separate training and validation fields.',0);
  try{
   const start=performance.now();
-  const set=await buildDataset({...settings,signal,onProgress:(a,b)=>{
+  const scans=scanSession(signal);
+  const set=await buildDataset({...settings,signal,generate:(recipe,step)=>{
+   const showRows=step.done===1 || recipe.points>100000;
+   return scans.generate(recipe,showRows ? frame=>live.show({title:step.split+' field',cloud:frame.cloud,
+    metric:'Row '+frame.row+' / '+frame.rows,legend:'Building the canopy',detail:'Seed '+recipe.seed,
+    fraction:(step.done-1+frame.row/frame.rows)/step.total}) : undefined);
+  },onScan:(scan,step)=>{
+   if(!step.firstValidation && step.done!==step.total && performance.now()-lastFrame<150)return;
+   const cloud=sampleCloud(scan.xyz,scan.cls);
+   if(step.firstValidation) previewCloud=cloud;
+   live.show({title:step.split+' field',cloud,metric:step.done+' / '+step.total+' scans',
+    legend:'Green · crop returns',detail:scan.labels.num_points.toLocaleString()+' returns · seed '+scan.p.seed,fraction:step.done/step.total});
+   lastFrame=performance.now();
+  },onProgress:(a,b)=>{
    if(signal.aborted)return;
    if(a.stage==='labels'){status('Labeling training examples',a.done+' / '+a.total+' training scans labeled',27+3*a.done/a.total);return;}
    const current=typeof a==='object'?a.current??a.completed??a.done:a,total=typeof a==='object'?a.total:b;
    status('Generating fields',Number.isFinite(current)&&Number.isFinite(total)?current+' / '+total+' scan variants':'Preparing examples…',total>0&&Number.isFinite(current)?27*current/total:undefined);
-  }});
+  }}).finally(scans.close);
   const generated=performance.now();
   signal.throwIfAborted();status('Training on '+backend,'Starting '+backend+' training…',30);
+  const tile=set.validation[0];
+  live.show({title:'Learning plant centers',cloud:previewCloud,metric:'Starting '+backend,
+   detail:'Held-out field · seed '+tile.seed,legend:'Rings · predicted centers',fraction:0});
+  const checkpoint=(epoch,weights)=>{
+   if(signal.aborted)return;
+   const scores=predictNetwork(tile.X,weights,set.dims,settings.hiddenLayers,settings.activation);
+   const pins=detectionStages(tile,scores,threshold).selected;
+   live.show({pins,detail:pins.length+' predicted · epoch '+epoch.toLocaleString()+' · seed '+tile.seed});
+  };
   let finish=false, warm=null, latest=null;
   const options={...settings,dims:set.dims,lr:settings.learningRate,epochs:timeLimitMs?40:targetEpochs,timeLimitMs};
   const ready=fn=>{finishTraining=fn;$('finish').hidden=trial;$('finish').disabled=trial;};
@@ -479,6 +512,7 @@ async function runFit(trial){
    const rate=warm && p.epoch>warm.epoch?(p.elapsedMs-warm.elapsedMs)/(p.epoch-warm.epoch):p.elapsedMs/p.epoch;
    const remaining=timeLimitMs?Math.max(0,timeLimitMs-p.elapsedMs):Math.max(0,targetEpochs-p.epoch)*rate;
    const fraction=timeLimitMs?p.elapsedMs/timeLimitMs:p.epoch/targetEpochs;
+   live.show({metric:'Epoch '+p.epoch.toLocaleString()+' · loss '+p.loss.toFixed(3),fraction,loss:{epoch:p.epoch,loss:p.loss}});
    status(trial?'Timing '+backend+' trial':'Training on '+backend,'Epoch '+p.epoch.toLocaleString()+
     (timeLimitMs?'':' / '+targetEpochs.toLocaleString())+' · '+duration(p.elapsedMs)+' elapsed · '+
     (p.epoch<4 && !timeLimitMs?'measuring speed…':'about '+duration(remaining)+' of training left'),30+55*Math.min(1,fraction));
@@ -492,9 +526,9 @@ async function runFit(trial){
   let fit;
   if(backend==='WebGPU'){
    ready(()=>{finish=true;});
-   fit=await trainNetworkGPU(set.X,set.Y,{...options,signal,onEpoch:progress,shouldFinish:()=>finish});
+   fit=await trainNetworkGPU(set.X,set.Y,{...options,signal,onEpoch:progress,onCheckpoint:checkpoint,shouldFinish:()=>finish});
   }else{
-   fit=await trainInWorker(set.X,set.Y,options,signal,progress,ready);
+   fit=await trainInWorker(set.X,set.Y,options,signal,progress,ready,checkpoint);
   }
   const epochs=fit.epochsCompleted;
   finishTraining=null;$('finish').hidden=true;
@@ -503,12 +537,16 @@ async function runFit(trial){
   await new Promise(r=>setTimeout(r,0));
   const scores=await validateModel(set,fit.weights,{threshold,signal,predictScores:(x,w,d)=>predictNetwork(x,w,d,settings.hiddenLayers,settings.activation),onProgress:(a)=>{
    if(signal.aborted)return;
+   live.show({title:'Checking plant centers',metric:a.done+' / '+a.total+' scans',
+    cloud:null,flat:true,points:a.tile.points,pins:a.predictions,misses:a.missed.map(i=>a.tile.truth[i]),
+    legend:'○ Prediction   × Missed at 15 cm',detail:'Top view · seed '+a.tile.seed,fraction:a.done/a.total});
    if(a?.total)status('Validating held-out fields',a.done+' / '+a.total+' scan variants scored',88+11*a.done/a.total);
   }});
   const finished=performance.now();
   signal.throwIfAborted();
   const perEpoch=warm && epochs>warm.epoch?(latest.elapsedMs-warm.elapsedMs)/(epochs-warm.epoch):latest.elapsedMs/epochs;
   calibration={key,perEpoch,overhead:Math.max(0,finished-start-latest.elapsedMs)};
+  live.show({title:trial?'Trial harvest':'Harvest complete',metric:(100*scores.meanF1).toFixed(1)+'% mean F1',fraction:1});
   if(trial){
    status('Trial complete','Timed 16 training epochs and scored the validation fields. See the estimate in Run setup.',100);
    return;
@@ -539,6 +577,7 @@ async function runFit(trial){
   $('downloadWeights').hidden=false;$('downloadRun').hidden=false;$('downloadSettings').hidden=false;$('exportText').hidden=false;
   status('Run complete',backend+' training · '+(scores.meanF1*100).toFixed(1)+'% mean F1 on held-out synthetic scans.',100);
  }catch(err){
+  live.show({title:signal.aborted?'Run canceled':'Run interrupted',metric:'Last preview'});
   if(signal.aborted){status('Canceled',trial?'Timing trial stopped.':'Training stopped.',0);if(!trial)$('resultNote').textContent='This run was canceled.'}
   else{status('Run failed',String(err?.message||err)+(backend==='WebGPU'?' Choose CPU to retry.':''),0);if(!trial)$('resultNote').textContent='No validation result was produced.'}
  }finally{controller=null;finishTraining=null;locked.forEach(el=>el.disabled=false);$('cancel').disabled=true;$('finish').hidden=true;workload()}
