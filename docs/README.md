@@ -1,0 +1,24 @@
+# Crop Trainer field guide
+
+[Train your first crop](https://mvalancy.github.io/crop-trainer/trainer/) or choose a guide for your next experiment.
+
+| I want to… | Open |
+| --- | --- |
+| Understand how dots become predictions | [How training works](training.md) |
+| Grow, scan, share or export a field | [Fields and scanners](scanners.md) |
+| Find out why a plant was missed | [Inspecting detections](field-inspection.md) |
+| Compare two detectors on the same fields | [Benchmarks](benchmarks.md) |
+| Read the papers and check dataset licenses | [Datasets and research](research.md) |
+| Run locally or replay a browser experiment | [Local setup](local-setup.md) |
+
+## Pick a question
+
+Open a question and select **Run benchmark**. Each preset fills in the crop, scanner, seed and comparison. All three run on a local CPU.
+
+| Question | What to inspect |
+| --- | --- |
+| [Do shorter peaks find more tomatoes in a sparse scan?](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=heights&crop=tomato&seed=2221&sensor=mixed&validationSensor=os1-64&validationRayBudget=12000) | Compare matches and extra pins. Repeat at 60,000 validation rays in the same tab to see the F1 scores side by side. |
+| [Which lettuce plant changed match?](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=heights&crop=lettuce&seed=2121&sensor=mixed&validationSensor=os1-64&validationRayBudget=12000&pairSeed=2122&pairTile=39c12665d375fbb9&pairDistance=7.5&pairBox=1#modelBoxes) | Open the selected box in 3D and use **Focus plant** to orbit its center. |
+| [Which model counted the artichokes more accurately?](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=models&crop=artichoke&seed=1551&sensor=mixed&validationSensor=os1-64&validationRayBudget=12000&fieldMetric=meanAbsolute) | Compare absolute count error per planting, then check whether pins landed near the labeled centers. |
+
+[Crop Trainer home](../README.md) · [Agent quickstart](../AGENTS.md)

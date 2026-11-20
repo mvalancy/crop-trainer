@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 202" role="img" aria-labelledby="title desc">
+  <title id="title">Two detectors, one planting</title>
+  <desc id="desc">A schematic comparison on identical plant centers, shown as green rings. The first detector misses one center. The second finds all six but places an extra red pin between the rows.</desc>
+  <defs>
+    <g id="beds">
+      <rect width="250" height="114" rx="10" fill="#e3ebd6"/>
+      <path d="M18 44L218 17M31 97L231 70" stroke="#c4d1ab" stroke-width="22" stroke-linecap="round"/>
+      <g fill="#f3f5df" stroke="#46764f" stroke-width="2.5">
+        <circle cx="42" cy="41" r="13"/><circle cx="124" cy="30" r="13"/><circle cx="201" cy="19" r="13"/>
+        <circle cx="56" cy="94" r="13"/><circle cx="136" cy="83" r="13"/><circle cx="213" cy="72" r="13"/>
+      </g>
+    </g>
+    <g id="five" fill="#a44332"><circle cx="45" cy="41" r="5"/><circle cx="122" cy="31" r="5"/><circle cx="199" cy="22" r="5"/><circle cx="55" cy="91" r="5"/><circle cx="212" cy="74" r="5"/></g>
+  </defs>
+  <style>
+    .pins {animation: settle 4s ease-out infinite}
+    @keyframes settle {0%{opacity:.15;transform:translateY(-7px)}30%,92%{opacity:1;transform:translateY(0)}100%{opacity:.15}}
+    @media(prefers-reduced-motion:reduce){.pins{animation:none}}
+  </style>
+  <rect width="560" height="202" rx="16" fill="#193e31"/>
+  <g fill="#f0f3df" font-family="system-ui,sans-serif" font-size="20" font-weight="650"><text x="18" y="32">Detector A</text><text x="292" y="32">Detector B</text></g>
+  <g transform="translate(18 45)"><use href="#beds"/><g class="pins"><use href="#five"/></g></g>
+  <g transform="translate(292 45)"><use href="#beds"/><g class="pins"><use href="#five"/><g fill="#a44332"><circle cx="133" cy="84" r="5"/><circle cx="154" cy="53" r="5"/></g></g></g>
+  <g fill="#f0f3df" font-family="system-ui,sans-serif" font-size="17"><text x="18" y="186">One missed plant</text><text x="292" y="186">One extra pin</text></g>
+</svg>

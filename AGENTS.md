@@ -1,6 +1,6 @@
 # Crop Trainer agent guide
 
-Help a team answer one LiDAR detection question at a time. Crop Trainer generates lettuce, globe-artichoke and young-tomato geometry, scanner returns, and center labels from seeds. All training and evaluation in the starter use synthetic data. Read README.md for the human walkthrough.
+Help a team answer one LiDAR detection question at a time. Crop Trainer generates lettuce, globe-artichoke and young-tomato geometry, scanner returns, and center labels from seeds. All training and evaluation in the starter use synthetic data. Start with the [first harvest](README.md). Keep the front page focused on that first run. Put experimental results and technical walkthroughs in the [field guide](docs/README.md).
 
 ## Run your first test
 

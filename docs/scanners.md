@@ -1,0 +1,99 @@
+# Fields, scanners and ray budgets
+
+[Open the field generator](https://mvalancy.github.io/crop-trainer/) and choose a crop in **Scan settings**. Drag the scan to orbit, Shift-drag to pan, and scroll or pinch to zoom. Coral rings mark plants with crop returns. Gold crosses mark plants with none.
+
+| Crop | Synthetic geometry | Starting peak height | Minimum distance between final pins |
+| --- | --- | ---: | ---: |
+| Lettuce | Compact overlapping leaves in paired rows | 3.5 cm | 12.5 cm |
+| Globe artichoke | Large lobed leaves around a raised terminal bud | 6.5 cm | 40 cm |
+| Young tomato | Compound foliage and an upright growing tip | 6.5 cm | 22 cm |
+
+In the **Field generator**, choose a scanner, ray budget, soil, noise and obstacles. Export the XYZ scan, bounding boxes and exact recipe. **Train this crop and layout** carries the crop and scanner into the training shed. Training generates separate fields with seeded noise and clutter. A fixed generator budget carries into validation, and the training budget defaults to seeded variation. The OS1 layouts reproduce selected channel and angular-column counts using a projected ring lattice. Real scanners also have beam angles, intensity response, timing and return-selection behavior. [Ouster sensor data reference](https://static.ouster.dev/sensor-docs/image_route1/image_route2/sensor_data/sensor-data.html)
+
+## Share one scan with another grower
+
+Choose **Grow and scan**, then **Copy scan link** under the viewer. The link captures the displayed crop, field seed, scanner, ray budget, soil, noise and each obstacle setting. A teammate can open it and download the regenerated XYZ and labels without an account. Edits to the controls take effect on the next scan. On localhost, the link points to your own server. Use the public farm for a link anyone can open.
+
+A shared link includes the expected tile ID. The viewer flags a mismatch if the generator produces a different ID. Keep the PLY and labels alongside the source revision for a long-lived dataset. [Open a sparse tomato scan from the benchmark](https://mvalancy.github.io/crop-trainer/?crop=tomato&sensor=os1-32&seed=854812180&budget=12000&ground=true&tile=e3a36b5c8e54f55d#field)
+
+## Test a detector on a different scan layout
+
+In the training shed, **Training LiDAR layout** determines the examples used to fit the detector. **Validation LiDAR layout** controls how the held-out plants are scanned. The default follows the training layout. To isolate a scanner change, keep the seed, crop, training layout, epochs and cutoffs fixed. The generator keeps the plant centers, clutter, ground variants and requested ray budgets paired. Layout capacity and simulated noise can change the number of returns. In the field audit, **Open this scan in the 3D viewer** opens the selected tile, including its ground setting. Check its tile ID against the exported report.
+
+These paired mean F1 scores use six mixed training fields, three held-out fields with both ground variants, 40 CPU neural epochs and a 0.50 cutoff. Each row compares the same weights and training normalization.
+
+| Crop | Run seed | Reference grid | Simulated OS1-64 |
+| --- | ---: | ---: | ---: |
+| Lettuce | 211 | 0.771 | 0.760 |
+| Lettuce | 212 | 0.693 | 0.657 |
+| Globe artichoke | 211 | 0.782 | 0.723 |
+| Globe artichoke | 212 | 0.754 | 0.656 |
+| Young tomato | 211 | 0.818 | 0.758 |
+| Young tomato | 212 | 0.675 | 0.604 |
+
+For tomato at seed 212, the ring scan had a candidate peak within 15 cm of 578 of 620 labeled plant instances across six tiles. The score cutoff retained matches for 311 and the spacing filter left 310. A second test trained exclusively on that same ring layout, holding validation scans fixed. Tomato mean F1 rose from 0.604 to 0.627 on seed 212 and fell from 0.758 to 0.726 on seed 211. These measurements describe the projected synthetic layouts. [Open the tomato ring test](https://mvalancy.github.io/crop-trainer/trainer/?crop=tomato&seed=212&sensor=mixed&validationSensor=os1-64) · [Open its grid control](https://mvalancy.github.io/crop-trainer/trainer/?crop=tomato&seed=212&sensor=mixed&validationSensor=reference)
+
+## How many rays reach the field?
+
+Set **Validation ray budget** in the Training Shed to vary scan density on held-out fields. Training uses the budget selected for its own split, which defaults to seeded variation. Open a scored tile to see how many rays its layout sampled and how many returns survived noise and soil removal. The **Ray scout** farm challenge uses the same distinction. Two requests above the layout's capacity produce the same number of sampled rays.
+
+On dataset seeds 721, 722, 751 and 752, increasing the simulated OS1-64 validation budget from 12,000 to 60,000 raised mean F1 on all four seeds for each of lettuce, artichoke and tomato. Each pair used six mixed-layout training fields, three held-out plantings, 40 neural epochs, identical CPU weights and identical plant labels. Changing the budget resamples the layout, so the two clouds can contain different ray positions. These projected layouts measure synthetic sampling effects. Physical scanner performance requires measured scans.
+
+On tomato seed 721, more rays raised the number of labeled plant instances matched within 15 cm from 245 to 698 out of 734 across the six scans. Extra pins rose from 7 to 57. Times below are from the Node CPU runner and generation includes both splits. [Replay 12,000 rays](https://mvalancy.github.io/crop-trainer/trainer/?crop=tomato&seed=721&sensor=mixed&validationSensor=os1-64&validationRayBudget=12000&engine=cpu) · [Replay 60,000 rays](https://mvalancy.github.io/crop-trainer/trainer/?crop=tomato&seed=721&sensor=mixed&validationSensor=os1-64&validationRayBudget=60000&engine=cpu)
+
+| Validation rays | Generation | Training | Validation | F1 at 7.5 cm | F1 at 10 cm | F1 at 15 cm |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 12,000 | 1,746 ms | 78 ms | 30 ms | 0.4158 | 0.4929 | 0.4970 |
+| 60,000 | 2,260 ms | 95 ms | 36 ms | 0.8865 | 0.9335 | 0.9375 |
+
+## Does matching training density help on sparse scans?
+
+On two fresh seeds, training at 12,000 rays improved mean F1 for all three crops on held-out 12,000-ray OS1-64 scans. The comparison used six training fields, three held-out fields, both soil variants, 40 neural epochs and a 0.50 score cutoff. Each pair had identical validation scans and training plantings. Resampling the training scans changed their candidate peaks and the number of balanced examples.
+
+| Crop | Seed 1221 · train 12k / 60k | Seed 1222 · train 12k / 60k |
+| --- | ---: | ---: |
+| Lettuce | 0.712 / 0.168 | 0.680 / 0.405 |
+| Globe artichoke | 0.660 / 0.136 | 0.624 / 0.368 |
+| Young tomato | 0.550 / 0.119 | 0.598 / 0.337 |
+
+For lettuce seed 1221, F1 at 7.5, 10 and 15 cm was 0.642, 0.727 and 0.767 with 12k training rays, and 0.159, 0.167 and 0.178 with 60k. The Node CPU run spent 2.41 s generating, 0.09 s training and 0.07 s validating at 12k, compared with 3.52 s, 0.17 s and 0.03 s at 60k. These scores describe this simulated sparse layout. In the Training shed, open **Scanner and ray budgets** to set the two splits independently. [Replay lettuce at 12k training rays](https://mvalancy.github.io/crop-trainer/trainer/?crop=lettuce&seed=1221&sensor=os1-64&trainingRayBudget=12000&validationRayBudget=12000&engine=cpu) · [Replay the 60k control](https://mvalancy.github.io/crop-trainer/trainer/?crop=lettuce&seed=1221&sensor=os1-64&trainingRayBudget=60000&validationRayBudget=12000&engine=cpu)
+
+## Does the same fit work on dense scans?
+
+Choose **Training scan density** in the benchmark. The CPU fits the same neural architecture twice per seed, using 12,000 and 60,000 requested rays per training scan. Select a validation budget and compare the fits on identical held-out tiles. The results show the sampled rays and balanced examples that reached each fit. Select a contender to replay it in the Training shed. [Run the density benchmark](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=density&sensor=os1-64&crop=lettuce&seed=1321&validationRayBudget=60000)
+
+On seeds 1321 and 1322 we ran the benchmark twice on the simulated OS1-64, changing only the validation budget between runs. Each cell gives mean F1 for **12k / 60k training rays**. All fits used 40 epochs, a 0.50 cutoff and both soil variants. We verified that changing validation density preserved each fit’s weights and training manifest.
+
+| Crop | Seed | Test at 12k | Test at 60k |
+| --- | ---: | ---: | ---: |
+| Lettuce | 1321 | 0.689 / 0.321 | 0.825 / 0.846 |
+| Lettuce | 1322 | 0.743 / 0.323 | 0.798 / 0.803 |
+| Globe artichoke | 1321 | 0.633 / 0.304 | 0.580 / 0.815 |
+| Globe artichoke | 1322 | 0.762 / 0.312 | 0.825 / 0.854 |
+| Young tomato | 1321 | 0.588 / 0.252 | 0.845 / 0.849 |
+| Young tomato | 1322 | 0.630 / 0.223 | 0.794 / 0.809 |
+
+Matching the budgets improved mean F1 in each pair. On dense artichoke scans at seed 1321 the gain was 0.235, while on dense tomato scans at the same seed it was 0.004. Even within one detector, matching distance matters. On dense lettuce seed 1322, denser training lowered 7.5 cm F1 from 0.776 to 0.772 and raised 15 cm F1 from 0.818 to 0.829. These results cover six held-out plantings per crop and one simulated layout. PointNet++ studies multi-scale features under varying sampling density. This experiment holds the feature extractor fixed while changing the training scans. [PointNet++](https://arxiv.org/abs/1706.02413) · [Replay sparse validation](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=density&sensor=os1-64&seed=1321&validationRayBudget=12000)
+
+On dense artichoke seed 1321, the 12k and 60k Node CPU runs spent 1.84 / 2.43 seconds generating, 71 / 85 ms training and 22 / 16 ms scoring. F1 at 7.5, 10 and 15 cm was 0.459, 0.574 and 0.707 for 12k training, and 0.663, 0.819 and 0.964 for 60k. Each fit includes its own normalization and balanced training examples.
+
+## Can one detector handle both sparse and dense scans?
+
+In **Benchmark → Training scan density**, select **Include a mixed-density fit** to add a third detector. It learns from three plantings scanned at 12,000 rays and three at 60,000. Run the benchmark at one validation budget, follow the repeat link in the same tab, and run it again. The new table shows each detector’s mean F1 at both densities. Read the lower of those two scores if your detector needs to handle either scan density. [Try the artichoke experiment](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=density&crop=artichoke&sensor=os1-64&seed=1421&includeMixed=1&validationRayBudget=60000)
+
+On the simulated OS1-64, sparse-only training had the best worst-case F1 on both lettuce seeds and both tomato seeds. For artichoke the advantage changed with the planting seed. Each entry below is the lower of the two validation scores. Every fit used 40 CPU epochs, a 0.50 cutoff and three held-out plantings with both soil variants. Changing validation density preserved the training tiles, feature scaling and fitted weights.
+
+| Crop | Seed | Train at 12k | Alternate 12k and 60k | Train at 60k |
+| --- | ---: | ---: | ---: | ---: |
+| Lettuce | 1421 | **0.6702** | 0.6460 | 0.2365 |
+| Lettuce | 1422 | **0.7246** | 0.6985 | 0.3526 |
+| Globe artichoke | 1421 | 0.6042 | **0.6831** | 0.2787 |
+| Globe artichoke | 1422 | 0.7134 | **0.7303** | 0.3618 |
+| Globe artichoke | 1451 | **0.6512** | 0.5440 | 0.2173 |
+| Globe artichoke | 1452 | **0.6699** | 0.6600 | 0.3097 |
+| Young tomato | 1421 | **0.5687** | 0.5116 | 0.2219 |
+| Young tomato | 1422 | **0.6275** | 0.5571 | 0.2242 |
+
+On artichoke seed 1451, alternating training improved dense-scan mean F1 from 0.7015 to 0.7876 over sparse-only training, while sparse-scan mean F1 fell from 0.6512 to 0.5440. For the alternating fit on dense scans, F1 at 7.5, 10 and 15 cm was 0.685, 0.816 and 0.862. One Node CPU run spent 2.01 s generating, 52 ms training and 25 ms validating. Different ray budgets also produce different numbers of training examples. These measurements apply to this synthetic layout. Domain randomization has been studied for image-based object localization. Here the varied property is the number of simulated LiDAR rays. [Replay the repeat seeds](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=density&crop=artichoke&sensor=os1-64&seed=1451&includeMixed=1&validationRayBudget=12000) · [Tobin et al., 2017](https://arxiv.org/abs/1703.06907)
+
+[Back to the field guide](README.md)

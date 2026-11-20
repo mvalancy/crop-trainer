@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 206" role="img" aria-labelledby="title desc">
+  <title id="title">From laser dots to lettuce pins</title>
+  <desc id="desc">A beam sweeps over a lettuce rosette. Labeled points feed a small network. On a new planting, two pins land near plant centers and a third plant is missed.</desc>
+  <defs>
+    <pattern id="paper" width="12" height="12" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1" fill="#a4b38e"/></pattern>
+    <g id="leaf"><path d="M0 1C-19-5-24-23-15-35C-2-40 11-25 0 1Z" fill="#8cb967" stroke="#25513b" stroke-width="2.4"/><path d="M0 0Q-3-20-12-30" fill="none" stroke="#477946" stroke-width="2"/></g>
+    <g id="rosette">
+      <use href="#leaf"/><use href="#leaf" transform="rotate(73)"/><use href="#leaf" transform="rotate(145)"/><use href="#leaf" transform="rotate(217)"/><use href="#leaf" transform="rotate(289)"/>
+      <path d="M-10-3Q-10-16 1-10Q15-9 9 2Q7 11-2 9Q-12 8-10-3Z" fill="#d7e78b" stroke="#31593b" stroke-width="2"/>
+    </g>
+    <g id="returns" fill="#386a45">
+      <circle cx="-11" cy="-10" r="3"/><circle cx="0" cy="-13" r="2"/><circle cx="9" cy="-7" r="3"/>
+      <circle cx="-15" cy="0" r="2"/><circle cx="-4" cy="-2" r="3"/><circle cx="5" cy="2" r="2"/>
+      <circle cx="14" cy="3" r="2.5"/><circle cx="-9" cy="9" r="2"/><circle cx="2" cy="12" r="3"/>
+    </g>
+    <clipPath id="plot"><rect x="15" y="14" width="181" height="127" rx="12"/></clipPath>
+  </defs>
+  <style>
+    .sweep {animation: sweep 5s ease-in-out infinite alternate}
+    .signal {stroke-dasharray: 8 78;animation: signal 3s linear infinite}
+    .pins {animation: pins 5s ease-in-out infinite}
+    @keyframes sweep {from{transform:translateX(-50px)}to{transform:translateX(67px)}}
+    @keyframes signal {to{stroke-dashoffset:-86}}
+    @keyframes pins {0%,22%{opacity:.18}45%,90%{opacity:1}100%{opacity:.18}}
+    @media(prefers-reduced-motion:reduce){.sweep,.signal,.pins{animation:none}}
+  </style>
+  <rect width="620" height="206" rx="18" fill="#f4f4e6"/>
+  <g fill="#e1e8cd">
+    <rect x="15" y="14" width="181" height="127" rx="12"/><rect x="424" y="14" width="181" height="127" rx="12"/>
+  </g>
+  <rect x="15" y="14" width="181" height="127" rx="12" fill="url(#paper)"/>
+  <use href="#rosette" transform="translate(104 78) scale(1.24)"/>
+  <g clip-path="url(#plot)"><g class="sweep">
+    <path d="M50 14H78L135 141H104Z" fill="#efffa6" opacity=".55"/>
+    <path d="M78 14L135 141" stroke="#254e39" stroke-width="2.5" stroke-dasharray="4 4"/>
+  </g></g>
+  <rect x="220" y="14" width="180" height="127" rx="12" fill="#193e31"/>
+  <g fill="none" stroke-width="2.3">
+    <path d="M242 50L307 39L375 77L307 115L242 102L307 78L242 50M242 102L307 39M242 50L307 115M307 78L375 77" stroke="#739c77"/>
+    <path class="signal" d="M242 50L307 78L375 77M242 102L307 39L375 77" stroke="#e2f292" stroke-width="4"/>
+  </g>
+  <g fill="#bedb87" stroke="#163628" stroke-width="2">
+    <circle cx="242" cy="50" r="7"/><circle cx="242" cy="102" r="7"/>
+    <circle cx="307" cy="39" r="8"/><circle cx="307" cy="78" r="8"/><circle cx="307" cy="115" r="8"/>
+    <circle cx="375" cy="77" r="9" fill="#f0a17d"/>
+  </g>
+  <g transform="translate(424 14)">
+    <path d="m12 74 111-60m-90 101 132-71" stroke="#bfcca7" stroke-width="14"/>
+    <use href="#returns" x="48" y="57"/><use href="#returns" x="93" y="33"/><use href="#returns" x="115" y="77"/>
+    <g fill="none" stroke="#47794c" stroke-width="2"><circle cx="48" cy="57" r="18"/><circle cx="93" cy="33" r="18"/><circle cx="115" cy="77" r="18"/></g>
+    <g class="pins" fill="#b94f36" stroke="#fff9e6" stroke-width="2"><circle cx="47" cy="58" r="6"/><circle cx="117" cy="76" r="6"/></g>
+  </g>
+  <g fill="#193e31" font-family="system-ui,sans-serif" font-weight="700" font-size="24" text-anchor="middle"><text x="105" y="180">Scan a field</text><text x="310" y="180">Learn</text><text x="515" y="180">Find plants</text></g>
+  <path d="M194 170h24m-7-6 7 6-7 6m185-6h24m-7-6 7 6-7 6" fill="none" stroke="#718764" stroke-width="2.5"/>
+</svg>
