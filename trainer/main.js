@@ -1,5 +1,6 @@
-import {initSandbox, modelSettings, duration, trainInWorker, inspectWeights, featureNames} from './sandbox.js';
-import {MAX_SANDBOX_EPOCHS, trainerId} from './network.js';
+import {initFieldTest} from './field-test-ui.js';
+import {initSandbox, modelSettings, duration, trainInWorker, inspectWeights} from './sandbox.js?v=field-test1';
+import {MAX_SANDBOX_EPOCHS, trainerId, weightArtifact} from './network.js?v=field-test1';
 import {returnBand} from './field.js?v=missbands1';
 import {cropProfile} from './crops.js';
 import {allProfiles, sensorOptions, validationSensorOptions, sensorDetails, rayBudgetOptions, trainingRayOptions, trainingRayValue, ALTERNATING_BUDGET} from './sensors.js?v=densitymix1';
@@ -382,14 +383,9 @@ function downloadJSON(data, filename) {
 $('downloadRun').onclick = () => {
  if (lastRun) downloadJSON(lastRun, 'crop-trainer-' + lastRun.backend.toLowerCase() + '-' + lastRun.epochs + 'ep-seed' + lastRun.seed + '.json');
 };
-$('downloadWeights').onclick = () => {
- if (!lastRun) return;
- const {settings, scaling, weights, trainer, epochs} = lastRun;
- downloadJSON({format:'crop-trainer-weights-v1',trainer,featureSchema:'crop-peak-13-v1',inputs:13,featureNames,
-   hiddenLayers:settings.hiddenLayers,activation:settings.activation,output:'sigmoid',
-   layout:'layer-major, neuron-major, incoming weights then bias',crop:settings.crop,
-   minimumHeight:settings.minimumHeight,threshold:settings.threshold,pinSeparation:cropProfile(settings.crop).pinSeparation,
-   scaling,weights,epochs}, 'crop-weights-'+settings.crop+'-'+settings.seed+'.json');
+const setFieldTestModel=initFieldTest(downloadJSON);
+$('downloadWeights').onclick=()=>{
+ if(lastRun)downloadJSON(weightArtifact(lastRun),'crop-weights-'+lastRun.settings.crop+'-'+lastRun.seed+'.json');
 };
 $('downloadSettings').onclick = () => {
  if (lastRun) downloadJSON(lastRun.settings, 'crop-settings-' + lastRun.seed + '.json');
@@ -538,6 +534,7 @@ async function runFit(trial){
    earned=['First harvest',...(farm.mixed?['Field scout']:[]),...(farm.seeds.length>=2?['Seed saver']:[])];
   }catch{}
   $('harvest').textContent=earned.length?'Farm journal · '+earned.join(' / '):'Harvest complete';
+  setFieldTestModel(weightArtifact(lastRun),seed);
   inspectWeights(lastRun.weights,settings.hiddenLayers);
   $('downloadWeights').hidden=false;$('downloadRun').hidden=false;$('downloadSettings').hidden=false;$('exportText').hidden=false;
   status('Run complete',backend+' training · '+(scores.meanF1*100).toFixed(1)+'% mean F1 on held-out synthetic scans.',100);

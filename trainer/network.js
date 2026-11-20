@@ -1,3 +1,5 @@
+import {cropProfile} from './crops.js';
+
 // Each layer stores output neurons in order, with incoming weights followed by bias.
 export const MAX_SANDBOX_EPOCHS = 100_000_000;
 export function networkShape(dims, hiddenLayers = [4], activation = 'tanh') {
@@ -93,6 +95,21 @@ export function trackFit(plan, {onEpoch, shouldFinish}, backend) {
 export function trainerId({hiddenLayers,activation}) {
   if (!hiddenLayers.length) return 'crop-peak-logistic-v1';
   return hiddenLayers.length === 1 && hiddenLayers[0] === 4 && activation === 'tanh' ? 'crop-mlp-v1' : 'crop-dense-v1';
+}
+
+export const featureNames = ['Smoothed peak height','Center cell height','Mean inner height','Mean middle height',
+  'Mean outer height','Peak above outer mean','High cells in middle ring','High cells in outer ring',
+  'Occupied inner cells','Occupied outer cells','Log return count','Shape asymmetry','Peak above background'];
+
+// Both training entry points export the same inference metadata for a completed fit.
+export function weightArtifact({settings,scaling,weights,trainer,epochs}) {
+  return {
+    format:'crop-trainer-weights-v1', trainer, featureSchema:'crop-peak-13-v1',
+    inputs:featureNames.length, featureNames, hiddenLayers:settings.hiddenLayers,
+    activation:settings.activation, output:'sigmoid', layout:'layer-major, neuron-major, incoming weights then bias',
+    crop:settings.crop, minimumHeight:settings.minimumHeight, threshold:settings.threshold,
+    pinSeparation:cropProfile(settings.crop).pinSeparation, scaling, weights:Array.from(weights), epochs
+  };
 }
 
 // Score raw candidate rows from features(tile, minimumHeight) using a saved fit.

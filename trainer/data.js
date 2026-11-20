@@ -6,6 +6,7 @@ export const PEAK_HEIGHTS = [0.065, 0.035];
 export const FIELD_LIMITS={train:256,validation:128};
 import {mixedProfiles as SENSORS, getSensor, RAY_BUDGETS, ALTERNATING_BUDGET, DENSITY_BUDGETS} from './sensors.js?v=densitymix1';
 const SIZE=200, STEP=.05, DIMS=13, TOL=[.075,.1,.15];
+export {TOL as MATCH_RADII_METERS};
 const at=(x,y)=>y*SIZE+x, clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const pause=()=>new Promise(r=>setTimeout(r,0));
 function check(signal){if(signal?.aborted)throw new DOMException('Training stopped','AbortError');}
@@ -29,7 +30,7 @@ export function makeRecipe(seed,ground,sampling,crop='lettuce'){
 function centers(boxes){return boxes.map(({min,max})=>[(min[0]+max[0])/2,(min[1]+max[1])/2]);}
 export function features(tile, minimumHeight=.065){
  // Only XYZ, never the synthetic return classes or supplied training boxes.
- const xy=tile.xyz,N=SIZE*SIZE, max=new Float32Array(N), count=new Uint16Array(N);
+ const xy=tile.xyz,N=SIZE*SIZE, max=new Float32Array(N), count=new Uint32Array(N);
  for(let i=0;i<xy.length;i+=3){
   let x=clamp(Math.floor(xy[i]/STEP),0,SIZE-1),y=clamp(Math.floor(xy[i+1]/STEP),0,SIZE-1),j=at(x,y);
   max[j]=Math.max(max[j],xy[i+2]);count[j]++;
@@ -130,7 +131,7 @@ export async function buildDataset({seed=27,crop='lettuce',trainFields=6,valFiel
   manifest:[...training,...validation].map((t,i)=>({split:i<training.length?'train':'validation',seed:t.seed,tile_id:t.tile_id,returnCount:t.returnCount,sampledRays:t.sampledRays,recipe:t.recipe}))};
 }
 const matchingSlack = 1e-12;
-function matchCenters(pins, truth, radius) {
+export function matchCenters(pins, truth, radius) {
  const radiusSquared = radius ** 2;
  const candidates = pins.map(([x, y]) => {
   const boxes = [];
@@ -162,15 +163,15 @@ function matchCenters(pins, truth, radius) {
 export function matchedCount(pred, truth, radius) {
  return matchCenters(pred, truth, radius).count;
 }
-export function detectionStages(tile, probabilities, threshold=.5){
+export function detectionStages(tile, probabilities, threshold=.5, separation=cropProfile(tile.recipe?.crop).pinSeparation){
  const ordered=Array.from(probabilities.keys())
   .filter(i=>probabilities[i]>=threshold)
   .sort((a,b)=>probabilities[b]-probabilities[a]||a-b);
  const accepted=ordered.map(i=>tile.pos[i]);
  const selected=[];
- const separation=cropProfile(tile.recipe?.crop).pinSeparation;
- for(const [x,y] of accepted){
-  if(selected.every(([a,b])=>(a-x)**2+(b-y)**2>=separation**2))selected.push([x,y]);
+ for(const point of accepted){
+  const [x,y]=point;
+  if(selected.every(([a,b])=>(a-x)**2+(b-y)**2>=separation**2))selected.push(point);
  }
  return {proposals:tile.pos,accepted,selected};
 }

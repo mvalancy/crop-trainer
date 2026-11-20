@@ -20,4 +20,6 @@ Training uses your GPU through WebGPU when available. Your CPU can do the whole 
 
 [Explore a field in 3D](https://mvalancy.github.io/crop-trainer/#field), or try the same training run with **globe artichokes** or **young tomatoes**. Which crop is easiest to find?
 
+Have a scan of your own? [Try your detector on a local PLY](https://mvalancy.github.io/crop-trainer/trainer/#field-test) and see how it compares with picking the tallest peaks.
+
 [Field guide and experiments](docs/README.md) · [Agent quickstart](AGENTS.md) · [MIT license](LICENSE)

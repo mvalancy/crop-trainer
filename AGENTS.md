@@ -1,6 +1,6 @@
 # Crop Trainer agent guide
 
-Help a team answer one LiDAR detection question at a time. Crop Trainer generates lettuce, globe-artichoke and young-tomato geometry, scanner returns, and center labels from seeds. All training and evaluation in the starter use synthetic data. Start with the [first harvest](README.md). Keep the front page focused on that first run. Put experimental results and technical walkthroughs in the [field guide](docs/README.md).
+Help a team answer one LiDAR detection question at a time. Crop Trainer generates lettuce, globe-artichoke and young-tomato geometry, scanner returns, and center labels from seeds. The starter trains and benchmarks on synthetic data. Users can evaluate a saved detector against their own local survey in Field test. Start with the [first harvest](README.md). Keep the front page focused on that first run. Put experimental results and technical walkthroughs in the [field guide](docs/README.md).
 
 ## Run your first test
 
@@ -17,6 +17,12 @@ Open http://127.0.0.1:4173/ to inspect a field and its training run in the brows
 To reproduce a completed browser experiment, choose **Download run settings**, then pass that JSON as the second filename, for example `node run.mjs train replay.json crop-settings-27.json`. A replay generates the same fields and trains fresh weights. CPU and WebGPU floating-point results can differ slightly.
 
 Browser settings exports include `hiddenLayers`, `activation`, `initSeed`, `optimizer`, `batchSize`, `learningRate` and `momentum`. Earlier settings files select the original four-unit tanh net or the logistic baseline. A time-limited run records its completed epoch count so the CLI can repeat the same number of updates. For the weight format and an inference example, see [the training guide](docs/training.md).
+
+## Test a detector outside the generator
+
+Use a model exported by the Training shed and a local plot scan. If the user supplies an independently surveyed center CSV, run `node score-scan.mjs weights.json plot.ply new-result.json --labels centers.csv`. With no survey, omit `--labels` and describe the resulting pins as predictions. Use the same frame, scan and one-to-one matching for the trained detector and its height-only baseline. The output includes SHA-256 hashes and both source and local coordinates. See the [file and frame contract](docs/scan-cli.md) and [field validation protocol](docs/field-validation.md).
+
+To reproduce the four-detector comparison on separate synthetic plantings, run `node benchmark/paired-evidence.mjs`. It also calibrates tomato on separate fields and evaluates the frozen cutoff on fresh plantings. [Study design and results](docs/evidence.md)
 
 ## Run a paired experiment
 

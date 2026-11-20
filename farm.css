@@ -383,3 +383,23 @@ tbody tr:nth-child(even) { background: #f6f8f0; }
 .weightBar i { position: absolute; height: 100%; }
 .weightBar .negative { right: 50%; background: #b26143; }
 .weightBar .positive { left: 50%; background: #588448; }
+
+.fieldTest { margin-top: 2rem; }
+.testGuides { display: flex; flex-wrap: wrap; gap: .4rem 1.25rem; padding-block-start: .75rem; border-top: 1px solid var(--line); }
+.testGuides a { display: inline-flex; align-items: center; min-height: 2.75rem; }
+.testInputs { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,15rem),1fr)); gap: .85rem 1.25rem; }
+.testInputs input[type=file] { padding: .4rem; font-size: .86rem; }
+.testFrame { margin: 1.1rem 0; border-block-start: 1px solid var(--line); }
+.testSlope { margin-top: .85rem; }
+.testSlope .testInputs { grid-template-columns: repeat(2,minmax(0,1fr)); max-width: 28rem; }
+.testFrame legend { font-weight: 650; padding-right: .5rem; }
+.testFrame .testInputs { grid-template-columns: repeat(4,minmax(0,1fr)); }
+#testStatus { margin: 1rem 0; color: var(--muted); }
+.testView { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(0,1fr); gap: 1rem 2rem; align-items: start; margin-block: 1rem; }
+.testView canvas { display: block; width: 100%; height: auto; background: #f1f4ea; border-radius: .6rem; }
+.testView figcaption { font-size: .85rem; color: var(--muted); margin-top: .5rem; }
+#testMetrics caption { text-align: left; font-weight: 650; }
+@media (max-width: 650px) {
+  .testView { grid-template-columns: 1fr; }
+  .testFrame .testInputs { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}

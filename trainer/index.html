@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Train &amp; validate · Crop Trainer</title>
-<link rel="stylesheet" href="../farm.css?v=model-sandbox1"></head>
+<link rel="stylesheet" href="../farm.css?v=field-test1"></head>
 <body class="shed"><a class="skip" href="#main">Skip to content</a>
 <header class="siteBar">
 <div class="barInner"><a class="brand" href="../"><span class="mark" aria-hidden="true"><i></i></span>Crop Trainer</a>
@@ -11,7 +11,7 @@
 <main id="main">
 <header class="pageIntro">
 <h1>Training shed</h1>
-<p>Teach a model to find plants in laser scans. Try the starter, or build a network of your own and see which plants it finds.</p></header>
+<p>Teach a model to find plants in laser scans. Try the starter, or build a network of your own and see which plants it finds. <a href="#field-test">Test a model on your own scan ↓</a></p></header>
 <div class="grid">
 <aside>
 <h2>Run setup</h2>
@@ -160,9 +160,43 @@
 <details class="method">
 <summary>How generation, training and validation work</summary><ol><li>Generate separate seeded fields for training and validation. Each is scanned with ground included and removed.</li><li>Project XYZ into a 5 cm grid. Measure 13 features at each candidate height peak. Nearby labeled centers supply positive examples and far-away peaks supply negatives.</li><li>Balance training examples and normalize them using training statistics. Fit the selected network or logistic model by minimizing binary cross-entropy.</li><li>Score peaks on unseen fields and retain those at or above the selected detection cutoff. Keep the higher-confidence pin when candidates fall inside the crop’s spacing filter. Match remaining pins to planted centers at three distances.</li><li>Field generation and scoring use the CPU. Model fitting uses your selected backend. An epoch is one pass over the training examples.</li></ol><p><a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/training.md">Training controls and weight-file guide →</a></p></details>
 </section></div>
+<section id="field-test" class="fieldTest panel" aria-labelledby="fieldTestTitle">
+<div class="sectionHead"><h2 id="fieldTestTitle">Field test</h2><p>Run a detector on a LiDAR plot you own. Your files are processed in this browser.</p></div>
+<form id="fieldTestForm">
+<div class="testInputs">
+<label>Detector<select id="testModelSource"><option value="file">Saved weights JSON</option><option value="current" disabled>Most recent completed fit</option></select></label>
+<label id="testWeightsLabel">Weights file<input type="file" id="testWeights" accept=".json,application/json" required></label>
+<label>Plot scan<input type="file" id="testPly" accept=".ply" required><span>ASCII or little-endian binary PLY. One Z-up plot up to 10 × 10 m, 32 MiB and 1 million returns.</span></label>
+<label>Reference centers (optional)<input type="file" id="testLabels" accept=".csv,.json"><span>Survey every plant in the plot. Use CSV with header <code>x,y</code>, or the generator’s matching labels JSON.</span></label>
+</div>
+<p id="testExtent" class="hint"></p>
+<fieldset class="testFrame"><legend>Scan coordinates</legend>
+<p class="hint">Enter the plot’s lower-left corner and the ground elevation there, in the file’s units. For generator exports use metres and zeros.</p>
+<div class="testInputs"><label>File units<select id="testUnits"><option value="m">Metres</option><option value="cm">Centimetres</option><option value="mm">Millimetres</option></select></label>
+<label>Plot origin X<input type="number" id="testX" step="any" value="0" required></label><label>Plot origin Y<input type="number" id="testY" step="any" value="0" required></label><label>Ground Z<input type="number" id="testZ" step="any" value="0" required></label></div>
+<details class="testSlope"><summary>Surveyed sloping ground</summary>
+<p class="hint">On a bed with a uniform slope, enter the measured rise in each direction. A grade of 5 means the ground rises 5 cm per metre. Negative values slope downhill.</p>
+<div class="testInputs"><label>Grade along X (%)<input type="number" id="testGradeX" step="any" value="0" required></label><label>Grade along Y (%)<input type="number" id="testGradeY" step="any" value="0" required></label></div></details></fieldset>
+<div class="action"><button id="testDetect" class="primary" disabled>Find plants</button><button id="testCancel" type="button" hidden>Cancel field test</button></div>
+</form>
+<p id="testStatus" role="status">Choose a scan and a model to begin.</p>
+<div id="testResults" hidden>
+<h3 id="testSummary">Detections</h3>
+<div class="testView"><figure><canvas id="testMap" width="500" height="500" aria-label="Top view of the imported scan and plant detections" role="img"></canvas>
+<figcaption id="testLegend"></figcaption></figure>
+<div><label>Show pins from<select id="testOverlay"><option value="model">Trained model</option><option value="baseline">Height-only baseline</option></select></label>
+<p>The baseline keeps the tallest peaks first. Both methods use the same candidate peaks and plant spacing.</p>
+<p id="testOutcome"></p><p class="hint" id="testRule"></p>
+<button type="button" id="testExport">Download field test JSON</button></div></div>
+<div id="testMetrics" class="tableScroll" hidden><table><caption>One-to-one matches against supplied centers</caption><thead><tr><th>Method</th><th>Distance</th><th>Matched</th><th>Extra</th><th>Missed</th><th>Precision</th><th>Recall</th><th>F1</th></tr></thead><tbody id="testRows"></tbody></table></div>
+<div id="testStages" hidden><h3>Where did the model lose plants?</h3>
+<p id="testStageSummary"></p><p class="hint">Each stage matches peaks to surveyed centers one to one within 15 cm. A plant needs a nearby candidate before the network can score it.</p></div>
+</div>
+<div class="testGuides"><a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/evidence.md">When does training beat peak height?</a><a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/field-validation.md">Design a field trial →</a></div>
+</section>
 </main>
 <footer class="siteFoot"><span>Crop Trainer</span>
 <div><a href="../AGENTS.md">Agent quickstart</a><a href="https://github.com/mvalancy/crop-trainer">GitHub</a><a href="../LICENSE">MIT license</a></div></footer>
-<script type="module" src="./main.js?v=model-sandbox1"></script>
+<script type="module" src="./main.js?v=field-test1"></script>
 </body>
 </html>

@@ -1,4 +1,5 @@
-import {networkShape} from './network.js';
+import {networkShape,featureNames} from './network.js?v=field-test1';
+export {featureNames};
 
 const $ = id => document.getElementById(id);
 export function duration(ms) {
@@ -84,10 +85,6 @@ export function trainInWorker(x,y,options,signal,onEpoch,onReady) {
     worker.postMessage({x,y,options},[x.buffer,y.buffer]);
   });
 }
-
-export const featureNames = ['Smoothed peak height','Center cell height','Mean inner height','Mean middle height',
-  'Mean outer height','Peak above outer mean','High cells in middle ring','High cells in outer ring',
-  'Occupied inner cells','Occupied outer cells','Log return count','Shape asymmetry','Peak above background'];
 
 export function inspectWeights(weights, hiddenLayers) {
   const {layers} = networkShape(featureNames.length,hiddenLayers);
