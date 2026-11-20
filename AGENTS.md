@@ -65,7 +65,15 @@ Check training tile IDs, CPU weights and scaling before comparing the runs. Matc
 
 In each validation tile, `coverage.zero`, `coverage.oneToFour` and `coverage.fiveOrMore` count plants by their surviving crop returns. The values sum to the number of labeled plants. For per-plant detail, open the exact tile in the generator and download Labels. Entry `crop_returns_per_box[i]` counts returns from `boxes[i]`. Earlier label files omit this array. Regenerate their recipe to compute coverage.
 
-For a paired run, start with tomato seed 921, mixed training and OS1-64 validation. Compare budgets 12000 and 60000 and repeat at seed 922. Group by field seed, using soil-present tiles to count each planting once. Soil removal drops only soil and leaves these counts intact. At 15 cm, `max(0, fn - coverage.zero)` is a lower bound on misses that had crop returns. The scorer matches coordinates, so the counts alone cannot identify the individual misses. Coverage comes exclusively from generator bookkeeping and is excluded from all 13 detector inputs.
+For a paired run, start with tomato seed 921, mixed training and OS1-64 validation. Compare budgets 12000 and 60000 and repeat at seed 922. Group by field seed, using soil-present tiles to count each planting once. Soil removal drops only soil and leaves these counts intact. At 15 cm, `max(0, fn - coverage.zero)` is a lower bound on misses that had crop returns. This bound also works on older reports that only have aggregate coverage. Coverage comes exclusively from generator bookkeeping and is excluded from all 13 detector inputs.
+
+### Find the exact missed plants
+
+In the Training Shed, run the detector, choose **Missed plants** in the field map, and select a matching distance. **Highlight a missed plant** lists the zero-based box index, center coordinates in metres and crop return count. A second ring highlights the selected box.
+
+In a CLI report or browser benchmark row, find the tile by `tile_id`, then select `missesByTolerance` by `cm`. Each `boxIndices` entry indexes `boxes` and `crop_returns_per_box` in that tile’s generator label download. Its length equals the corresponding false-negative count. `withCropReturns` counts the missed boxes that have one or more returns. In earlier reports this section is absent.
+
+To compare cutoffs, check the weights and tile IDs, then take the set difference between the two missed-index lists for the same tile and distance. This gives the boxes that gained or lost a match under the scorer’s assignment. A pin can be close to two labels. The scorer chooses a deterministic maximum-cardinality assignment and can reassign a pin to fit another match.
 
 ### Compare the same field with and without soil
 

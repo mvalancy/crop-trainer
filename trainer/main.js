@@ -38,7 +38,7 @@ function updateBenchmarkLinks() {
 for (const id of ['crop','scanner','validationSensor','validationRayBudget','seed','epochs']) $(id).addEventListener('input', updateBenchmarkLinks);
 let controller=null,losses=[],lastPreview=null,backendReady=false,deps,webgpuAvailable=false,lastRun=null,lastPaint=0;
 try {
- deps=await Promise.all([import('./data.js?v=coverage1'),import('./model.js?v=benchmark1'),import('./neural.js')]);
+ deps=await Promise.all([import('./data.js?v=misses1'),import('./model.js?v=benchmark1'),import('./neural.js')]);
  $('epochs').max=deps[1].MAX_EPOCHS;
  const epochsParam = params.get('epochs');
  if (/^\d+$/.test(epochsParam) && Number(epochsParam) >= 1 && Number(epochsParam) <= deps[1].MAX_EPOCHS) {
@@ -76,10 +76,28 @@ function showField(){
  lastPreview=fieldViews.get(field?.tile_id);
  if(!lastPreview)return;
  const stage=$('overlayStage').value;
+ const inspectingMisses = stage === 'misses';
+ $('missControls').hidden = !inspectingMisses;
+ if (inspectingMisses) {
+  const {cm,boxIndices,withCropReturns} = selectedMisses();
+  $('previewText').textContent = boxIndices.length+' missed at '+cm+' cm. '+withCropReturns+' had crop returns (red rings). '+(boxIndices.length-withCropReturns)+' had none (dark squares).';
+  $('missBox').disabled = !boxIndices.length;
+  $('missBox').replaceChildren(new Option('All missed plants',''), ...boxIndices.map(box => {
+   const [x,y] = lastPreview.truth[box], returns = lastPreview.plantReturns[box];
+   return new Option('Box '+box+' · x '+x.toFixed(2)+' m, y '+y.toFixed(2)+' m · '+returns+' crop returns', String(box));
+  }));
+  draw();
+  return;
+ }
  const count=lastPreview.stages[stage].length;
  $('previewText').textContent=field.seed+' · ground '+(field.ground?'present':'removed')+' · '+lastPreview.truth.length+' labeled plants (green rings) · '+count+' centers at this stage (red dots).';
  draw();
 }
+function selectedMisses(){
+ return lastPreview.missesByTolerance.find(row => row.cm === Number($('missDistance').value));
+}
+$('missBox').addEventListener('change',draw);
+$('missDistance').addEventListener('change',showField);
 $('overlayStage').addEventListener('change',showField);
 function showStages(){
  const tile=auditTiles[Number($('auditField').value)];
@@ -113,6 +131,7 @@ function clear(){
  $('groundStudy').hidden = true;
  $('groundStudy').open = false;
  $('soilMetric').value = 'recall';
+ $('missControls').hidden = true; $('missDistance').value = '15'; $('missBox').replaceChildren();
  $('harvest').textContent='';auditTiles=[];fieldViews.clear();$('overlayStage').value='selected';$('stageAudit').hidden=true;
  losses=[];lastPreview=null;lastRun=null;lastPaint=0;$('downloadRun').hidden=true;$('downloadSettings').hidden=true;$('benchmark').hidden=true;$('exportText').hidden=true;$('exportText').open=false;$('reportText').value='';$('copyReport').textContent='Copy JSON';
  for(const id of ['s75','s10','s15']){$(id).textContent='—';$('d'+id.slice(1)).textContent=''}
@@ -135,7 +154,26 @@ function draw(){
  g.strokeStyle='#c5d0c0';g.strokeRect(left,top,side,side);
  if(lastPreview){
  const plot=(list,color,r,ring=false)=>{g.fillStyle=g.strokeStyle=color;g.lineWidth=1.1;for(const v of list||[]){const c=coords(v);if(!c||!Number.isFinite(c[0])||!Number.isFinite(c[1]))continue;g.beginPath();g.arc(left+c[0]*side/10,top+side-c[1]*side/10,r,0,2*Math.PI);if(ring)g.stroke();else g.fill()}};
- plot(lastPreview.points,'#acbba8',.65);plot(lastPreview.truth,'#386b46',3,true);plot(lastPreview.stages[$('overlayStage').value],'#b92e35',1.6);
+ plot(lastPreview.points,'#acbba8',.65);
+ const stage = $('overlayStage').value;
+ if (stage === 'misses') {
+  const selectedBox = $('missBox').value;
+  for (const box of selectedMisses().boxIndices) {
+   const [x,y] = lastPreview.truth[box];
+   const px = left+x*side/10, py = top+side-y*side/10;
+   if (String(box) === selectedBox) {
+    g.strokeStyle = '#152c62'; g.lineWidth = 2; g.beginPath(); g.arc(px,py,8,0,2*Math.PI); g.stroke();
+   }
+   g.lineWidth = 1.2;
+   if (lastPreview.plantReturns[box] > 0) {
+    g.strokeStyle = '#b92e35'; g.beginPath(); g.arc(px,py,3,0,2*Math.PI); g.stroke();
+   } else {
+    g.strokeStyle = '#26334e'; g.strokeRect(px-3,py-3,6,6);
+   }
+  }
+ } else {
+  plot(lastPreview.truth,'#386b46',3,true);plot(lastPreview.stages[stage],'#b92e35',1.6);
+ }
  }
 }
 new ResizeObserver(draw).observe(document.querySelector('.viz'));draw();

@@ -85,6 +85,7 @@ export async function buildDataset({seed=27,crop='lettuce',trainFields=6,valFiel
    const t=field(recipe), f=features(t,minimumHeight), truth=centers(t.labels.boxes), points=[];
    if(!trainingField){const n=t.xyz.length/3,inc=Math.max(1,Math.ceil(n/1500));for(let i=0;i<n;i+=inc)points.push([t.xyz[3*i],t.xyz[3*i+1]]);}
    const item={...f,truth,coverage:t.coverage,seed:id,ground:v===0,recipe:t.p,sampledRays:t.sampledRays,tile_id:t.labels.tile_id,returnCount:t.labels.num_points,points};
+   if (!trainingField) item.plantReturns = t.plantReturns;
    (trainingField?training:validation).push(item);
    onProgress({done:2*k+v+1,total,stage:'data'});await pause();
   }
@@ -124,11 +125,37 @@ export async function buildDataset({seed=27,crop='lettuce',trainFields=6,valFiel
   stats:{crop,trainFields,valFields,trainTiles:training.length,valTiles:validation.length,minimumHeight,samples:Y.length,sampleLimit:48000,sensorMode,validationSensorMode,validationRayBudget,fieldSeeds:{training:trainSeeds,validation:valSeeds},generator:'crop-trainer-v1'},
   manifest:[...training,...validation].map((t,i)=>({split:i<training.length?'train':'validation',seed:t.seed,tile_id:t.tile_id,returnCount:t.returnCount,sampledRays:t.sampledRays,recipe:t.recipe}))};
 }
-export function matchedCount(pred,truth,radius){
- const r2=radius**2, adj=pred.map(([x,y])=>{const a=[];for(let j=0;j<truth.length;j++){const [tx,ty]=truth[j];if((tx-x)**2+(ty-y)**2<=r2+1e-12)a.push(j);}return a;});
- const match=new Int32Array(truth.length).fill(-1),visited=new Int32Array(truth.length).fill(-1);
- function assign(i,visit){for(const j of adj[i])if(visited[j]!==visit){visited[j]=visit;if(match[j]===-1||assign(match[j],visit)){match[j]=i;return true;}}return false;}
- let n=0;for(let i=0;i<adj.length;i++)if(assign(i,i))n++;return n;
+function matchCenters(pins, truth, radius) {
+ const radiusSquared = radius ** 2;
+ const candidates = pins.map(([x, y]) => {
+  const boxes = [];
+  for (let box = 0; box < truth.length; box++) {
+   const [tx, ty] = truth[box];
+   if ((tx-x)**2 + (ty-y)**2 <= radiusSquared + 1e-12) boxes.push(box);
+  }
+  return boxes;
+ });
+ const pinByBox = new Int32Array(truth.length).fill(-1);
+ const visited = new Int32Array(truth.length).fill(-1);
+ function assign(pin, visit) {
+  for (const box of candidates[pin]) {
+   if (visited[box] === visit) continue;
+   visited[box] = visit;
+   if (pinByBox[box] === -1 || assign(pinByBox[box], visit)) {
+    pinByBox[box] = pin;
+    return true;
+   }
+  }
+  return false;
+ }
+ let count = 0;
+ for (let pin = 0; pin < pins.length; pin++) {
+  if (assign(pin, pin)) count++;
+ }
+ return {count, pinByBox};
+}
+export function matchedCount(pred, truth, radius) {
+ return matchCenters(pred, truth, radius).count;
 }
 export function detectionStages(tile, probabilities, threshold=.5){
  const ordered=Array.from(probabilities.keys())
@@ -180,12 +207,19 @@ export async function validateModel(set,weights,{threshold=.5,predictScores=pred
   check(signal);
   const stages=detectionStages(t,predictScores(t.X,weights,set.dims),threshold);
   const predictions=stages.selected;
+  const missesByTolerance = [];
   const byTolerance = TOL.map(radius => {
-   const tp = matchedCount(predictions, t.truth, radius);
+   const {count:tp, pinByBox} = matchCenters(predictions, t.truth, radius);
+   const boxIndices = [];
+   for (const [box, pin] of pinByBox.entries()) {
+    if (pin === -1) boxIndices.push(box);
+   }
+   const withCropReturns = t.plantReturns && boxIndices.filter(box => t.plantReturns[box] > 0).length;
+   missesByTolerance.push({cm:100 * radius, boxIndices, withCropReturns});
    return {cm: 100 * radius, tp, fp: predictions.length - tp, fn: t.truth.length - tp};
   });
-  tiles.push({seed:t.seed,ground:t.ground,tile_id:t.tile_id,crop:t.recipe.crop,requestedRays:t.recipe.points,sampledRays:t.sampledRays,returnCount:t.returnCount,sensor:t.recipe.sampling.key,coverage:t.coverage,byTolerance,stages15cm:measureStages(stages,t.truth,byTolerance[2].tp)});
-  previews.set(t.tile_id,{truth:t.truth,predictions,ground:t.ground,seed:t.seed,points:t.points,stages});
+  tiles.push({seed:t.seed,ground:t.ground,tile_id:t.tile_id,crop:t.recipe.crop,requestedRays:t.recipe.points,sampledRays:t.sampledRays,returnCount:t.returnCount,sensor:t.recipe.sampling.key,coverage:t.coverage,byTolerance,missesByTolerance,stages15cm:measureStages(stages,t.truth,byTolerance[2].tp)});
+  previews.set(t.tile_id,{truth:t.truth,plantReturns:t.plantReturns,missesByTolerance,predictions,ground:t.ground,seed:t.seed,points:t.points,stages});
   onProgress({done:i+1,total:set.validation.length,stage:'validation'});await pause();
  }
  const byGround = [true, false].map(ground => {

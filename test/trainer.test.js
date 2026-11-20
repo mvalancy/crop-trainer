@@ -169,3 +169,30 @@ test('plant coverage follows final crop returns through occlusion, dropout and c
     });
   }
 });
+
+test('missed box IDs follow the final one-to-one assignment at each tolerance', async () => {
+  // The first pin can take either nearby box at 15 cm. Move it to box 1
+  // so the second pin, which can only reach box 0, also receives a match.
+  const tile = {
+    seed:4, ground:true, tile_id:'assignment', recipe:{crop:'lettuce', sampling:{key:'reference'}},
+    truth:[[0,0],[.22,0],[2,2]], plantReturns:[5,0,3],
+    pos:[[.11,0],[-.04,0]], X:new Float32Array(2)
+  };
+  const set = {dims:1, validation:[tile]};
+  const result = await validateModel(set, [], {predictScores:() => [.9,.8]});
+  const row = result.tiles[0];
+  assert.deepEqual(row.missesByTolerance, [
+    {cm:7.5, boxIndices:[1,2], withCropReturns:1},
+    {cm:10, boxIndices:[1,2], withCropReturns:1},
+    {cm:15, boxIndices:[2], withCropReturns:1}
+  ]);
+  assert.deepEqual(result.previews.get(tile.tile_id).missesByTolerance, row.missesByTolerance);
+  for (const [i, group] of row.missesByTolerance.entries()) {
+    assert.equal(group.boxIndices.length, row.byTolerance[i].fn);
+  }
+  const none = await validateModel(set, [], {predictScores:() => [0,0]});
+  for (const group of none.tiles[0].missesByTolerance) {
+    assert.deepEqual(group.boxIndices, [0,1,2]);
+    assert.equal(group.withCropReturns, 2);
+  }
+});
