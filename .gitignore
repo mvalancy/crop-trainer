@@ -1,0 +1,9 @@
+node_modules/
+*.log
+*.ply
+*-harvest.json
+harvest-*.json
+control-*.json
+variant-*.json
+results/
+.DS_Store

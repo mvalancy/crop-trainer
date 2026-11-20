@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Crop Trainer · The procedural farm</title><meta name="description" content="Grow synthetic lettuce, scan it with LiDAR, and train a crop-center detector on your CPU or GPU."><link rel="stylesheet" href="farm.css"></head>
+<body><header><a class="brand" href="./">Crop Trainer</a><nav aria-label="Farm navigation"><a href="#field">Grow a field</a><a href="trainer/">Training shed</a><a href="#missions">Farm journal</a><a href="AGENTS.md">For agents</a></nav></header>
+<main><h1><img src="art/title.svg" alt="Crop Trainer. The procedural farm."></h1>
+<section class="welcome"><div><h2>Your first lettuce harvest</h2><p>Grow a field of virtual lettuce and teach a detector to place one pin per plant. Everything from the leaves to the LiDAR returns is generated on your device.</p></div><a class="primary" href="trainer/">Start training</a></section>
+<section id="field" class="field"><aside><div class="tag">Lettuce patch</div><h2>Grow a field</h2><p>Keep the seed fixed to scan the same plants in different ways.</p>
+<form id="grow"><label>Field seed<input type="number" id="seed" min="0" max="4294967295" step="1" required value="27"></label>
+<label>Scan pattern<select id="scan"><option value="grid">Reference grid</option><option value="lines">Sparse lines</option><option value="rings">Concentric rings</option></select></label>
+<label class="check"><input type="checkbox" id="ground" checked> Include ground</label><label class="check"><input type="checkbox" id="pins" checked> Show labeled centers</label>
+<button class="primary">Grow and scan</button></form></aside><div class="plot"><canvas id="map" width="820" height="500" role="img" aria-label="Oblique view of the generated lettuce field"></canvas>
+<p id="count" role="status">Generating the first field…</p><div class="downloads"><button id="ply" disabled>Download scan (.ply)</button><button id="labels" disabled>Download labels (.json)</button></div></div></section>
+<section id="missions"><div class="tag">Farm journal</div><h2>Field missions</h2><p>Completed runs earn stamps in this browser.</p><ol class="missions"><li><b>First harvest</b><span>Finish training and score a field.</span><strong id="first">Open</strong></li><li><b>Field scout</b><span>Finish a run with mixed scan patterns.</span><strong id="scout">Open</strong></li><li><b>Seed saver</b><span>Complete runs with two different seeds.</span><strong id="saver">Open</strong></li></ol></section>
+<section id="guide"><div class="tag">Field school</div><h2>What does training do?</h2><div class="lessons">
+<article><h3>Grow the answer key</h3><p>The generator puts leaves around each plant and records its bounding box. The box midpoint gives us a known center to learn from.</p></article>
+<article><h3>Learn which peaks are plants</h3><p>The detector finds height peaks in a top-down grid. It measures 13 clues around each peak, including height, shape and point density. Training adjusts weights to give peaks near a plant a higher score.</p></article>
+<article><h3>Scout unfamiliar ground</h3><p>Validation uses different field seeds. Precision tells you how many pins found plants. Recall tells you how many plants got a pin. F1 balances both at 7.5, 10 and 15 cm.</p></article></div>
+<p>In the <a href="trainer/">training shed</a>, compare the four-unit neural network with the logistic baseline. Use the field selector and map overlay to see which plants disappear between the peak, score and spacing stages.</p>
+<details><summary>Try a paired experiment</summary><p>Run seed 27 with mixed scans, 6 training fields, 3 validation fields and 40 epochs. Compare peak heights of 6.5 and 3.5 cm while keeping every other setting fixed. Export both JSON reports. Repeat with seed 28 and check whether the effect holds.</p></details>
+<p><a href="AGENTS.md">Read the agent quickstart</a> · <a href="https://github.com/mvalancy/crop-trainer">Source and local setup</a> · <a href="LICENSE">MIT license</a></p></section></main><script type="module" src="farm.js"></script></body></html>

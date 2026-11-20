@@ -1,0 +1,1 @@
+{"name":"crop-trainer","version":"1.0.0","private":true,"type":"module","license":"MIT","scripts":{"start":"node run.mjs serve","test":"node --test"},"engines":{"node":">=22"}}
