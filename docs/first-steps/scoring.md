@@ -1,8 +1,8 @@
+![Three example candidates score 0.77, 0.64 and 0.30. The cutoff drops the third, and spacing keeps only the higher score of the two nearby candidates.](../../art/lesson-pins.svg)
+
 # Was the pin any good?
 
 Our lettuce scored 0.772 and passed the 0.50 **cutoff**. Other peaks can pass too. Suppose two leaves on one plant both look convincing. Counting both would turn one lettuce into two. The app considers higher-scoring peaks first and suppresses a nearby duplicate using a minimum spacing for the chosen crop.
-
-![Three example candidates score 0.77, 0.64 and 0.30. The cutoff drops the third, and spacing keeps only the higher score of the two nearby candidates.](../../art/lesson-pins.svg)
 
 A cutoff is a score. A matching tolerance is a distance. After pin selection, the app checks how close the final pins are to labeled centers in the horizontal plane. Our example pin was **4.46 cm** from its assigned lettuce, close enough at each of the app’s three tolerances (7.5, 10 and 15 cm). The reference is used to grade that pin after prediction.
 

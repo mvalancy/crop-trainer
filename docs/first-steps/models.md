@@ -1,3 +1,5 @@
+![A worked logistic model combines two weighted clues and a bias into a total of 1, then outputs a score of 0.73.](../../art/lesson-weights.svg)
+
 # What is a model?
 
 A model here is a calculation with adjustable numbers. Give it the 13 measurements around one peak and it returns a score between 0 and 1. Training chooses the adjustable numbers. Using those numbers later on another scan is called **inference**. For the crop you selected, it estimates how strongly each peak resembles a plant center.
@@ -5,8 +7,6 @@ A model here is a calculation with adjustable numbers. Give it the 13 measuremen
 ## A model you can calculate by hand
 
 Imagine using just two clues, height above the surrounding cells and the fraction of nearby cells filled with returns. Put each on a scale measured relative to the training examples. Now “1” means one typical unit of variation above the training average, and “0” means average. This lets the model combine measurements originally expressed in different units.
-
-![A worked logistic model combines two weighted clues and a bias into a total of 1, then outputs a score of 0.73.](../../art/lesson-weights.svg)
 
 In this **invented two-clue example**, the first clue is 1 and its weight is 1.5. The second clue is 0 and its weight is 0.4. Add a starting offset, called the **bias**, of −0.5. The total is 1 × 1.5 + 0 × 0.4 − 0.5 = **1**. A smooth S-shaped function called the **sigmoid** converts that total into a score of about **0.73**. A total of zero would give 0.50.
 

@@ -1,8 +1,8 @@
+![A ruler around a reference center shows three example peaks. At 5 cm it teaches “yes”, at 12 cm it is skipped, and at 20 cm it teaches “no”.](../../art/lesson-labels.svg)
+
 # How does the model learn from a mistake?
 
 Suppose a peak receives a low score and the planting map puts it right on a lettuce. During practice the model can compare its answer with a **label**, the answer we want it to learn. Which peaks should count as practice examples in the first place?
-
-![A ruler around a reference center shows three example peaks. At 5 cm it teaches “yes”, at 12 cm it is skipped, and at 20 cm it teaches “no”.](../../art/lesson-labels.svg)
 
 For every practice peak, the app finds the nearest labeled center. Under 9.5 cm away earns a positive label (1). Over 15 cm earns a negative label (0). It skips the distances in between, including the two boundaries. That avoids teaching a firm answer from a borderline peak. It draws equal numbers of positive and negative examples and uses the training examples to set each feature’s average and scale.
 

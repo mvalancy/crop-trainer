@@ -9,6 +9,7 @@ export function createViewer(canvas, controls) {
   let frame = 0, spinning = false, previousTime = 0;
   const colors = ['#667d70', '#badf74', '#58ae81', '#ca9763', '#f1b674', '#acbce0', '#86b8dc'];
   const elevation = Array.from({length:64}, (_, i) => 'hsl('+(175-i*1.65)+' 53% '+(34+i*.48)+'%)');
+  let denseLayer;
   const clamp = (value, low, high) => Math.min(high, Math.max(low, value));
 
   function schedule() { if (!frame) frame = requestAnimationFrame(draw); }
@@ -56,20 +57,26 @@ export function createViewer(canvas, controls) {
         context.lineTo(ox+q[0]*scale,oy+q[1]*scale);context.stroke();
       }
     }
-    const size=clamp(scale*.043,1.25,5);
-    if(!sorted){
-      for(let i=0;i<order.length;i++){
-        const j=3*i,[px,py,depth]=project(scan.xyz[j],scan.xyz[j+1],scan.xyz[j+2]);
-        projected[j]=px;projected[j+1]=py;projected[j+2]=depth;
+    if (scan.cls.length > 100000) {
+      denseLayer ??= denseRenderer(colors, elevation);
+      denseLayer(context, scan, {w,h,ratio,scale,ox,oy,c,s,cp,sp,pivot,elevationScale,
+        byClass:controls.color.value==='class', moving:spinning || pointers.size>0});
+    } else {
+      const size=clamp(scale*.043,1.25,5);
+      if(!sorted){
+        for(let i=0;i<order.length;i++){
+          const j=3*i,[px,py,depth]=project(scan.xyz[j],scan.xyz[j+1],scan.xyz[j+2]);
+          projected[j]=px;projected[j+1]=py;projected[j+2]=depth;
+        }
+        // Equal-depth returns keep their acquisition order when a view is revisited.
+        order.sort((a,b)=>projected[3*a+2]-projected[3*b+2] || a-b);
+        sorted=true;
       }
-      // Equal-depth returns keep their acquisition order when a view is revisited.
-      order.sort((a,b)=>projected[3*a+2]-projected[3*b+2] || a-b);
-      sorted=true;
-    }
-    for(const i of order){
-      const j=i*3;
-      context.fillStyle=controls.color.value==='class'?colors[scan.cls[i]]:elevation[clamp(Math.round(scan.xyz[j+2]*elevationScale),0,63)];
-      context.fillRect(ox+projected[j]*scale,oy+projected[j+1]*scale,size,size);
+      for(const i of order){
+        const j=i*3;
+        context.fillStyle=controls.color.value==='class'?colors[scan.cls[i]]:elevation[clamp(Math.round(scan.xyz[j+2]*elevationScale),0,63)];
+        context.fillRect(ox+projected[j]*scale,oy+projected[j+1]*scale,size,size);
+      }
     }
     if(controls.pins.checked){
       context.lineWidth=1.5;
@@ -137,7 +144,7 @@ export function createViewer(canvas, controls) {
     else orbit(dx,dy);
     old.x=e.clientX;old.y=e.clientY;
   });
-  for(const name of ['lostpointercapture','pointercancel','pointerup'])canvas.addEventListener(name,e=>pointers.delete(e.pointerId));
+  for(const name of ['lostpointercapture','pointercancel','pointerup'])canvas.addEventListener(name,e=>{if(pointers.delete(e.pointerId))schedule();});
   canvas.addEventListener('contextmenu',e=>e.preventDefault());
   canvas.addEventListener('wheel',e=>{
     e.preventDefault();const box=canvas.getBoundingClientRect();
@@ -169,10 +176,57 @@ export function createViewer(canvas, controls) {
       if (newPlanting && pivot !== fieldCenter) reset();
       scan = value;
       elevationScale = value.labels.growing_system ? 63 / Math.max(.8,...value.labels.boxes.map(b=>b.max[2])) : 80;
-      projected = new Float32Array(scan.xyz.length);
-      order = Uint32Array.from({length:scan.cls.length}, (_, i) => i);
+      const sortedPoints = scan.cls.length <= 100000 ? scan.cls.length : 0;
+      projected = new Float32Array(3*sortedPoints);
+      order = new Uint32Array(sortedPoints);
+      for (let i=0;i<order.length;i++) order[i]=i;
       sorted = false;
       schedule();
     }
+  };
+}
+
+// A depth buffer keeps the front point in each pixel without sorting a million
+// returns every time the camera turns. The transparent layer sits over the grid.
+function denseRenderer(classColors, elevationColors) {
+  const layer = document.createElement('canvas');
+  const brush = layer.getContext('2d');
+  const palette = [...classColors, ...elevationColors];
+  layer.width = palette.length;
+  layer.height = 1;
+  palette.forEach((color,i) => {brush.fillStyle=color; brush.fillRect(i,0,1,1);});
+  const rgba = new Uint32Array(brush.getImageData(0,0,palette.length,1).data.buffer);
+  let image, pixels, depths;
+  return (context, scan, camera) => {
+    const {w,h,ratio,scale,ox,oy,c,s,cp,sp,pivot,elevationScale,byClass,moving} = camera;
+    // Footprints grow with zoom. Keep native device pixels for fine detail.
+    const pixelSize = Math.max(1/ratio, Math.min(4, scale*.015));
+    const width = Math.ceil(w/pixelSize), height = Math.ceil(h/pixelSize);
+    if (!image || layer.width !== width || layer.height !== height) {
+      layer.width = width;
+      layer.height = height;
+      image = brush.createImageData(width,height);
+      pixels = new Uint32Array(image.data.buffer);
+      depths = new Float32Array(width*height);
+    }
+    depths.fill(-Infinity);
+    pixels.fill(0);
+    const step = moving ? Math.max(1, Math.ceil(scan.cls.length/100000)) : 1;
+    const xyz = scan.xyz;
+    for (let i=0; i<scan.cls.length; i+=step) {
+      const x=xyz[3*i]-pivot[0], y=xyz[3*i+1]-pivot[1], z=xyz[3*i+2]-pivot[2];
+      const along=s*x+c*y;
+      const px=Math.floor((ox+(c*x-s*y)*scale)/pixelSize);
+      const py=Math.floor((oy+(along*sp-z*cp)*scale)/pixelSize);
+      if (px<0 || px>=width || py<0 || py>=height) continue;
+      const index=py*width+px, depth=along*cp+z*sp;
+      if (depth < depths[index]) continue;
+      depths[index]=depth;
+      const color=byClass ? scan.cls[i] : classColors.length+Math.max(0,Math.min(63,Math.round(xyz[3*i+2]*elevationScale)));
+      pixels[index]=rgba[color];
+    }
+    brush.putImageData(image,0,0);
+    context.imageSmoothingEnabled=false;
+    context.drawImage(layer,0,0,width*pixelSize,height*pixelSize);
   };
 }

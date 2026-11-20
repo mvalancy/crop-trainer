@@ -1,8 +1,8 @@
+![On one measured lettuce tile, proposals cover 199 plants, the cutoff retains matches for 141, and the final pins still match 141.](../../art/lesson-stages.svg)
+
 # Would it work on my farm?
 
 Start with a missed lettuce. Did the scanner get any points on it? Did those points make a peak? Did the model reject that peak? Did a neighboring pin take its place? Each answer suggests a different experiment.
-
-![On one measured lettuce tile, proposals cover 199 plants, the cutoff retains matches for 141, and the final pins still match 141.](../../art/lesson-stages.svg)
 
 This is the same seed-27 validation tile from the scoring lesson. At 15 cm, all 199 plants could be matched to distinct initial peaks, although there were 558 peaks altogether. After the score cutoff, 161 candidates remained and 141 plants could still be matched. Spacing reduced the candidates to 146 pins while preserving the matched **count**. Here, inspecting the model scores or changing the cutoff makes sense. On another tile the first stage might already have lost most plants. A classifier can only rank the peaks it receives.
 

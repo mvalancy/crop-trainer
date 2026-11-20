@@ -30,3 +30,15 @@ for (const crop of ['apple','grapevine','bench-lettuce','high-wire-tomato']) {
     assert.deepEqual(heldOut.truth,field(heldOut.recipe).labels.boxes.map(b=>b.base_xy_m));
   });
 }
+
+test('dense scans preserve planted labels and honor both layout and PLY limits', () => {
+  const recipe = makeRecipe(43571, true, getSensor('reference'));
+  const high = field({...recipe, points:1_000_000, scanNoise:{seed:13,stray:0.3}});
+  assert.equal(high.sampledRays, 1_000_000);
+  assert.equal(high.xyz.length / 3, 1_000_000);
+  assert.equal(high.cls.length, high.labels.num_points);
+  const rings = field({...recipe, points:1_000_000, sampling:getSensor('os1-128'),scanNoise:null});
+  assert.equal(rings.sampledRays, 2048*128);
+  assert.deepEqual(high.labels.boxes,rings.labels.boxes);
+  assert.throws(()=>field({...recipe,points:1_000_001}),/ray budget/);
+});

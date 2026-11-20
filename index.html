@@ -65,7 +65,8 @@
 <label>Scanner layout<select id="scan"></select></label>
 <p class="hint" id="systemInfo" hidden></p>
 <p class="hint" id="sensorInfo"></p>
-<label>Ray budget<select id="budget"></select></label>
+<label>Ray budget<select id="budget" aria-describedby="resolutionInfo"></select></label>
+<p class="hint" id="resolutionInfo"></p>
 <label>Scan noise<select id="noise"><option value="seeded">Seeded variation</option><option value="clean">Clean returns</option><option value="rough">Jitter, gaps and stray returns</option></select></label>
 <label class="check"><input type="checkbox" id="ground" checked=""> Include ground returns</label></fieldset>
 <details>
@@ -76,6 +77,7 @@
 <label>Sticks<select id="sticks"></select></label>
 <label>Boards<select id="boards"></select></label></div></details>
 <button class="primary">Grow and scan <span aria-hidden="true">→</span></button><a class="mobileShortcut" href="#scan-viewer">Back to scan ↑</a>
+<p id="generationStatus" role="status"></p>
 </form></aside></div>
 <details>
 <summary>How the scanner samples a crop</summary>
@@ -109,6 +111,6 @@
 </main>
 <footer class="siteFoot"><span>Created by Matthew Valancy</span>
 <div><a href="AGENTS.md">Agent quickstart</a><a href="#missions">Farm journal</a><a href="LICENSE">MIT license</a></div></footer>
-<script type="module" src="farm.js?v=systems1"></script>
+<script type="module" src="farm.js?v=dense1"></script>
 </body>
 </html>

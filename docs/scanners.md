@@ -18,6 +18,36 @@ Try the [vineyard](https://mvalancy.github.io/crop-trainer/?crop=grapevine&seed=
 
 In the **Field generator**, choose a scanner, ray budget, soil, noise and obstacles. Export the XYZ scan, bounding boxes and exact recipe. **Train this crop and layout** carries the crop and scanner into the training shed. Training generates separate fields with seeded noise and clutter. A fixed generator budget carries into validation, and the training budget defaults to seeded variation. The OS1 layouts reproduce selected channel and angular-column counts using a projected ring lattice. Real scanners also have beam angles, intensity response, timing and return-selection behavior. [Ouster sensor data reference](https://static.ouster.dev/sensor-docs/image_route1/image_route2/sensor_data/sensor-data.html)
 
+## How fine can I scan a leaf?
+
+For the densest scan, choose **Reference** under **Scanner layout**, set **Ray budget** to **1,000,000**, and select **Grow and scan**. Zoom in on one plant using **Focus plant**. For a first visit the generator opens at 262,144 rays. Shared scans keep their original budget. [Open the one-million-ray lettuce scan](https://mvalancy.github.io/crop-trainer/?crop=lettuce&seed=43571&sensor=reference&budget=1000000&noise=clean#field)
+
+| Reference budget | Approximate grid pitch on a 10 m square | Clean XYZ payload with soil |
+| ---: | ---: | ---: |
+| 100,000 | 3.15 cm | 1.2 MB |
+| 262,144 | 1.95 cm | 3.15 MB |
+| 500,000 | 1.41 cm | 6 MB |
+| 1,000,000 | 1.00 cm | 12 MB |
+
+Pitch is the width of one grid cell. Each selected cell gets a jittered ray, so exact distances between points vary. The table uses three 32-bit coordinates per return and excludes the short PLY header. Gaps and soil removal can reduce the number of exported points. Stray returns can add points up to the one-million-return import limit.
+
+Check **rays requested**, **sampled**, and **returns** under the viewer. The OS1-32, OS1-64 and OS1-128 presets can sample at most 16,384, 65,536 and 262,144 positions per scan, respectively. Requesting more leaves the same projected ring lattice. The detector still measures peaks in 5 cm cells. Denser input supplies more observations inside those cells.
+
+On two fresh lettuce plantings (seeds 43571 and 43572), the clean reference grid produced 9,563 and 17,017 crop returns at 100,000 rays. At one million it produced 95,772 and 170,378. Plant labels stayed identical within each pair. On the same fields the OS1-128 preset gave exactly the same crop-return counts at 262,144, 500,000 and one million requested rays.
+
+**Does more detail improve this detector?** We held the CPU neural weights fixed within each seed and rescanned the same two validation plantings at two budgets. Training used four mixed-layout fields at their seeded budgets, 40 epochs, the lettuce peak floor of 3.5 cm and the 0.50 score cutoff. Validation used the reference grid with seeded noise and both soil settings.
+
+| Dataset seed | Validation rays | F1 at 7.5 / 10 / 15 cm | Generation / training / validation (ms) |
+| ---: | ---: | --- | --- |
+| 43571 | 100,000 | .9013 / .9116 / .9116 | 2,083 / 96 / 125 |
+| 43571 | 1,000,000 | .8932 / .8932 / .8952 | 6,383 / 65 / 36 |
+| 43572 | 100,000 | .9104 / .9259 / .9259 | 1,710 / 107 / 41 |
+| 43572 | 1,000,000 | .8837 / .8856 / .8874 | 6,131 / 102 / 42 |
+
+Both fits scored slightly lower on the denser scans. This detector uses local height and density measurements, and these fits practiced on sparser fields. To test a fit for dense scans, set its training and validation budgets independently and reserve fresh validation plantings. These times are from Node on a hosted CPU. Generation includes all training and validation scans in the run.
+
+Dense scans generate in a background worker on supported browsers. During drag or spin, the viewer draws a sample to keep the camera responsive. At rest it uses every return. Exports always contain the full generated scan.
+
 ## Share one scan with another grower
 
 Choose **Grow and scan**, then **Copy scan link** under the viewer. The link captures the displayed crop, field seed, scanner, ray budget, soil, noise and each obstacle setting. A teammate can open it and download the regenerated XYZ and labels without an account. Edits to the controls take effect on the next scan. On localhost, the link points to your own server. Use the public farm for a link anyone can open.

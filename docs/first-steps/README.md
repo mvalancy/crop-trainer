@@ -1,3 +1,5 @@
+![Side-view sketch of sample rays meeting two leaves and the ground. Dots mark the surfaces that were sampled.](../../art/lesson-returns.svg)
+
 # How does a browser learn to spot lettuce?
 
 Imagine walking a row with a clipboard. Someone hands you a map covered in dots and asks you to put one pin on each lettuce. Where would you look? What would you count as a good guess? Crop Trainer lets you ask a small computer model those same questions, then uncover the planting map to check its work.
@@ -15,8 +17,6 @@ You can do the whole tour in a browser. Each chapter has a small experiment, and
 ## What can a scanner see?
 
 A LiDAR instrument sends out light and times its return. With the direction of the beam and that distance, it can place a dot in space. A **point cloud** is a collection of those dots. Each has three coordinates. On our level plot, X and Y tell you where to walk and Z tells you how high the surface was. A return can come from a leaf, the soil, or a board across the row.
-
-![Side-view sketch of sample rays meeting two leaves and the ground. Dots mark the surfaces that were sampled.](../../art/lesson-returns.svg)
 
 The browser makes a pretend field from a **seed**, a number you can share to grow the same layout again. Its projected scanner samples the top surface at a series of XY positions. A leaf between sample positions can be missed entirely. Rotating the viewer lets you see the recorded heights from the side. Getting new measurements would require another scan.
 

@@ -1,3 +1,4 @@
+import {layoutDimensions, MAX_SCAN_RAYS} from './sensors.js?v=dense1';
 import {cropProfile, bladeWidth, bladeHeight} from './crops.js?v=systems1';
 import {canopyPlant,scanFixtures} from './growing-systems.js';
 export function returnBand(count) {
@@ -9,13 +10,15 @@ export function field(p){
 const crop = p.crop ?? 'lettuce';
 const profile = cropProfile(crop);
 let seed=p.seed>>>0;function rng(s){return ()=>{s=(s+0x6d2b79f5)>>>0;let a=Math.imul(s^(s>>>15),1|s);a^=a+Math.imul(a^(a>>>7),61|a);return ((a^(a>>>14))>>>0)/4294967296}}
-let r=rng(seed),o=rng(seed^54321),s=rng(seed^737373), sensor=p.sampling, active=sensor&&sensor.key!=='reference', nx=active?Math.max(1,Math.round(1000/sensor.along)):0, ny=active?Math.max(1,Math.round(1000/sensor.across)):0;
-if(active&&sensor.alongCount){nx=sensor.alongCount;ny=sensor.acrossCount}
-let n=active?Math.min(200000,p.points|0,nx*ny):(p.points|0), g=Math.ceil(Math.sqrt(n)), xyz=new Float32Array(n*3), cls=new Uint8Array(n), ids=new Uint16Array(n), boxes=[],centers=[],tau=2*Math.PI,sz=10;
+let r=rng(seed),o=rng(seed^54321),s=rng(seed^737373), sensor=p.sampling;
+const dimensions=layoutDimensions(sensor), active=dimensions!==null, [nx,ny]=dimensions ?? [0,0];
+if(!Number.isSafeInteger(p.points) || p.points<1 || p.points>MAX_SCAN_RAYS) throw Error('Choose a ray budget from 1 to 1,000,000.');
+let n=active?Math.min(p.points,nx*ny):p.points, g=Math.ceil(Math.sqrt(n)), xyz=new Float32Array(n*3), cls=new Uint8Array(n), ids=new Uint16Array(n), boxes=[],centers=[],tau=2*Math.PI,sz=10;
 let terrain=profile.system==='greenhouse'?()=>0:(x,y)=>.016*Math.sin(1.3*x+.4*y)+.016*Math.sin(1.7*y)+.004*x+.005*Math.cos(12*y);
 let at=new Int32Array(g*g).fill(-1), next=active?new Int32Array(n):null, noise=new Float32Array(n);
 if(!active){
- let cells=Array.from({length:g*g},(_,i)=>i);
+ const cells=new Uint32Array(g*g);
+ for(let i=0;i<cells.length;i++)cells[i]=i;
  for(let j=0;j<n;j++){let k=j+Math.floor(s()*(cells.length-j));[cells[j],cells[k]]=[cells[k],cells[j]]}
  for(let i=0;i<n;i++){let c=cells[i],x=((c%g)+s())*sz/g,y=((c/g|0)+s())*sz/g;at[c]=i;xyz.set([x,y,terrain(x,y)+(s()+s()-1)*.012],3*i);noise[i]=(s()+s()-1)*.004}
 }else{
@@ -98,7 +101,7 @@ if(noiseActive){
      counts[outCls[to]]--;outCls[to]=outCls[from];counts[outCls[to]]++;
    }
  }
- for(let i=0;i<outliers&&(!active||outputN<200000);i++){
+ for(let i=0;i<outliers&&outputN<MAX_SCAN_RAYS;i++){
    const x=stray()*sz,y=stray()*sz,offset=(.12+.68*stray())*(stray()<.18?-1:1);
    outXYZ.set([x,y,terrain(x,y)+offset],3*outputN);outCls[outputN++]=5;counts[5]++;
  }

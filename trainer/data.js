@@ -1,10 +1,10 @@
 import {cropProfile} from './crops.js?v=systems1';
-import {field, returnBand} from './field.js?v=systems1';
+import {field, returnBand} from './field.js?v=dense1';
 import {predict} from './model.js';
 
 export const PEAK_HEIGHTS = [0.065, 0.035];
 export const FIELD_LIMITS={train:256,validation:128};
-import {mixedProfiles as SENSORS, getSensor, RAY_BUDGETS, ALTERNATING_BUDGET, DENSITY_BUDGETS} from './sensors.js?v=densitymix1';
+import {mixedProfiles as SENSORS, getSensor, RAY_BUDGETS, ALTERNATING_BUDGET, DENSITY_BUDGETS} from './sensors.js?v=dense1';
 const SIZE=200, STEP=.05, DIMS=13, TOL=[.075,.1,.15];
 export {TOL as MATCH_RADII_METERS};
 const at=(x,y)=>y*SIZE+x, clamp=(x,a,b)=>Math.max(a,Math.min(b,x));

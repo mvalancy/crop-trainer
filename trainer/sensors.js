@@ -51,7 +51,24 @@ export function sensorDetails(key) {
     : 'Offset sweeps distribute rays across the plot using an anisotropic repeating pattern.';
 }
 
-export const RAY_BUDGETS = [12000, 30000, 60000, 100000];
+export const MAX_SCAN_RAYS = 1_000_000;
+export const DEFAULT_GENERATOR_RAYS = 262_144;
+export const RAY_BUDGETS = [12000, 30000, 60000, 100000, DEFAULT_GENERATOR_RAYS, 500_000, MAX_SCAN_RAYS];
+
+// Synthetic line spacings are centimetres on a 1,000 cm plot. Ring layouts
+// carry their own column and channel counts.
+export function layoutDimensions(sensor) {
+  if (!sensor || sensor.key === 'reference') return null;
+  return [
+    sensor.alongCount ?? Math.max(1, Math.round(1000 / sensor.along)),
+    sensor.acrossCount ?? Math.max(1, Math.round(1000 / sensor.across))
+  ];
+}
+
+export function layoutCapacity(sensor) {
+  const size = layoutDimensions(sensor);
+  return size ? Math.min(MAX_SCAN_RAYS, size[0] * size[1]) : MAX_SCAN_RAYS;
+}
 
 export function rayBudgetOptions(select, requested) {
   select.replaceChildren(new Option('Seeded · 26–42k rays', '0'));
