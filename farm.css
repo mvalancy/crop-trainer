@@ -155,6 +155,25 @@ progress { width: 100%; height: .6rem; accent-color: var(--forest); }
 .mapWorkspace { display: grid; gap: 1rem; align-items: start; }
 .mapTools, #missControls { display: grid; gap: .75rem; min-width: 0; }
 .mapTools label { margin: 0; }
+.peakTrace { margin-top: 1rem; padding-top: .85rem; border-top: 1px solid var(--line); }
+.peakTrace h4 { margin: 0; }
+.traceLayout { display: grid; gap: 1rem; align-items: start; margin-top: .7rem; }
+.traceLayout figure { margin: 0; }
+.traceLayout svg { display: block; width: 100%; max-height: 10rem; background: var(--paper); border-radius: .4rem; }
+.traceLayout figcaption { font-size: .8rem; color: var(--muted); margin-top: .4rem; }
+.matchRadius { fill: none; stroke: #657c68; stroke-dasharray: 4 3; }
+.plantCross { fill: none; stroke: #172c48; stroke-width: 2; }
+#peakDot { fill: #324a38; }
+#passedSquare { fill: none; stroke: #a04f10; stroke-width: 2; }
+#pinRing { fill: none; stroke: #236b5e; stroke-width: 2; }
+@container (min-width: 32rem) {
+  .traceLayout { grid-template-columns: minmax(11rem,.75fr) minmax(0,1.25fr); }
+}
+.peakTrace dl { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .5rem; margin: .65rem 0; }
+.peakTrace dl div { padding: .55rem .65rem; background: var(--wash); border-radius: .45rem; }
+.peakTrace dt { font-size: .8rem; line-height: 1.25; }
+.peakTrace dd { margin: .15rem 0 0; font: 1.35rem var(--serif); }
+.peakTrace p { margin-bottom: 0; }
 .fieldMap { margin: 0; min-width: 0; }
 .fieldMap canvas { aspect-ratio: 1; height: auto; background: var(--paper); border-radius: .45rem; }
 .fieldMap figcaption { padding-top: .5rem; color: var(--muted); font-size: .86rem; line-height: 1.5; }

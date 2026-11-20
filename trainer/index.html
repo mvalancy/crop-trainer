@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Train &amp; validate · Crop Trainer</title>
-<link rel="stylesheet" href="../farm.css?v=missbands1"></head>
+<link rel="stylesheet" href="../farm.css?v=peaktrace1"></head>
 <body class="shed"><a class="skip" href="#main">Skip to content</a>
 <header class="siteBar">
 <div class="barInner"><a class="brand" href="../"><span class="mark" aria-hidden="true"><i></i></span>Crop Trainer</a>
@@ -112,7 +112,17 @@
 <label class="fine">Crop returns per plant<select id="missBand"><option value="all">All plants</option><option value="zero">0 returns</option><option value="oneToFour">1–4 returns</option><option value="fiveOrMore">5 or more returns</option></select></label>
 <label class="fine">Highlight a missed plant<select id="missBox"></select></label><a id="inspectBox" target="_blank" rel="noopener" hidden="">Inspect highlighted plant in 3D (new tab)</a></div></div>
 <figure class="fieldMap"><canvas id="preview" aria-label="Top-down predicted and true centers" role="img"></canvas>
-<figcaption id="previewText">Labeled plants appear as green rings and detections as red dots.</figcaption></figure></div></article></div>
+<figcaption id="previewText">Labeled plants appear as green rings and detections as red dots.</figcaption></figure></div>
+<section id="peakTrace" class="peakTrace" aria-labelledby="peakTitle" hidden>
+<h4 id="peakTitle"></h4>
+<div class="traceLayout"><figure>
+<svg viewBox="-100 -100 200 200" role="img" aria-labelledby="peakTitle peakLegend">
+<defs><circle id="peakDot" r="3"/><rect id="passedSquare" x="-4" y="-4" width="8" height="8"/><circle id="pinRing" r="7"/></defs>
+<circle r="80" class="matchRadius"/><g id="peakMarks"></g><path class="plantCross" d="M-5 0H5 M0 -5V5"/>
+</svg>
+<figcaption id="peakLegend">The cross marks the plant center. The circle marks the matching distance. Dots are peaks, squares passed the cutoff, and rings are final pins.</figcaption></figure>
+<div><dl><div><dt>Height peaks</dt><dd id="nearProposals"></dd></div><div><dt>Passed cutoff</dt><dd id="nearAccepted"></dd></div><div><dt>Final pins</dt><dd id="nearSelected"></dd></div></dl>
+<p id="traceText" role="status"></p></div></div></section></article></div>
 <figure class="trainingFlow">
 <figcaption>How a run works</figcaption>
 <ol><li><strong>Grow fields</strong><span>XYZ scans and plant centers</span></li><li><strong>Fit the detector</strong><span>Learn from labeled peaks</span></li><li><strong>Score new fields</strong><span>Match pins to plant centers</span></li></ol>
@@ -123,6 +133,6 @@
 </main>
 <footer class="siteFoot"><span>Crop Trainer</span>
 <div><a href="../AGENTS.md">Agent quickstart</a><a href="https://github.com/mvalancy/crop-trainer">GitHub</a><a href="../LICENSE">MIT license</a></div></footer>
-<script type="module" src="./main.js?v=missbands1"></script>
+<script type="module" src="./main.js?v=peaktrace1"></script>
 </body>
 </html>

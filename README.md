@@ -235,6 +235,8 @@ flowchart LR
   U --> C[Look up crop returns for each box]
   C --> B[Filter by crop returns per plant]
   B --> H[Highlight a missed plant on the map]
+  H --> T[Inspect peaks inside the matching circle]
+  T --> S[Check scores, spacing and pin assignment]
   H --> V[Focus and orbit that plant in 3D]
 ```
 
@@ -247,6 +249,21 @@ How many previously missed plants gain a pin if the score cutoff drops from 0.50
 | Young tomato | 59 | 9 | 91 | 17 |
 
 For tomato seed 1021, 54 of the 59 recovered boxes had crop returns. The other five received a pin within 15 cm despite having zero returns from the plant itself. Across both soil settings, F1 at 7.5, 10 and 15 cm rose from 0.245 / 0.279 / 0.297 to 0.414 / 0.469 / 0.505. The 0.50 run took 1,896 ms to generate, 113 ms to train and 32 ms to validate on Node CPU. The 0.35 replay took 1,945 / 99 / 24 ms. [Open the field audit](https://mvalancy.github.io/crop-trainer/trainer/?crop=tomato&seed=1021&sensor=mixed&validationSensor=os1-64&validationRayBudget=12000&engine=cpu) · [Compare the cutoffs](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=cutoffs&crop=tomato&seed=1021&sensor=mixed&validationSensor=os1-64&validationRayBudget=12000)
+
+### Could changing the cutoff help this missed plant?
+
+In the Training Shed, run the detector, choose **Missed plants** and highlight a box. The close-up shows the height peaks, peaks that passed the score cutoff and final pins inside its matching circle. If no peak is inside the circle, changing the cutoff alone cannot recover the plant. If all nearby peaks fell below the cutoff, the highest nearby score tells you where at least one would enter the spacing filter. A retained pin may still match a neighboring plant. [Inspect tomato seed 1921](https://mvalancy.github.io/crop-trainer/trainer/?crop=tomato&seed=1921&sensor=mixed&validationSensor=os1-64&validationRayBudget=12000&engine=cpu&missBand=all)
+
+We traced every 15 cm miss at a cutoff of 0.50, then rescored the same weights and scans at 0.35. Each cell gives **misses at 0.50 → boxes matched at 0.35 among those misses**. Each crop used 12 soil-present validation fields across dataset seeds 1921, 1922, 1951 and 1952. Both CPU models used six mixed-layout training fields per seed, 40 epochs and a simulated OS1-64 at 12,000 requested validation rays.
+
+| Crop and model | No nearby peak | All nearby scores below cutoff | Spacing removed all nearby peaks that passed | Nearby final pin assigned elsewhere |
+| --- | ---: | ---: | ---: | ---: |
+| Lettuce · neural | 123 → 0 | 596 → 396 | 6 → 2 | 2 → 1 |
+| Globe artichoke · neural | 11 → 0 | 70 → 28 | 7 → 0 | 0 → 0 |
+| Young tomato · neural | 205 → 0 | 404 → 281 | 7 → 3 | 0 → 0 |
+| Young tomato · logistic | 205 → 0 | 419 → 282 | 4 → 2 | 0 → 0 |
+
+On tomato seed 1921, F1 across both soil settings at 7.5 / 10 / 15 cm was 0.529 / 0.647 / 0.732 for neural and 0.535 / 0.646 / 0.722 for logistic at 0.50. On Node CPU, shared generation took 912 ms. Neural fitting and validation took 44 and 17 ms, and logistic took 8 and 13 ms. The close-up uses horizontal distances in synthetic scans. For background on analyzing detector errors beyond the aggregate score, see Hoiem and colleagues. [Diagnosing Error in Object Detectors](https://doi.org/10.1007/978-3-642-33712-3_25)
 
 ### Which crops gain a match when the cutoff drops?
 

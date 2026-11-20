@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {buildDataset,validateModel,matchedCount,compareMatchedBoxes,coverageAtDistance} from '../trainer/data.js';
+import {buildDataset,validateModel,matchedCount,compareMatchedBoxes,coverageAtDistance,nearbyPeaks} from '../trainer/data.js';
 import {trainNetworkCPU,predictNetwork} from '../trainer/neural.js';
 import {trainCPU} from '../trainer/model.js';
 
@@ -203,6 +203,23 @@ test('missed box IDs follow the final one-to-one assignment at each tolerance', 
     assert.equal(group.withCropReturns, 2);
     assert.deepEqual(group.missedByCoverage, {zero:1,oneToFour:1,fiveOrMore:1});
   }
+});
+
+test('local peak trace uses the matching distance and the scores of the original proposals', async () => {
+  const edge = [.075,0], outside = [.07501,0], suppressed = [-.01,0];
+  const tile = {
+    seed:1, tile_id:'trace', recipe:{crop:'lettuce',sampling:{key:'reference'}}, ground:true,
+    truth:[[0,0],[2,2]], pos:[outside,edge,suppressed], X:new Float32Array(3)
+  };
+  const r = await validateModel({dims:1,validation:[tile]}, [], {predictScores:()=>[.9,.5,.1]});
+  const preview = r.previews.get('trace');
+  assert.deepEqual(nearbyPeaks(preview,0,7.5), {
+    proposals:[edge,suppressed], accepted:[edge], selected:[], bestScore:.5
+  });
+  assert.deepEqual(nearbyPeaks(preview,0,10), {
+    proposals:[outside,edge,suppressed], accepted:[outside,edge], selected:[outside], bestScore:.9
+  });
+  assert.deepEqual(nearbyPeaks(preview,1,15), {proposals:[], accepted:[], selected:[], bestScore:null});
 });
 
 test('model comparison identifies complementary matches on the same labeled tile', () => {

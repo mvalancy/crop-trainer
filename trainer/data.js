@@ -128,13 +128,14 @@ export async function buildDataset({seed=27,crop='lettuce',trainFields=6,valFiel
   stats:{crop,trainFields,valFields,trainTiles:training.length,valTiles:validation.length,minimumHeight,samples:Y.length,sampleLimit:48000,sensorMode,validationSensorMode,trainingRayBudget,validationRayBudget,fieldSeeds:{training:trainSeeds,validation:valSeeds},generator:'crop-trainer-v1'},
   manifest:[...training,...validation].map((t,i)=>({split:i<training.length?'train':'validation',seed:t.seed,tile_id:t.tile_id,returnCount:t.returnCount,sampledRays:t.sampledRays,recipe:t.recipe}))};
 }
+const matchingSlack = 1e-12;
 function matchCenters(pins, truth, radius) {
  const radiusSquared = radius ** 2;
  const candidates = pins.map(([x, y]) => {
   const boxes = [];
   for (let box = 0; box < truth.length; box++) {
    const [tx, ty] = truth[box];
-   if ((tx-x)**2 + (ty-y)**2 <= radiusSquared + 1e-12) boxes.push(box);
+   if ((tx-x)**2 + (ty-y)**2 <= radiusSquared + matchingSlack) boxes.push(box);
   }
   return boxes;
  });
@@ -171,6 +172,23 @@ export function detectionStages(tile, probabilities, threshold=.5){
   if(selected.every(([a,b])=>(a-x)**2+(b-y)**2>=separation**2))selected.push([x,y]);
  }
  return {proposals:tile.pos,accepted,selected};
+}
+
+// Proximity to one label, independent of the scorer's one-to-one assignments.
+export function nearbyPeaks(preview, box, cm) {
+ const [x,y] = preview.truth[box];
+ const limit = (cm / 100) ** 2 + matchingSlack;
+ const withinRange = ([px,py]) => (px-x)**2 + (py-y)**2 <= limit;
+ const proposals = [];
+ let bestScore = null;
+ for (const [i, point] of preview.stages.proposals.entries()) {
+  if (withinRange(point)) {
+   proposals.push(point);
+   const score = preview.proposalScores[i];
+   if (bestScore === null || score > bestScore) bestScore = score;
+  }
+ }
+ return {proposals, accepted:preview.stages.accepted.filter(withinRange), selected:preview.stages.selected.filter(withinRange), bestScore};
 }
 
 export function measureStages(stages,truth,finalMatches){
@@ -216,7 +234,8 @@ export async function validateModel(set,weights,{threshold=.5,predictScores=pred
  const tiles=[],previews=new Map();
  for(const [i,t] of set.validation.entries()){
   check(signal);
-  const stages=detectionStages(t,predictScores(t.X,weights,set.dims),threshold);
+  const proposalScores=predictScores(t.X,weights,set.dims);
+  const stages=detectionStages(t,proposalScores,threshold);
   const predictions=stages.selected;
   const missesByTolerance = [];
   const byTolerance = TOL.map(radius => {
@@ -235,7 +254,7 @@ export async function validateModel(set,weights,{threshold=.5,predictScores=pred
    return {cm: 100 * radius, tp, fp: predictions.length - tp, fn: t.truth.length - tp};
   });
   tiles.push({seed:t.seed,ground:t.ground,tile_id:t.tile_id,crop:t.recipe.crop,requestedRays:t.recipe.points,sampledRays:t.sampledRays,returnCount:t.returnCount,sensor:t.recipe.sampling.key,coverage:t.coverage,byTolerance,missesByTolerance,stages15cm:measureStages(stages,t.truth,byTolerance[2].tp)});
-  previews.set(t.tile_id,{truth:t.truth,plantReturns:t.plantReturns,missesByTolerance,predictions,ground:t.ground,seed:t.seed,points:t.points,stages});
+  previews.set(t.tile_id,{truth:t.truth,proposalScores,plantReturns:t.plantReturns,missesByTolerance,predictions,ground:t.ground,seed:t.seed,points:t.points,stages});
   onProgress({done:i+1,total:set.validation.length,stage:'validation'});await pause();
  }
  const byGround = [true, false].map(ground => {

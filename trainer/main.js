@@ -44,7 +44,7 @@ function updateBenchmarkLinks() {
 for (const id of ['crop','scanner','validationSensor','trainingRayBudget','validationRayBudget','seed','epochs']) $(id).addEventListener('input', updateBenchmarkLinks);
 let controller=null,losses=[],lastPreview=null,backendReady=false,deps,webgpuAvailable=false,lastRun=null,lastPaint=0;
 try {
- deps=await Promise.all([import('./data.js?v=missbands1'),import('./model.js?v=benchmark1'),import('./neural.js')]);
+ deps=await Promise.all([import('./data.js?v=peaktrace1'),import('./model.js?v=benchmark1'),import('./neural.js')]);
  $('epochs').max=deps[1].MAX_EPOCHS;
  const epochsParam = params.get('epochs');
  if (/^\d+$/.test(epochsParam) && Number(epochsParam) >= 1 && Number(epochsParam) <= deps[1].MAX_EPOCHS) {
@@ -86,6 +86,7 @@ function showField(){
  const stage=$('overlayStage').value;
  const inspectingMisses = stage === 'misses';
  $('missControls').hidden = !inspectingMisses;
+ $('peakTrace').hidden = true;
  if (inspectingMisses) {
   const {cm,withCropReturns} = selectedMisses();
   const boxIndices = visibleMisses();
@@ -120,13 +121,45 @@ function visibleMisses() {
  const band = $('missBand').value;
  return band === 'all' ? boxes : boxes.filter(box => returnBand(lastPreview.plantReturns[box]) === band);
 }
+function showPeakTrace(box) {
+ const cm = Number($('missDistance').value);
+ const {proposals, accepted, selected, bestScore} = deps[0].nearbyPeaks(lastPreview, box, cm);
+ $('peakTitle').textContent = 'Box '+box+' · within '+cm+' cm of its center';
+ $('nearProposals').textContent = proposals.length;
+ $('nearAccepted').textContent = accepted.length;
+ $('nearSelected').textContent = selected.length;
+ const [cx,cy] = lastPreview.truth[box];
+ const scale = 80 / (cm / 100);
+ const marks = [];
+ for (const [symbol, points] of [['peakDot',proposals], ['passedSquare',accepted], ['pinRing',selected]]) {
+  for (const [x,y] of points) {
+   const mark = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+   mark.setAttribute('href', '#'+symbol);
+   mark.setAttribute('x', (x-cx)*scale);
+   mark.setAttribute('y', (cy-y)*scale);
+   marks.push(mark);
+  }
+ }
+ $('peakMarks').replaceChildren(...marks);
+ let message;
+ if (!proposals.length) message = 'No peak lies within this distance. Changing the score cutoff alone cannot place a pin here.';
+ else if (!accepted.length) message = 'Every nearby peak scored below the '+auditThreshold+' cutoff.';
+ else if (!selected.length) message = 'Nearby peaks passed the cutoff, but the spacing filter removed them all.';
+ else message = 'The scorer assigned every nearby final pin to another plant.';
+ if (bestScore !== null) message += ' The highest nearby score rounds to '+bestScore.toFixed(3)+'.';
+ $('traceText').textContent = message;
+ $('peakTrace').hidden = false;
+}
 $('missBand').addEventListener('change',showField);
 $('missBox').addEventListener('change', () => {
  const box = $('missBox').value;
  const link = $('inspectBox');
  link.hidden = box === '';
  const url = new URL($('inspectScan').href);
- if (box !== '') url.searchParams.set('box', box);
+ if (box !== '') {
+  url.searchParams.set('box', box);
+  showPeakTrace(Number(box));
+ } else $('peakTrace').hidden = true;
  link.href = url.href;
  draw();
 });
@@ -172,7 +205,7 @@ function clear(){
  $('groundStudy').hidden = true;
  $('groundStudy').open = false;
 
- $('missControls').hidden = true; $('missDistance').value = '15'; $('missBand').value = replayMisses ? requestedBand : 'all'; $('missBox').replaceChildren();
+ $('peakTrace').hidden = true; $('missControls').hidden = true; $('missDistance').value = '15'; $('missBand').value = replayMisses ? requestedBand : 'all'; $('missBox').replaceChildren();
  $('harvest').textContent='';auditTiles=[];fieldViews.clear();$('overlayStage').value=replayMisses ? 'misses' : 'selected';$('stageAudit').hidden=true;
  losses=[];lastPreview=null;lastRun=null;lastPaint=0;$('downloadRun').hidden=true;$('downloadSettings').hidden=true;$('benchmark').hidden=true;$('exportText').hidden=true;$('exportText').open=false;$('reportText').value='';$('copyReport').textContent='Copy JSON';
  for(const id of ['s75','s10','s15']){$(id).textContent='—';$('d'+id.slice(1)).textContent=''}
