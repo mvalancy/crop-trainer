@@ -210,3 +210,22 @@ test('model comparison identifies complementary matches on the same labeled tile
   assert.throws(() => compareMatchedBoxes(a,b,20), /matching distance/);
   assert.throws(() => compareMatchedBoxes(a,{...b,missesByTolerance:undefined},10), /Replay this run/);
 });
+
+test('training ray budget changes the examples while preserving each held-out scan', async () => {
+  const settings = {seed:1221, trainFields:2, valFields:1, sensorMode:'os1-64', validationRayBudget:12000};
+  const sparse = await buildDataset({...settings, trainingRayBudget:12000});
+  const dense = await buildDataset({...settings, trainingRayBudget:60000});
+  assert.notDeepEqual(sparse.X, dense.X);
+  assert.deepEqual(sparse.stats.fieldSeeds, dense.stats.fieldSeeds);
+  for (const [i, scan] of sparse.manifest.entries()) {
+    const paired = dense.manifest[i];
+    if (scan.split === 'train') {
+      assert.equal(scan.sampledRays, 12000);
+      assert.equal(paired.sampledRays, 60000);
+      assert.deepEqual(paired.recipe, {...scan.recipe, points:60000});
+    } else {
+      assert.deepEqual(scan, paired);
+    }
+  }
+  await assert.rejects(buildDataset({...settings, trainingRayBudget:1}), /training ray budget/);
+});

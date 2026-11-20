@@ -1,31 +1,107 @@
-<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Crop Trainer · The procedural farm</title><meta name="description" content="Generate crop LiDAR scans, explore them in 3D, and train crop detectors locally with CPU or WebGPU."><link rel="stylesheet" href="farm.css"></head>
-<body><header><a class="brand" href="./">Crop Trainer</a><nav aria-label="Farm navigation"><a href="#field">Data generation</a><a href="trainer/">Training shed</a><a href="benchmark/">Benchmark</a><a href="#missions">Farm journal</a><a href="AGENTS.md">For agents</a></nav></header>
-<main><h1><img src="art/title.svg" alt="Crop Trainer. The procedural farm."></h1>
-<section class="welcome"><div><h2>Your first harvest</h2><p>Plant lettuce, globe artichokes or young tomatoes. Inspect the LiDAR returns in 3D, then teach a detector to place one pin on each plant.</p></div><a class="primary" href="trainer/">Start training</a></section>
-<section id="field"><div class="sectionHead"><h2>Data generation</h2><p>A seed fixes the plants in a 10 × 10 metre plot. Change the scanner, clutter and ground to see which plants it can still observe.</p></div>
-<div class="lab"><aside><form id="grow">
-<fieldset><legend>Planting</legend><label>Crop<select id="crop"><option value="lettuce">Lettuce</option><option value="artichoke">Globe artichoke</option><option value="tomato">Young tomato</option></select></label>
-<label>Field seed<input type="number" id="seed" min="0" max="4294967295" step="1" required value="27"></label></fieldset>
-<fieldset><legend>LiDAR setup</legend><label>Scanner layout<select id="scan"></select></label><p class="hint" id="sensorInfo"></p>
+<!DOCTYPE html><html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Crop Trainer · The procedural farm</title>
+<meta name="description" content="Generate crop LiDAR scans, explore them in 3D, and train crop detectors locally with CPU or WebGPU.">
+<link rel="stylesheet" href="farm.css?v=fieldstudio1"></head>
+<body class="farm"><a class="skip" href="#main">Skip to content</a>
+<header class="siteBar">
+<div class="barInner"><a class="brand" href="./"><span class="mark" aria-hidden="true"><i></i></span>Crop Trainer</a>
+<nav aria-label="Main navigation"><a href="#field" aria-current="page">Field generator</a><a href="trainer/">Training shed</a><a href="benchmark/">Benchmark</a></nav><a class="journalLink" href="#missions">Farm journal</a></div></header>
+<main id="main">
+<section class="hero" aria-labelledby="hero-title">
+<figure class="specimen"><img src="art/lettuce-study.webp" width="1080" height="720" alt="An illustration of a lettuce rosette in green point-cloud dots" fetchpriority="high"><figcaption>Lettuce · scan illustration</figcaption></figure>
+<div class="heroCopy">
+<h1 id="hero-title">Grow a field.<br><em>Train a detector.</em></h1>
+<p>Generate synthetic crop LiDAR, inspect each plant in 3D, and train a detector on your own CPU or GPU.</p>
+<div class="heroActions"><a class="primary" href="#field">Generate field <span aria-hidden="true">→</span></a><a href="trainer/">Training shed</a></div></div>
+</section>
+
+<section id="field">
+<div class="sectionHead">
+<h2>Field generator</h2>
+<p>Plant a 10 × 10 m plot. Change the scanner or soil, then inspect the returns from the same planting.</p></div>
+<div class="lab">
+
+<article class="plot" id="scan-viewer">
+<div class="plotHead">
+<h3>3D scan viewer</h3><span id="scanId"></span><a class="mobileShortcut" href="#scan-settings">Settings ↓</a></div>
+<div class="viewer"><canvas id="map" width="860" height="530" tabindex="0" aria-label="Interactive 3D point cloud" aria-describedby="cameraHelp"></canvas>
+<div class="cameraButtons">
+<button id="zoomIn" aria-label="Zoom in">+</button>
+<button id="zoomOut" aria-label="Zoom out">−</button>
+<button id="fit">Reset view</button>
+<button id="spin" aria-pressed="false">Auto spin</button></div></div>
+<div class="viewTools">
+<label>Drag mode<select id="mode"><option value="orbit">Orbit</option><option value="pan">Pan</option></select></label>
+<label>Camera<select id="view"><option value="oblique">Oblique</option><option value="top">Top down</option><option value="side">Side</option><option value="custom" disabled="">Free orbit</option></select></label>
+<label>Color by<select id="color"><option value="class">Return class</option><option value="height">Elevation</option></select></label>
+<label>Highlight plant<select id="highlight"><option value="">None</option></select></label>
+<label class="check"><input id="pins" type="checkbox" checked=""> Label centers</label></div>
+<details class="cameraHelp">
+<summary>Camera controls</summary>
+<p class="hint" id="cameraHelp">Drag to orbit. Shift-drag or right-drag to pan. Scroll to zoom. On touch, use two fingers to pan and pinch. With the canvas focused, arrow keys rotate, Shift + arrows pan, + / − zoom, and R resets.</p></details>
+<p id="count" role="status">Growing the first field…</p>
+<dl class="readouts" id="readouts"></dl>
+<h4>Plant coverage</h4>
+<p id="plantCoverage"></p>
+<p class="hint">With label centers enabled, a gold × marks a plant with zero surviving crop returns. A coral ring marks a plant with at least one.</p>
+<div class="downloads">
+<button id="ply" disabled="">Download scan (.ply)</button>
+<button id="labels" disabled="">Labels (.json)</button>
+<button id="recipe" disabled="">Recipe (.json)</button></div>
+<p><a id="scanLink">Open scan link</a> <button id="copyScan" type="button" disabled="">Copy scan link</button> <span id="shareStatus" role="status"></span></p>
+<p class="hint">PLY contains little-endian XYZ coordinates in metres. The label file gives each plant’s bounding box and crop return count. The recipe and scan link use the settings of the displayed scan. Choose Grow and scan to apply your edits.</p><a id="trainLayout" href="trainer/" class="trainLink">Train this crop and layout →</a></article>
+<aside id="scan-settings">
+<h3>Scan settings</h3>
+<form id="grow">
+<fieldset>
+<legend>Planting</legend>
+<label>Crop<select id="crop"><option value="lettuce">Lettuce</option><option value="artichoke">Globe artichoke</option><option value="tomato">Young tomato</option></select></label>
+<label>Field seed<input type="number" id="seed" min="0" max="4294967295" step="1" required="" value="27"></label></fieldset>
+<fieldset>
+<legend>LiDAR setup</legend>
+<label>Scanner layout<select id="scan"></select></label>
+<p class="hint" id="sensorInfo"></p>
 <label>Ray budget<select id="budget"></select></label>
 <label>Scan noise<select id="noise"><option value="seeded">Seeded variation</option><option value="clean">Clean returns</option><option value="rough">Jitter, gaps and stray returns</option></select></label>
-<label class="check"><input type="checkbox" id="ground" checked> Include soil returns</label></fieldset>
-<details><summary>Weeds and obstacles</summary><div class="clutter"><label>Weeds<select id="weeds"></select></label><label>Sticks<select id="sticks"></select></label><label>Boards<select id="boards"></select></label></div></details>
-<button class="primary">Grow and scan</button></form></aside>
-<article class="plot"><div class="plotHead"><h3>3D scan viewer</h3><span id="scanId"></span></div>
-<div class="viewer"><canvas id="map" width="860" height="530" tabindex="0" aria-label="Interactive 3D point cloud" aria-describedby="cameraHelp"></canvas>
-<div class="cameraButtons"><button id="zoomIn" aria-label="Zoom in">+</button><button id="zoomOut" aria-label="Zoom out">−</button><button id="fit">Reset view</button><button id="spin" aria-pressed="false">Auto spin</button></div></div>
-<div class="viewTools"><label>Drag mode<select id="mode"><option value="orbit">Orbit</option><option value="pan">Pan</option></select></label><label>Camera<select id="view"><option value="oblique">Oblique</option><option value="top">Top down</option><option value="side">Side</option><option value="custom" disabled>Free orbit</option></select></label><label>Color by<select id="color"><option value="class">Return class</option><option value="height">Elevation</option></select></label><label>Highlight plant<select id="highlight"><option value="">None</option></select></label><label class="check"><input id="pins" type="checkbox" checked> Label centers</label></div>
-<p class="hint" id="cameraHelp">Drag to orbit. Shift-drag or right-drag to pan. Scroll to zoom. On touch, use two fingers to pan and pinch. With the canvas focused, arrow keys rotate, Shift + arrows pan, + / − zoom, and R resets.</p>
-<p id="count" role="status">Growing the first field…</p><dl class="readouts" id="readouts"></dl><p id="plantCoverage"></p><p class="hint">With label centers enabled, a gold × marks a plant with zero surviving crop returns. A coral ring marks a plant with at least one.</p>
-<div class="downloads"><button id="ply" disabled>Download scan (.ply)</button><button id="labels" disabled>Labels (.json)</button><button id="recipe" disabled>Recipe (.json)</button></div>
-<p><a id="scanLink">Open scan link</a> <button id="copyScan" type="button" disabled>Copy scan link</button> <span id="shareStatus" role="status"></span></p>
-<p class="hint">PLY contains little-endian XYZ coordinates in metres. The label file gives each plant’s bounding box and crop return count. The recipe and scan link use the settings of the displayed scan. Choose Grow and scan to apply your edits.</p><a id="trainLayout" href="trainer/">Train this crop and layout →</a></article></div>
-<details><summary>How the scanner samples a crop</summary><p>Grid profiles distribute jittered samples over the plot. Line and sweep profiles change coverage along and across rows. Ring layouts use angular columns and channels, capped by the ray budget. The synthetic renderer takes the highest surface at each sample. Hardware-inspired presets reproduce selected channel and column counts. Beam calibration, pulse intensity, motion and multiple returns would require a richer sensor model. <a href="https://static.ouster.dev/sensor-docs/image_route1/image_route2/sensor_data/sensor-data.html">Ouster sensor data reference</a></p>
-<p>Try a sparse tomato field. At 12,000 rays, 81 of its 116 plants had a nearby height peak, and ten received a final pin within 15 cm at the default score cutoff. Zoom into the rows, then run the cutoff benchmark to see how many more plants a lower cutoff recovers. <a href="?crop=tomato&amp;sensor=os1-32&amp;seed=854812180&amp;budget=12000&amp;ground=true&amp;tile=e3a36b5c8e54f55d#field">Inspect these tomatoes</a> · <a href="benchmark/?comparison=cutoffs&amp;crop=tomato&amp;seed=822&amp;sensor=mixed&amp;validationSensor=os1-32&amp;validationRayBudget=12000">Compare tomato cutoffs</a></p></details></section>
-<section id="guide"><h2>Inside the training shed</h2><div class="lessons"><article><h3>Grow the answer key</h3><p>Each generated plant has a bounding box. Its horizontal midpoint gives the scorer a known plant center.</p></article><article><h3>Learn from local peaks</h3><p>The trainer finds height peaks in a 5 cm grid and measures 13 clues around each peak. Training updates model weights so peaks near plant centers receive higher scores.</p></article><article><h3>Scout unfamiliar ground</h3><p>New seeds supply the validation fields. Precision counts how often a pin finds a plant. Recall counts how many plants receive a pin.</p></article></div>
-<p><a href="trainer/">Train and inspect missed plants</a> · <a href="benchmark/">Compare models and backends</a> · <a href="README.md">Research and local setup</a></p></section>
-<section id="missions"><h2>Farm journal</h2><p>Field experiments earn stamps in this browser.</p><ol class="missions"><li><b>First harvest</b><span>Finish training and score a field.</span><strong id="first">Open</strong></li><li><b>Field scout</b><span>Finish a run with mixed scan patterns.</span><strong id="scout">Open</strong></li><li><b>Seed saver</b><span>Complete runs with two different seeds.</span><strong id="saver">Open</strong></li><li><b>Cutoff scout</b><span>Compare missed plants and extra pins across three cutoffs. <a href="benchmark/?comparison=cutoffs">Start benchmark</a></span><strong id="cutoffScout">Open</strong></li><li><b>Model scout</b><span>Find a plant matched by only one detector, then open that box in 3D. <a href="benchmark/?comparison=models">Compare models</a></span><strong id="modelScout">Open</strong></li><li><b>Ray scout</b><span>Grow one field twice. Change only the ray budget until the number of sampled rays changes. <a href="#field">Open generator</a></span><strong id="rayScout">Open</strong></li></ol></section>
-<footer><a href="AGENTS.md">Agent quickstart</a> · <a href="https://github.com/mvalancy/crop-trainer">Source on GitHub</a> · <a href="LICENSE">MIT license</a></footer></main><script type="module" src="farm.js?v=boxpair1"></script></body></html>
+<label class="check"><input type="checkbox" id="ground" checked=""> Include soil returns</label></fieldset>
+<details>
+<summary>Weeds and obstacles</summary>
+<div class="clutter">
+<label>Weeds<select id="weeds"></select></label>
+<label>Sticks<select id="sticks"></select></label>
+<label>Boards<select id="boards"></select></label></div></details>
+<button class="primary">Grow and scan <span aria-hidden="true">→</span></button><a class="mobileShortcut" href="#scan-viewer">Back to scan ↑</a>
+</form></aside></div>
+<details>
+<summary>How the scanner samples a crop</summary>
+<p>Grid profiles distribute jittered samples over the plot. Line and sweep profiles change coverage along and across rows. Ring layouts use angular columns and channels, capped by the ray budget. The synthetic renderer takes the highest surface at each sample. Hardware-inspired presets reproduce selected channel and column counts. Beam calibration, pulse intensity, motion and multiple returns would require a richer sensor model. <a href="https://static.ouster.dev/sensor-docs/image_route1/image_route2/sensor_data/sensor-data.html">Ouster sensor data reference</a></p>
+<p>Try a sparse tomato field. At 12,000 rays, 81 of its 116 plants had a nearby height peak, and ten received a final pin within 15 cm at the default score cutoff. Zoom into the rows, then run the cutoff benchmark to see how many more plants a lower cutoff recovers. <a href="?crop=tomato&amp;sensor=os1-32&amp;seed=854812180&amp;budget=12000&amp;ground=true&amp;tile=e3a36b5c8e54f55d#field">Inspect these tomatoes</a> · <a href="benchmark/?comparison=cutoffs&amp;crop=tomato&amp;seed=822&amp;sensor=mixed&amp;validationSensor=os1-32&amp;validationRayBudget=12000">Compare tomato cutoffs</a></p></details>
+</section>
+<section id="guide">
+<h2>From scan to detector</h2>
+<div class="lessons">
+<article>
+<h3>Grow the answer key</h3>
+<p>Each generated plant has a bounding box. Its horizontal midpoint gives the scorer a known plant center.</p></article>
+<article>
+<h3>Learn from local peaks</h3>
+<p>The trainer finds height peaks in a 5 cm grid and measures 13 clues around each peak. Training updates model weights so peaks near plant centers receive higher scores.</p></article>
+<article>
+<h3>Scout unfamiliar ground</h3>
+<p>New seeds supply the validation fields. Precision counts how often a pin finds a plant. Recall counts how many plants receive a pin.</p></article></div>
+<p><a href="trainer/">Train and inspect missed plants</a> · <a href="benchmark/">Compare models and backends</a> · <a href="README.md">Research and local setup</a></p>
+</section>
+<section id="missions">
+<div class="journalHead">
+<h2>Farm journal</h2><a class="textLink" href="trainer/">Open training shed →</a></div>
+<p>Field experiments earn stamps in this browser.</p><ol class="missions"><li><b>First harvest</b><span>Finish training and score a field.</span><strong id="first">Open</strong></li><li><b>Field scout</b><span>Finish a run with mixed scan patterns.</span><strong id="scout">Open</strong></li><li><b>Seed saver</b><span>Complete runs with two different seeds.</span><strong id="saver">Open</strong></li><li><b>Cutoff scout</b><span>Compare missed plants and extra pins across three cutoffs. <a href="benchmark/?comparison=cutoffs">Start benchmark</a></span><strong id="cutoffScout">Open</strong></li><li><b>Model scout</b><span>Find a plant matched by only one detector, then open that box in 3D. <a href="benchmark/?comparison=models">Compare models</a></span><strong id="modelScout">Open</strong></li><li><b>Ray scout</b><span>Grow one field twice. Change only the ray budget until the number of sampled rays changes. <a href="#field">Open generator</a></span><strong id="rayScout">Open</strong></li></ol>
+</section>
+</main>
+<footer class="siteFoot"><span>Crop Trainer</span>
+<div><a href="AGENTS.md">Agent quickstart</a><a href="https://github.com/mvalancy/crop-trainer">GitHub</a><a href="LICENSE">MIT license</a></div></footer>
+<script type="module" src="farm.js?v=fieldstudio1"></script>
+</body>
+</html>

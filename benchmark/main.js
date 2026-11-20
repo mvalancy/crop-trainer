@@ -1,4 +1,4 @@
-import {buildDataset, validateModel, compareMatchedBoxes} from '../trainer/data.js?v=boxpair1';
+import {buildDataset, validateModel, compareMatchedBoxes} from '../trainer/data.js?v=fieldstudio1';
 import {trainNetworkCPU, trainNetworkGPU, predictNetwork} from '../trainer/neural.js';
 import {trainCPU, MAX_EPOCHS} from '../trainer/model.js';
 import {cropProfile} from '../trainer/crops.js';
@@ -14,6 +14,7 @@ for (const id of ['comparison', 'crop', 'sensor', 'validationSensor']) {
   const value = requested.get(id);
   if ([...$(id).options].some(option => option.value === value)) $(id).value = value;
 }
+rayBudgetOptions($('trainingRayBudget'), requested.get('trainingRayBudget'));
 rayBudgetOptions($('validationRayBudget'), requested.get('validationRayBudget'));
 const requestedSeed = requested.get('seed');
 if (/^\d+$/.test(requestedSeed) && Number(requestedSeed) <= Number($('seed').max)) {
@@ -75,6 +76,7 @@ function appendRow(row, comparison, settings) {
     const query = new URLSearchParams({
       crop:settings.crop, sensor:settings.sensorMode, seed:row.seed, epochs:row.epochs, threshold:row.threshold, engine:'cpu'
     });
+    if (settings.trainingRayBudget) query.set('trainingRayBudget', settings.trainingRayBudget);
     if (settings.validationRayBudget) query.set('validationRayBudget', settings.validationRayBudget);
     if (settings.validationSensorMode) query.set('validationSensor', settings.validationSensorMode);
     const link = document.createElement('a');
@@ -198,8 +200,9 @@ $('benchForm').onsubmit = async event => {
   const {signal} = controller;
   const seed=Number($('seed').value), crop=$('crop').value, sensorMode=$('sensor').value;
   const validationSensorMode = $('validationSensor').value === 'follow' ? undefined : $('validationSensor').value;
+  const trainingRayBudget = Number($('trainingRayBudget').value);
   const validationRayBudget = Number($('validationRayBudget').value);
-  const settings={seed,crop,sensorMode,validationSensorMode,validationRayBudget,trainFields:6,valFields:3,minimumHeight:cropProfile(crop).peakHeight};
+  const settings={seed,crop,sensorMode,validationSensorMode,trainingRayBudget,validationRayBudget,trainFields:6,valFields:3,minimumHeight:cropProfile(crop).peakHeight};
   const comparison=$('comparison').value;
   if (comparison !== 'epochs') settings.epochs = $('fitEpochs').valueAsNumber;
   const neuralCPU = {model:'neural', backend:'CPU', train:trainNetworkCPU};
@@ -269,6 +272,7 @@ $('benchForm').onsubmit = async event => {
     $('summary').textContent='Average mean F1 across both seeds: '+means.join(' · ')+'.'+device;
     const replay = new URL(location.pathname, location.origin);
     replay.search = new URLSearchParams({comparison, crop, sensor:sensorMode, seed});
+    if (trainingRayBudget) replay.searchParams.set('trainingRayBudget', trainingRayBudget);
     if (validationRayBudget) replay.searchParams.set('validationRayBudget', validationRayBudget);
     if (validationSensorMode) replay.searchParams.set('validationSensor', validationSensorMode);
     if (settings.epochs !== undefined && settings.epochs !== 40) replay.searchParams.set('epochs', settings.epochs);

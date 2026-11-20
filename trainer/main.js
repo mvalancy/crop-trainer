@@ -3,7 +3,10 @@ import {allProfiles, sensorOptions, validationSensorOptions, sensorDetails, rayB
 if(new URLSearchParams(location.search).has('embed'))document.body.classList.add('embed');
 const $=id=>document.getElementById(id);
 const params = new URLSearchParams(location.search);
+rayBudgetOptions($('trainingRayBudget'), params.get('trainingRayBudget'));
 rayBudgetOptions($('validationRayBudget'), params.get('validationRayBudget'));
+$('scanOptions').open = ['sensor', 'validationSensor', 'trainingRayBudget', 'validationRayBudget'].some(key => params.has(key));
+$('detectorOptions').open = params.has('threshold');
 const seedParam = params.get('seed');
 if (/^\d+$/.test(seedParam) && Number(seedParam) <= 0xffffffff) $('seed').value = String(Number(seedParam));
 const cropParam = params.get('crop');
@@ -27,6 +30,7 @@ function updateBenchmarkLinks() {
  const validSeed = Number.isInteger(seed) && seed >= 0 && seed < 0xffffffff;
  for (const [id, comparison] of [['cutoffBench', 'cutoffs'], ['epochBench', 'epochs']]) {
   const query = new URLSearchParams({comparison, crop:$('crop').value, sensor:$('scanner').value, seed});
+  if (Number($('trainingRayBudget').value)) query.set('trainingRayBudget', $('trainingRayBudget').value);
   if (Number($('validationRayBudget').value)) query.set('validationRayBudget', $('validationRayBudget').value);
   if ($('validationSensor').value !== 'follow') query.set('validationSensor', $('validationSensor').value);
   const link = $(id);
@@ -35,10 +39,10 @@ function updateBenchmarkLinks() {
   link.href = '../benchmark/?'+query;
  }
 }
-for (const id of ['crop','scanner','validationSensor','validationRayBudget','seed','epochs']) $(id).addEventListener('input', updateBenchmarkLinks);
+for (const id of ['crop','scanner','validationSensor','trainingRayBudget','validationRayBudget','seed','epochs']) $(id).addEventListener('input', updateBenchmarkLinks);
 let controller=null,losses=[],lastPreview=null,backendReady=false,deps,webgpuAvailable=false,lastRun=null,lastPaint=0;
 try {
- deps=await Promise.all([import('./data.js?v=misses1'),import('./model.js?v=benchmark1'),import('./neural.js')]);
+ deps=await Promise.all([import('./data.js?v=fieldstudio1'),import('./model.js?v=benchmark1'),import('./neural.js')]);
  $('epochs').max=deps[1].MAX_EPOCHS;
  const epochsParam = params.get('epochs');
  if (/^\d+$/.test(epochsParam) && Number(epochsParam) >= 1 && Number(epochsParam) <= deps[1].MAX_EPOCHS) {
@@ -137,6 +141,7 @@ $('pairedScan').addEventListener('click', () => {
  showStages();
 });
 function clear(){
+ $('charts').hidden = false;
  $('groundStudy').hidden = true;
  $('groundStudy').open = false;
  $('soilMetric').value = 'recall';
@@ -287,7 +292,7 @@ $('copyReport').onclick=async()=>{
  catch{$('reportText').focus();$('reportText').select();$('reportText').setSelectionRange(0,$('reportText').value.length);$('copyReport').textContent='Selected. Use Copy.'}
 };
 $('cancel').onclick=()=>{if(controller){controller.abort();$('cancel').disabled=true;status('Canceling…','Waiting for the current operation to stop.')}};
-const runInputs=['crop','seed','train','validation','epochs','scanner','validationSensor','validationRayBudget','peakHeight','architecture','threshold','engine','stress'];
+const runInputs=['crop','seed','train','validation','epochs','scanner','validationSensor','trainingRayBudget','validationRayBudget','peakHeight','architecture','threshold','engine','stress'];
 function workload(){
  const n=+$('train').value,v=+$('validation').value,e=+$('epochs').value;
  $('workload').textContent=(2*(n+v)).toLocaleString()+' scan variants · '+e.toLocaleString()+' epochs'+(n+v>=64?' · Large run; keep this tab in the foreground.':'.');
@@ -303,6 +308,7 @@ $('controls').onsubmit=async e=>{
  const crop=$('crop').value;
  const neural=$('architecture').value==='neural';
  const threshold=$('threshold').valueAsNumber;
+ const trainingRayBudget = Number($('trainingRayBudget').value);
  const validationRayBudget = Number($('validationRayBudget').value);
  const validationSensorMode = $('validationSensor').value === 'follow' ? undefined : $('validationSensor').value;
  const requestedBackend=$('engine').value,sensorMode=$('scanner').value,minimumHeight=Number($('peakHeight').value);
@@ -312,7 +318,7 @@ $('controls').onsubmit=async e=>{
  $('run').disabled=true;$('cancel').disabled=false;runInputs.forEach(id=>$(id).disabled=true);clear();status('Generating fields','Building separate training and validation fields.',0);
  try{
   const start=performance.now();
-  const set=await buildDataset({crop,seed,trainFields,valFields,sensorMode,validationSensorMode,validationRayBudget,minimumHeight,signal,onProgress:(a,b)=>{
+  const set=await buildDataset({crop,seed,trainFields,valFields,sensorMode,validationSensorMode,trainingRayBudget,validationRayBudget,minimumHeight,signal,onProgress:(a,b)=>{
    if(signal.aborted)return;
    if(a.stage==='labels'){status('Labeling training examples',a.done+' / '+a.total+' training scans labeled',27+3*a.done/a.total);return;}
    const current=typeof a==='object'?a.current??a.completed??a.done:a,total=typeof a==='object'?a.total:b;
@@ -333,7 +339,7 @@ $('controls').onsubmit=async e=>{
   signal.throwIfAborted();display(scores,threshold,validationRayBudget);
   const timings={generationMs:generated-start,trainingMs:trained-generated,validationMs:finished-trained,totalMs:finished-start};
   displayBenchmark(timings,fit.backend,epochs,set.stats.samples);
-  const settings = {crop, seed, trainFields, valFields, epochs, model: neural ? 'neural' : 'linear', sensorMode, validationSensorMode, validationRayBudget, minimumHeight, threshold};
+  const settings = {crop, seed, trainFields, valFields, epochs, model: neural ? 'neural' : 'linear', sensorMode, validationSensorMode, trainingRayBudget, validationRayBudget, minimumHeight, threshold};
   lastRun={schema:3,settings,trainer:neural?'crop-mlp-v1':'crop-peak-logistic-v1',domain:'synthetic',backend:fit.backend,adapter:fit.adapter,requestedBackend,webgpuAvailable,sensorMode,samplePasses:epochs*set.stats.samples,timings,epochsPerSecond:timings.trainingMs>0?epochs*1000/timings.trainingMs:null,seed,epochs,learningRate:.25,threshold,minimumHeight,stats:set.stats,recipeManifest:set.manifest,scaling:set.scaling,weights:Array.from(fit.weights),loss:fit.loss,meanF1:scores.meanF1,scores:scores.scores,byGround:scores.byGround, byField:scores.byField, tiles:scores.tiles};
   let earned=[];
   try{

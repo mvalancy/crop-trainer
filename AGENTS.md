@@ -57,7 +57,7 @@ To verify reproducibility, open the link in a fresh browser, compare the tile ID
 
 ### Change held-out ray density
 
-Use `validationRayBudget` in CLI settings or browser trainer and benchmark URLs. Omit it or set it to 0 for the original seeded budget. Fixed values are 12000, 30000, 60000 and 100000. Training recipes retain their original budgets. To repeat the density experiment, choose mixed training, `validationSensorMode: "os1-64"`, seed 721 and compare validation budgets 12000 and 60000. Repeat at seed 722.
+Use `validationRayBudget` in CLI settings or browser trainer and benchmark URLs. Omit it or set it to 0 for the original seeded budget. Fixed values are 12000, 30000, 60000 and 100000. Training recipes use seeded budgets by default. To change training density independently, set `trainingRayBudget` to the same supported values. Both settings travel in trainer and benchmark links and JSON exports. In the Training shed, expand **Scanner and ray budgets**. To test density matching, fix the training and validation layouts to `os1-64`, keep validation at 12000 rays, and compare 12000 with 60000 training rays on seeds 1221 and 1222. Verify identical held-out tile IDs and report training sample counts in each arm. To repeat the density experiment, choose mixed training, `validationSensorMode: "os1-64"`, seed 721 and compare validation budgets 12000 and 60000. Repeat at seed 722.
 
 Check training tile IDs, CPU weights and scaling before comparing the runs. Match held-out tiles by field seed and ground flag. The manifest's `recipe.points` is the request, `sampledRays` is the number sampled before scan noise, and `returnCount` is the final XYZ count. Stray returns can increase the final count. Capped layouts can produce identical scans and tile IDs for two requests above capacity. The OS1-32 preset caps a 100000-ray request at 16384 samples. Use the per-tolerance scores and stage audit to tell a missing peak from a rejected candidate.
 
@@ -113,6 +113,7 @@ Group exported rows by `seed` and `epochs`. Read the duration from the row. The 
 | trainer/model.js | Linear logistic baseline, including CPU and WebGPU implementations. |
 | trainer/neural.js | Fully trained 13 → 4 tanh → 1 sigmoid network, CPU gradients and WebGPU compute kernels. |
 | trainer/main.js | Training form, backend selection, progress, per-field maps and JSON export. |
+| farm.css | Shared navigation, forms, responsive layouts, viewer, and score tables for all three app pages. |
 | farm.js | Seeded farm preview, scan and label downloads, and local mission stamps. |
 | run.mjs | Dependency-free local server and CPU experiment entry point. |
 

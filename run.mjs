@@ -7,8 +7,8 @@ import {trainNetworkCPU,predictNetwork} from './trainer/neural.js';
 
 const [command,output,configuration]=process.argv.slice(2);
 if(command==='serve'){
- const allowed=new Set(['index.html','farm.js','farm.css','viewer.js','benchmark/index.html','benchmark/main.js','art/title.svg','trainer/index.html','trainer/main.js','trainer/data.js','trainer/field.js','trainer/model.js','trainer/neural.js','trainer/crops.js','trainer/sensors.js','README.md','AGENTS.md','LICENSE']);
- const types={html:'text/html',js:'text/javascript',css:'text/css',svg:'image/svg+xml',md:'text/plain'};
+ const allowed=new Set(['index.html','farm.js','farm.css','viewer.js','benchmark/index.html','benchmark/main.js','art/title.svg','art/lettuce-study.webp','trainer/index.html','trainer/main.js','trainer/data.js','trainer/field.js','trainer/model.js','trainer/neural.js','trainer/crops.js','trainer/sensors.js','README.md','AGENTS.md','LICENSE']);
+ const types={html:'text/html',js:'text/javascript',css:'text/css',svg:'image/svg+xml',webp:'image/webp',md:'text/plain'};
  const port=Number(output||4173);
  if(!Number.isInteger(port)||port<1||port>65535)throw Error('Choose a port from 1 to 65535.');
  const server=createServer(async(req,res)=>{
@@ -22,7 +22,7 @@ if(command==='serve'){
  });
  server.listen(port,'127.0.0.1',()=>console.log('Open http://127.0.0.1:'+port+'/'));
 }else if(command==='train'&&output){
- const defaults={crop:'lettuce',seed:27,trainFields:6,valFields:3,epochs:40,model:'neural',sensorMode:'mixed',validationSensorMode:undefined,validationRayBudget:0,minimumHeight:.035,threshold:.5};
+ const defaults={crop:'lettuce',seed:27,trainFields:6,valFields:3,epochs:40,model:'neural',sensorMode:'mixed',validationSensorMode:undefined,trainingRayBudget:0,validationRayBudget:0,minimumHeight:.035,threshold:.5};
  const config=configuration?JSON.parse(await readFile(configuration,'utf8')):{};
  if(!config||typeof config!=='object'||Array.isArray(config))throw Error('Expected a JSON settings object.');
  for(const key of Object.keys(config))if(!Object.hasOwn(defaults,key))throw Error('Unknown setting '+key);
