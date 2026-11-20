@@ -21,17 +21,19 @@ To reproduce a completed browser experiment, choose **Download run settings**, t
 Write settings into a local JSON file. These are the supported keys and default values.
 
 ```json
-{"crop":"lettuce","seed":27,"trainFields":6,"valFields":3,"epochs":40,"model":"neural","sensorMode":"mixed","minimumHeight":0.035}
+{"crop":"lettuce","seed":27,"trainFields":6,"valFields":3,"epochs":40,"model":"neural","sensorMode":"mixed","minimumHeight":0.035,"threshold":0.5}
 ```
 
 1. Save this as control.json. Run `node run.mjs train control-27.json control.json`.
 2. Copy the settings to variant.json and change just minimumHeight to 0.065. Run `node run.mjs train variant-27.json variant.json`.
-3. Repeat both configurations at a fresh seed. Use new output filenames. Compare meanF1, each scores entry, and the same seed and ground setting in tiles. For each tile, stages15cm shows losses before classification, after the 0.5 score threshold and after spacing.
+3. Repeat both configurations at a fresh seed. Use new output filenames. Compare meanF1, each scores entry, and the same seed and ground setting in tiles. For each tile, stages15cm shows losses before classification, after the selected score cutoff and after spacing.
 4. Report the direction and size of the difference on each seed, wall time if measured, and which stage explains the change. The two ground variants share one field and belong in the same split.
 
-Valid settings include 2–256 training fields, 1–128 validation fields, 1–5,000 epochs, unsigned 32-bit seeds, neural or linear, mixed sampling or any exact scanner key in trainer/sensors.js, and 0.035 or 0.065 metres for minimumHeight. Crop keys are lettuce, artichoke and tomato. Omitting minimumHeight selects the crop default (0.035 m for lettuce and 0.065 m for artichoke and tomato). Large runs can take substantially longer. Browser report times include generation, optimization and validation. Use training-set normalization for every validation tile.
+Valid settings include 2–256 training fields, 1–128 validation fields, 1–5,000 epochs, unsigned 32-bit seeds, neural or linear, mixed sampling or any exact scanner key in trainer/sensors.js, and 0.035 or 0.065 metres for minimumHeight. The optional threshold accepts a number from 0 through 1 and defaults to 0.5, including when replaying older settings. It applies to validation after fitting. Crop keys are lettuce, artichoke and tomato. Omitting minimumHeight selects the crop default (0.035 m for lettuce and 0.065 m for artichoke and tomato). Large runs can take substantially longer. Browser report times include generation, optimization and validation. Use training-set normalization for every validation tile.
 
 For a browser benchmark, open `/benchmark/`, select the crop, scanner and first seed, and run the comparison. Each seed uses one dataset shared by both contenders. Expand **Scores at each matching distance** to see which pins matched, which were extra, and which plants were missed. Use **Link to these settings** after a run to open the same setup on another browser. The JSON includes this URL, timings and tile IDs. A localhost link uses the local server address. GPU rows include available adapter metadata. A software adapter exercises WebGPU kernels on the CPU. Record the device separately when reporting a physical GPU timing.
+
+To isolate the score cutoff, select **Detection score cutoffs**. This fits one CPU neural network per seed and scores the same weights and fields three times. Group the JSON rows by seed and threshold. Each group of three shares the generation and training costs. For a follow-up, pass the desired threshold in CLI settings and check the precision and recall change on fresh fields.
 
 ## Where to change the app
 

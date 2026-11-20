@@ -14,6 +14,16 @@ $('scanner').value = allProfiles.some(profile => profile.key === scannerParam) ?
 function describeScanner() { $('scannerInfo').textContent = sensorDetails($('scanner').value); }
 $('scanner').addEventListener('change', describeScanner);
 describeScanner();
+function updateCutoffLink() {
+ const seed = $('seed').valueAsNumber;
+ const link = $('cutoffBench');
+ link.hidden = !Number.isInteger(seed) || seed < 0 || seed >= 0xffffffff;
+ link.href = '../benchmark/?'+new URLSearchParams({
+  comparison:'cutoffs', crop:$('crop').value, sensor:$('scanner').value, seed
+ });
+}
+for (const id of ['crop','scanner','seed']) $(id).addEventListener('input', updateCutoffLink);
+updateCutoffLink();
 let controller=null,losses=[],lastPreview=null,backendReady=false,deps,webgpuAvailable=false,lastRun=null,lastPaint=0;
 try {
  deps=await Promise.all([import('./data.js?v=peak2'),import('./model.js?v=benchmark1'),import('./neural.js')]);
@@ -38,7 +48,7 @@ function status(stage,detail,value){
  $('stage').textContent=stage;$('status').textContent=detail||'';
  if(Number.isFinite(value))$('progress').value=Math.min(100,Math.max(0,value));else $('progress').removeAttribute('value');
 }
-let auditTiles=[],fieldViews=new Map();
+let auditTiles=[],fieldViews=new Map(),auditThreshold=.5;
 function showField(){
  const field=auditTiles[Number($('auditField').value)];
  lastPreview=fieldViews.get(field?.tile_id);
@@ -54,7 +64,7 @@ function showStages(){
  if(!tile)return;
  const totals=tile.byTolerance.at(-1);
  const labels=totals.tp+totals.fn;
- const names={proposals:'Height peaks',accepted:'Score ≥ 0.5',selected:'After spacing filter'};
+ const names={proposals:'Height peaks',accepted:'Score ≥ '+auditThreshold,selected:'After spacing filter'};
  const rows=tile.stages15cm.map(({stage,count,matched})=>{
   const row=document.createElement('tr');
   for(const value of [names[stage],count,matched+' / '+labels,(100*matched/(labels||1)).toFixed(1)+'%']){
@@ -117,7 +127,8 @@ function pickScore(scores,key,index){
  const x=Array.isArray(scores)?scores[index]:scores?.[key]??scores?.[String(key*100)]??scores?.[String(key*100)+'cm'];
  return typeof x==='number'?x:x?.f1??x?.fScore;
 }
-function display(v){
+function display(v,threshold){
+ auditThreshold=threshold;
  for(const [i,k,id] of [[0,.075,'s75'],[1,.10,'s10'],[2,.15,'s15']]){
   const x=pickScore(v?.scores??v?.metrics??v,i===0?.075:k,i);
   if(Number.isFinite(x))$(id).textContent=(x*100).toFixed(1)+'%';
@@ -157,14 +168,14 @@ $('copyReport').onclick=async()=>{
  catch{$('reportText').focus();$('reportText').select();$('reportText').setSelectionRange(0,$('reportText').value.length);$('copyReport').textContent='Selected. Use Copy.'}
 };
 $('cancel').onclick=()=>{if(controller){controller.abort();$('cancel').disabled=true;status('Canceling…','Waiting for the current operation to stop.')}};
-const runInputs=['crop','seed','train','validation','epochs','scanner','peakHeight','architecture','engine','stress'];
+const runInputs=['crop','seed','train','validation','epochs','scanner','peakHeight','architecture','threshold','engine','stress'];
 function workload(){
  const n=+$('train').value,v=+$('validation').value,e=+$('epochs').value;
  $('workload').textContent=(2*(n+v)).toLocaleString()+' scan variants · '+e.toLocaleString()+' epochs'+(n+v>=64?' · Large run; keep this tab in the foreground.':'.');
 }
 for(const id of ['train','validation','epochs'])$(id).addEventListener('input',workload);
 $('stress').onclick=()=>{
- $('train').value=128;$('validation').value=64;$('epochs').value=5000;$('scanner').value='mixed';describeScanner();workload();
+ $('train').value=128;$('validation').value=64;$('epochs').value=5000;$('scanner').value='mixed';describeScanner();updateCutoffLink();workload();
 };
 workload();
 $('controls').onsubmit=async e=>{
@@ -172,6 +183,7 @@ $('controls').onsubmit=async e=>{
  const [{buildDataset,validateModel},{trainGPU,trainCPU},{trainNetworkCPU,trainNetworkGPU,predictNetwork}]=deps;
  const crop=$('crop').value;
  const neural=$('architecture').value==='neural';
+ const threshold=$('threshold').valueAsNumber;
  const requestedBackend=$('engine').value,sensorMode=$('scanner').value,minimumHeight=Number($('peakHeight').value);
  const backend=requestedBackend==='webgpu'||(requestedBackend==='auto'&&webgpuAvailable)?'WebGPU':'CPU';
  controller=new AbortController();const {signal}=controller;
@@ -192,16 +204,16 @@ $('controls').onsubmit=async e=>{
   const trained=performance.now();
   signal.throwIfAborted();status('Validating held-out fields','Matching predicted centers to ground truth…',88);
   await new Promise(r=>setTimeout(r,0));
-  const scores=await validateModel(set,fit.weights,{signal,predictScores:neural?predictNetwork:undefined,onProgress:(a)=>{
+  const scores=await validateModel(set,fit.weights,{threshold,signal,predictScores:neural?predictNetwork:undefined,onProgress:(a)=>{
    if(signal.aborted)return;
    if(a?.total)status('Validating held-out fields',a.done+' / '+a.total+' scan variants scored',88+11*a.done/a.total);
   }});
   const finished=performance.now();
-  signal.throwIfAborted();display(scores);
+  signal.throwIfAborted();display(scores,threshold);
   const timings={generationMs:generated-start,trainingMs:trained-generated,validationMs:finished-trained,totalMs:finished-start};
   displayBenchmark(timings,fit.backend,epochs,set.stats.samples);
-  const settings = {crop, seed, trainFields, valFields, epochs, model: neural ? 'neural' : 'linear', sensorMode, minimumHeight};
-  lastRun={schema:3,settings,trainer:neural?'crop-mlp-v1':'crop-peak-logistic-v1',domain:'synthetic',backend:fit.backend,adapter:fit.adapter,requestedBackend,webgpuAvailable,sensorMode,samplePasses:epochs*set.stats.samples,timings,epochsPerSecond:timings.trainingMs>0?epochs*1000/timings.trainingMs:null,seed,epochs,learningRate:.25,threshold:.5,minimumHeight,stats:set.stats,recipeManifest:set.manifest,scaling:set.scaling,weights:Array.from(fit.weights),loss:fit.loss,meanF1:scores.meanF1,scores:scores.scores,tiles:scores.tiles};
+  const settings = {crop, seed, trainFields, valFields, epochs, model: neural ? 'neural' : 'linear', sensorMode, minimumHeight, threshold};
+  lastRun={schema:3,settings,trainer:neural?'crop-mlp-v1':'crop-peak-logistic-v1',domain:'synthetic',backend:fit.backend,adapter:fit.adapter,requestedBackend,webgpuAvailable,sensorMode,samplePasses:epochs*set.stats.samples,timings,epochsPerSecond:timings.trainingMs>0?epochs*1000/timings.trainingMs:null,seed,epochs,learningRate:.25,threshold,minimumHeight,stats:set.stats,recipeManifest:set.manifest,scaling:set.scaling,weights:Array.from(fit.weights),loss:fit.loss,meanF1:scores.meanF1,scores:scores.scores,tiles:scores.tiles};
   let earned=[];
   try{
    const farm=JSON.parse(localStorage.getItem('crop-trainer-farm-v1')||'{"seeds":[],"mixed":false}');

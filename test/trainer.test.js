@@ -46,3 +46,17 @@ test('crop selection controls geometry, labels and duplicate filtering', async (
   assert.throws(() => makeRecipe(27, true, getSensor('reference'), 'unknown'));
   assert.throws(() => getSensor('unknown'));
 });
+
+test('the cutoff includes equal scores and applies before crop spacing', async () => {
+  const {detectionStages} = await import('../trainer/data.js');
+  const tile = {pos:[[1,1], [1.01,1], [3,3]], recipe:{crop:'lettuce'}};
+  const scores = [.75, .50, .35];
+  assert.deepEqual(detectionStages(tile,scores), detectionStages(tile,scores,.5));
+  assert.deepEqual(detectionStages(tile,scores,.5).accepted, tile.pos.slice(0,2));
+  assert.deepEqual(detectionStages(tile,scores,.5).selected, [tile.pos[0]]);
+  assert.deepEqual(detectionStages(tile,scores,.35).selected, [tile.pos[0],tile.pos[2]]);
+  assert.deepEqual(detectionStages(tile,scores,1).selected, []);
+  for (const threshold of [-.1, 1.01, NaN, null, '0.5']) {
+    await assert.rejects(validateModel({}, [], {threshold}), /score cutoff/);
+  }
+});

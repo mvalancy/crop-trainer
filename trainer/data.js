@@ -145,7 +145,13 @@ export function measureStages(stages,truth,finalMatches){
   matched:stage==='selected'&&finalMatches!==undefined?finalMatches:matchedCount(points,truth,.15)
  }));
 }
+export function checkScoreThreshold(value) {
+ if (!Number.isFinite(value) || value < 0 || value > 1) {
+  throw new RangeError('The detection score cutoff must be a number between 0 and 1.');
+ }
+}
 export async function validateModel(set,weights,{threshold=.5,predictScores=predict,signal,onProgress=()=>{}}={}){
+ checkScoreThreshold(threshold);
  const totals=TOL.map(()=>[0,0,0]),tiles=[],previews=new Map();
  for(const [i,t] of set.validation.entries()){
   check(signal);
