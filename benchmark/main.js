@@ -1,8 +1,9 @@
-import {buildDataset, validateModel, compareMatchedBoxes} from '../trainer/data.js?v=fieldstudio1';
+import {DENSITY_HISTORY_KEY, densitySnapshot, pairDensityScores} from './density.js';
+import {buildDataset, validateModel, compareMatchedBoxes} from '../trainer/data.js?v=densitymix1';
 import {trainNetworkCPU, trainNetworkGPU, predictNetwork} from '../trainer/neural.js';
 import {trainCPU, MAX_EPOCHS} from '../trainer/model.js';
 import {cropProfile} from '../trainer/crops.js';
-import {sensorOptions, validationSensorOptions, rayBudgetOptions} from '../trainer/sensors.js?v=rays1';
+import {sensorOptions, validationSensorOptions, rayBudgetOptions, trainingRayOptions, trainingRayValue, ALTERNATING_BUDGET, DENSITY_BUDGETS} from '../trainer/sensors.js?v=densitymix1';
 
 const $ = id => document.getElementById(id);
 const formatTime = ms => (ms/1000).toFixed(2)+' s';
@@ -10,11 +11,12 @@ let controller, report, gpuAvailable = false;
 sensorOptions($('sensor'), true);
 validationSensorOptions($('validationSensor'));
 const requested = new URLSearchParams(location.search);
+$('includeMixed').checked = requested.get('includeMixed') === '1';
 for (const id of ['comparison', 'crop', 'sensor', 'validationSensor']) {
   const value = requested.get(id);
   if ([...$(id).options].some(option => option.value === value)) $(id).value = value;
 }
-rayBudgetOptions($('trainingRayBudget'), requested.get('trainingRayBudget'));
+trainingRayOptions($('trainingRayBudget'), requested.get('trainingRayBudget'));
 rayBudgetOptions($('validationRayBudget'), requested.get('validationRayBudget'));
 const requestedSeed = requested.get('seed');
 if (/^\d+$/.test(requestedSeed) && Number(requestedSeed) <= Number($('seed').max)) {
@@ -36,13 +38,15 @@ if (!gpuAvailable && requested.get('comparison') === 'backend') {
 }
 function explainComparison() {
   const compareDensity = $('comparison').value === 'density';
+  $('mixedControl').hidden = !compareDensity;
+  $('includeMixed').disabled = !compareDensity;
   $('trainingBudgetControl').hidden = compareDensity;
   $('trainingRayBudget').disabled = compareDensity;
   const compareDurations = $('comparison').value === 'epochs';
   $('epochControl').hidden = compareDurations;
   $('fitEpochs').disabled = compareDurations;
   const descriptions = {
-    density: 'Train the CPU neural detector twice on each planting, first at 12,000 and then at 60,000 requested rays. Both fits score the same held-out scans at your chosen validation budget. The order reverses on seed two.',
+    density: 'Compare CPU neural fits trained on the same plantings at 12,000 and 60,000 rays. Include a mixed fit to alternate budgets between training fields. Every fit scores the same held-out scans.',
     epochs: 'An epoch is one pass over the training examples. Fit the same CPU neural model from identical starting weights for 10, 40 and 100 epochs. Compare training loss with F1 on unseen fields.',
     cutoffs: 'Fit one CPU neural network per seed, then score the same weights at cutoffs of 0.35, 0.50 and 0.65. Select a cutoff in the results to replay that fit.',
     models: 'Fit logistic and neural models on CPU for the chosen number of epochs. Both use the same training examples and held-out fields.',
@@ -62,7 +66,7 @@ $('export').onclick = () => {
   link.click(); setTimeout(()=>URL.revokeObjectURL(url),10000);
 };
 function contenderLabel(row, comparison) {
-  if (comparison === 'density') return row.trainingRayBudget.toLocaleString()+' training rays';
+  if (comparison === 'density') return row.trainingRayBudget === ALTERNATING_BUDGET ? 'Alternating 12k / 60k' : row.trainingRayBudget.toLocaleString()+' training rays';
   if (comparison === 'epochs') return row.epochs+' epochs';
   if (comparison === 'cutoffs') return 'Cutoff '+row.threshold;
   if (comparison === 'models') return row.model === 'linear' ? 'Logistic' : 'Neural';
@@ -123,7 +127,8 @@ function displayDensityStudy() {
     const low = Math.min(...sampled), high = Math.max(...sampled);
     const range = low === high ? low.toLocaleString() : low.toLocaleString()+'–'+high.toLocaleString();
     const tr = body.insertRow();
-    for (const value of [row.seed, row.trainingRayBudget.toLocaleString(), range, dataset.stats.samples.toLocaleString(), row.meanF1.toFixed(4)]) {
+    const requestedRays = row.trainingRayBudget === ALTERNATING_BUDGET ? '12k / 60k by field' : row.trainingRayBudget.toLocaleString();
+    for (const value of [row.seed, requestedRays, range, dataset.stats.samples.toLocaleString(), row.meanF1.toFixed(4)]) {
       tr.insertCell().textContent = value;
     }
   }
@@ -137,10 +142,33 @@ function displayDensityStudy() {
     link.textContent = 'Repeat with '+budget.toLocaleString()+' validation rays';
     $('densityRepeats').append(link);
   }
+  $('mixedNote').hidden = !report.rows.some(row => row.trainingRayBudget === ALTERNATING_BUDGET);
   $('densityCapNote').hidden = sampledCountChanged;
   if (sampledCountChanged) {
     try { localStorage.setItem('crop-trainer-ray-scout', 'earned'); } catch {}
   }
+  const snapshot = densitySnapshot(report);
+  $('densityRepeatHelp').textContent = snapshot
+    ? 'Run the other validation budget in this tab to compare each fit on sparse and dense scans.'
+    : 'Run both fixed validation budgets below in this tab to compare each fit on sparse and dense scans.';
+  let paired = [];
+  if (snapshot) {
+    try {
+      const saved = sessionStorage.getItem(DENSITY_HISTORY_KEY);
+      if (saved) paired = pairDensityScores(snapshot, JSON.parse(saved));
+    } catch {}
+    try { sessionStorage.setItem(DENSITY_HISTORY_KEY, JSON.stringify(snapshot)); } catch {}
+  }
+  const pairedRows = $('robustnessRows');
+  pairedRows.replaceChildren();
+  for (const row of paired) {
+    const tr = pairedRows.insertRow();
+    const budget = row.trainingRayBudget === ALTERNATING_BUDGET ? 'Alternating' : row.trainingRayBudget.toLocaleString();
+    for (const value of [row.seed, budget, row.sparse.toFixed(4), row.dense.toFixed(4), row.lower.toFixed(4)]) {
+      tr.insertCell().textContent = value;
+    }
+  }
+  $('robustnessTable').hidden = !paired.length;
   $('densityStudy').hidden = false;
 }
 function displayCutoffChanges() {
@@ -243,16 +271,18 @@ $('benchForm').onsubmit = async event => {
   const seed=Number($('seed').value), crop=$('crop').value, sensorMode=$('sensor').value;
   const validationSensorMode = $('validationSensor').value === 'follow' ? undefined : $('validationSensor').value;
   const comparison=$('comparison').value;
-  const trainingRayBudget = comparison === 'density' ? undefined : Number($('trainingRayBudget').value);
+  const trainingRayBudget = comparison === 'density' ? undefined : trainingRayValue($('trainingRayBudget'));
   const validationRayBudget = Number($('validationRayBudget').value);
   const settings={seed,crop,sensorMode,validationSensorMode,trainingRayBudget,validationRayBudget,trainFields:6,valFields:3,minimumHeight:cropProfile(crop).peakHeight};
   if (comparison !== 'epochs') settings.epochs = $('fitEpochs').valueAsNumber;
   const neuralCPU = {model:'neural', backend:'CPU', train:trainNetworkCPU};
+  const includeMixed = comparison === 'density' && $('includeMixed').checked;
+  const trainingBudgets = includeMixed ? [...DENSITY_BUDGETS, ALTERNATING_BUDGET] : DENSITY_BUDGETS;
   const comparisons = {
     backend: [neuralCPU, {model:'neural', backend:'WebGPU', train:trainNetworkGPU}],
     models: [{model:'linear', backend:'CPU', train:trainCPU}, neuralCPU],
     cutoffs: [neuralCPU],
-    density: [12000, 60000].map(trainingRayBudget => ({...neuralCPU, trainingRayBudget})),
+    density: trainingBudgets.map(trainingRayBudget => ({...neuralCPU, trainingRayBudget})),
     epochs: [10, 40, 100].map(epochs => ({...neuralCPU, epochs}))
   };
   const contenders = comparisons[comparison];
@@ -326,6 +356,7 @@ $('benchForm').onsubmit = async event => {
     $('summary').textContent='Average mean F1 across both seeds: '+means.join(' · ')+'.'+device;
     const replay = new URL(location.pathname, location.origin);
     replay.search = new URLSearchParams({comparison, crop, sensor:sensorMode, seed});
+    if (includeMixed) replay.searchParams.set('includeMixed', '1');
     if (trainingRayBudget) replay.searchParams.set('trainingRayBudget', trainingRayBudget);
     if (validationRayBudget) replay.searchParams.set('validationRayBudget', validationRayBudget);
     if (validationSensorMode) replay.searchParams.set('validationSensor', validationSensorMode);

@@ -229,3 +229,18 @@ test('training ray budget changes the examples while preserving each held-out sc
   }
   await assert.rejects(buildDataset({...settings, trainingRayBudget:1}), /training ray budget/);
 });
+
+test('alternating training budgets keep soil variants together and leave validation fixed', async () => {
+  for (const seed of [1421, 1422]) {
+    const settings = {seed, trainFields:3, valFields:1, sensorMode:'os1-64', validationRayBudget:30000};
+    const set = await buildDataset({...settings, trainingRayBudget:'alternating'});
+    const expected = seed % 2 ? [60000,12000,60000] : [12000,60000,12000];
+    const train = set.manifest.filter(tile => tile.split === 'train');
+    assert.deepEqual(train.map(tile => tile.recipe.points), expected.flatMap(rays => [rays,rays]));
+    assert.deepEqual(train.map(tile => tile.sampledRays), train.map(tile => tile.recipe.points));
+    const fixed = await buildDataset({...settings, trainingRayBudget:12000});
+    assert.deepEqual(set.manifest.filter(t => t.split === 'validation'), fixed.manifest.filter(t => t.split === 'validation'));
+    assert.deepEqual(train.filter(t => t.recipe.points === 12000), fixed.manifest.filter(t => train.some(m => m.tile_id === t.tile_id)));
+  }
+  await assert.rejects(buildDataset({validationRayBudget:'alternating'}), /validation ray budget/);
+});

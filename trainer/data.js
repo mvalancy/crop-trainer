@@ -3,7 +3,7 @@ import {field} from './field.js?v=coverage1';
 import {predict} from './model.js';
 
 export const FIELD_LIMITS={train:256,validation:128};
-import {mixedProfiles as SENSORS, getSensor, RAY_BUDGETS} from './sensors.js?v=rays1';
+import {mixedProfiles as SENSORS, getSensor, RAY_BUDGETS, ALTERNATING_BUDGET, DENSITY_BUDGETS} from './sensors.js?v=densitymix1';
 const SIZE=200, STEP=.05, DIMS=13, TOL=[.075,.1,.15];
 const at=(x,y)=>y*SIZE+x, clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const pause=()=>new Promise(r=>setTimeout(r,0));
@@ -67,7 +67,7 @@ export function features(tile, minimumHeight=.065){
 export async function buildDataset({seed=27,crop='lettuce',trainFields=6,valFields=3,sensorMode='reference',validationSensorMode=sensorMode,trainingRayBudget=0,validationRayBudget=0,minimumHeight=.065,onProgress=()=>{},signal}={}){
  if(![.035,.065].includes(minimumHeight))throw new Error('Choose a supported minimum peak height.');
  if(!Number.isInteger(seed)||seed<0||seed>0xffffffff||!Number.isInteger(trainFields)||trainFields<2||trainFields>FIELD_LIMITS.train||!Number.isInteger(valFields)||valFields<1||valFields>FIELD_LIMITS.validation)throw new Error('Use a valid seed and the available field count limits.');
- if (trainingRayBudget !== 0 && !RAY_BUDGETS.includes(trainingRayBudget)) throw new Error('Choose a supported training ray budget.');
+ if (trainingRayBudget !== ALTERNATING_BUDGET && trainingRayBudget !== 0 && !RAY_BUDGETS.includes(trainingRayBudget)) throw new Error('Choose a supported training ray budget.');
  if (validationRayBudget !== 0 && !RAY_BUDGETS.includes(validationRayBudget)) throw new Error('Choose a supported validation ray budget.');
  const fixedSensors = [sensorMode, validationSensorMode].map(mode => mode === 'mixed' ? null : getSensor(mode));
  const total=2*(trainFields+valFields), training=[],validation=[], trainSeeds=[],valSeeds=[];
@@ -79,10 +79,11 @@ export async function buildDataset({seed=27,crop='lettuce',trainFields=6,valFiel
   const idx=trainingField?k:k-trainFields;
   const split = trainingField ? 0 : 1;
   const profile = fixedSensors[split] ?? orders[split][idx % SENSORS.length];
+  let rayBudget = trainingField ? trainingRayBudget : validationRayBudget;
+  if (rayBudget === ALTERNATING_BUDGET) rayBudget = DENSITY_BUDGETS[(seed + idx) % 2];
   for(let v=0;v<2;v++){
    check(signal);
    const recipe = makeRecipe(id, v === 0, profile, crop);
-   const rayBudget = trainingField ? trainingRayBudget : validationRayBudget;
    if (rayBudget) recipe.points = rayBudget;
    const t=field(recipe), f=features(t,minimumHeight), truth=centers(t.labels.boxes), points=[];
    if(!trainingField){const n=t.xyz.length/3,inc=Math.max(1,Math.ceil(n/1500));for(let i=0;i<n;i+=inc)points.push([t.xyz[3*i],t.xyz[3*i+1]]);}

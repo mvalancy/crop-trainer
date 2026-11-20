@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Benchmark · Crop Trainer</title>
-<link rel="stylesheet" href="../farm.css?v=fieldstudio1"></head>
+<link rel="stylesheet" href="../farm.css?v=densitymix1"></head>
 <body class="benchmark"><a class="skip" href="#main">Skip to content</a>
 <header class="siteBar">
 <div class="barInner"><a class="brand" href="../"><span class="mark" aria-hidden="true"><i></i></span>Crop Trainer</a>
@@ -25,6 +25,7 @@
 <label>Crop<select id="crop"><option value="lettuce">Lettuce</option><option value="artichoke">Globe artichoke</option><option value="tomato">Young tomato</option></select></label>
 <label>First seed<input type="number" id="seed" value="27" min="0" max="4294967294" step="1" required=""></label>
 <label>Training layout<select id="sensor"></select></label>
+<label id="mixedControl" class="check" hidden><input id="includeMixed" type="checkbox"> Include a mixed-density fit</label>
 <label id="trainingBudgetControl">Training ray budget<select id="trainingRayBudget"></select></label>
 <label>Validation layout<select id="validationSensor"></select></label>
 <label>Validation ray budget<select id="validationRayBudget"></select></label>
@@ -37,20 +38,27 @@
 </section>
 <section class="panel benchResults">
 <h2>Results</h2>
+<p id="summary"></p>
 <p id="emptyResults">Run a comparison to see timing, precision, recall and F1 for both seeds.</p>
 <div class="tableScroll">
 <table>
 <thead>
-<tr><th>Seed</th><th>Contender</th><th>Epochs</th><th>Cutoff</th><th>Generation¹</th><th>Training</th><th>Scoring</th><th>Training loss</th><th>Mean F1</th><th>Precision / recall at 15 cm</th></tr></thead>
+<tr><th>Seed</th><th>Contender</th><th>Epochs</th><th>Cutoff</th><th>Generation</th><th>Training</th><th>Scoring</th><th>Training loss</th><th>Mean F1</th><th>Precision / recall at 15 cm</th></tr></thead>
 <tbody id="results"></tbody></table></div>
-<p class="hint">¹ Generation time covers the training and validation fields. Rows that share a dataset also share its generation time. The density comparison generates a dataset for each training budget. The cutoff experiment also shares training time across its three rows. Training time includes model initialization, GPU setup and readback where applicable. Training loss is the cross-entropy measured before the last weight update. Mean F1 averages the three held-out F1 scores at 7.5, 10 and 15 cm.</p>
-<p id="summary"></p>
+<details class="timingGuide"><summary>How to read timings and scores</summary><p>Generation time covers the training and validation fields. Rows that share a dataset also share its generation time. The density comparison generates a dataset for each training budget. The cutoff experiment also shares training time across its three rows. Training time includes model initialization, GPU setup and readback where applicable. Training loss is the cross-entropy measured before the last weight update. Mean F1 averages the three held-out F1 scores at 7.5, 10 and 15 cm.</p></details>
 <section id="densityStudy" hidden aria-labelledby="densityTitle">
 <h3 id="densityTitle">How much training data did each fit see?</h3>
-<p class="hint">Scanner capacity can cap the rays sampled per scan. The training examples are balanced candidate peaks from both soil variants. Both fits at each seed used the same validation tiles.</p>
+<p class="hint">Scanner capacity can cap the rays sampled per scan. The training examples are balanced candidate peaks from both soil variants. All fits at each seed used the same validation tiles.</p>
+<p id="mixedNote" class="hint" hidden>The alternating fit uses three plantings at 12,000 rays and three at 60,000 rays. Each planting keeps its budget across both soil scans.</p>
 <div class="tableScroll"><table><thead><tr><th>Seed</th><th>Rays requested per scan</th><th>Rays sampled per training scan</th><th>Training examples</th><th>Mean F1</th></tr></thead><tbody id="densityRows"></tbody></table></div>
 <p id="densityCapNote" hidden>Both ray requests reached the layout’s sampling limit on every training scan. Choose a layout with a higher capacity, such as OS1-64, to compare different training densities.</p>
+<p class="hint" id="densityRepeatHelp"></p>
 <div class="action" id="densityRepeats"></div>
+<div id="robustnessTable" hidden>
+<h3>How well did each fit handle both densities?</h3>
+<p class="hint">Each row combines this run with the preceding matching benchmark in this tab. The lower F1 shows how the fit performed at its harder validation density.</p>
+<div class="tableScroll"><table><thead><tr><th>Seed</th><th>Training rays</th><th>F1 at 12k rays</th><th>F1 at 60k rays</th><th>Lower F1</th></tr></thead><tbody id="robustnessRows"></tbody></table></div>
+</div>
 </section>
 <details id="cutoffChanges" hidden="">
 <summary>What changes from the 0.50 cutoff?</summary>
@@ -96,6 +104,6 @@
 </main>
 <footer class="siteFoot"><span>Crop Trainer</span>
 <div><a href="../AGENTS.md">Agent quickstart</a><a href="https://github.com/mvalancy/crop-trainer">GitHub</a><a href="../LICENSE">MIT license</a></div></footer>
-<script type="module" src="main.js?v=densitypair1"></script>
+<script type="module" src="main.js?v=densitymix1"></script>
 </body>
 </html>

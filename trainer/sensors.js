@@ -58,3 +58,16 @@ export function rayBudgetOptions(select, requested) {
   for (const rays of RAY_BUDGETS) select.add(new Option(rays.toLocaleString(), String(rays)));
   if (RAY_BUDGETS.includes(Number(requested))) select.value = String(Number(requested));
 }
+
+export const ALTERNATING_BUDGET = 'alternating';
+export const DENSITY_BUDGETS = [12000, 60000];
+
+export function trainingRayOptions(select, requested) {
+  rayBudgetOptions(select, requested);
+  select.add(new Option('Alternate 12k and 60k by field', ALTERNATING_BUDGET));
+  if (requested === ALTERNATING_BUDGET) select.value = requested;
+}
+
+export function trainingRayValue(select) {
+  return select.value === ALTERNATING_BUDGET ? select.value : Number(select.value);
+}

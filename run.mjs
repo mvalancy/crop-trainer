@@ -7,7 +7,7 @@ import {trainNetworkCPU,predictNetwork} from './trainer/neural.js';
 
 const [command,output,configuration]=process.argv.slice(2);
 if(command==='serve'){
- const allowed=new Set(['index.html','farm.js','farm.css','viewer.js','benchmark/index.html','benchmark/main.js','art/title.svg','art/lettuce-study.webp','trainer/index.html','trainer/main.js','trainer/data.js','trainer/field.js','trainer/model.js','trainer/neural.js','trainer/crops.js','trainer/sensors.js','README.md','AGENTS.md','LICENSE']);
+ const allowed=new Set(['index.html','farm.js','farm.css','viewer.js','benchmark/index.html','benchmark/main.js','benchmark/density.js','art/title.svg','art/lettuce-study.webp','trainer/index.html','trainer/main.js','trainer/data.js','trainer/field.js','trainer/model.js','trainer/neural.js','trainer/crops.js','trainer/sensors.js','README.md','AGENTS.md','LICENSE']);
  const types={html:'text/html',js:'text/javascript',css:'text/css',svg:'image/svg+xml',webp:'image/webp',md:'text/plain'};
  const port=Number(output||4173);
  if(!Number.isInteger(port)||port<1||port>65535)throw Error('Choose a port from 1 to 65535.');

@@ -1,9 +1,9 @@
 import {cropProfile} from './crops.js';
-import {allProfiles, sensorOptions, validationSensorOptions, sensorDetails, rayBudgetOptions} from './sensors.js?v=rays1';
+import {allProfiles, sensorOptions, validationSensorOptions, sensorDetails, rayBudgetOptions, trainingRayOptions, trainingRayValue, ALTERNATING_BUDGET} from './sensors.js?v=densitymix1';
 if(new URLSearchParams(location.search).has('embed'))document.body.classList.add('embed');
 const $=id=>document.getElementById(id);
 const params = new URLSearchParams(location.search);
-rayBudgetOptions($('trainingRayBudget'), params.get('trainingRayBudget'));
+trainingRayOptions($('trainingRayBudget'), params.get('trainingRayBudget'));
 rayBudgetOptions($('validationRayBudget'), params.get('validationRayBudget'));
 $('scanOptions').open = ['sensor', 'validationSensor', 'trainingRayBudget', 'validationRayBudget'].some(key => params.has(key));
 $('detectorOptions').open = params.has('threshold');
@@ -30,7 +30,8 @@ function updateBenchmarkLinks() {
  const validSeed = Number.isInteger(seed) && seed >= 0 && seed < 0xffffffff;
  for (const [id, comparison] of [['cutoffBench', 'cutoffs'], ['epochBench', 'epochs'], ['densityBench', 'density']]) {
   const query = new URLSearchParams({comparison, crop:$('crop').value, sensor:$('scanner').value, seed});
-  if (comparison !== 'density' && Number($('trainingRayBudget').value)) query.set('trainingRayBudget', $('trainingRayBudget').value);
+  if (comparison === 'density' && $('trainingRayBudget').value === ALTERNATING_BUDGET) query.set('includeMixed', '1');
+  if (comparison !== 'density' && trainingRayValue($('trainingRayBudget'))) query.set('trainingRayBudget', $('trainingRayBudget').value);
   if (Number($('validationRayBudget').value)) query.set('validationRayBudget', $('validationRayBudget').value);
   if ($('validationSensor').value !== 'follow') query.set('validationSensor', $('validationSensor').value);
   const link = $(id);
@@ -42,7 +43,7 @@ function updateBenchmarkLinks() {
 for (const id of ['crop','scanner','validationSensor','trainingRayBudget','validationRayBudget','seed','epochs']) $(id).addEventListener('input', updateBenchmarkLinks);
 let controller=null,losses=[],lastPreview=null,backendReady=false,deps,webgpuAvailable=false,lastRun=null,lastPaint=0;
 try {
- deps=await Promise.all([import('./data.js?v=fieldstudio1'),import('./model.js?v=benchmark1'),import('./neural.js')]);
+ deps=await Promise.all([import('./data.js?v=densitymix1'),import('./model.js?v=benchmark1'),import('./neural.js')]);
  $('epochs').max=deps[1].MAX_EPOCHS;
  const epochsParam = params.get('epochs');
  if (/^\d+$/.test(epochsParam) && Number(epochsParam) >= 1 && Number(epochsParam) <= deps[1].MAX_EPOCHS) {
@@ -308,7 +309,7 @@ $('controls').onsubmit=async e=>{
  const crop=$('crop').value;
  const neural=$('architecture').value==='neural';
  const threshold=$('threshold').valueAsNumber;
- const trainingRayBudget = Number($('trainingRayBudget').value);
+ const trainingRayBudget = trainingRayValue($('trainingRayBudget'));
  const validationRayBudget = Number($('validationRayBudget').value);
  const validationSensorMode = $('validationSensor').value === 'follow' ? undefined : $('validationSensor').value;
  const requestedBackend=$('engine').value,sensorMode=$('scanner').value,minimumHeight=Number($('peakHeight').value);

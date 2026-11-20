@@ -34,7 +34,7 @@
 <div class="detailFields">
 <label>Training LiDAR layout<select id="scanner"><option value="reference">Reference scanner only</option><option value="mixed" selected="">Mixed profiles (14)</option></select><span id="scannerInfo"></span></label>
 <label>Validation LiDAR layout<select id="validationSensor"></select><span>Choose a different layout to rescan the same held-out plantings. The training examples and their normalization stay fixed.</span></label>
-<label>Training ray budget<select id="trainingRayBudget"></select></label>
+<label>Training ray budget<select id="trainingRayBudget"></select><span>The alternating option switches between 12k and 60k rays on successive plantings. Both soil variants share the same budget.</span></label>
 <label>Validation ray budget<select id="validationRayBudget"></select><span>Each budget requests rays per scan. The selected layout can cap the sampled count.</span></label>
 <a id="densityBench" href="../benchmark/?comparison=density">Compare 12k and 60k training rays</a></div></details>
 <details id="detectorOptions">
@@ -119,6 +119,6 @@
 </main>
 <footer class="siteFoot"><span>Crop Trainer</span>
 <div><a href="../AGENTS.md">Agent quickstart</a><a href="https://github.com/mvalancy/crop-trainer">GitHub</a><a href="../LICENSE">MIT license</a></div></footer>
-<script type="module" src="./main.js?v=densitypair1"></script>
+<script type="module" src="./main.js?v=densitymix1"></script>
 </body>
 </html>

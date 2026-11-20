@@ -142,6 +142,35 @@ Matching the budgets improved mean F1 in each pair. On dense artichoke scans at 
 
 On dense artichoke seed 1321, the 12k and 60k Node CPU runs spent 1.84 / 2.43 seconds generating, 71 / 85 ms training and 22 / 16 ms scoring. F1 at 7.5, 10 and 15 cm was 0.459, 0.574 and 0.707 for 12k training, and 0.663, 0.819 and 0.964 for 60k. Each fit includes its own normalization and balanced training examples.
 
+### Can one detector handle both sparse and dense scans?
+
+In **Benchmark → Training scan density**, select **Include a mixed-density fit** to add a third detector. It learns from three plantings scanned at 12,000 rays and three at 60,000. Run the benchmark at one validation budget, follow the repeat link in the same tab, and run it again. The new table shows each detector’s mean F1 at both densities. Read the lower of those two scores if your detector needs to handle either scan density. [Try the artichoke experiment](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=density&crop=artichoke&sensor=os1-64&seed=1421&includeMixed=1&validationRayBudget=60000)
+
+```mermaid
+flowchart LR
+  A[Six training plantings] --> B[12k on three fields and 60k on three]
+  B --> C[Fit the neural detector]
+  C --> D[Score at 12k validation rays]
+  C --> E[Score the same plantings at 60k rays]
+  D --> F[Compare the two mean F1 scores]
+  E --> F
+```
+
+On the simulated OS1-64, sparse-only training had the best worst-case F1 on both lettuce seeds and both tomato seeds. For artichoke the advantage changed with the planting seed. Each entry below is the lower of the two validation scores. Every fit used 40 CPU epochs, a 0.50 cutoff and three held-out plantings with both soil variants. Changing validation density preserved the training tiles, feature scaling and fitted weights.
+
+| Crop | Seed | Train at 12k | Alternate 12k and 60k | Train at 60k |
+| --- | ---: | ---: | ---: | ---: |
+| Lettuce | 1421 | **0.6702** | 0.6460 | 0.2365 |
+| Lettuce | 1422 | **0.7246** | 0.6985 | 0.3526 |
+| Globe artichoke | 1421 | 0.6042 | **0.6831** | 0.2787 |
+| Globe artichoke | 1422 | 0.7134 | **0.7303** | 0.3618 |
+| Globe artichoke | 1451 | **0.6512** | 0.5440 | 0.2173 |
+| Globe artichoke | 1452 | **0.6699** | 0.6600 | 0.3097 |
+| Young tomato | 1421 | **0.5687** | 0.5116 | 0.2219 |
+| Young tomato | 1422 | **0.6275** | 0.5571 | 0.2242 |
+
+On artichoke seed 1451, alternating training improved dense-scan mean F1 from 0.7015 to 0.7876 over sparse-only training, while sparse-scan mean F1 fell from 0.6512 to 0.5440. For the alternating fit on dense scans, F1 at 7.5, 10 and 15 cm was 0.685, 0.816 and 0.862. One Node CPU run spent 2.01 s generating, 52 ms training and 25 ms validating. Different ray budgets also produce different numbers of training examples. These measurements apply to this synthetic layout. Domain randomization has been studied for image-based object localization. Here the varied property is the number of simulated LiDAR rays. [Replay the repeat seeds](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=density&crop=artichoke&sensor=os1-64&seed=1451&includeMixed=1&validationRayBudget=12000) · [Tobin et al., 2017](https://arxiv.org/abs/1703.06907)
+
 ## Did the scan see the plants the detector missed?
 
 The generator records which plant supplied each surviving crop return. In the 3D viewer, turn on **Label centers** to see gold crosses on plants with zero crop returns. The Training Shed shows the same coverage counts beside the detection stages for each field. A return can land on a leaf far from the center. Conversely, a nearby weed can produce a peak within the scoring distance of a plant that supplied no returns.
