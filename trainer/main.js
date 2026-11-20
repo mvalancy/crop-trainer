@@ -21,22 +21,28 @@ $('scanner').value = allProfiles.some(profile => profile.key === scannerParam) ?
 function describeScanner() { $('scannerInfo').textContent = sensorDetails($('scanner').value); }
 $('scanner').addEventListener('change', describeScanner);
 describeScanner();
-function updateCutoffLink() {
+function updateBenchmarkLinks() {
  const seed = $('seed').valueAsNumber;
- const link = $('cutoffBench');
- link.hidden = !Number.isInteger(seed) || seed < 0 || seed >= 0xffffffff;
- const query = new URLSearchParams({
-  comparison:'cutoffs', crop:$('crop').value, sensor:$('scanner').value, seed
- });
+ const query = new URLSearchParams({crop:$('crop').value, sensor:$('scanner').value, seed});
  if ($('validationSensor').value !== 'follow') query.set('validationSensor', $('validationSensor').value);
- link.href = '../benchmark/?'+query;
+ for (const [id, comparison] of [['cutoffBench', 'cutoffs'], ['epochBench', 'epochs']]) {
+  const link = $(id);
+  link.hidden = !Number.isInteger(seed) || seed < 0 || seed >= 0xffffffff;
+  query.set('comparison', comparison);
+  link.href = '../benchmark/?'+query;
+ }
 }
-for (const id of ['crop','scanner','validationSensor','seed']) $(id).addEventListener('input', updateCutoffLink);
-updateCutoffLink();
+for (const id of ['crop','scanner','validationSensor','seed']) $(id).addEventListener('input', updateBenchmarkLinks);
+updateBenchmarkLinks();
 let controller=null,losses=[],lastPreview=null,backendReady=false,deps,webgpuAvailable=false,lastRun=null,lastPaint=0;
 try {
  deps=await Promise.all([import('./data.js?v=soil1'),import('./model.js?v=benchmark1'),import('./neural.js')]);
  $('epochs').max=deps[1].MAX_EPOCHS;
+ const epochsParam = params.get('epochs');
+ if (/^\d+$/.test(epochsParam) && Number(epochsParam) >= 1 && Number(epochsParam) <= deps[1].MAX_EPOCHS) {
+  $('epochs').value = Number(epochsParam);
+ }
+ if (params.get('engine') === 'cpu') $('engine').value = 'cpu';
  $('train').max=deps[0].FIELD_LIMITS.train;
  $('validation').max=deps[0].FIELD_LIMITS.validation;
  let gpuStatus='WebGPU unavailable · browser API missing';
@@ -230,7 +236,7 @@ function workload(){
 }
 for(const id of ['train','validation','epochs'])$(id).addEventListener('input',workload);
 $('stress').onclick=()=>{
- $('train').value=128;$('validation').value=64;$('epochs').value=5000;$('scanner').value='mixed';describeScanner();updateCutoffLink();workload();
+ $('train').value=128;$('validation').value=64;$('epochs').value=5000;$('scanner').value='mixed';describeScanner();updateBenchmarkLinks();workload();
 };
 workload();
 $('controls').onsubmit=async e=>{

@@ -27,6 +27,17 @@ $('status').textContent = gpuAvailable ? 'WebGPU adapter available.' : 'CPU comp
 if (!gpuAvailable && requested.get('comparison') === 'backend') {
   $('status').textContent = 'This link requests CPU vs WebGPU. This browser has no available WebGPU adapter. The form is set to compare models on CPU.';
 }
+function explainComparison() {
+  const descriptions = {
+    epochs: 'An epoch is one pass over the training examples. Fit the same CPU neural model from identical starting weights for 10, 40 and 100 epochs. Compare training loss with F1 on unseen fields.',
+    cutoffs: 'Fit one CPU neural network for 40 epochs per seed, then score the same weights at cutoffs of 0.35, 0.50 and 0.65.',
+    models: 'Fit logistic and neural models on CPU for 40 epochs each. Both use the same training examples and held-out fields.',
+    backend: 'Fit the same neural model for 40 epochs on CPU and WebGPU. Only training uses the selected backend.'
+  };
+  $('comparisonHelp').textContent = descriptions[$('comparison').value];
+}
+$('comparison').addEventListener('change', explainComparison);
+explainComparison();
 $('run').disabled = false;
 $('cancel').onclick = () => controller?.abort();
 $('export').onclick = () => {
@@ -36,11 +47,33 @@ $('export').onclick = () => {
   link.download = 'crop-benchmark-'+report.settings.crop+'-'+report.settings.seed+'.json';
   link.click(); setTimeout(()=>URL.revokeObjectURL(url),10000);
 };
-function appendRow(row) {
+function contenderLabel(row, comparison) {
+  if (comparison === 'epochs') return row.epochs+' epochs';
+  if (comparison === 'cutoffs') return 'Cutoff '+row.threshold;
+  if (comparison === 'models') return row.model === 'linear' ? 'Logistic' : 'Neural';
+  return row.backend;
+}
+function appendRow(row, comparison, settings) {
   const tr=document.createElement('tr');
   const widest=row.scores.at(-1);
-  for(const text of [row.seed,row.model+' / '+row.backend,row.threshold,formatTime(row.generationMs),
-    formatTime(row.trainingMs),formatTime(row.scoringMs),row.meanF1.toFixed(4),
+  tr.insertCell().textContent = row.seed;
+  tr.insertCell().textContent = row.model+' / '+row.backend;
+  const duration = tr.insertCell();
+  if (comparison === 'epochs') {
+    const query = new URLSearchParams({
+      crop:settings.crop, sensor:settings.sensorMode, seed:row.seed, epochs:row.epochs, engine:'cpu'
+    });
+    if (settings.validationSensorMode) query.set('validationSensor', settings.validationSensorMode);
+    const link = document.createElement('a');
+    link.href = '../trainer/?'+query;
+    link.textContent = row.epochs;
+    link.setAttribute('aria-label', 'Open '+row.epochs+' epochs at seed '+row.seed+' in the training shed');
+    duration.append(link);
+  } else {
+    duration.textContent = row.epochs;
+  }
+  for(const text of [row.threshold,formatTime(row.generationMs),
+    formatTime(row.trainingMs),formatTime(row.scoringMs),row.trainingLoss.toFixed(4),row.meanF1.toFixed(4),
     (100*widest.precision).toFixed(1)+'% / '+(100*widest.recall).toFixed(1)+'%']){
     const td=document.createElement('td');td.textContent=text;tr.append(td);
   }
@@ -48,7 +81,7 @@ function appendRow(row) {
   $('scoreDetails').hidden = false;
   for (const score of row.scores) {
     const detail = $('scoreRows').insertRow();
-    for (const value of [row.seed, row.model+' / '+row.backend, row.threshold, score.cm+' cm',
+    for (const value of [row.seed, row.model+' / '+row.backend, row.epochs, row.threshold, score.cm+' cm',
       score.precision.toFixed(4), score.recall.toFixed(4), score.f1.toFixed(4),
       score.tp, score.fp, score.fn]) {
       detail.insertCell().textContent = value;
@@ -57,11 +90,7 @@ function appendRow(row) {
 }
 function displayFields() {
   const {comparison, datasets, rows, settings} = report;
-  function contender(row) {
-    if (comparison === 'cutoffs') return 'Cutoff '+row.threshold;
-    if (comparison === 'models') return row.model === 'linear' ? 'Logistic' : 'Neural';
-    return row.backend;
-  }
+  const contender = row => contenderLabel(row, comparison);
   const columns = rows.filter(row => row.seed === datasets[0].seed).map(contender);
   const headings = ['Dataset seed', 'Field seed', 'Layout', ...columns];
   $('fieldHeading').replaceChildren(...headings.map(label => {
@@ -100,13 +129,15 @@ $('benchForm').onsubmit = async event => {
   const {signal} = controller;
   const seed=Number($('seed').value), crop=$('crop').value, sensorMode=$('sensor').value;
   const validationSensorMode = $('validationSensor').value === 'follow' ? undefined : $('validationSensor').value;
-  const settings={seed,crop,sensorMode,validationSensorMode,trainFields:6,valFields:3,epochs:40,minimumHeight:cropProfile(crop).peakHeight};
+  const settings={seed,crop,sensorMode,validationSensorMode,trainFields:6,valFields:3,minimumHeight:cropProfile(crop).peakHeight};
   const comparison=$('comparison').value;
+  if (comparison !== 'epochs') settings.epochs = 40;
   const neuralCPU = {model:'neural', backend:'CPU', train:trainNetworkCPU};
   const comparisons = {
     backend: [neuralCPU, {model:'neural', backend:'WebGPU', train:trainNetworkGPU}],
     models: [{model:'linear', backend:'CPU', train:trainCPU}, neuralCPU],
-    cutoffs: [neuralCPU]
+    cutoffs: [neuralCPU],
+    epochs: [10, 40, 100].map(epochs => ({...neuralCPU, epochs}))
   };
   const contenders = comparisons[comparison];
   const thresholds = comparison === 'cutoffs' ? [.35, .5, .65] : [.5];
@@ -129,10 +160,10 @@ $('benchForm').onsubmit = async event => {
       const order=offset?[...contenders].reverse():contenders;
       for(const contender of order){
         signal.throwIfAborted();
-        const {model,backend,train}=contender;
-        $('status').textContent='Training '+model+' on '+backend+' · seed '+runSeed;
+        const {model, backend, train, epochs = settings.epochs} = contender;
+        $('status').textContent='Training '+model+' on '+backend+' · '+epochs+' epochs · seed '+runSeed;
         const before=performance.now();
-        const fit=await train(set.X,set.Y,{dims:set.dims,epochs:settings.epochs,lr:.25,signal});
+        const fit=await train(set.X,set.Y,{dims:set.dims,epochs,lr:.25,signal});
         const trained=performance.now();
         const trainingMs = trained - before;
         const cuts = offset ? [...thresholds].reverse() : thresholds;
@@ -144,18 +175,18 @@ $('benchForm').onsubmit = async event => {
             threshold, predictScores:model === 'neural' ? predictNetwork : undefined, signal
           });
           const row = {
-            model, backend:fit.backend, threshold, seed:runSeed, generationMs, trainingMs,
+            model, backend:fit.backend, epochs, trainingLoss:fit.loss.at(-1), threshold, seed:runSeed, generationMs, trainingMs,
             scoringMs:performance.now()-scoringStart, adapter:fit.adapter,
             meanF1:result.meanF1, scores:result.scores, byGround:result.byGround, byField:result.byField, tiles:result.tiles
           };
           rows.push(row);
-          appendRow(row);
+          appendRow(row, comparison, settings);
         }
       }
     }
     const groups = new Map();
     for (const row of rows) {
-      const label = comparison === 'cutoffs' ? 'cutoff '+row.threshold : row.model+' / '+row.backend;
+      const label = contenderLabel(row, comparison);
       groups.set(label, (groups.get(label) || 0) + row.meanF1);
     }
     const means = [...groups].map(([label, sum]) => label+' '+(sum/datasets.length).toFixed(4));
