@@ -8,12 +8,24 @@ const $ = id => document.getElementById(id);
 const formatTime = ms => (ms/1000).toFixed(2)+' s';
 let controller, report, gpuAvailable = false;
 sensorOptions($('sensor'), true);
+const requested = new URLSearchParams(location.search);
+for (const id of ['comparison', 'crop', 'sensor']) {
+  const value = requested.get(id);
+  if ([...$(id).options].some(option => option.value === value)) $(id).value = value;
+}
+const requestedSeed = requested.get('seed');
+if (/^\d+$/.test(requestedSeed) && Number(requestedSeed) <= Number($('seed').max)) {
+  $('seed').value = String(Number(requestedSeed));
+}
 try { gpuAvailable = Boolean(await navigator.gpu?.requestAdapter()); } catch {}
 if (!gpuAvailable) {
   $('comparison').querySelector('[value="backend"]').disabled = true;
   $('comparison').value = 'models';
 }
 $('status').textContent = gpuAvailable ? 'WebGPU adapter available.' : 'CPU model comparison ready. This browser has no available WebGPU adapter.';
+if (!gpuAvailable && requested.get('comparison') === 'backend') {
+  $('status').textContent = 'This link requests CPU vs WebGPU. This browser has no available WebGPU adapter. The form is set to compare models on CPU.';
+}
 $('run').disabled = false;
 $('cancel').onclick = () => controller?.abort();
 $('export').onclick = () => {
@@ -53,6 +65,7 @@ $('benchForm').onsubmit = async event => {
     ? [{model:'neural',backend:'CPU',train:trainNetworkCPU},{model:'neural',backend:'WebGPU',train:trainNetworkGPU}]
     : [{model:'linear',backend:'CPU',train:trainCPU},{model:'neural',backend:'CPU',train:trainNetworkCPU}];
   const rows=[],datasets=[];
+  $('replay').hidden = true;
   report=null;$('export').disabled=true;$('summary').textContent='';$('results').replaceChildren();
   $('scoreDetails').hidden = true;
   $('scoreRows').replaceChildren();
@@ -86,7 +99,11 @@ $('benchForm').onsubmit = async event => {
     const adapter = rows.find(row => row.adapter)?.adapter;
     const device = adapter ? ' WebGPU adapter: '+[adapter.kind, adapter.description || adapter.architecture].filter(Boolean).join(' · ')+'.' : '';
     $('summary').textContent='Average mean F1 across both seeds: '+means.join(' · ')+'.'+device;
-    report={schema:1,domain:'synthetic',comparison,settings,datasets,rows};
+    const replay = new URL(location.pathname, location.origin);
+    replay.search = new URLSearchParams({comparison, crop, sensor:sensorMode, seed});
+    $('replay').href = replay.href;
+    $('replay').hidden = false;
+    report={schema:1,domain:'synthetic',comparison,settings,replayUrl:replay.href,datasets,rows};
     $('export').disabled=false;$('status').textContent='Benchmark complete · four scored runs.';
   }catch(error){
     $('status').textContent=signal.aborted?'Canceled. Completed rows remain in Results.':'Benchmark failed. '+error.message;
