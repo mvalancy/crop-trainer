@@ -226,9 +226,11 @@ th, td { text-align: left; padding: .65rem .55rem; border-bottom: 1px solid var(
 th { color: #425841; background: var(--wash); font-size: .78rem; }
 tbody tr:nth-child(even) { background: #f6f8f0; }
 #emptyResults { padding: 1rem; background: var(--wash); border-radius: .5rem; }
-.benchResults:has(#results:empty) > :is(.tableScroll,.hint,.timingGuide,#export) { display: none; }
+.benchResults:has(#results:empty) > :is(.tableScroll,.hint,.timingGuide,.reportActions) { display: none; }
 .benchResults:has(#results:not(:empty)) #emptyResults { display: none; }
 .embed .pageIntro { display: none; }
+.missionLinks { display: flex; flex-wrap: wrap; gap: 0 1rem; font-size: .95rem; }
+.guideLinks { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; margin-block: .7rem; }
 @media (max-width: 950px) {
   .benchSetup { grid-template-columns: minmax(0,1fr); }
   .benchContext { border: 0; grid-row: auto; padding: 0; }
@@ -240,7 +242,10 @@ tbody tr:nth-child(even) { background: #f6f8f0; }
 @media (max-width: 740px) {
   .barInner { display: grid; grid-template-columns: 1fr auto; gap: 0; padding-top: .65rem; }
   .journalLink { grid-row: 1; grid-column: 2; }
-  .siteBar nav { grid-column: 1/-1; grid-row: 2; justify-content: space-between; gap: .55rem; }
+  .brand, .journalLink { min-height: 44px; }
+  .siteBar nav { grid-area: 2 / 1 / auto / -1; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 0; margin-top: .35rem; }
+  .siteBar nav a { justify-content: center; text-align: center; line-height: 1.2; }
+  .siteBar nav a[aria-current] { background: var(--wash); border-radius: .45rem .45rem 0 0; }
   .siteBar nav a { padding: .65rem 0 .5rem; font-size: .86rem; }
   .hero { display: flex; flex-direction: column; }
   .heroCopy { width: 100%; padding: 1.6rem; }
@@ -268,7 +273,6 @@ tbody tr:nth-child(even) { background: #f6f8f0; }
 }
 @media (max-width: 380px) {
   .heroCopy { padding: 1.25rem; }
-  .heroActions { gap: .75rem; }
   #scanId { order: 1; flex: 1 0 100%; }
 }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
@@ -298,13 +302,53 @@ tbody tr:nth-child(even) { background: #f6f8f0; }
   .lab > aside { grid-row: 2; }
   .lab > .plot { grid-column: 1; }
   #scanId { order: 1; flex-basis: 100%; }
-  .siteBar nav a { min-height: 2.75rem; }
+  button, .primary, .check, .mobileShortcut, .siteBar nav a { min-height: 44px; }
+  .siteFoot { display: grid; gap: .35rem; }
+  .siteFoot div { display: grid; grid-template-columns: auto auto 1fr; gap: clamp(.55rem, 3vw, 1.2rem); }
+  .siteFoot a, .guideLinks a, #experiments a, .journalHead a, .plot .trainLink,
+  .mapTools > a, #missControls > a, .detailFields > a, #heightRepeats a, #densityRepeats a {
+    display: flex; align-items: center; min-height: 44px;
+  }
+  .guideLinks, #experiments ul { display: grid; gap: 0; }
+  .guideLinks a, #experiments li { border-bottom: 1px solid var(--line); }
+  .journalHead { flex-wrap: wrap; align-items: center; gap: 0 .75rem; }
+  .heroActions, .scanLayers, .plot .downloads, .shareActions, #controls .action,
+  .benchForm .action, .reportActions, .pairInspect, #heightAnswers {
+    display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); align-items: stretch; gap: .5rem;
+  }
+  .heroActions { max-width: 25rem; grid-template-columns: 1.12fr 1fr; }
+  .heroActions .primary { gap: .35rem; }
+  #controls .action { grid-template-columns: minmax(0,1fr) minmax(0,1.65fr); }
+  .scanLayers { grid-template-columns: minmax(0,1fr) minmax(0,1.3fr); }
+  .scanLayers button { padding-inline: .5rem; }
+  .missions .missionLinks { display: grid; width: 100%; }
+  .missionLinks a { display: flex; align-items: center; min-height: 44px; }
+  .heroActions > a, .shareActions > a, .reportActions > a, .pairInspect > a {
+    display: flex; align-items: center; justify-content: center; min-height: 44px; padding: .55rem;
+    border: 1px solid #b6c3b4; border-radius: .5rem; font-size: .9rem; line-height: 1.25;
+    font-weight: 630; text-align: center; text-decoration: none;
+  }
+  .heroActions > .primary { border-color: var(--lime); }
+  .heroActions > a + a { border-color: #809888; }
+  .scanLayers > label, .plot .downloads > #ply, .shareActions > #shareStatus,
+  #controls .action > .primary, .pairInspect > label { grid-column: 1/-1; }
+  .shareActions > #shareStatus:empty { display: none; }
+  .benchForm .action { grid-template-columns: 2fr 1fr; }
+  #heightAnswers { grid-template-columns: repeat(3,minmax(0,1fr)); }
+  #heightAnswers button { padding-inline: .25rem; }
+  #heightRepeats, #densityRepeats, .grid .downloads, .reportActions { display: grid; grid-template-columns: minmax(0,1fr); }
+  .workloadLine { flex-wrap: wrap; align-items: center; gap: 0 .65rem; margin-block: .45rem; }
+  #workload { margin: 0; }
+  .cameraButtons { left: .5rem; right: .5rem; display: grid; grid-template-columns: 44px 44px repeat(2,minmax(0,1fr)); max-width: 20rem; }
+  .cameraButtons button { padding-inline: .25rem; }
 }
 @media (max-width: 480px) {
   .benchFields { grid-template-columns: 1fr; }
 }
+@media (max-width: 350px) {
+  .heroActions { grid-template-columns: 1fr; }
+}
 @media (max-width: 410px) {
-  .heroActions { gap: .85rem; }
   .trainingFlow ol { flex-direction: column; gap: .65rem; }
   .trainingFlow li:not(:last-child)::after { content: none; }
 }
