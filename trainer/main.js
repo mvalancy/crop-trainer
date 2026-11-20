@@ -28,14 +28,14 @@ describeScanner();
 function updateBenchmarkLinks() {
  const seed = $('seed').valueAsNumber;
  const validSeed = Number.isInteger(seed) && seed >= 0 && seed < 0xffffffff;
- for (const [id, comparison] of [['cutoffBench', 'cutoffs'], ['epochBench', 'epochs']]) {
+ for (const [id, comparison] of [['cutoffBench', 'cutoffs'], ['epochBench', 'epochs'], ['densityBench', 'density']]) {
   const query = new URLSearchParams({comparison, crop:$('crop').value, sensor:$('scanner').value, seed});
-  if (Number($('trainingRayBudget').value)) query.set('trainingRayBudget', $('trainingRayBudget').value);
+  if (comparison !== 'density' && Number($('trainingRayBudget').value)) query.set('trainingRayBudget', $('trainingRayBudget').value);
   if (Number($('validationRayBudget').value)) query.set('validationRayBudget', $('validationRayBudget').value);
   if ($('validationSensor').value !== 'follow') query.set('validationSensor', $('validationSensor').value);
   const link = $(id);
-  link.hidden = !validSeed || (comparison === 'cutoffs' && !$('epochs').validity.valid);
-  if (comparison === 'cutoffs') query.set('epochs', $('epochs').value);
+  link.hidden = !validSeed || (comparison !== 'epochs' && !$('epochs').validity.valid);
+  if (comparison !== 'epochs') query.set('epochs', $('epochs').value);
   link.href = '../benchmark/?'+query;
  }
 }

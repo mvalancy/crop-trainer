@@ -101,7 +101,7 @@ On tomato seed 721, more rays raised the number of labeled plant instances match
 | 12,000 | 1,746 ms | 78 ms | 30 ms | 0.4158 | 0.4929 | 0.4970 |
 | 60,000 | 2,260 ms | 95 ms | 36 ms | 0.8865 | 0.9335 | 0.9375 |
 
-#### Does matching training density help on sparse scans?
+### Does matching training density help on sparse scans?
 
 On two fresh seeds, training at 12,000 rays improved mean F1 for all three crops on held-out 12,000-ray OS1-64 scans. The comparison used six training fields, three held-out fields, both soil variants, 40 neural epochs and a 0.50 score cutoff. Each pair had identical validation scans and training plantings. Resampling the training scans changed their candidate peaks and the number of balanced examples.
 
@@ -112,6 +112,35 @@ On two fresh seeds, training at 12,000 rays improved mean F1 for all three crops
 | Young tomato | 0.550 / 0.119 | 0.598 / 0.337 |
 
 For lettuce seed 1221, F1 at 7.5, 10 and 15 cm was 0.642, 0.727 and 0.767 with 12k training rays, and 0.159, 0.167 and 0.178 with 60k. The Node CPU run spent 2.41 s generating, 0.09 s training and 0.07 s validating at 12k, compared with 3.52 s, 0.17 s and 0.03 s at 60k. These scores describe this simulated sparse layout. In the Training shed, open **Scanner and ray budgets** to set the two splits independently. [Replay lettuce at 12k training rays](https://mvalancy.github.io/crop-trainer/trainer/?crop=lettuce&seed=1221&sensor=os1-64&trainingRayBudget=12000&validationRayBudget=12000&engine=cpu) · [Replay the 60k control](https://mvalancy.github.io/crop-trainer/trainer/?crop=lettuce&seed=1221&sensor=os1-64&trainingRayBudget=60000&validationRayBudget=12000&engine=cpu)
+
+### Does the same fit work on dense scans?
+
+Choose **Training scan density** in the benchmark. The CPU fits the same neural architecture twice per seed, using 12,000 and 60,000 requested rays per training scan. Select a validation budget and compare the fits on identical held-out tiles. The results show the sampled rays and balanced examples that reached each fit. Select a contender to replay it in the Training shed. [Run the density benchmark](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=density&sensor=os1-64&crop=lettuce&seed=1321&validationRayBudget=60000)
+
+```mermaid
+flowchart LR
+  P[Same six training plantings] --> A[Scan at 12k and fit]
+  P --> B[Scan at 60k and fit]
+  V[Three held-out plantings] --> T[One set of validation tiles]
+  A --> S[Score both fits]
+  B --> S
+  T --> S
+```
+
+On seeds 1321 and 1322 we ran the benchmark twice on the simulated OS1-64, changing only the validation budget between runs. Each cell gives mean F1 for **12k / 60k training rays**. All fits used 40 epochs, a 0.50 cutoff and both soil variants. We verified that changing validation density preserved each fit’s weights and training manifest.
+
+| Crop | Seed | Test at 12k | Test at 60k |
+| --- | ---: | ---: | ---: |
+| Lettuce | 1321 | 0.689 / 0.321 | 0.825 / 0.846 |
+| Lettuce | 1322 | 0.743 / 0.323 | 0.798 / 0.803 |
+| Globe artichoke | 1321 | 0.633 / 0.304 | 0.580 / 0.815 |
+| Globe artichoke | 1322 | 0.762 / 0.312 | 0.825 / 0.854 |
+| Young tomato | 1321 | 0.588 / 0.252 | 0.845 / 0.849 |
+| Young tomato | 1322 | 0.630 / 0.223 | 0.794 / 0.809 |
+
+Matching the budgets improved mean F1 in each pair. On dense artichoke scans at seed 1321 the gain was 0.235, while on dense tomato scans at the same seed it was 0.004. Even within one detector, matching distance matters. On dense lettuce seed 1322, denser training lowered 7.5 cm F1 from 0.776 to 0.772 and raised 15 cm F1 from 0.818 to 0.829. These results cover six held-out plantings per crop and one simulated layout. PointNet++ studies multi-scale features under varying sampling density. This experiment holds the feature extractor fixed while changing the training scans. [PointNet++](https://arxiv.org/abs/1706.02413) · [Replay sparse validation](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=density&sensor=os1-64&seed=1321&validationRayBudget=12000)
+
+On dense artichoke seed 1321, the 12k and 60k Node CPU runs spent 1.84 / 2.43 seconds generating, 71 / 85 ms training and 22 / 16 ms scoring. F1 at 7.5, 10 and 15 cm was 0.459, 0.574 and 0.707 for 12k training, and 0.663, 0.819 and 0.964 for 60k. Each fit includes its own normalization and balanced training examples.
 
 ## Did the scan see the plants the detector missed?
 

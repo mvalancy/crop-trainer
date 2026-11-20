@@ -35,10 +35,14 @@ if (!gpuAvailable && requested.get('comparison') === 'backend') {
   $('status').textContent = 'This link requests CPU vs WebGPU. This browser has no available WebGPU adapter. The form is set to compare models on CPU.';
 }
 function explainComparison() {
+  const compareDensity = $('comparison').value === 'density';
+  $('trainingBudgetControl').hidden = compareDensity;
+  $('trainingRayBudget').disabled = compareDensity;
   const compareDurations = $('comparison').value === 'epochs';
   $('epochControl').hidden = compareDurations;
   $('fitEpochs').disabled = compareDurations;
   const descriptions = {
+    density: 'Train the CPU neural detector twice on each planting, first at 12,000 and then at 60,000 requested rays. Both fits score the same held-out scans at your chosen validation budget. The order reverses on seed two.',
     epochs: 'An epoch is one pass over the training examples. Fit the same CPU neural model from identical starting weights for 10, 40 and 100 epochs. Compare training loss with F1 on unseen fields.',
     cutoffs: 'Fit one CPU neural network per seed, then score the same weights at cutoffs of 0.35, 0.50 and 0.65. Select a cutoff in the results to replay that fit.',
     models: 'Fit logistic and neural models on CPU for the chosen number of epochs. Both use the same training examples and held-out fields.',
@@ -58,6 +62,7 @@ $('export').onclick = () => {
   link.click(); setTimeout(()=>URL.revokeObjectURL(url),10000);
 };
 function contenderLabel(row, comparison) {
+  if (comparison === 'density') return row.trainingRayBudget.toLocaleString()+' training rays';
   if (comparison === 'epochs') return row.epochs+' epochs';
   if (comparison === 'cutoffs') return 'Cutoff '+row.threshold;
   if (comparison === 'models') return row.model === 'linear' ? 'Logistic' : 'Neural';
@@ -67,23 +72,25 @@ function appendRow(row, comparison, settings) {
   const tr=document.createElement('tr');
   const widest=row.scores.at(-1);
   tr.insertCell().textContent = row.seed;
-  tr.insertCell().textContent = row.model+' / '+row.backend;
+  const modelCell = tr.insertCell();
+  const modelLabel = comparison === 'density' ? contenderLabel(row, comparison) : row.model+' / '+row.backend;
+  modelCell.textContent = modelLabel;
   const duration = tr.insertCell();
   const cutoff = tr.insertCell();
   duration.textContent = row.epochs;
   cutoff.textContent = row.threshold;
-  if (comparison === 'epochs' || comparison === 'cutoffs') {
+  if (['density','epochs','cutoffs'].includes(comparison)) {
     const query = new URLSearchParams({
       crop:settings.crop, sensor:settings.sensorMode, seed:row.seed, epochs:row.epochs, threshold:row.threshold, engine:'cpu'
     });
-    if (settings.trainingRayBudget) query.set('trainingRayBudget', settings.trainingRayBudget);
+    if (row.trainingRayBudget) query.set('trainingRayBudget', row.trainingRayBudget);
     if (settings.validationRayBudget) query.set('validationRayBudget', settings.validationRayBudget);
     if (settings.validationSensorMode) query.set('validationSensor', settings.validationSensorMode);
     const link = document.createElement('a');
     link.href = '../trainer/?'+query;
-    const cell = comparison === 'epochs' ? duration : cutoff;
+    const cell = {density:modelCell, epochs:duration, cutoffs:cutoff}[comparison];
     link.textContent = cell.textContent;
-    link.setAttribute('aria-label', 'Replay seed '+row.seed+' with '+row.epochs+' epochs and cutoff '+row.threshold);
+    link.setAttribute('aria-label', 'Replay '+modelLabel+' on seed '+row.seed+' with '+row.epochs+' epochs and cutoff '+row.threshold);
     cell.replaceChildren(link);
   }
   for(const text of [formatTime(row.generationMs),
@@ -95,12 +102,46 @@ function appendRow(row, comparison, settings) {
   $('scoreDetails').hidden = false;
   for (const score of row.scores) {
     const detail = $('scoreRows').insertRow();
-    for (const value of [row.seed, row.model+' / '+row.backend, row.epochs, row.threshold, score.cm+' cm',
+    for (const value of [row.seed, modelLabel, row.epochs, row.threshold, score.cm+' cm',
       score.precision.toFixed(4), score.recall.toFixed(4), score.f1.toFixed(4),
       score.tp, score.fp, score.fn]) {
       detail.insertCell().textContent = value;
     }
   }
+}
+function displayDensityStudy() {
+  const body = $('densityRows');
+  body.replaceChildren();
+  const trainingCounts = new Map();
+  let sampledCountChanged = false;
+  for (const row of report.rows) {
+    const dataset = report.datasets[row.datasetIndex];
+    const sampled = dataset.recipeManifest.filter(tile => tile.split === 'train').map(tile => tile.sampledRays);
+    const previous = trainingCounts.get(row.seed);
+    if (previous && sampled.some((count, i) => count !== previous[i])) sampledCountChanged = true;
+    trainingCounts.set(row.seed, sampled);
+    const low = Math.min(...sampled), high = Math.max(...sampled);
+    const range = low === high ? low.toLocaleString() : low.toLocaleString()+'–'+high.toLocaleString();
+    const tr = body.insertRow();
+    for (const value of [row.seed, row.trainingRayBudget.toLocaleString(), range, dataset.stats.samples.toLocaleString(), row.meanF1.toFixed(4)]) {
+      tr.insertCell().textContent = value;
+    }
+  }
+  $('densityRepeats').replaceChildren();
+  for (const budget of [12000, 60000]) {
+    if (budget === report.settings.validationRayBudget) continue;
+    const url = new URL(report.replayUrl);
+    url.searchParams.set('validationRayBudget', budget);
+    const link = document.createElement('a');
+    link.href = url;
+    link.textContent = 'Repeat with '+budget.toLocaleString()+' validation rays';
+    $('densityRepeats').append(link);
+  }
+  $('densityCapNote').hidden = sampledCountChanged;
+  if (sampledCountChanged) {
+    try { localStorage.setItem('crop-trainer-ray-scout', 'earned'); } catch {}
+  }
+  $('densityStudy').hidden = false;
 }
 function displayCutoffChanges() {
   const cm = Number($('cutoffDistance').value);
@@ -134,7 +175,8 @@ function displayFields() {
   }));
   $('fieldRows').replaceChildren();
   const metric = $('fieldMetric').value;
-  for (const dataset of datasets) {
+  const seedDatasets = new Map(datasets.map(dataset => [dataset.seed, dataset]));
+  for (const dataset of seedDatasets.values()) {
     const contenders = new Map(rows.filter(row => row.seed === dataset.seed).map(row =>
       [contender(row), new Map(row.byField.map(field => [field.seed, field]))]));
     for (const seed of dataset.stats.fieldSeeds.validation) {
@@ -200,22 +242,24 @@ $('benchForm').onsubmit = async event => {
   const {signal} = controller;
   const seed=Number($('seed').value), crop=$('crop').value, sensorMode=$('sensor').value;
   const validationSensorMode = $('validationSensor').value === 'follow' ? undefined : $('validationSensor').value;
-  const trainingRayBudget = Number($('trainingRayBudget').value);
+  const comparison=$('comparison').value;
+  const trainingRayBudget = comparison === 'density' ? undefined : Number($('trainingRayBudget').value);
   const validationRayBudget = Number($('validationRayBudget').value);
   const settings={seed,crop,sensorMode,validationSensorMode,trainingRayBudget,validationRayBudget,trainFields:6,valFields:3,minimumHeight:cropProfile(crop).peakHeight};
-  const comparison=$('comparison').value;
   if (comparison !== 'epochs') settings.epochs = $('fitEpochs').valueAsNumber;
   const neuralCPU = {model:'neural', backend:'CPU', train:trainNetworkCPU};
   const comparisons = {
     backend: [neuralCPU, {model:'neural', backend:'WebGPU', train:trainNetworkGPU}],
     models: [{model:'linear', backend:'CPU', train:trainCPU}, neuralCPU],
     cutoffs: [neuralCPU],
+    density: [12000, 60000].map(trainingRayBudget => ({...neuralCPU, trainingRayBudget})),
     epochs: [10, 40, 100].map(epochs => ({...neuralCPU, epochs}))
   };
   const contenders = comparisons[comparison];
   const thresholds = comparison === 'cutoffs' ? [.35, .5, .65] : [.5];
   const rows=[],datasets=[];
   $('replay').hidden = true;
+  $('densityStudy').hidden = true;
   $('cutoffChanges').hidden = true;
   $('cutoffChanges').open = false;
   $('fieldDetails').hidden = true;
@@ -229,15 +273,24 @@ $('benchForm').onsubmit = async event => {
   try {
     for(const offset of [0,1]){
       const runSeed=seed+offset;
-      $('status').textContent='Growing fields for seed '+runSeed+'…';
-      const start=performance.now();
-      const set=await buildDataset({...settings,seed:runSeed,signal});
-      const generationMs=performance.now()-start;
-      datasets.push({seed:runSeed,stats:set.stats,recipeManifest:set.manifest});
+      let set, generationMs, datasetIndex, validationIds;
       const order=offset?[...contenders].reverse():contenders;
       for(const contender of order){
         signal.throwIfAborted();
-        const {model, backend, train, epochs = settings.epochs} = contender;
+        const {model, backend, train, epochs = settings.epochs, trainingRayBudget = settings.trainingRayBudget} = contender;
+        if (!set || comparison === 'density') {
+          $('status').textContent='Growing fields for seed '+runSeed+'…';
+          const start=performance.now();
+          set=await buildDataset({...settings,seed:runSeed,trainingRayBudget,signal});
+          generationMs=performance.now()-start;
+          const ids=set.validation.map(tile => tile.tile_id);
+          if (validationIds && (ids.length !== validationIds.length || ids.some((id,i) => id !== validationIds[i]))) {
+            throw new Error('The two fits have different validation scans.');
+          }
+          validationIds=ids;
+          datasetIndex=datasets.length;
+          datasets.push({seed:runSeed,stats:set.stats,recipeManifest:set.manifest});
+        }
         $('status').textContent='Training '+model+' on '+backend+' · '+epochs+' epochs · seed '+runSeed;
         const before=performance.now();
         const fit=await train(set.X,set.Y,{dims:set.dims,epochs,lr:.25,signal});
@@ -252,7 +305,7 @@ $('benchForm').onsubmit = async event => {
             threshold, predictScores:model === 'neural' ? predictNetwork : undefined, signal
           });
           const row = {
-            model, backend:fit.backend, epochs, trainingLoss:fit.loss.at(-1), threshold, seed:runSeed, generationMs, trainingMs,
+            model, backend:fit.backend, datasetIndex, trainingRayBudget, epochs, trainingLoss:fit.loss.at(-1), threshold, seed:runSeed, generationMs, trainingMs,
             scoringMs:performance.now()-scoringStart, adapter:fit.adapter,
             meanF1:result.meanF1, scores:result.scores, byGround:result.byGround, byField:result.byField, tiles:result.tiles
           };
@@ -266,7 +319,8 @@ $('benchForm').onsubmit = async event => {
       const label = contenderLabel(row, comparison);
       groups.set(label, (groups.get(label) || 0) + row.meanF1);
     }
-    const means = [...groups].map(([label, sum]) => label+' '+(sum/datasets.length).toFixed(4));
+    const seedCount = new Set(rows.map(row => row.seed)).size;
+    const means = [...groups].map(([label, sum]) => label+' '+(sum/seedCount).toFixed(4));
     const adapter = rows.find(row => row.adapter)?.adapter;
     const device = adapter ? ' WebGPU adapter: '+[adapter.kind, adapter.description || adapter.architecture].filter(Boolean).join(' · ')+'.' : '';
     $('summary').textContent='Average mean F1 across both seeds: '+means.join(' · ')+'.'+device;
@@ -279,6 +333,7 @@ $('benchForm').onsubmit = async event => {
     $('replay').href = replay.href;
     $('replay').hidden = false;
     report={schema:1,domain:'synthetic',comparison,thresholds,settings,replayUrl:replay.href,datasets,rows};
+    if (comparison === 'density') displayDensityStudy();
     if (comparison === 'models') {
       const options = rows.filter(row => row.model === 'linear').flatMap(row => row.tiles.map(tile =>
         new Option('Run '+row.seed+' · field '+tile.seed+' · soil '+(tile.ground?'present':'removed'), JSON.stringify([row.seed,tile.tile_id]))));
