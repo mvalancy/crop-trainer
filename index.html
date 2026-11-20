@@ -38,10 +38,10 @@
 <label>Camera<select id="view"><option value="oblique">Oblique</option><option value="top">Top down</option><option value="side">Side</option><option value="custom" disabled="">Free orbit</option></select></label>
 <label>Color by<select id="color"><option value="class">Return class</option><option value="height">Elevation</option></select></label>
 <label>Highlight plant<select id="highlight"><option value="">None</option></select></label>
-<div class="scanLayers"><label class="check"><input id="pins" type="checkbox" checked=""> Label centers</label><button type="button" id="switchSoil" disabled>View without soil</button></div></div>
+<div class="scanLayers"><label class="check"><input id="pins" type="checkbox" checked=""> Label centers</label><button type="button" id="focusPlant" disabled>Focus plant</button><button type="button" id="switchSoil" disabled>View without soil</button></div></div>
 <details class="cameraHelp">
 <summary>Camera controls</summary>
-<p class="hint" id="cameraHelp">Drag to orbit. Shift-drag or right-drag to pan. Scroll to zoom. On touch, use two fingers to pan and pinch. With the canvas focused, arrow keys rotate, Shift + arrows pan, + / − zoom, and R resets.</p></details>
+<p class="hint" id="cameraHelp">Drag to orbit. Shift-drag or right-drag to pan. Scroll to zoom. On touch, use two fingers to pan and pinch. With the canvas focused, arrow keys rotate, Shift + arrows pan, + / − zoom, F centers the highlighted plant for close-up orbit, and R resets the field view.</p></details>
 <p id="count" role="status">Growing the first field…</p>
 <dl class="readouts" id="readouts"></dl>
 <h4>Plant coverage</h4>
@@ -102,6 +102,6 @@
 </main>
 <footer class="siteFoot"><span>Crop Trainer</span>
 <div><a href="AGENTS.md">Agent quickstart</a><a href="https://github.com/mvalancy/crop-trainer">GitHub</a><a href="LICENSE">MIT license</a></div></footer>
-<script type="module" src="farm.js?v=soilpair2"></script>
+<script type="module" src="farm.js?v=missbands1"></script>
 </body>
 </html>

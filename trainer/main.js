@@ -1,3 +1,4 @@
+import {returnBand} from './field.js?v=missbands1';
 import {cropProfile} from './crops.js';
 import {allProfiles, sensorOptions, validationSensorOptions, sensorDetails, rayBudgetOptions, trainingRayOptions, trainingRayValue, ALTERNATING_BUDGET} from './sensors.js?v=densitymix1';
 if(new URLSearchParams(location.search).has('embed'))document.body.classList.add('embed');
@@ -43,7 +44,7 @@ function updateBenchmarkLinks() {
 for (const id of ['crop','scanner','validationSensor','trainingRayBudget','validationRayBudget','seed','epochs']) $(id).addEventListener('input', updateBenchmarkLinks);
 let controller=null,losses=[],lastPreview=null,backendReady=false,deps,webgpuAvailable=false,lastRun=null,lastPaint=0;
 try {
- deps=await Promise.all([import('./data.js?v=count1'),import('./model.js?v=benchmark1'),import('./neural.js')]);
+ deps=await Promise.all([import('./data.js?v=missbands1'),import('./model.js?v=benchmark1'),import('./neural.js')]);
  $('epochs').max=deps[1].MAX_EPOCHS;
  const epochsParam = params.get('epochs');
  if (/^\d+$/.test(epochsParam) && Number(epochsParam) >= 1 && Number(epochsParam) <= deps[1].MAX_EPOCHS) {
@@ -75,6 +76,8 @@ function status(stage,detail,value){
  $('stage').textContent=stage;$('status').textContent=detail||'';
  if(Number.isFinite(value))$('progress').value=Math.min(100,Math.max(0,value));else $('progress').removeAttribute('value');
 }
+const requestedBand = params.get('missBand');
+const replayMisses = [...$('missBand').options].some(option => option.value === requestedBand);
 let auditTiles=[],fieldViews=new Map(),auditThreshold=.5, auditRayBudget=0;
 function showField(){
  const field=auditTiles[Number($('auditField').value)];
@@ -84,11 +87,21 @@ function showField(){
  const inspectingMisses = stage === 'misses';
  $('missControls').hidden = !inspectingMisses;
  if (inspectingMisses) {
-  const {cm,boxIndices,withCropReturns} = selectedMisses();
-  $('previewText').textContent = boxIndices.length+' missed at '+cm+' cm. '+withCropReturns+' had crop returns (red rings). '+(boxIndices.length-withCropReturns)+' had none (dark squares).';
+  const {cm,withCropReturns} = selectedMisses();
+  const boxIndices = visibleMisses();
+  const band = $('missBand').value;
+  if (band === 'all') {
+   $('previewText').textContent = boxIndices.length+' missed at '+cm+' cm. '+withCropReturns+' had crop returns (red rings). '+(boxIndices.length-withCropReturns)+' had none (dark squares).';
+  } else {
+   const total = field.coverage[band];
+   const description = $('missBand').selectedOptions[0].textContent;
+   $('previewText').textContent = description+' · '+(total
+    ? boxIndices.length+' of '+total+' plants missed at '+cm+' cm ('+(100*boxIndices.length/total).toFixed(1)+'%).'
+    : 'No plants in this scan had that number of returns.');
+  }
   $('inspectBox').hidden = true;
   $('missBox').disabled = !boxIndices.length;
-  $('missBox').replaceChildren(new Option('All missed plants',''), ...boxIndices.map(box => {
+  $('missBox').replaceChildren(new Option(boxIndices.length ? 'Show all listed misses' : 'No missed plants in this group',''), ...boxIndices.map(box => {
    const [x,y] = lastPreview.truth[box], returns = lastPreview.plantReturns[box];
    return new Option('Box '+box+' · x '+x.toFixed(2)+' m, y '+y.toFixed(2)+' m · '+returns+' crop returns', String(box));
   }));
@@ -102,6 +115,12 @@ function showField(){
 function selectedMisses(){
  return lastPreview.missesByTolerance.find(row => row.cm === Number($('missDistance').value));
 }
+function visibleMisses() {
+ const boxes = selectedMisses().boxIndices;
+ const band = $('missBand').value;
+ return band === 'all' ? boxes : boxes.filter(box => returnBand(lastPreview.plantReturns[box]) === band);
+}
+$('missBand').addEventListener('change',showField);
 $('missBox').addEventListener('change', () => {
  const box = $('missBox').value;
  const link = $('inspectBox');
@@ -153,8 +172,8 @@ function clear(){
  $('groundStudy').hidden = true;
  $('groundStudy').open = false;
 
- $('missControls').hidden = true; $('missDistance').value = '15'; $('missBox').replaceChildren();
- $('harvest').textContent='';auditTiles=[];fieldViews.clear();$('overlayStage').value='selected';$('stageAudit').hidden=true;
+ $('missControls').hidden = true; $('missDistance').value = '15'; $('missBand').value = replayMisses ? requestedBand : 'all'; $('missBox').replaceChildren();
+ $('harvest').textContent='';auditTiles=[];fieldViews.clear();$('overlayStage').value=replayMisses ? 'misses' : 'selected';$('stageAudit').hidden=true;
  losses=[];lastPreview=null;lastRun=null;lastPaint=0;$('downloadRun').hidden=true;$('downloadSettings').hidden=true;$('benchmark').hidden=true;$('exportText').hidden=true;$('exportText').open=false;$('reportText').value='';$('copyReport').textContent='Copy JSON';
  for(const id of ['s75','s10','s15']){$(id).textContent='—';$('d'+id.slice(1)).textContent=''}
  $('resultNote').textContent='Run in progress. Validation uses synthetic fields only.';
@@ -180,7 +199,7 @@ function draw(){
  const stage = $('overlayStage').value;
  if (stage === 'misses') {
   const selectedBox = $('missBox').value;
-  for (const box of selectedMisses().boxIndices) {
+  for (const box of visibleMisses()) {
    const [x,y] = lastPreview.truth[box];
    const px = left+x*side/10, py = top+side-y*side/10;
    if (String(box) === selectedBox) {

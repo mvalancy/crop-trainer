@@ -1,5 +1,5 @@
 import {cropProfile} from './crops.js';
-import {field} from './field.js?v=coverage1';
+import {field, returnBand} from './field.js?v=missbands1';
 import {predict} from './model.js';
 
 export const FIELD_LIMITS={train:256,validation:128};
@@ -225,8 +225,13 @@ export async function validateModel(set,weights,{threshold=.5,predictScores=pred
    for (const [box, pin] of pinByBox.entries()) {
     if (pin === -1) boxIndices.push(box);
    }
-   const withCropReturns = t.plantReturns && boxIndices.filter(box => t.plantReturns[box] > 0).length;
-   missesByTolerance.push({cm:100 * radius, boxIndices, withCropReturns});
+   let missedByCoverage, withCropReturns;
+   if (t.plantReturns) {
+    missedByCoverage = {zero:0, oneToFour:0, fiveOrMore:0};
+    for (const box of boxIndices) missedByCoverage[returnBand(t.plantReturns[box])]++;
+    withCropReturns = missedByCoverage.oneToFour + missedByCoverage.fiveOrMore;
+   }
+   missesByTolerance.push({cm:100 * radius, boxIndices, withCropReturns, missedByCoverage});
    return {cm: 100 * radius, tp, fp: predictions.length - tp, fn: t.truth.length - tp};
   });
   tiles.push({seed:t.seed,ground:t.ground,tile_id:t.tile_id,crop:t.recipe.crop,requestedRays:t.recipe.points,sampledRays:t.sampledRays,returnCount:t.returnCount,sensor:t.recipe.sampling.key,coverage:t.coverage,byTolerance,missesByTolerance,stages15cm:measureStages(stages,t.truth,byTolerance[2].tp)});

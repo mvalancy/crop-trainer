@@ -1,5 +1,5 @@
 import {DENSITY_HISTORY_KEY, densitySnapshot, pairDensityScores} from './density.js';
-import {buildDataset, validateModel, compareMatchedBoxes} from '../trainer/data.js?v=count1';
+import {buildDataset, validateModel, compareMatchedBoxes} from '../trainer/data.js?v=missbands1';
 import {trainNetworkCPU, trainNetworkGPU, predictNetwork} from '../trainer/neural.js';
 import {trainCPU, MAX_EPOCHS} from '../trainer/model.js';
 import {cropProfile} from '../trainer/crops.js';

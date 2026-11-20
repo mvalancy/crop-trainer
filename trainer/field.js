@@ -1,4 +1,9 @@
 import {cropProfile, bladeWidth, bladeHeight} from './crops.js';
+export function returnBand(count) {
+ if (count === 0) return 'zero';
+ return count < 5 ? 'oneToFour' : 'fiveOrMore';
+}
+
 export function field(p){
 const crop = p.crop ?? 'lettuce';
 const profile = cropProfile(crop);
@@ -99,9 +104,7 @@ for (let i = 0; i < outputN; i++) {
 }
 const coverage = {zero: 0, oneToFour: 0, fiveOrMore: 0};
 for (const count of plantReturns) {
-  if (count === 0) coverage.zero++;
-  else if (count < 5) coverage.oneToFour++;
-  else coverage.fiveOrMore++;
+  coverage[returnBand(count)]++;
 }
 let groundRemoved=0;
 if(p.ground===false){

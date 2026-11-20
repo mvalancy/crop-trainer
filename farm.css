@@ -145,11 +145,22 @@ progress { width: 100%; height: .6rem; accent-color: var(--forest); }
 .cards > div { background: #f9faf3; border: 1px solid var(--line); padding: .9rem; }
 .cards b { display: block; font-family: var(--serif); font-size: clamp(1.5rem,3vw,2.3rem); line-height: 1.2; }
 .bench { grid-template-columns: repeat(auto-fit,minmax(7.5rem,1fr)); margin: 1rem 0; }
-.viz { display: grid; grid-template-columns: minmax(0,.8fr) minmax(0,1.2fr); gap: .75rem; margin-top: 1rem; align-items: start; }
-.viz article { min-width: 0; border-radius: .55rem; padding: .8rem; border: 1px solid var(--line); }
-.viz canvas { display: block; width: 100%; height: 10rem; }
-.viz article:last-child canvas { height: clamp(12rem,23vw,19rem); }
-.viz label { margin-top: .5rem; }
+.viz { display: grid; gap: 1rem; margin-top: 1rem; }
+.viz article { min-width: 0; border-radius: .55rem; padding: clamp(.8rem, 2vw, 1.25rem); border: 1px solid var(--line); }
+.viz h3 { margin: 0 0 .65rem; font-size: 1.1rem; }
+.viz canvas { display: block; width: 100%; }
+.lossChart canvas { height: 7rem; }
+.lossChart p { margin: .45rem 0 0; }
+.fieldInspector { container-type: inline-size; }
+.mapWorkspace { display: grid; gap: 1rem; align-items: start; }
+.mapTools, #missControls { display: grid; gap: .75rem; min-width: 0; }
+.mapTools label { margin: 0; }
+.fieldMap { margin: 0; min-width: 0; }
+.fieldMap canvas { aspect-ratio: 1; height: auto; background: var(--paper); border-radius: .45rem; }
+.fieldMap figcaption { padding-top: .5rem; color: var(--muted); font-size: .86rem; line-height: 1.5; }
+@container (min-width: 32rem) {
+  .mapWorkspace { grid-template-columns: minmax(12rem, .78fr) minmax(0, 1.22fr); }
+}
 #stageAudit > select { margin: .5rem 0; }
 .benchSetup { display: grid; grid-template-columns: minmax(13rem,.8fr) minmax(0,1.65fr); gap: 1rem 2.5rem; }
 .benchContext { padding-right: 1.5rem; border-right: 1px solid var(--line); grid-row: span 2; }
@@ -184,7 +195,6 @@ tbody tr:nth-child(even) { background: #f6f8f0; }
   .heroCopy { width: 58%; }
   .viewTools { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .readouts { grid-template-columns: repeat(3,minmax(0,1fr)); }
-  .viz { grid-template-columns: 1fr; }
 }
 @media (max-width: 740px) {
   .barInner { display: grid; grid-template-columns: 1fr auto; gap: 0; padding-top: .65rem; }

@@ -182,9 +182,9 @@ test('missed box IDs follow the final one-to-one assignment at each tolerance', 
   const result = await validateModel(set, [], {predictScores:() => [.9,.8]});
   const row = result.tiles[0];
   assert.deepEqual(row.missesByTolerance, [
-    {cm:7.5, boxIndices:[1,2], withCropReturns:1},
-    {cm:10, boxIndices:[1,2], withCropReturns:1},
-    {cm:15, boxIndices:[2], withCropReturns:1}
+    {cm:7.5, boxIndices:[1,2], withCropReturns:1, missedByCoverage:{zero:1,oneToFour:1,fiveOrMore:0}},
+    {cm:10, boxIndices:[1,2], withCropReturns:1, missedByCoverage:{zero:1,oneToFour:1,fiveOrMore:0}},
+    {cm:15, boxIndices:[2], withCropReturns:1, missedByCoverage:{zero:0,oneToFour:1,fiveOrMore:0}}
   ]);
   assert.deepEqual(result.previews.get(tile.tile_id).missesByTolerance, row.missesByTolerance);
   for (const [i, group] of row.missesByTolerance.entries()) {
@@ -194,6 +194,7 @@ test('missed box IDs follow the final one-to-one assignment at each tolerance', 
   for (const group of none.tiles[0].missesByTolerance) {
     assert.deepEqual(group.boxIndices, [0,1,2]);
     assert.equal(group.withCropReturns, 2);
+    assert.deepEqual(group.missedByCoverage, {zero:1,oneToFour:1,fiveOrMore:1});
   }
 });
 

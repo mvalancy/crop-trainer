@@ -1,12 +1,12 @@
 import {field} from './trainer/field.js?v=coverage1';
 import {makeRecipe} from './trainer/data.js?v=coverage1';
 import {getSensor, sensorOptions, sensorDetails, rayBudgetOptions} from './trainer/sensors.js?v=rays1';
-import {createViewer} from './viewer.js?v=boxpair1';
+import {createViewer} from './viewer.js?v=missbands1';
 
 const $ = id => document.getElementById(id);
 const viewer = createViewer($('map'), {
   mode:$('mode'), view:$('view'), highlight:$('highlight'), color:$('color'), pins:$('pins'), spin:$('spin'),
-  zoomIn:$('zoomIn'), zoomOut:$('zoomOut'), reset:$('fit')
+  zoomIn:$('zoomIn'), zoomOut:$('zoomOut'), reset:$('fit'), focus:$('focusPlant')
 });
 let scan, previousRayTrial;
 sensorOptions($('scan'));
@@ -42,6 +42,7 @@ $('copyScan').onclick = async () => {
 };
 
 function updateBoxLink() {
+  $('focusPlant').disabled = $('highlight').value === '';
   const url = new URL($('scanLink').href);
   if ($('highlight').value === '') url.searchParams.delete('box');
   else url.searchParams.set('box', $('highlight').value);

@@ -4,6 +4,8 @@ export function createViewer(canvas, controls) {
   const context = canvas.getContext('2d');
   const pointers = new Map();
   let panX, panY, yaw, pitch, zoom, scan, projected = [], order = [], sorted = false;
+  const fieldCenter = [5, 5, 0];
+  let pivot = fieldCenter;
   let frame = 0, spinning = false, previousTime = 0;
   const colors = ['#667d70', '#badf74', '#58ae81', '#ca9763', '#f1b674', '#acbce0'];
   const elevation = Array.from({length:64}, (_, i) => 'hsl('+(175-i*1.65)+' 53% '+(34+i*.48)+'%)');
@@ -13,6 +15,7 @@ export function createViewer(canvas, controls) {
   function fit(view = 'oblique') {
     yaw = view === 'oblique' ? -.62 : 0;
     pitch = view === 'top' ? Math.PI/2 : view === 'side' ? .08 : .72;
+    pivot = fieldCenter;
     zoom = 1; panX = 0; panY = 0; sorted = false; schedule();
   }
   function orbit(dx, dy) {
@@ -41,7 +44,8 @@ export function createViewer(canvas, controls) {
     const c=Math.cos(yaw),s=Math.sin(yaw),cp=Math.cos(pitch),sp=Math.sin(pitch);
     const scale=Math.min(w/15,h/12)*zoom, ox=w/2+panX, oy=h/2+panY;
     function project(x,y,z){
-      const across=c*(x-5)-s*(y-5), along=s*(x-5)+c*(y-5);
+      x -= pivot[0]; y -= pivot[1]; z -= pivot[2];
+      const across=c*x-s*y, along=s*x+c*y;
       return [across,along*sp-z*cp,along*cp+z*sp];
     }
     context.strokeStyle='#315044';context.lineWidth=1;
@@ -96,6 +100,18 @@ export function createViewer(canvas, controls) {
     }
     if(spinning)schedule();
   }
+  function focusPlant() {
+    if (!scan || controls.highlight.value === '') return;
+    const {min, max} = scan.labels.boxes[Number(controls.highlight.value)];
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    if (!w || !h) return;
+    spin(false);
+    controls.view.value = 'custom';
+    pivot = [(min[0]+max[0])/2, (min[1]+max[1])/2, max[2]];
+    const diameter = Math.hypot(max[0]-min[0], max[1]-min[1], max[2]-min[2]);
+    zoom = clamp(.35*Math.min(w,h) / (diameter*Math.min(w/15,h/12)), 1, 12);
+    panX = 0; panY = 0; sorted = false; schedule();
+  }
   function spin(on){
     if (on) controls.view.value='custom';
     spinning=on;previousTime=0;controls.spin.textContent=on?'Pause spin':'Auto spin';
@@ -132,16 +148,28 @@ export function createViewer(canvas, controls) {
     else if(['+','='].includes(e.key))magnify(1.2);
     else if(e.key==='-')magnify(1/1.2);
     else if(e.key.toLowerCase()==='r')reset();
+    else if(e.key.toLowerCase()==='f' && controls.highlight.value!=='')focusPlant();
     else return;
     e.preventDefault();
   });
   const reset=()=>{spin(false);controls.view.value='oblique';fit();};
   canvas.addEventListener('dblclick',reset);
+  controls.focus.onclick=focusPlant;
   controls.reset.onclick=reset;controls.zoomIn.onclick=()=>magnify(1.3);controls.zoomOut.onclick=()=>magnify(1/1.3);
   controls.spin.onclick=()=>spin(!spinning);controls.view.onchange=()=>{spin(false);fit(controls.view.value);};
   controls.highlight.onchange=controls.pins.onchange=controls.color.onchange=schedule;
   document.addEventListener('visibilitychange',()=>{if(document.hidden)spin(false);});
   new ResizeObserver(schedule).observe(canvas);
   fit();
-  return {setScan(value){scan=value;projected=new Float32Array(scan.xyz.length);order=Uint32Array.from({length:scan.cls.length},(_,i)=>i);sorted=false;schedule();}};
+  return {
+    setScan(value) {
+      const newPlanting = scan && (scan.p.seed !== value.p.seed || scan.p.crop !== value.p.crop);
+      if (newPlanting && pivot !== fieldCenter) reset();
+      scan = value;
+      projected = new Float32Array(scan.xyz.length);
+      order = Uint32Array.from({length:scan.cls.length}, (_, i) => i);
+      sorted = false;
+      schedule();
+    }
+  };
 }

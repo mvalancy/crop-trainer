@@ -233,7 +233,9 @@ flowchart LR
   P[Final pins and planted centers] --> M[Match one to one at the chosen distance]
   M --> U[Collect the unmatched box indices]
   U --> C[Look up crop returns for each box]
-  C --> H[Highlight a missed plant on the field map]
+  C --> B[Filter by crop returns per plant]
+  B --> H[Highlight a missed plant on the map]
+  H --> V[Focus and orbit that plant in 3D]
 ```
 
 How many previously missed plants gain a pin if the score cutoff drops from 0.50 to 0.35? On fresh dataset seeds 1021 and 1022, each pair used the same 40-epoch neural weights, mixed training layouts and 12,000-ray simulated OS1-64 validation scans. These counts cover three soil-present fields per seed at 15 cm. No previously matched boxes lost their match in these six comparisons.
@@ -245,6 +247,25 @@ How many previously missed plants gain a pin if the score cutoff drops from 0.50
 | Young tomato | 59 | 9 | 91 | 17 |
 
 For tomato seed 1021, 54 of the 59 recovered boxes had crop returns. The other five received a pin within 15 cm despite having zero returns from the plant itself. Across both soil settings, F1 at 7.5, 10 and 15 cm rose from 0.245 / 0.279 / 0.297 to 0.414 / 0.469 / 0.505. The 0.50 run took 1,896 ms to generate, 113 ms to train and 32 ms to validate on Node CPU. The 0.35 replay took 1,945 / 99 / 24 ms. [Open the field audit](https://mvalancy.github.io/crop-trainer/trainer/?crop=tomato&seed=1021&sensor=mixed&validationSensor=os1-64&validationRayBudget=12000&engine=cpu) · [Compare the cutoffs](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=cutoffs&crop=tomato&seed=1021&sensor=mixed&validationSensor=os1-64&validationRayBudget=12000)
+
+### Does the detector miss plants that have several returns?
+
+In the Training Shed, select **Missed plants** and filter **Crop returns per plant**. The map shows how many plants the detector missed out of all plants in the selected group. Pick a box, open it in 3D and choose **Focus plant** to orbit it up close. With the canvas focused, **F** centers the highlighted plant and **R** returns to the whole field. [Inspect a young tomato field](https://mvalancy.github.io/crop-trainer/trainer/?crop=tomato&seed=1721&sensor=mixed&validationSensor=os1-64&validationRayBudget=12000&engine=cpu&missBand=fiveOrMore)
+
+Each cell below gives missed plants / labeled plants at 15 cm. Both CPU models used the same fields, mixed training layouts, 40 epochs and a 0.50 score cutoff. Dataset seeds 1721, 1722, 1751 and 1752 each supplied six training and three validation plantings per crop. Each held-out planting appears once here, scanned with soil present on the simulated OS1-64 layout at 12,000 requested rays.
+
+| Crop | Detector | 0 crop returns | 1–4 returns | 5 or more returns |
+| --- | --- | ---: | ---: | ---: |
+| Lettuce | Logistic | 50 / 72 | 430 / 564 | 625 / 2,084 |
+| Lettuce | Neural | 47 / 72 | 440 / 564 | 662 / 2,084 |
+| Globe artichoke | Logistic | No plants | 5 / 6 | 126 / 386 |
+| Globe artichoke | Neural | No plants | 5 / 6 | 111 / 386 |
+| Young tomato | Logistic | 51 / 54 | 349 / 403 | 349 / 862 |
+| Young tomato | Neural | 53 / 54 | 377 / 403 | 428 / 862 |
+
+The neural model missed 93.5% of young tomatoes with one to four returns and 49.7% of those with five or more. The better-covered group still accounted for more missed plants because it was larger. Only six globe artichokes fell in the one-to-four group. These counts describe the simulated plantings. A leaf can produce several returns far from its plant center.
+
+On tomato seed 1721, across both soil settings, logistic F1 was 0.511, 0.649 and 0.704 at 7.5, 10 and 15 cm. Neural F1 was 0.481, 0.598 and 0.636. Node CPU generation, training and validation took 2,235 / 49 / 45 ms for logistic and 2,398 / 61 / 24 ms for neural. The nuScenes detection evaluator excludes ground-truth boxes with zero LiDAR and radar points. Crop Trainer keeps every planted label and counts returns by which synthetic plant supplied them. The choice of denominator matters when interpreting recall. [Replay both models](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=models&crop=tomato&seed=1721&sensor=mixed&validationSensor=os1-64&validationRayBudget=12000) · [nuScenes detection evaluation](https://github.com/nutonomy/nuscenes-devkit/blob/master/python-sdk/nuscenes/eval/detection/README.md)
 
 ### Which model finds plants in a sparse scan?
 
