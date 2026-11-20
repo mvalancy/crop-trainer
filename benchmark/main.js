@@ -119,6 +119,18 @@ function appendRow(row, comparison, settings) {
     }
   }
 }
+function displayValidationBudgets(container) {
+  container.replaceChildren();
+  for (const budget of DENSITY_BUDGETS) {
+    if (budget === report.settings.validationRayBudget) continue;
+    const url = new URL(report.replayUrl);
+    url.searchParams.set('validationRayBudget', budget);
+    const link = document.createElement('a');
+    link.href = url;
+    link.textContent = 'Repeat with '+budget.toLocaleString()+' validation rays';
+    container.append(link);
+  }
+}
 function displayDensityStudy() {
   const body = $('densityRows');
   body.replaceChildren();
@@ -138,16 +150,7 @@ function displayDensityStudy() {
       tr.insertCell().textContent = value;
     }
   }
-  $('densityRepeats').replaceChildren();
-  for (const budget of [12000, 60000]) {
-    if (budget === report.settings.validationRayBudget) continue;
-    const url = new URL(report.replayUrl);
-    url.searchParams.set('validationRayBudget', budget);
-    const link = document.createElement('a');
-    link.href = url;
-    link.textContent = 'Repeat with '+budget.toLocaleString()+' validation rays';
-    $('densityRepeats').append(link);
-  }
+  displayValidationBudgets($('densityRepeats'));
   $('mixedNote').hidden = !report.rows.some(row => row.trainingRayBudget === ALTERNATING_BUDGET);
   $('densityCapNote').hidden = sampledCountChanged;
   if (sampledCountChanged) {
@@ -215,6 +218,7 @@ function displayHeightStudy() {
       $('heightAnswer').textContent = feedback;
     };
   }
+  displayValidationBudgets($('heightRepeats'));
   $('heightStudy').hidden = false;
 }
 function displayCutoffCoverage(cm) {
@@ -351,47 +355,82 @@ $('fieldMetric').addEventListener('change', () => {
   else url.searchParams.set('fieldMetric', $('fieldMetric').value);
   report.replayUrl = url.href;
   $('replay').href = url.href;
-  for (const link of $('densityRepeats').querySelectorAll('a')) {
+  for (const link of document.querySelectorAll('#densityRepeats a, #heightRepeats a')) {
     const repeat = new URL(url);
     repeat.searchParams.set('validationRayBudget', new URL(link.href).searchParams.get('validationRayBudget'));
     link.href = repeat.href;
   }
 });
-function displayModelBoxes() {
-  const [seed, tileId] = JSON.parse($('pairScan').value);
+// Give each fit a stable column even when execution order reverses on seed two.
+function boxFits(seed) {
   const rows = report.rows.filter(row => row.seed === seed);
+  if (report.comparison === 'heights') return PEAK_HEIGHTS.map(height => rows.find(row => row.minimumHeight === height));
+  return ['linear', 'neural'].map(model => rows.find(row => row.model === model));
+}
+function displayPairedBoxes() {
+  const [seed, tileId] = JSON.parse($('pairScan').value);
+  const [first, second] = boxFits(seed);
+  const firstTile = first.tiles.find(tile => tile.tile_id === tileId);
+  const secondTile = second.tiles.find(tile => tile.tile_id === tileId);
   const cm = Number($('pairDistance').value);
-  const tileFor = model => rows.find(row => row.model === model).tiles.find(tile => tile.tile_id === tileId);
-  const logistic = tileFor('linear'), neural = tileFor('neural');
-  const {both, firstOnly:logisticOnly, secondOnly:neuralOnly, neither, firstFP, secondFP} = compareMatchedBoxes(logistic, neural, cm);
+  const {both, firstOnly, secondOnly, neither, firstFP, secondFP} = compareMatchedBoxes(firstTile, secondTile, cm);
+  const label = row => contenderLabel(row, report.comparison);
+  $('pairFirst').textContent = label(first)+' only';
+  $('pairSecond').textContent = label(second)+' only';
   $('pairCounts').replaceChildren();
-  for (const count of [both, logisticOnly.length, neuralOnly.length, neither]) {
+  for (const count of [both, firstOnly.length, secondOnly.length, neither]) {
     $('pairCounts').insertCell().textContent = count;
   }
-  $('pairExtras').textContent = 'Extra pins at '+cm+' cm · Logistic '+firstFP+' · Neural '+secondFP;
-  const boxOptions = (boxes, model) => boxes.map(box => new Option(model+' only · box '+box, String(box)));
-  $('pairBox').replaceChildren(new Option('Whole scan', ''), ...boxOptions(logisticOnly,'Logistic'), ...boxOptions(neuralOnly,'Neural'));
-  $('pairBox').disabled = !logisticOnly.length && !neuralOnly.length;
-  const query = new URLSearchParams({crop:report.settings.crop, seed:logistic.seed, sensor:logistic.sensor, ground:logistic.ground, tile:tileId});
+  $('pairExtras').textContent = 'Extra pins at '+cm+' cm · '+label(first)+' '+firstFP+' · '+label(second)+' '+secondFP;
+  const boxOptions = (boxes, row) => boxes.map(box => new Option(label(row)+' only · box '+box, String(box)));
+  $('pairBox').replaceChildren(new Option('Whole scan', ''), ...boxOptions(firstOnly,first), ...boxOptions(secondOnly,second));
+  $('pairBox').disabled = !firstOnly.length && !secondOnly.length;
+  const query = new URLSearchParams({crop:report.settings.crop, seed:firstTile.seed, sensor:firstTile.sensor, ground:firstTile.ground, tile:tileId});
   if (report.settings.validationRayBudget) query.set('budget', report.settings.validationRayBudget);
   $('pairViewer').href = '../?'+query+'#field';
-  $('pairViewer').textContent = 'Open scan in 3D';
+  updateBoxLinks();
 }
-$('pairScan').addEventListener('change',displayModelBoxes);
-$('pairDistance').addEventListener('change',displayModelBoxes);
+function displayHeightTurnover() {
+  const cm = Number($('pairDistance').value);
+  let fields = 0, gained = 0, lost = 0;
+  for (const seed of new Set(report.rows.map(row => row.seed))) {
+    const [tall, short] = boxFits(seed);
+    for (const tile of tall.tiles.filter(tile => tile.ground)) {
+      const paired = short.tiles.find(other => other.tile_id === tile.tile_id);
+      const {firstOnly, secondOnly} = compareMatchedBoxes(tile, paired, cm);
+      fields++;
+      gained += secondOnly.length;
+      lost += firstOnly.length;
+    }
+  }
+  $('heightTurnover').textContent = 'Across '+fields+' soil-present fields at '+cm+' cm, lowering the peak height gained '+gained+' plant matches and lost '+lost+'.';
+}
+$('pairScan').addEventListener('change', displayPairedBoxes);
+$('pairDistance').addEventListener('change', () => {
+  displayPairedBoxes();
+  if (report.comparison === 'heights') displayHeightTurnover();
+});
 $('pairViewer').addEventListener('click', () => {
-  if ($('pairBox').value !== '') {
+  if (report?.comparison === 'models' && $('pairBox').value !== '') {
     try { localStorage.setItem('crop-trainer-model-scout', 'earned'); } catch {}
   }
 });
-$('pairBox').addEventListener('change', () => {
+function updateBoxLinks() {
   const url = new URL($('pairViewer').href);
   const box = $('pairBox').value;
   if (box === '') url.searchParams.delete('box');
   else url.searchParams.set('box', box);
   $('pairViewer').href = url.href;
   $('pairViewer').textContent = box === '' ? 'Open scan in 3D' : 'Inspect box '+box+' in 3D';
-});
+  const replay = new URL(report.replayUrl);
+  replay.searchParams.set('pairSeed', JSON.parse($('pairScan').value)[0]);
+  replay.searchParams.set('pairTile', url.searchParams.get('tile'));
+  replay.searchParams.set('pairDistance', $('pairDistance').value);
+  if (box !== '') replay.searchParams.set('pairBox', box);
+  replay.hash = 'modelBoxes';
+  $('sharePair').href = replay.href;
+}
+$('pairBox').addEventListener('change', updateBoxLinks);
 
 $('benchForm').onsubmit = async event => {
   event.preventDefault(); if(controller)return;
@@ -502,12 +541,33 @@ $('benchForm').onsubmit = async event => {
     report={schema:1,domain:'synthetic',comparison,thresholds,settings,replayUrl:replay.href,datasets,rows};
     if (comparison === 'heights') displayHeightStudy();
     if (comparison === 'density') displayDensityStudy();
-    if (comparison === 'models') {
-      const options = rows.filter(row => row.model === 'linear').flatMap(row => row.tiles.map(tile =>
+    if (comparison === 'models' || comparison === 'heights') {
+      const heights = comparison === 'heights';
+      $('pairTitle').textContent = heights ? 'Which plants changed match when the peak height dropped?' : 'Which plants did each model find?';
+      $('heightTurnover').hidden = !heights;
+      const referenceRows = [...new Set(rows.map(row => row.seed))].map(seed => boxFits(seed)[0]);
+      const options = referenceRows.flatMap(row => row.tiles.map(tile =>
         new Option('Run '+row.seed+' · field '+tile.seed+' · soil '+(tile.ground?'present':'removed'), JSON.stringify([row.seed,tile.tile_id]))));
       $('pairScan').replaceChildren(...options);
-      displayModelBoxes();
+      const selected = options.find(option => {
+        const [runSeed, tileId] = JSON.parse(option.value);
+        return tileId === requested.get('pairTile') && (!requested.has('pairSeed') || String(runSeed) === requested.get('pairSeed'));
+      });
+      if (selected) {
+        $('pairScan').value = selected.value;
+        const distance = requested.get('pairDistance');
+        if (['7.5','10','15'].includes(distance)) $('pairDistance').value = distance;
+      }
+      displayPairedBoxes();
+      if (heights) displayHeightTurnover();
+      if (selected) {
+        const box = requested.get('pairBox');
+        if ([...$('pairBox').options].some(option => option.value === box)) $('pairBox').value = box;
+        updateBoxLinks();
+      }
       $('modelBoxes').hidden = false;
+      $('modelBoxes').open = Boolean(selected);
+      if (selected && location.hash === '#modelBoxes') $('modelBoxes').scrollIntoView();
     }
     displayFields();
     $('fieldDetails').open = $('fieldMetric').value !== 'mean';

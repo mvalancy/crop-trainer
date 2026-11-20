@@ -276,6 +276,34 @@ Of 195 tomato plants with no peak within 15 cm at 6.5 cm, 124 gained a nearby pe
 
 On tomato seed 2021 across both soil settings, neural F1 at 7.5 / 10 / 15 cm rose from 0.4264 / 0.5265 / 0.6326 to 0.4976 / 0.6455 / 0.7920. Generation, training and validation on Node CPU took 753 / 52 / 15 ms at 6.5 cm and 1,058 / 74 / 47 ms at 3.5 cm. These heights describe a filtered scan surface. Measuring physical crop height or scanner performance requires field observations. [Background on local peak detection](https://scikit-image.org/docs/stable/api/skimage.feature.html#skimage.feature.peak_local_max)
 
+### Which plants change when the peak height drops?
+
+A larger match count can hide plants the earlier fit found. In a **Minimum peak height** benchmark, open **Which plants changed match when the peak height dropped?** Choose a scan and matching distance. The table splits its labels into plants found by both fits, those unique to each height, and those missed by both. Pick a plant unique to either height, open it in 3D, then use **Focus plant** to orbit its center. The line above the table totals gains and losses across the six soil-present fields in that run. **Link to this inspection** lets someone rerun the benchmark and reopen your chosen scan, distance and plant. [Replay a lettuce plant found only by the shorter fit](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=heights&crop=lettuce&seed=2121&sensor=mixed&validationSensor=os1-64&validationRayBudget=12000&pairSeed=2122&pairTile=39c12665d375fbb9&pairDistance=7.5&pairBox=1#modelBoxes)
+
+```mermaid
+flowchart LR
+  A[One validation scan] --> B[Final pins from the 6.5 cm fit]
+  A --> C[Final pins from the 3.5 cm fit]
+  B --> D[Match pins to labeled plant centers at the selected distance]
+  C --> D
+  D --> E[Compare matched plant IDs]
+  E --> F[Select a changed plant in 3D]
+```
+
+Across seeds 2121, 2122, 2151 and 2152, each crop contributed 12 soil-present held-out fields. Both heights used the same raw scans, six mixed-layout training fields per seed, 40 CPU neural epochs, a 0.50 score cutoff and 12,000 requested validation rays on the simulated OS1-64 layout. At 15 cm the lower height gave the following changes.
+
+| Crop | Newly matched plants | Previously matched plants lost | Net change in matches | Change in extra pins |
+| --- | ---: | ---: | ---: | ---: |
+| Lettuce | 805 | 90 | +715 | +316 |
+| Globe artichoke | 14 | 1 | +13 | +4 |
+| Young tomato | 379 | 10 | +369 | +68 |
+
+Lettuce seed 2121 lost 74 plant matches and gained 52. The other three seeds each gained more matches than they lost. The logistic fit on the same tomato fields gained 318 matches, lost 12 and added 73 extra pins. Each change describes the final one-to-one assignment after refitting at the new height. Several nearby pins can compete for a label.
+
+For tomato seed 2121 across both soil settings, neural F1 at 7.5 / 10 / 15 cm changed from 0.3377 / 0.4132 / 0.4557 to 0.4096 / 0.5225 / 0.5747. Node CPU generation, training and validation took 995 / 42 / 21 ms at 6.5 cm and 944 / 113 / 14 ms at 3.5 cm. For research on analyzing the individual errors behind an aggregate detection score, see Bolya and colleagues. [TIDE, ECCV 2020](https://dbolya.com/tide/)
+
+**Does the gain hold on denser scans?** Repeating the same synthetic plantings at 60,000 validation rays reduced the benefit of shorter peaks. At 15 cm the neural tomato fit gained 18 plant matches, lost 9 and added 71 extra pins. At 12,000 rays it had gained 379 and lost 10 with 68 extra pins. On dense lettuce the fits gained 109 and lost 56 (+159 extra pins), and on dense artichoke they gained 2 and lost 5 (+9 extra pins). Each comparison uses the same height-specific training examples at both ray budgets. Use the validation-ray links under the Peak scout question to repeat this check on other seeds. [Replay the dense tomato fields](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=heights&crop=tomato&seed=2121&sensor=mixed&validationSensor=os1-64&validationRayBudget=60000)
+
 ### Could changing the cutoff help this missed plant?
 
 In the Training Shed, run the detector, choose **Missed plants** and highlight a box. The close-up shows the height peaks, peaks that passed the score cutoff and final pins inside its matching circle. If no peak is inside the circle, changing the cutoff alone cannot recover the plant. If all nearby peaks fell below the cutoff, the highest nearby score tells you where at least one would enter the spacing filter. A retained pin may still match a neighboring plant. [Inspect tomato seed 1921](https://mvalancy.github.io/crop-trainer/trainer/?crop=tomato&seed=1921&sensor=mixed&validationSensor=os1-64&validationRayBudget=12000&engine=cpu&missBand=all)

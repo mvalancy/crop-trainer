@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Benchmark · Crop Trainer</title>
-<link rel="stylesheet" href="../farm.css?v=height1"></head>
+<link rel="stylesheet" href="../farm.css?v=pairheights1"></head>
 <body class="benchmark"><a class="skip" href="#main">Skip to content</a>
 <header class="siteBar">
 <div class="barInner"><a class="brand" href="../"><span class="mark" aria-hidden="true"><i></i></span>Crop Trainer</a>
@@ -59,7 +59,23 @@
 <fieldset><legend id="heightQuestion">Which height produced fewer extra pins?</legend>
 <div class="action" id="heightAnswers"><button type="button" value="0.065">6.5 cm</button><button type="button" value="0.035">3.5 cm</button><button type="button" value="tie">Equal counts</button></div>
 <p class="hint" role="status" id="heightAnswer"></p></fieldset>
+<p class="hint">To test the effect of scan density, keep the training fields and change the validation ray budget.</p>
+<div class="action" id="heightRepeats"></div>
 </section>
+<details id="modelBoxes" hidden>
+<summary id="pairTitle">Which plants did each model find?</summary>
+<p>Each labeled plant can match one final pin within the selected distance. Pick a plant matched by just one fit to inspect its center in 3D.</p>
+<div class="pairControls">
+<label>Validation scan<select id="pairScan"></select></label>
+<label>Matching distance<select id="pairDistance"><option value="7.5">7.5 cm</option><option value="10">10 cm</option><option value="15" selected>15 cm</option></select></label>
+</div>
+<p id="heightTurnover" hidden></p>
+<div class="tableScroll"><table class="pairTable">
+<caption>Plant matches on the selected scan</caption>
+<thead><tr><th scope="col">Both fits</th><th scope="col" id="pairFirst">Logistic only</th><th scope="col" id="pairSecond">Neural only</th><th scope="col">Missed by both</th></tr></thead>
+<tbody><tr id="pairCounts"></tr></tbody></table></div>
+<p id="pairExtras" class="hint"></p>
+<div class="pairInspect"><label>Plant to inspect<select id="pairBox"></select></label><a id="pairViewer">Open scan in 3D</a><a id="sharePair">Link to this inspection</a></div></details>
 <section id="densityStudy" hidden aria-labelledby="densityTitle">
 <h3 id="densityTitle">How much training data did each fit see?</h3>
 <p class="hint">Scanner capacity can cap the rays sampled per scan. The training examples are balanced candidate peaks from both soil variants. All fits at each seed used the same validation tiles.</p>
@@ -105,25 +121,13 @@
 <thead>
 <tr id="fieldHeading"></tr></thead>
 <tbody id="fieldRows"></tbody></table></div></details>
-<details id="modelBoxes" hidden="">
-<summary>Which plants did each model find?</summary>
-<p>Compare final one-to-one matches on one scan. Choose a plant found by only one model to highlight its labeled center in the 3D viewer.</p>
-<label>Validation scan<select id="pairScan"></select></label>
-<label>Matching distance<select id="pairDistance"><option value="7.5">7.5 cm</option><option value="10">10 cm</option><option value="15" selected="">15 cm</option></select></label>
-<div class="tableScroll">
-<table aria-label="Plants matched by each model">
-<thead>
-<tr><th>Both models</th><th>Logistic only</th><th>Neural only</th><th>Missed by both</th></tr></thead>
-<tbody>
-<tr id="pairCounts"></tr></tbody></table></div>
-<p id="pairExtras"></p>
-<label>Plant to inspect<select id="pairBox"></select></label><a id="pairViewer">Open scan in 3D</a></details>
+
 <button id="export" disabled="">Download benchmark JSON</button> <a id="replay" hidden="">Link to these settings</a>
 </section>
 <p>Use the <a href="../trainer/">training shed</a> for individual runs, custom workloads, loss curves, weights and field-by-field overlays.</p>
 </main>
 <footer class="siteFoot"><span>Crop Trainer</span>
 <div><a href="../AGENTS.md">Agent quickstart</a><a href="https://github.com/mvalancy/crop-trainer">GitHub</a><a href="../LICENSE">MIT license</a></div></footer>
-<script type="module" src="main.js?v=height1"></script>
+<script type="module" src="main.js?v=pairheights1"></script>
 </body>
 </html>
