@@ -131,7 +131,7 @@ fieldset { min-width: 0; border: 0; padding: 0; margin: 0; }
 .grid { grid-template-columns: minmax(19rem, .86fr) minmax(0,1.7fr); }
 .grid > aside h2, .grid > section > h2 { font-family: var(--serif); font-weight: 500; font-size: 1.85rem; line-height: 1.1; }
 .adapter, .benchStatus { display: block; background: var(--wash); color: #395239; border-left: 3px solid #7e9e62; padding: .55rem .8rem; font: .82rem/1.4 var(--mono); }
-.formPair, .benchForm { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .8rem 1rem; }
+.formPair, .benchFields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .8rem 1rem; }
 .formPair { margin: 1.25rem 0 1rem; }
 #workload { margin: .6rem 0 1rem; }
 #controls details + details, #stageAudit, .grid .method, .grid .export, .grid .downloads:not(:empty) { margin-top: .8rem; }
@@ -185,13 +185,21 @@ progress { width: 100%; height: .6rem; accent-color: var(--forest); }
 .benchContext { padding-right: 1.5rem; border-right: 1px solid var(--line); grid-row: span 2; }
 .benchContext h2, .benchResults h2 { font-size: clamp(1.65rem,3vw,2.3rem); }
 .benchContext p { color: var(--muted); font-size: .95rem; }
-.benchForm { grid-template-columns: repeat(2,minmax(0,1fr)); align-items: end; }
-.benchForm:has(#epochControl[hidden]) > label:first-child { grid-column: 1/-1; }
-.benchForm .action { grid-column: 1/-1; }
+.benchForm { display: grid; gap: 1.2rem; }
+.benchFields { align-items: end; }
+.benchForm legend { margin-bottom: .55rem; color: var(--forest); font-size: 1rem; font-weight: 700; }
+.benchForm fieldset + fieldset { border-top: 1px solid var(--line); }
+.benchForm fieldset + fieldset legend { padding-right: .65rem; }
+.benchFields .comparisonChoice { grid-column: 1/-1; }
 .benchStatus { margin: 0; }
 .benchResults { margin: 1.3rem 0; }
 .benchResults #summary:not(:empty) { margin: 1rem 0; padding: .8rem 1rem; border-left: 3px solid var(--forest); background: var(--wash); }
-#densityStudy, #robustnessTable { margin-block: 1.5rem; padding-top: 1.1rem; border-top: 1px solid var(--line); }
+#heightStudy fieldset { margin-top: 1.15rem; padding: .85rem 1rem; border: 1px solid var(--line); border-radius: .6rem; }
+#heightStudy legend { padding-inline: .3rem; font-weight: 650; }
+#heightStudy fieldset .hint:empty { display: none; }
+#heightRows tr:nth-child(3) td { border-top: 2px solid var(--line); }
+#heightRows td:nth-last-child(2) { color: var(--forest); font-weight: 700; }
+#heightStudy, #densityStudy, #robustnessTable { margin-block: 1.5rem; padding-top: 1.1rem; border-top: 1px solid var(--line); }
 #robustnessTable td:last-child { color: var(--forest); font-weight: 700; }
 .benchResults details { margin: .75rem 0; }
 #fieldHeading th:nth-child(n+4), #fieldRows td:nth-child(n+4), #fieldRows .seedAverage td { text-align: right; }
@@ -242,11 +250,9 @@ tbody tr:nth-child(even) { background: #f6f8f0; }
   #grow fieldset:first-child { grid-template-columns: repeat(2,minmax(0,1fr)); }
   #grow fieldset:first-child legend { grid-column: 1/-1; }
   .lessons, .missions { grid-template-columns: 1fr; }
-  .benchForm { grid-template-columns: repeat(2,minmax(0,1fr)); }
-  .benchForm > label:first-child { grid-column: 1/-1; }
   .cameraButtons button { min-height: 2.75rem; min-width: 2.75rem; }
   input:not([type=checkbox]), select { font-size: 1rem; }
-  .formPair, .benchForm { gap: .7rem; }
+  .formPair, .benchFields { gap: .7rem; }
   .cards > div { padding: .55rem; }
 }
 @media (max-width: 380px) {
@@ -284,7 +290,7 @@ tbody tr:nth-child(even) { background: #f6f8f0; }
   .siteBar nav a { min-height: 2.75rem; }
 }
 @media (max-width: 480px) {
-  .benchForm { grid-template-columns: 1fr; }
+  .benchFields { grid-template-columns: 1fr; }
 }
 @media (max-width: 410px) {
   .heroActions { gap: .85rem; }

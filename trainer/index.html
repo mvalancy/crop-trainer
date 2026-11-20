@@ -46,7 +46,7 @@
 <details class="peakHelp">
 <summary>Which height should I try?</summary>
 <p>Lower peaks can recover plants with sparse returns. For lettuce with the starter neural model and mixed scans, lowering the cutoff from 6.5 to 3.5 cm raised mean F1 from 0.650 to 0.749 on seed 27 and from 0.575 to 0.704 on seed 28.</p>
-<p>Both cutoffs used six training fields, three unseen fields and 40 epochs per seed. Try a fresh seed to see whether the gain holds.</p></details><a id="epochBench" href="../benchmark/?comparison=epochs">Compare 10, 40 and 100 training epochs</a><a id="cutoffBench" href="../benchmark/?comparison=cutoffs">Compare three cutoffs at this training duration</a></div></details>
+<p>Both cutoffs used six training fields, three unseen fields and 40 epochs per seed. Try a fresh seed to see whether the gain holds.</p></details><a id="heightBench" href="../benchmark/?comparison=heights">Compare 6.5 and 3.5 cm peak heights</a><a id="epochBench" href="../benchmark/?comparison=epochs">Compare 10, 40 and 100 training epochs</a><a id="cutoffBench" href="../benchmark/?comparison=cutoffs">Compare three cutoffs at this training duration</a></div></details>
 </form>
 <p class="fine">To compare speeds, keep seed, field counts and epochs the same. Download the settings to repeat a finished experiment with the CPU command in the <a href="../AGENTS.md">agent guide</a>. The benchmark JSON also includes weights, timing and scores.</p>
 <p class="fine">Each planting is scanned with and without soil. Both scans stay in the same split.</p></aside>
@@ -133,6 +133,6 @@
 </main>
 <footer class="siteFoot"><span>Crop Trainer</span>
 <div><a href="../AGENTS.md">Agent quickstart</a><a href="https://github.com/mvalancy/crop-trainer">GitHub</a><a href="../LICENSE">MIT license</a></div></footer>
-<script type="module" src="./main.js?v=peaktrace1"></script>
+<script type="module" src="./main.js?v=height1"></script>
 </body>
 </html>

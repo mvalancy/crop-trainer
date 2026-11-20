@@ -222,6 +222,20 @@ test('local peak trace uses the matching distance and the scores of the original
   assert.deepEqual(nearbyPeaks(preview,1,15), {proposals:[], accepted:[], selected:[], bestScore:null});
 });
 
+test('peak-height fits use the same scans and keep all taller validation peaks', async () => {
+  const config = {crop:'tomato',seed:2021,trainFields:2,valFields:1,sensorMode:'mixed',
+    validationSensorMode:'os1-64',validationRayBudget:12000};
+  const tall = await buildDataset({...config,minimumHeight:.065});
+  const short = await buildDataset({...config,minimumHeight:.035});
+  assert.deepEqual(tall.manifest, short.manifest);
+  for (const [i, tile] of tall.validation.entries()) {
+    const low = short.validation[i];
+    const positions = new Set(low.pos.map(point => point.join(',')));
+    assert.ok(low.pos.length > tile.pos.length);
+    assert.ok(tile.pos.every(point => positions.has(point.join(','))));
+  }
+});
+
 test('model comparison identifies complementary matches on the same labeled tile', () => {
   const tile = (boxIndices,fp) => ({
     tile_id:'paired', byTolerance:[{cm:10,tp:5-boxIndices.length,fn:boxIndices.length,fp}],

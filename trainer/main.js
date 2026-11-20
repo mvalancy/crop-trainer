@@ -7,7 +7,7 @@ const params = new URLSearchParams(location.search);
 trainingRayOptions($('trainingRayBudget'), params.get('trainingRayBudget'));
 rayBudgetOptions($('validationRayBudget'), params.get('validationRayBudget'));
 $('scanOptions').open = ['sensor', 'validationSensor', 'trainingRayBudget', 'validationRayBudget'].some(key => params.has(key));
-$('detectorOptions').open = params.has('threshold');
+$('detectorOptions').open = params.has('threshold') || params.has('minimumHeight');
 const seedParam = params.get('seed');
 if (/^\d+$/.test(seedParam) && Number(seedParam) <= 0xffffffff) $('seed').value = String(Number(seedParam));
 const cropParam = params.get('crop');
@@ -15,6 +15,8 @@ if ([...$('crop').options].some(option => option.value === cropParam)) $('crop')
 function selectCropDefault() { $('peakHeight').value = String(cropProfile($('crop').value).peakHeight); }
 $('crop').addEventListener('change', selectCropDefault);
 selectCropDefault();
+const requestedHeight = params.get('minimumHeight');
+if ([...$('peakHeight').options].some(option => option.value === requestedHeight)) $('peakHeight').value = requestedHeight;
 sensorOptions($('scanner'), true);
 validationSensorOptions($('validationSensor'));
 const validationParam = params.get('validationSensor');
@@ -29,8 +31,9 @@ describeScanner();
 function updateBenchmarkLinks() {
  const seed = $('seed').valueAsNumber;
  const validSeed = Number.isInteger(seed) && seed >= 0 && seed < 0xffffffff;
- for (const [id, comparison] of [['cutoffBench', 'cutoffs'], ['epochBench', 'epochs'], ['densityBench', 'density']]) {
+ for (const [id, comparison] of [['cutoffBench', 'cutoffs'], ['epochBench', 'epochs'], ['densityBench', 'density'], ['heightBench','heights']]) {
   const query = new URLSearchParams({comparison, crop:$('crop').value, sensor:$('scanner').value, seed});
+  if (comparison !== 'heights') query.set('minimumHeight', $('peakHeight').value);
   if (comparison === 'density' && $('trainingRayBudget').value === ALTERNATING_BUDGET) query.set('includeMixed', '1');
   if (comparison !== 'density' && trainingRayValue($('trainingRayBudget'))) query.set('trainingRayBudget', $('trainingRayBudget').value);
   if (Number($('validationRayBudget').value)) query.set('validationRayBudget', $('validationRayBudget').value);
@@ -41,7 +44,8 @@ function updateBenchmarkLinks() {
   link.href = '../benchmark/?'+query;
  }
 }
-for (const id of ['crop','scanner','validationSensor','trainingRayBudget','validationRayBudget','seed','epochs']) $(id).addEventListener('input', updateBenchmarkLinks);
+$('crop').addEventListener('change', updateBenchmarkLinks);
+for (const id of ['peakHeight','scanner','validationSensor','trainingRayBudget','validationRayBudget','seed','epochs']) $(id).addEventListener('input', updateBenchmarkLinks);
 let controller=null,losses=[],lastPreview=null,backendReady=false,deps,webgpuAvailable=false,lastRun=null,lastPaint=0;
 try {
  deps=await Promise.all([import('./data.js?v=peaktrace1'),import('./model.js?v=benchmark1'),import('./neural.js')]);

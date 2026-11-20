@@ -2,6 +2,7 @@ import {cropProfile} from './crops.js';
 import {field, returnBand} from './field.js?v=missbands1';
 import {predict} from './model.js';
 
+export const PEAK_HEIGHTS = [0.065, 0.035];
 export const FIELD_LIMITS={train:256,validation:128};
 import {mixedProfiles as SENSORS, getSensor, RAY_BUDGETS, ALTERNATING_BUDGET, DENSITY_BUDGETS} from './sensors.js?v=densitymix1';
 const SIZE=200, STEP=.05, DIMS=13, TOL=[.075,.1,.15];
@@ -65,7 +66,7 @@ export function features(tile, minimumHeight=.065){
  return{X:Float32Array.from(vec),pos};
 }
 export async function buildDataset({seed=27,crop='lettuce',trainFields=6,valFields=3,sensorMode='reference',validationSensorMode=sensorMode,trainingRayBudget=0,validationRayBudget=0,minimumHeight=.065,onProgress=()=>{},signal}={}){
- if(![.035,.065].includes(minimumHeight))throw new Error('Choose a supported minimum peak height.');
+ if(!PEAK_HEIGHTS.includes(minimumHeight))throw new Error('Choose a supported minimum peak height.');
  if(!Number.isInteger(seed)||seed<0||seed>0xffffffff||!Number.isInteger(trainFields)||trainFields<2||trainFields>FIELD_LIMITS.train||!Number.isInteger(valFields)||valFields<1||valFields>FIELD_LIMITS.validation)throw new Error('Use a valid seed and the available field count limits.');
  if (trainingRayBudget !== ALTERNATING_BUDGET && trainingRayBudget !== 0 && !RAY_BUDGETS.includes(trainingRayBudget)) throw new Error('Choose a supported training ray budget.');
  if (validationRayBudget !== 0 && !RAY_BUDGETS.includes(validationRayBudget)) throw new Error('Choose a supported validation ray budget.');

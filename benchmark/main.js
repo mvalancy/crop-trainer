@@ -1,5 +1,5 @@
 import {DENSITY_HISTORY_KEY, densitySnapshot, pairDensityScores} from './density.js';
-import {buildDataset, validateModel, compareMatchedBoxes, coverageAtDistance} from '../trainer/data.js?v=cutcoverage1';
+import {buildDataset, validateModel, compareMatchedBoxes, coverageAtDistance, PEAK_HEIGHTS} from '../trainer/data.js?v=height1';
 import {trainNetworkCPU, trainNetworkGPU, predictNetwork} from '../trainer/neural.js';
 import {trainCPU, MAX_EPOCHS} from '../trainer/model.js';
 import {cropProfile} from '../trainer/crops.js';
@@ -12,7 +12,7 @@ sensorOptions($('sensor'), true);
 validationSensorOptions($('validationSensor'));
 const requested = new URLSearchParams(location.search);
 $('includeMixed').checked = requested.get('includeMixed') === '1';
-for (const id of ['comparison', 'crop', 'sensor', 'validationSensor', 'fieldMetric', 'cutoffDistance']) {
+for (const id of ['comparison', 'crop', 'sensor', 'validationSensor', 'minimumHeight', 'fieldMetric', 'cutoffDistance']) {
   const value = requested.get(id);
   if ([...$(id).options].some(option => option.value === value)) $(id).value = value;
 }
@@ -37,6 +37,9 @@ if (!gpuAvailable && requested.get('comparison') === 'backend') {
   $('status').textContent = 'This link requests CPU vs WebGPU. This browser has no available WebGPU adapter. The form is set to compare models on CPU.';
 }
 function explainComparison() {
+  const compareHeights = $('comparison').value === 'heights';
+  $('heightControl').hidden = compareHeights;
+  $('minimumHeight').disabled = compareHeights;
   const compareDensity = $('comparison').value === 'density';
   $('mixedControl').hidden = !compareDensity;
   $('includeMixed').disabled = !compareDensity;
@@ -46,6 +49,7 @@ function explainComparison() {
   $('epochControl').hidden = compareDurations;
   $('fitEpochs').disabled = compareDurations;
   const descriptions = {
+    heights: 'Use identical raw scans and fit a new CPU neural detector for each minimum height. Lowering the height admits shorter peaks during both training and validation.',
     density: 'Compare CPU neural fits trained on the same plantings at 12,000 and 60,000 rays. Include a mixed fit to alternate budgets between training fields. Every fit scores the same held-out scans.',
     epochs: 'An epoch is one pass over the training examples. Fit the same CPU neural model from identical starting weights for 10, 40 and 100 epochs. Compare training loss with F1 on unseen fields.',
     cutoffs: 'Fit one CPU neural network per seed, then score the same weights at cutoffs of 0.35, 0.50 and 0.65. Select a cutoff in the results to replay that fit.',
@@ -66,6 +70,7 @@ $('export').onclick = () => {
   link.click(); setTimeout(()=>URL.revokeObjectURL(url),10000);
 };
 function contenderLabel(row, comparison) {
+  if (comparison === 'heights') return (100 * row.minimumHeight).toFixed(1)+' cm peaks';
   if (comparison === 'density') return row.trainingRayBudget === ALTERNATING_BUDGET ? 'Alternating 12k / 60k' : row.trainingRayBudget.toLocaleString()+' training rays';
   if (comparison === 'epochs') return row.epochs+' epochs';
   if (comparison === 'cutoffs') return 'Cutoff '+row.threshold;
@@ -77,22 +82,23 @@ function appendRow(row, comparison, settings) {
   const widest=row.scores.at(-1);
   tr.insertCell().textContent = row.seed;
   const modelCell = tr.insertCell();
-  const modelLabel = comparison === 'density' ? contenderLabel(row, comparison) : row.model+' / '+row.backend;
+  const modelLabel = ['density','heights'].includes(comparison) ? contenderLabel(row, comparison) : row.model+' / '+row.backend;
   modelCell.textContent = modelLabel;
   const duration = tr.insertCell();
   const cutoff = tr.insertCell();
   duration.textContent = row.epochs;
   cutoff.textContent = row.threshold;
-  if (['density','epochs','cutoffs'].includes(comparison)) {
+  if (['density','epochs','cutoffs','heights'].includes(comparison)) {
     const query = new URLSearchParams({
       crop:settings.crop, sensor:settings.sensorMode, seed:row.seed, epochs:row.epochs, threshold:row.threshold, engine:'cpu'
     });
+    query.set('minimumHeight', row.minimumHeight);
     if (row.trainingRayBudget) query.set('trainingRayBudget', row.trainingRayBudget);
     if (settings.validationRayBudget) query.set('validationRayBudget', settings.validationRayBudget);
     if (settings.validationSensorMode) query.set('validationSensor', settings.validationSensorMode);
     const link = document.createElement('a');
     link.href = '../trainer/?'+query;
-    const cell = {density:modelCell, epochs:duration, cutoffs:cutoff}[comparison];
+    const cell = {heights:modelCell, density:modelCell, epochs:duration, cutoffs:cutoff}[comparison];
     link.textContent = cell.textContent;
     link.setAttribute('aria-label', 'Replay '+modelLabel+' on seed '+row.seed+' with '+row.epochs+' epochs and cutoff '+row.threshold);
     cell.replaceChildren(link);
@@ -170,6 +176,46 @@ function displayDensityStudy() {
   }
   $('robustnessTable').hidden = !paired.length;
   $('densityStudy').hidden = false;
+}
+function displayHeightStudy() {
+  const seed = report.settings.seed;
+  const extraPins = new Map();
+  const body = $('heightRows');
+  body.replaceChildren();
+  for (const row of report.rows) {
+    const soil = row.byGround.find(group => group.ground);
+    const final = soil.scores.find(score => score.cm === 15);
+    if (row.seed === seed) extraPins.set(row.minimumHeight, final.fp);
+    let peaks = 0, reachable = 0;
+    for (const tile of row.tiles.filter(tile => tile.ground)) {
+      const proposals = tile.stages15cm.find(stage => stage.stage === 'proposals');
+      peaks += proposals.count;
+      reachable += proposals.matched;
+    }
+    const tr = body.insertRow();
+    for (const value of [row.seed, (100 * row.minimumHeight).toFixed(1)+' cm', final.tp+final.fn, peaks, reachable, final.tp, final.fp]) {
+      tr.insertCell().textContent = value;
+    }
+  }
+  const tall = extraPins.get(.065), short = extraPins.get(.035);
+  const answer = tall === short ? 'tie' : tall < short ? '0.065' : '0.035';
+  $('heightQuestion').textContent = 'On seed '+seed+', which height produced fewer extra pins?';
+  $('heightAnswer').textContent = '';
+  for (const button of $('heightAnswers').querySelectorAll('button')) {
+    button.onclick = () => {
+      if (button.value !== answer) {
+        $('heightAnswer').textContent = 'Compare the two values in the Extra pins column for seed '+seed+' and try again.';
+        return;
+      }
+      let feedback = 'Correct. The 6.5 cm fit had '+tall+' extra pins and the 3.5 cm fit had '+short+'.';
+      try {
+        localStorage.setItem('crop-trainer-peak-scout', 'earned');
+        feedback += ' Peak scout stamp earned.';
+      } catch {}
+      $('heightAnswer').textContent = feedback;
+    };
+  }
+  $('heightStudy').hidden = false;
 }
 function displayCutoffCoverage(cm) {
   const summaries = report.thresholds.map(threshold => {
@@ -356,7 +402,8 @@ $('benchForm').onsubmit = async event => {
   const comparison=$('comparison').value;
   const trainingRayBudget = comparison === 'density' ? undefined : trainingRayValue($('trainingRayBudget'));
   const validationRayBudget = Number($('validationRayBudget').value);
-  const settings={seed,crop,sensorMode,validationSensorMode,trainingRayBudget,validationRayBudget,trainFields:6,valFields:3,minimumHeight:cropProfile(crop).peakHeight};
+  const settings={seed,crop,sensorMode,validationSensorMode,trainingRayBudget,validationRayBudget,trainFields:6,valFields:3};
+  if (comparison !== 'heights') settings.minimumHeight = Number($('minimumHeight').value) || cropProfile(crop).peakHeight;
   if (comparison !== 'epochs') settings.epochs = $('fitEpochs').valueAsNumber;
   const neuralCPU = {model:'neural', backend:'CPU', train:trainNetworkCPU};
   const includeMixed = comparison === 'density' && $('includeMixed').checked;
@@ -365,6 +412,7 @@ $('benchForm').onsubmit = async event => {
     backend: [neuralCPU, {model:'neural', backend:'WebGPU', train:trainNetworkGPU}],
     models: [{model:'linear', backend:'CPU', train:trainCPU}, neuralCPU],
     cutoffs: [neuralCPU],
+    heights: PEAK_HEIGHTS.map(minimumHeight => ({...neuralCPU, minimumHeight})),
     density: trainingBudgets.map(trainingRayBudget => ({...neuralCPU, trainingRayBudget})),
     epochs: [10, 40, 100].map(epochs => ({...neuralCPU, epochs}))
   };
@@ -372,6 +420,7 @@ $('benchForm').onsubmit = async event => {
   const thresholds = comparison === 'cutoffs' ? [.35, .5, .65] : [.5];
   const rows=[],datasets=[];
   $('replay').hidden = true;
+  $('heightStudy').hidden = true;
   $('densityStudy').hidden = true;
   $('cutoffChanges').hidden = true;
   $('cutoffChanges').open = false;
@@ -386,21 +435,22 @@ $('benchForm').onsubmit = async event => {
   try {
     for(const offset of [0,1]){
       const runSeed=seed+offset;
-      let set, generationMs, datasetIndex, validationIds;
+      let set, generationMs, datasetIndex, pairedIds;
       const order=offset?[...contenders].reverse():contenders;
       for(const contender of order){
         signal.throwIfAborted();
-        const {model, backend, train, epochs = settings.epochs, trainingRayBudget = settings.trainingRayBudget} = contender;
-        if (!set || comparison === 'density') {
+        const {model, backend, train, epochs = settings.epochs, minimumHeight = settings.minimumHeight, trainingRayBudget = settings.trainingRayBudget} = contender;
+        if (!set || comparison === 'density' || comparison === 'heights') {
           $('status').textContent='Growing fields for seed '+runSeed+'…';
           const start=performance.now();
-          set=await buildDataset({...settings,seed:runSeed,trainingRayBudget,signal});
+          set=await buildDataset({...settings,seed:runSeed,trainingRayBudget,minimumHeight,signal});
           generationMs=performance.now()-start;
-          const ids=set.validation.map(tile => tile.tile_id);
-          if (validationIds && (ids.length !== validationIds.length || ids.some((id,i) => id !== validationIds[i]))) {
-            throw new Error('The two fits have different validation scans.');
+          const pairedScans = comparison === 'heights' ? set.manifest : set.validation;
+          const ids = pairedScans.map(tile => tile.tile_id);
+          if (pairedIds && (ids.length !== pairedIds.length || ids.some((id,i) => id !== pairedIds[i]))) {
+            throw new Error('The fits have different scans in their paired comparison.');
           }
-          validationIds=ids;
+          pairedIds=ids;
           datasetIndex=datasets.length;
           datasets.push({seed:runSeed,stats:set.stats,recipeManifest:set.manifest});
         }
@@ -418,7 +468,7 @@ $('benchForm').onsubmit = async event => {
             threshold, predictScores:model === 'neural' ? predictNetwork : undefined, signal
           });
           const row = {
-            model, backend:fit.backend, datasetIndex, trainingRayBudget, epochs, trainingLoss:fit.loss.at(-1), threshold, seed:runSeed, generationMs, trainingMs,
+            model, backend:fit.backend, datasetIndex, minimumHeight, trainingRayBudget, epochs, trainingLoss:fit.loss.at(-1), threshold, seed:runSeed, generationMs, trainingMs,
             scoringMs:performance.now()-scoringStart, adapter:fit.adapter,
             meanF1:result.meanF1, scores:result.scores, countError:result.countError, byGround:result.byGround, byField:result.byField, tiles:result.tiles
           };
@@ -440,6 +490,7 @@ $('benchForm').onsubmit = async event => {
     const replay = new URL(location.pathname, location.origin);
     replay.search = new URLSearchParams({comparison, crop, sensor:sensorMode, seed});
     if ($('fieldMetric').value !== 'mean') replay.searchParams.set('fieldMetric', $('fieldMetric').value);
+    if (comparison !== 'heights' && $('minimumHeight').value !== 'default') replay.searchParams.set('minimumHeight', settings.minimumHeight);
     if (includeMixed) replay.searchParams.set('includeMixed', '1');
     if (trainingRayBudget) replay.searchParams.set('trainingRayBudget', trainingRayBudget);
     if (validationRayBudget) replay.searchParams.set('validationRayBudget', validationRayBudget);
@@ -449,6 +500,7 @@ $('benchForm').onsubmit = async event => {
     $('replay').href = replay.href;
     $('replay').hidden = false;
     report={schema:1,domain:'synthetic',comparison,thresholds,settings,replayUrl:replay.href,datasets,rows};
+    if (comparison === 'heights') displayHeightStudy();
     if (comparison === 'density') displayDensityStudy();
     if (comparison === 'models') {
       const options = rows.filter(row => row.model === 'linear').flatMap(row => row.tiles.map(tile =>

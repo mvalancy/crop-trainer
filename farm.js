@@ -128,7 +128,7 @@ $('ply').onclick=()=>{
 function journal(){
   try{
     const history=JSON.parse(localStorage.getItem('crop-trainer-farm-v1')||'{}');
-    for(const [key,done] of [['first',history.seeds?.length],['scout',history.mixed],['saver',history.seeds?.length>=2],['modelScout',localStorage.getItem('crop-trainer-model-scout')==='earned'],['rayScout',localStorage.getItem('crop-trainer-ray-scout')==='earned'],['cutoffScout',localStorage.getItem('crop-trainer-cutoff-scout')==='earned']]){
+    for(const [key,done] of [['first',history.seeds?.length],['scout',history.mixed],['saver',history.seeds?.length>=2],['modelScout',localStorage.getItem('crop-trainer-model-scout')==='earned'],['rayScout',localStorage.getItem('crop-trainer-ray-scout')==='earned'],['peakScout',localStorage.getItem('crop-trainer-peak-scout')==='earned'],['cutoffScout',localStorage.getItem('crop-trainer-cutoff-scout')==='earned']]){
       const el=$(key);el.textContent=done?'Stamp earned':'Open';el.parentElement.classList.toggle('earned',Boolean(done));
     }
   }catch{}

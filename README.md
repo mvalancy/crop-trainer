@@ -250,6 +250,32 @@ How many previously missed plants gain a pin if the score cutoff drops from 0.50
 
 For tomato seed 1021, 54 of the 59 recovered boxes had crop returns. The other five received a pin within 15 cm despite having zero returns from the plant itself. Across both soil settings, F1 at 7.5, 10 and 15 cm rose from 0.245 / 0.279 / 0.297 to 0.414 / 0.469 / 0.505. The 0.50 run took 1,896 ms to generate, 113 ms to train and 32 ms to validate on Node CPU. The 0.35 replay took 1,945 / 99 / 24 ms. [Open the field audit](https://mvalancy.github.io/crop-trainer/trainer/?crop=tomato&seed=1021&sensor=mixed&validationSensor=os1-64&validationRayBudget=12000&engine=cpu) · [Compare the cutoffs](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=cutoffs&crop=tomato&seed=1021&sensor=mixed&validationSensor=os1-64&validationRayBudget=12000)
 
+### Can shorter peaks recover a missed plant?
+
+In Benchmark, choose **Minimum peak height** and run the comparison. A peak is a local high point on the smoothed height map of the simulated laser returns. Lowering the minimum from 6.5 to 3.5 cm lets more locations enter the detector. The **Matched using all peaks** column shows how many labeled plants could receive a distinct pin within 15 cm before the model filters the peaks. Compare it with **Final matches** and **Extra pins**, then answer the question to earn a Peak scout stamp. [Try the sparse tomato benchmark](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=heights&crop=tomato&seed=2021&sensor=mixed&validationSensor=os1-64&validationRayBudget=12000)
+
+```mermaid
+flowchart LR
+  A[Identical seeded scans] --> B[Find peaks at least 6.5 cm high]
+  A --> C[Find peaks at least 3.5 cm high]
+  B --> D[Train and score at 6.5 cm]
+  C --> E[Train and score at 3.5 cm]
+  D --> F[Compare reachable plants, final matches and extra pins]
+  E --> F
+```
+
+Each cell below shows **6.5 cm → 3.5 cm**. Each crop used 12 held-out soil-present synthetic fields, three from each dataset seed (2021, 2022, 2051 and 2052). Each neural fit used six mixed-layout training fields, 40 epochs and a score cutoff of 0.50. Validation used the simulated OS1-64 layout with 12,000 requested rays.
+
+| Crop | Labeled plants | Matched using all peaks | Final matches | Extra pins |
+| --- | ---: | ---: | ---: | ---: |
+| Lettuce | 2,539 | 1,561 → 2,421 | 817 → 1,350 | 113 → 333 |
+| Globe artichoke | 377 | 372 → 372 | 232 → 252 | 30 → 40 |
+| Young tomato | 1,238 | 1,043 → 1,167 | 465 → 751 | 21 → 116 |
+
+Of 195 tomato plants with no peak within 15 cm at 6.5 cm, 124 gained a nearby peak at 3.5 cm. Only six of those plants received a final matching pin. Most of the overall gain therefore came from plants that already had a nearby peak at the taller setting. A logistic fit on the same tomato fields also gained matches (517 → 726) and extra pins (27 → 119).
+
+On tomato seed 2021 across both soil settings, neural F1 at 7.5 / 10 / 15 cm rose from 0.4264 / 0.5265 / 0.6326 to 0.4976 / 0.6455 / 0.7920. Generation, training and validation on Node CPU took 753 / 52 / 15 ms at 6.5 cm and 1,058 / 74 / 47 ms at 3.5 cm. These heights describe a filtered scan surface. Measuring physical crop height or scanner performance requires field observations. [Background on local peak detection](https://scikit-image.org/docs/stable/api/skimage.feature.html#skimage.feature.peak_local_max)
+
 ### Could changing the cutoff help this missed plant?
 
 In the Training Shed, run the detector, choose **Missed plants** and highlight a box. The close-up shows the height peaks, peaks that passed the score cutoff and final pins inside its matching circle. If no peak is inside the circle, changing the cutoff alone cannot recover the plant. If all nearby peaks fell below the cutoff, the highest nearby score tells you where at least one would enter the spacing filter. A retained pin may still match a neighboring plant. [Inspect tomato seed 1921](https://mvalancy.github.io/crop-trainer/trainer/?crop=tomato&seed=1921&sensor=mixed&validationSensor=os1-64&validationRayBudget=12000&engine=cpu&missBand=all)
@@ -364,7 +390,7 @@ flowchart LR
 
 ## Benchmark
 
-Open **Benchmark** to compare CPU and WebGPU on the same neural model, or compare logistic and neural models on CPU. Both comparisons use two seeds and reverse contender order for the second seed. Two more modes compare detection cutoffs on one fit or compare independent 10-, 40- and 100-epoch fits. The results include generation, training and scoring time, F1, and precision and recall. Download JSON for per-tolerance counts and per-field stages. Expand the distance table to see exact matches, extra pins and missed plants. Each WebGPU row in the JSON includes the adapter information exposed by the browser. To repeat the benchmark on another device, use the same app revision, crop, scanner and first seed. [Open Benchmark](https://mvalancy.github.io/crop-trainer/benchmark/)
+Open **Benchmark** to compare CPU and WebGPU on the same neural model, or compare logistic and neural models on CPU. Both comparisons use two seeds and reverse contender order for the second seed. Other modes compare score cutoffs on one fit, training duration, training ray density or minimum peak height. The results include generation, training and scoring time, F1, and precision and recall. Download JSON for per-tolerance counts and per-field stages. Expand the distance table to see exact matches, extra pins and missed plants. Each WebGPU row in the JSON includes the adapter information exposed by the browser. To repeat the benchmark on another device, use the same app revision, crop, scanner and first seed. [Open Benchmark](https://mvalancy.github.io/crop-trainer/benchmark/)
 
 ```mermaid
 flowchart LR

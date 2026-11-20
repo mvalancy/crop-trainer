@@ -41,6 +41,14 @@ To compare plant coverage, use `cutoffDistance=7.5`, `10` or `15` on the cutoff 
 
 To compare cutoffs at two training durations, run the same seed pair at 10 and 100 epochs. Check that both reports have the same tile IDs and field seeds. Within each report, all three cutoff rows for one seed share their fit and training time. Compare the change from 0.50 to 0.65 separately at each duration. Use a fresh seed pair to see whether the result repeats.
 
+### Compare peak heights on identical raw scans
+
+Open `/benchmark/?comparison=heights&crop=tomato&seed=2021&sensor=mixed&validationSensor=os1-64&validationRayBudget=12000`. Run both heights, download the JSON and repeat with first seed 2051 for another pair. The Peak scout question uses the first seed’s soil-present extra-pin counts at 15 cm.
+
+1. Pair rows by seed and read each row’s `minimumHeight` in metres. Compare the tile IDs in `datasets[row.datasetIndex].recipeManifest` for **both** splits. Each height rebuilds the training examples, fits its own scaling parameters and trains its own neural weights.
+2. For each soil-present tile, inspect the proposals entry in `stages15cm`. Its count is the number of candidate peaks and its matched count is the maximum possible one-to-one matches before classification. Compare with the final true positives and false positives. Use the scores table for all three matching distances across both soil settings.
+3. Select a height in Results to repeat that fit in the Training Shed. Set `minimumHeight=0.035` or `minimumHeight=0.065` in a model or backend benchmark URL to hold the height fixed for that comparison.
+
 ### Pair scanner layouts on identical plantings
 
 Set `sensorMode` to the training layout and `validationSensorMode` to the layout to score. Omitting the second key uses the training selection for validation, including for older settings files. Both accept `mixed` or any key in `trainer/sensors.js`. For a scanner comparison:
