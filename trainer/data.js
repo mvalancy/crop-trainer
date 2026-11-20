@@ -1,5 +1,5 @@
-import {cropProfile} from './crops.js';
-import {field, returnBand} from './field.js?v=missbands1';
+import {cropProfile} from './crops.js?v=systems1';
+import {field, returnBand} from './field.js?v=systems1';
 import {predict} from './model.js';
 
 export const PEAK_HEIGHTS = [0.065, 0.035];
@@ -21,13 +21,13 @@ export function makeRecipe(seed,ground,sampling,crop='lettuce'){
  const profile=cropProfile(crop);
  const r=rand(seed^0x5c451271), noise=r();
  return{
-  seed,ground,crop,points:26000+Math.floor(r()*5)*4000,radius:(.145+.067*r())*profile.radiusFactor,spacing:(.279+.11*r())*profile.spacingFactor,
+  seed,ground,crop,...(profile.fixtures?{infrastructure:true}:{}),points:26000+Math.floor(r()*5)*4000,radius:(.145+.067*r())*profile.radiusFactor,spacing:(.279+.11*r())*profile.spacingFactor,
   weeds:r()<.5,sticks:r()<.35,boards:r()<.28,sampling,
   scanNoise:{seed:mix(seed^0x17b737d0),xy:noise<.25?0:.4+.9*r(),z:noise<.25?0:.25+.9*r(),
     density:noise<.25?0:8+19*r(),gaps:noise<.65?0:1+4*r(),stray:noise<.6?0:.08+.28*r(),cluster:noise<.25?0:7+16*r()}
  };
 }
-function centers(boxes){return boxes.map(({min,max})=>[(min[0]+max[0])/2,(min[1]+max[1])/2]);}
+function centers(boxes){return boxes.map(({min,max,base_xy_m})=>base_xy_m ?? [(min[0]+max[0])/2,(min[1]+max[1])/2]);}
 export function features(tile, minimumHeight=.065){
  // Only XYZ, never the synthetic return classes or supplied training boxes.
  const xy=tile.xyz,N=SIZE*SIZE, max=new Float32Array(N), count=new Uint32Array(N);

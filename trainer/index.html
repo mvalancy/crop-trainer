@@ -3,11 +3,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Train &amp; validate · Crop Trainer</title>
-<link rel="stylesheet" href="../farm.css?v=field-test1"></head>
+<link rel="stylesheet" href="../farm.css?v=systems1"></head>
 <body class="shed"><a class="skip" href="#main">Skip to content</a>
 <header class="siteBar">
 <div class="barInner"><a class="brand" href="../"><span class="mark" aria-hidden="true"><i></i></span>Crop Trainer</a>
-<nav aria-label="Main navigation"><a href="../#field">Field generator</a><a href="../trainer/" aria-current="page">Training shed</a><a href="../benchmark/">Benchmark</a></nav><a class="journalLink" href="../#missions">Farm journal</a></div></header>
+<nav aria-label="Main navigation"><a href="../#field">Field generator</a><a href="../trainer/" aria-current="page">Training shed</a><a href="../benchmark/">Benchmark</a></nav><a class="repoLink" href="https://github.com/mvalancy/crop-trainer" aria-label="Crop Trainer on GitHub">GitHub <span aria-hidden="true">↗</span></a></div></header>
 <main id="main">
 <header class="pageIntro">
 <h1>Training shed</h1>
@@ -28,7 +28,7 @@
 <label>Hidden activation<select id="activation"><option value="tanh">Tanh</option><option value="relu">ReLU</option></select></label></fieldset>
 <p class="hint">Each input describes the shape around a peak. The output scores each possible plant center from 0 to 1. Counts show the full layer widths.</p></details></section>
 <div class="formPair">
-<label>Crop<select id="crop"><option value="lettuce">Lettuce</option><option value="artichoke">Globe artichoke</option><option value="tomato">Young tomato</option></select></label>
+<label>Crop<select id="crop"><option value="lettuce">Lettuce</option><option value="artichoke">Globe artichoke</option><option value="tomato">Young tomato</option><optgroup label="Experimental growing systems"><option value="apple">Apple orchard</option><option value="grapevine">Trellised vineyard</option><option value="bench-lettuce">Greenhouse bench lettuce</option><option value="high-wire-tomato">Greenhouse high-wire tomato</option></optgroup></select></label>
 <label>Training backend<select id="engine"><option value="auto">Automatic</option><option value="cpu">CPU</option><option value="webgpu" disabled="">WebGPU (experimental)</option></select></label></div>
 <div class="action">
 <button type="submit" class="primary" id="run" disabled="">Generate, train &amp; score</button>
@@ -195,8 +195,8 @@
 <div class="testGuides"><a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/evidence.md">When does training beat peak height?</a><a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/field-validation.md">Design a field trial →</a></div>
 </section>
 </main>
-<footer class="siteFoot"><span>Crop Trainer</span>
-<div><a href="../AGENTS.md">Agent quickstart</a><a href="https://github.com/mvalancy/crop-trainer">GitHub</a><a href="../LICENSE">MIT license</a></div></footer>
-<script type="module" src="./main.js?v=field-test1"></script>
+<footer class="siteFoot"><span>Created by Matthew Valancy</span>
+<div><a href="../AGENTS.md">Agent quickstart</a><a href="../#missions">Farm journal</a><a href="../LICENSE">MIT license</a></div></footer>
+<script type="module" src="./main.js?v=systems1"></script>
 </body>
 </html>

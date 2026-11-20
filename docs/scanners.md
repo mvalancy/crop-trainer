@@ -7,6 +7,14 @@
 | Lettuce | Compact overlapping leaves in paired rows | 3.5 cm | 12.5 cm |
 | Globe artichoke | Large lobed leaves around a raised terminal bud | 6.5 cm | 40 cm |
 | Young tomato | Compound foliage and an upright growing tip | 6.5 cm | 22 cm |
+| Apple orchard | Spaced trunks with uneven crowns | 6.5 cm | 105 cm |
+| Trellised vineyard | Overlapping vine canopies along posts and wires | 6.5 cm | 65 cm |
+| Greenhouse bench lettuce | Rosettes on raised benches over a level floor | 6.5 cm | 16 cm |
+| Greenhouse high-wire tomato | Leaning stems and layered foliage, wires and troughs | 6.5 cm | 31 cm |
+
+For these four growing systems, each label includes the planted base in metres (`base_xy_m`). The viewer, trainer and scorer use that XY position even when the canopy leans. The three original crops retain their bounding-box center targets. Toggle **Include growing-system fixtures** for two scans with identical plants. Benches, posts, wires and troughs count as fixtures with no plant ID. The soil toggle controls ground returns separately.
+
+Try the [vineyard](https://mvalancy.github.io/crop-trainer/?crop=grapevine&seed=32137#field) or [high-wire greenhouse](https://mvalancy.github.io/crop-trainer/?crop=high-wire-tomato&seed=32137#field). Each projected ray samples the highest surface at its XY location. Orbiting the viewer rotates those returns. Physical side views, glass reflections, fruit counts and yield require additional measurements. See the [field dataset guide](field-datasets.md) for sources to compare against.
 
 In the **Field generator**, choose a scanner, ray budget, soil, noise and obstacles. Export the XYZ scan, bounding boxes and exact recipe. **Train this crop and layout** carries the crop and scanner into the training shed. Training generates separate fields with seeded noise and clutter. A fixed generator budget carries into validation, and the training budget defaults to seeded variation. The OS1 layouts reproduce selected channel and angular-column counts using a projected ring lattice. Real scanners also have beam angles, intensity response, timing and return-selection behavior. [Ouster sensor data reference](https://static.ouster.dev/sensor-docs/image_route1/image_route2/sensor_data/sensor-data.html)
 

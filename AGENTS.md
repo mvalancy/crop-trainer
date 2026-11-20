@@ -1,6 +1,6 @@
 # Crop Trainer agent guide
 
-Help a team answer one LiDAR detection question at a time. Crop Trainer generates lettuce, globe-artichoke and young-tomato geometry, scanner returns, and center labels from seeds. The starter trains and benchmarks on synthetic data. Users can evaluate a saved detector against their own local survey in Field test. Start with the [first harvest](README.md). Keep the front page focused on that first run. Put experimental results and technical walkthroughs in the [field guide](docs/README.md).
+Help a team answer one LiDAR detection question at a time. Crop Trainer generates seeded leafy crops, orchard trees, trellised vines and greenhouse rows with scan returns and one target per plant. To evaluate synthetic weights on an openly available physical scan, replay the [surveyed vineyard strip](docs/field-datasets.md#replay-the-vineyard-test). The starter trains and benchmarks on synthetic data. Users can evaluate a saved detector against their own local survey in Field test. Start with the [first harvest](README.md). Keep the front page focused on that first run. Put experimental results and technical walkthroughs in the [field guide](docs/README.md).
 
 ## Run your first test
 

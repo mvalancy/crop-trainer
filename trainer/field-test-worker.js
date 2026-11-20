@@ -1,6 +1,6 @@
 import {parsePly, MAX_PLY_BYTES} from './ply.js';
-import {MAX_REFERENCE_BYTES} from './references.js';
-import {runFieldTest} from './score-scan.js';
+import {MAX_REFERENCE_BYTES} from './references.js?v=systems1';
+import {runFieldTest} from './score-scan.js?v=systems1';
 
 let xyz, scan;
 async function read(file, limit) {

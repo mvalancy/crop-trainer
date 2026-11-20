@@ -4,11 +4,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Crop Trainer · The procedural farm</title>
 <meta name="description" content="Generate crop LiDAR scans, explore them in 3D, and train crop detectors locally with CPU or WebGPU.">
-<link rel="stylesheet" href="farm.css?v=mobile-actions1"></head>
+<link rel="stylesheet" href="farm.css?v=systems1"></head>
 <body class="farm"><a class="skip" href="#main">Skip to content</a>
 <header class="siteBar">
 <div class="barInner"><a class="brand" href="./"><span class="mark" aria-hidden="true"><i></i></span>Crop Trainer</a>
-<nav aria-label="Main navigation"><a href="#field" aria-current="page">Field generator</a><a href="trainer/">Training shed</a><a href="benchmark/">Benchmark</a></nav><a class="journalLink" href="#missions">Farm journal</a></div></header>
+<nav aria-label="Main navigation"><a href="#field" aria-current="page">Field generator</a><a href="trainer/">Training shed</a><a href="benchmark/">Benchmark</a></nav><a class="repoLink" href="https://github.com/mvalancy/crop-trainer" aria-label="Crop Trainer on GitHub">GitHub <span aria-hidden="true">↗</span></a></div></header>
 <main id="main">
 <section class="hero" aria-labelledby="hero-title">
 <figure class="specimen"><img src="art/lettuce-study.webp" width="1080" height="720" alt="An illustration of a lettuce rosette in green point-cloud dots" fetchpriority="high"><figcaption>Lettuce · scan illustration</figcaption></figure>
@@ -58,17 +58,19 @@
 <form id="grow">
 <fieldset>
 <legend>Planting</legend>
-<label>Crop<select id="crop"><option value="lettuce">Lettuce</option><option value="artichoke">Globe artichoke</option><option value="tomato">Young tomato</option></select></label>
+<label>Crop or growing system<select id="crop"><option value="lettuce">Lettuce</option><option value="artichoke">Globe artichoke</option><option value="tomato">Young tomato</option><optgroup label="Experimental growing systems"><option value="apple">Apple orchard</option><option value="grapevine">Trellised vineyard</option><option value="bench-lettuce">Greenhouse bench lettuce</option><option value="high-wire-tomato">Greenhouse high-wire tomato</option></optgroup></select></label>
 <label>Field seed<input type="number" id="seed" min="0" max="4294967295" step="1" required="" value="27"></label></fieldset>
 <fieldset>
 <legend>LiDAR setup</legend>
 <label>Scanner layout<select id="scan"></select></label>
+<p class="hint" id="systemInfo" hidden></p>
 <p class="hint" id="sensorInfo"></p>
 <label>Ray budget<select id="budget"></select></label>
 <label>Scan noise<select id="noise"><option value="seeded">Seeded variation</option><option value="clean">Clean returns</option><option value="rough">Jitter, gaps and stray returns</option></select></label>
-<label class="check"><input type="checkbox" id="ground" checked=""> Include soil returns</label></fieldset>
+<label class="check"><input type="checkbox" id="ground" checked=""> Include ground returns</label></fieldset>
 <details>
 <summary>Weeds and obstacles</summary>
+<label id="fixturesLabel" class="check" hidden><input id="fixtures" type="checkbox" checked> Include growing-system fixtures</label>
 <div class="clutter">
 <label>Weeds<select id="weeds"></select></label>
 <label>Sticks<select id="sticks"></select></label>
@@ -85,7 +87,7 @@
 <div class="lessons">
 <article>
 <h3>Grow the answer key</h3>
-<p>Each generated plant has a bounding box. Its horizontal midpoint gives the scorer a known plant center.</p></article>
+<p>Each plant has a bounding box. Growing-system presets also record its planting position so the scorer can measure how far a pin lands from its base.</p></article>
 <article>
 <h3>Learn from local peaks</h3>
 <p>The trainer finds height peaks in a 5 cm grid and measures 13 clues around each peak. Training updates model weights so peaks near plant centers receive higher scores.</p></article>
@@ -93,6 +95,7 @@
 <h3>Scout unfamiliar ground</h3>
 <p>New seeds supply the validation fields. Precision counts how often a pin finds a plant. Recall counts how many plants receive a pin.</p></article></div>
 <nav class="guideLinks" aria-label="Continue exploring"><a href="trainer/">Train and inspect missed plants</a>
+<a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/field-datasets.md">Find a public field dataset</a>
 <a href="benchmark/#experiments">Try a crop experiment</a>
 <a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/README.md">Research and local setup</a></nav>
 </section>
@@ -103,8 +106,8 @@
 <li><b>Peak scout</b><span>Compare peak heights and identify which fit produced fewer extra pins.</span><div class="missionLinks"><a href="benchmark/?comparison=heights&amp;crop=tomato&amp;seed=2021&amp;validationSensor=os1-64&amp;validationRayBudget=12000&amp;sensor=mixed">Compare peak heights</a></div><strong id="peakScout">Open</strong></li></ol>
 </section>
 </main>
-<footer class="siteFoot"><span>Crop Trainer</span>
-<div><a href="AGENTS.md">Agent quickstart</a><a href="https://github.com/mvalancy/crop-trainer">GitHub</a><a href="LICENSE">MIT license</a></div></footer>
-<script type="module" src="farm.js?v=height1"></script>
+<footer class="siteFoot"><span>Created by Matthew Valancy</span>
+<div><a href="AGENTS.md">Agent quickstart</a><a href="#missions">Farm journal</a><a href="LICENSE">MIT license</a></div></footer>
+<script type="module" src="farm.js?v=systems1"></script>
 </body>
 </html>

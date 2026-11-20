@@ -1,6 +1,6 @@
-import {features, detectionStages, checkScoreThreshold, PEAK_HEIGHTS} from './data.js?v=field-test1';
-import {cropProfile} from './crops.js';
-import {scoreSavedWeights} from './network.js?v=field-test1';
+import {features, detectionStages, checkScoreThreshold, PEAK_HEIGHTS} from './data.js?v=systems1';
+import {cropProfile} from './crops.js?v=systems1';
+import {scoreSavedWeights} from './network.js?v=systems1';
 
 const metersPerUnit = {m:1, cm:.01, mm:.001};
 

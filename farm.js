@@ -1,7 +1,8 @@
-import {field} from './trainer/field.js?v=coverage1';
-import {makeRecipe} from './trainer/data.js?v=coverage1';
+import {cropProfile} from './trainer/crops.js?v=systems1';
+import {field} from './trainer/field.js?v=systems1';
+import {makeRecipe} from './trainer/data.js?v=systems1';
 import {getSensor, sensorOptions, sensorDetails, rayBudgetOptions} from './trainer/sensors.js?v=rays1';
-import {createViewer} from './viewer.js?v=missbands1';
+import {createViewer} from './viewer.js?v=systems1';
 
 const $ = id => document.getElementById(id);
 const viewer = createViewer($('map'), {
@@ -9,8 +10,15 @@ const viewer = createViewer($('map'), {
   zoomIn:$('zoomIn'), zoomOut:$('zoomOut'), reset:$('fit'), focus:$('focusPlant')
 });
 let scan, previousRayTrial;
+function showSystemControls() {
+  const profile=cropProfile($('crop').value);
+  $('fixturesLabel').hidden=!profile.fixtures;
+  $('systemInfo').hidden=!profile.system;
+  $('systemInfo').textContent=profile.description || '';
+}
 sensorOptions($('scan'));
 const requested = new URLSearchParams(location.search);
+$('crop').addEventListener('change',showSystemControls);
 const obstacles = ['weeds', 'sticks', 'boards'];
 for (const name of obstacles) {
   for (const [value,label] of [['seeded','From seed'],['on','Include'],['off','Exclude']]) $(name).add(new Option(label,value));
@@ -20,6 +28,8 @@ for (const [id, key] of replaySelects) {
   const value = requested.get(key);
   if ([...$(id).options].some(option => option.value === value)) $(id).value = value;
 }
+showSystemControls();
+$('fixtures').checked=requested.get('fixtures')!=='off';
 rayBudgetOptions($('budget'), requested.get('budget'));
 const requestedSeed = requested.get('seed');
 if (/^\d+$/.test(requestedSeed) && Number(requestedSeed) <= 0xffffffff) {
@@ -55,6 +65,7 @@ function grow() {
   const crop = $('crop').value;
   const sensor = getSensor($('scan').value);
   const recipe = makeRecipe(Number($('seed').value), $('ground').checked, sensor, crop);
+  if (cropProfile(crop).fixtures) recipe.infrastructure=$('fixtures').checked;
   if (Number($('budget').value)) recipe.points = Number($('budget').value);
   for (const key of obstacles) if ($(key).value !== 'seeded') recipe[key] = $(key).value === 'on';
   if ($('noise').value === 'clean') {
@@ -65,6 +76,7 @@ function grow() {
   const url = new URL('./', location.href);
   for (const [id, key] of replaySelects) url.searchParams.set(key, $(id).value);
   url.searchParams.set('budget', $('budget').value);
+  if(recipe.infrastructure===false) url.searchParams.set('fixtures','off');
   const previous = scan ? new URL($('scanLink').href) : new URL(location.href);
   showScan(recipe, url, previous.searchParams.get('box'), previous.searchParams.get('tile'));
 }
@@ -85,7 +97,9 @@ function showScan(recipe, url, selectedBox, expectedTile) {
   $('scanLink').href = url.href;
   $('copyScan').disabled = false;
   $('switchSoil').disabled = false;
-  $('switchSoil').textContent = recipe.ground ? 'View without soil' : 'View with soil';
+  const profile=cropProfile(recipe.crop);
+  const ground=profile.system==='greenhouse'?'floor':'soil';
+  $('switchSoil').textContent = recipe.ground ? 'View without '+ground : 'View with '+ground;
   updateBoxLink();
   const trialKey = JSON.stringify({...recipe, points:undefined});
   if (previousRayTrial?.key === trialKey && previousRayTrial.sampledRays !== scan.sampledRays) {
@@ -93,11 +107,12 @@ function showScan(recipe, url, selectedBox, expectedTile) {
     journal();
   }
   previousRayTrial = {key:trialKey, sampledRays:scan.sampledRays};
-  $('count').textContent = scan.labels.boxes.length+' '+recipe.crop+' plants · '+recipe.points.toLocaleString()+' rays requested · '+scan.sampledRays.toLocaleString()+' sampled · '+scan.cls.length.toLocaleString()+' returns · '+(recipe.ground ? 'soil included' : 'soil removed')+' · seed '+recipe.seed;
+  $('count').textContent = scan.labels.boxes.length+' '+(profile.system?profile.name:recipe.crop)+' plants · '+recipe.points.toLocaleString()+' rays requested · '+scan.sampledRays.toLocaleString()+' sampled · '+scan.cls.length.toLocaleString()+' returns · '+(ground+(recipe.ground?' included':' removed'))+' · seed '+recipe.seed;
   $('scanId').textContent = scan.labels.tile_id;
   const {zero, oneToFour, fiveOrMore} = scan.coverage;
   $('plantCoverage').textContent = zero+' plants with zero crop returns · '+oneToFour+' with 1–4 · '+fiveOrMore+' with 5 or more';
-  const bins=['Soil','Crop','Weeds','Sticks','Boards','Stray'];
+  const bins=[ground==='floor'?'Floor':'Soil','Crop','Weeds','Sticks','Boards','Stray'];
+  if(profile.fixtures) bins.push('Fixtures');
   $('readouts').replaceChildren(...bins.map((name,i)=>{
     const entry=document.createElement('div'), term=document.createElement('dt'), count=document.createElement('dd');
     term.textContent=name; count.textContent=(scan.counts[i]||0).toLocaleString();entry.append(term,count);return entry;
@@ -105,6 +120,7 @@ function showScan(recipe, url, selectedBox, expectedTile) {
   const training = new URLSearchParams({crop:recipe.crop,sensor:recipe.sampling.key});
   const budget = url.searchParams.get('budget');
   if (Number(budget)) training.set('validationRayBudget', budget);
+  $('trainLayout').textContent=recipe.infrastructure===false?'Train this crop and layout with fixtures →':'Train this crop and layout →';
   $('trainLayout').href = 'trainer/?'+training;
   $('ply').disabled=$('labels').disabled=$('recipe').disabled=false;
 }

@@ -1,8 +1,8 @@
-import {initFieldTest} from './field-test-ui.js';
+import {initFieldTest} from './field-test-ui.js?v=systems1';
 import {initSandbox, modelSettings, duration, trainInWorker, inspectWeights} from './sandbox.js?v=field-test1';
-import {MAX_SANDBOX_EPOCHS, trainerId, weightArtifact} from './network.js?v=field-test1';
-import {returnBand} from './field.js?v=missbands1';
-import {cropProfile} from './crops.js';
+import {MAX_SANDBOX_EPOCHS, trainerId, weightArtifact} from './network.js?v=systems1';
+import {returnBand} from './field.js?v=systems1';
+import {cropProfile} from './crops.js?v=systems1';
 import {allProfiles, sensorOptions, validationSensorOptions, sensorDetails, rayBudgetOptions, trainingRayOptions, trainingRayValue, ALTERNATING_BUDGET} from './sensors.js?v=densitymix1';
 if(new URLSearchParams(location.search).has('embed'))document.body.classList.add('embed');
 const $=id=>document.getElementById(id);
@@ -53,7 +53,7 @@ initSandbox(params);
 let finishTraining=null, calibration=null;
 let controller=null,losses=[],lastPreview=null,backendReady=false,deps,webgpuAvailable=false,lastRun=null,lastPaint=0;
 try {
- deps=await Promise.all([import('./data.js?v=peaktrace1'),import('./model.js?v=benchmark1'),import('./neural.js?v=sandbox1')]);
+ deps=await Promise.all([import('./data.js?v=systems1'),import('./model.js?v=benchmark1'),import('./neural.js?v=sandbox1')]);
  $('epochs').max=MAX_SANDBOX_EPOCHS;
  const epochsParam = params.get('epochs');
  if (/^\d+$/.test(epochsParam) && Number(epochsParam) >= 1 && Number(epochsParam) <= MAX_SANDBOX_EPOCHS) {

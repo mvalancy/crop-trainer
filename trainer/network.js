@@ -1,4 +1,4 @@
-import {cropProfile} from './crops.js';
+import {cropProfile} from './crops.js?v=systems1';
 
 // Each layer stores output neurons in order, with incoming weights followed by bias.
 export const MAX_SANDBOX_EPOCHS = 100_000_000;

@@ -1,8 +1,8 @@
 import {DENSITY_HISTORY_KEY, HEIGHT_HISTORY_KEY, densitySnapshot, pairDensityScores} from './density.js?v=peakpair2';
-import {buildDataset, validateModel, compareMatchedBoxes, coverageAtDistance, PEAK_HEIGHTS} from '../trainer/data.js?v=height1';
+import {buildDataset, validateModel, compareMatchedBoxes, coverageAtDistance, PEAK_HEIGHTS} from '../trainer/data.js?v=systems1';
 import {trainNetworkCPU, trainNetworkGPU, predictNetwork} from '../trainer/neural.js';
 import {trainCPU, MAX_EPOCHS} from '../trainer/model.js';
-import {cropProfile} from '../trainer/crops.js';
+import {cropProfile} from '../trainer/crops.js?v=systems1';
 import {sensorOptions, validationSensorOptions, rayBudgetOptions, trainingRayOptions, trainingRayValue, ALTERNATING_BUDGET, DENSITY_BUDGETS} from '../trainer/sensors.js?v=densitymix1';
 
 const $ = id => document.getElementById(id);

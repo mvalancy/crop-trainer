@@ -114,7 +114,7 @@ export function initFieldTest(downloadJSON) {
       updateControls(); return;
     }
     status.textContent = 'Reading '+file.name+'…';
-    const active = worker = new Worker(new URL('./field-test-worker.js',import.meta.url),{type:'module'});
+    const active = worker = new Worker(new URL('./field-test-worker.js?v=systems1',import.meta.url),{type:'module'});
     updateControls();
     function fail(message) {
       if (active !== worker) return;

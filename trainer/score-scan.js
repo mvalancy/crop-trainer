@@ -1,6 +1,6 @@
-import {detectScan} from './inference.js';
-import {measureStages} from './data.js?v=field-test1';
-import {parseReferences,evaluatePins} from './references.js';
+import {detectScan} from './inference.js?v=systems1';
+import {measureStages} from './data.js?v=systems1';
+import {parseReferences,evaluatePins} from './references.js?v=systems1';
 import {MAX_PLY_POINTS} from './ply.js';
 
 export function runFieldTest({model,xyz,alignment,labels=null,tileId}) {

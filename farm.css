@@ -34,18 +34,19 @@ h3, .grid h2 { font-size: 1.22rem; font-weight: 690; letter-spacing: -.028em; li
 h4 { font-size: 1rem; }
 .siteBar { background: var(--surface); border-bottom: 1px solid var(--line); }
 .barInner { min-height: 4.5rem; display: flex; align-items: center; gap: clamp(1.5rem, 5vw, 5rem); }
-.brand { display: inline-flex; align-items: center; gap: .6rem; font-weight: 760; font-size: 1.24rem; letter-spacing: -.06em; color: var(--ink); text-decoration: none; white-space: nowrap; }
+.brand { min-height: 44px; display: inline-flex; align-items: center; gap: .6rem; font-weight: 760; font-size: 1.24rem; letter-spacing: -.06em; color: var(--ink); text-decoration: none; white-space: nowrap; }
 .mark { position: relative; display: inline-block; width: 2rem; height: 2rem; background: var(--forest); border-radius: .6rem; }
 .mark i { position: absolute; background: var(--lime); width: 2px; height: 1.05rem; left: .95rem; bottom: .43rem; transform: rotate(6deg); }
 .mark i::before, .mark i::after { content: ''; background: var(--lime); position: absolute; width: .6rem; height: .43rem; }
 .mark i::before { right: 0; top: .24rem; border-radius: 0 90% 0 90%; }
 .mark i::after { left: 0; top: 0; border-radius: 90% 0 90% 0; }
 .siteBar nav { display: flex; align-self: stretch; gap: clamp(1.2rem, 3vw, 2.6rem); }
-.siteBar nav a, .journalLink { display: inline-flex; align-items: center; color: var(--muted); font-size: .9rem; font-weight: 620; text-decoration: none; }
+.siteBar nav a, .repoLink { display: inline-flex; align-items: center; color: var(--muted); font-size: .9rem; font-weight: 620; text-decoration: none; }
 .siteBar nav a { border-bottom: 3px solid transparent; padding-top: 3px; }
 .siteBar nav a[aria-current], .siteBar nav a:hover { color: var(--forest); border-color: var(--forest); }
-.journalLink { margin-left: auto; gap: .45rem; }
-.journalLink::before { content: ''; width: .6rem; height: .78rem; border: 1.5px solid; border-left-width: 3px; border-radius: 2px; }
+.repoLink { margin-left: auto; gap: .45rem; }
+.repoLink { min-height: 44px; color: var(--forest); }
+.repoLink:hover { text-decoration: underline; }
 .siteFoot { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-top: 3rem; padding: 1.5rem 0 2.8rem; border-top: 1px solid var(--line); color: var(--muted); font-size: .87rem; }
 .siteFoot span { color: var(--forest); font-weight: 720; }
 .siteFoot div { display: flex; gap: 1.1rem; flex-wrap: wrap; }
@@ -241,8 +242,8 @@ tbody tr:nth-child(even) { background: #f6f8f0; }
 }
 @media (max-width: 740px) {
   .barInner { display: grid; grid-template-columns: 1fr auto; gap: 0; padding-top: .65rem; }
-  .journalLink { grid-row: 1; grid-column: 2; }
-  .brand, .journalLink { min-height: 44px; }
+  .repoLink { grid-row: 1; grid-column: 2; }
+  .brand, .repoLink { min-height: 44px; }
   .siteBar nav { grid-area: 2 / 1 / auto / -1; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 0; margin-top: .35rem; }
   .siteBar nav a { justify-content: center; text-align: center; line-height: 1.2; }
   .siteBar nav a[aria-current] { background: var(--wash); border-radius: .45rem .45rem 0 0; }

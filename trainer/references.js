@@ -48,6 +48,12 @@ function generatorCenters(text, frame, expected) {
     const {min,max} = box || {};
     if (![min,max].every(a => Array.isArray(a) && a.length === 3 && a.every(Number.isFinite)) ||
         min.some((v,axis) => v > max[axis])) throw Error('Invalid bounds for label box '+(i+1)+'.');
+    if (data.center_target==='plant-base-xy') {
+      if (!Array.isArray(box.base_xy_m) || box.base_xy_m.length!==2 || !box.base_xy_m.every(Number.isFinite)) {
+        throw Error('Invalid planting position for label box '+(i+1)+'.');
+      }
+      return box.base_xy_m;
+    }
     return [(min[0]+max[0])/2, (min[1]+max[1])/2];
   });
 }

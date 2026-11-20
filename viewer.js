@@ -5,9 +5,9 @@ export function createViewer(canvas, controls) {
   const pointers = new Map();
   let panX, panY, yaw, pitch, zoom, scan, projected = [], order = [], sorted = false;
   const fieldCenter = [5, 5, 0];
-  let pivot = fieldCenter;
+  let pivot = fieldCenter, elevationScale = 80;
   let frame = 0, spinning = false, previousTime = 0;
-  const colors = ['#667d70', '#badf74', '#58ae81', '#ca9763', '#f1b674', '#acbce0'];
+  const colors = ['#667d70', '#badf74', '#58ae81', '#ca9763', '#f1b674', '#acbce0', '#86b8dc'];
   const elevation = Array.from({length:64}, (_, i) => 'hsl('+(175-i*1.65)+' 53% '+(34+i*.48)+'%)');
   const clamp = (value, low, high) => Math.min(high, Math.max(low, value));
 
@@ -68,13 +68,14 @@ export function createViewer(canvas, controls) {
     }
     for(const i of order){
       const j=i*3;
-      context.fillStyle=controls.color.value==='class'?colors[scan.cls[i]]:elevation[clamp(Math.round(scan.xyz[j+2]*80),0,63)];
+      context.fillStyle=controls.color.value==='class'?colors[scan.cls[i]]:elevation[clamp(Math.round(scan.xyz[j+2]*elevationScale),0,63)];
       context.fillRect(ox+projected[j]*scale,oy+projected[j+1]*scale,size,size);
     }
     if(controls.pins.checked){
       context.lineWidth=1.5;
       for(const [index, {min,max}] of scan.labels.boxes.entries()){
-        const [px,py]=project((min[0]+max[0])/2,(min[1]+max[1])/2,max[2]);
+        const xy = scan.labels.boxes[index].base_xy_m ?? [(min[0]+max[0])/2,(min[1]+max[1])/2];
+        const [px,py]=project(...xy,max[2]);
         const x = ox+px*scale, y = oy+py*scale, radius = clamp(scale*.07,2,6);
         context.beginPath();
         if (scan.plantReturns[index] === 0) {
@@ -90,7 +91,8 @@ export function createViewer(canvas, controls) {
     }
     if (controls.highlight.value !== '') {
       const {min,max} = scan.labels.boxes[Number(controls.highlight.value)];
-      const [px,py] = project((min[0]+max[0])/2, (min[1]+max[1])/2, max[2]);
+      const xy = scan.labels.boxes[Number(controls.highlight.value)].base_xy_m ?? [(min[0]+max[0])/2,(min[1]+max[1])/2];
+      const [px,py] = project(...xy,max[2]);
       const x = ox+px*scale, y = oy+py*scale;
       context.strokeStyle = '#9ffaff';
       context.lineWidth = 2.5;
@@ -166,6 +168,7 @@ export function createViewer(canvas, controls) {
       const newPlanting = scan && (scan.p.seed !== value.p.seed || scan.p.crop !== value.p.crop);
       if (newPlanting && pivot !== fieldCenter) reset();
       scan = value;
+      elevationScale = value.labels.growing_system ? 63 / Math.max(.8,...value.labels.boxes.map(b=>b.max[2])) : 80;
       projected = new Float32Array(scan.xyz.length);
       order = Uint32Array.from({length:scan.cls.length}, (_, i) => i);
       sorted = false;

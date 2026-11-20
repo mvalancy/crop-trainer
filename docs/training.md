@@ -1,5 +1,7 @@
 # How a crop detector learns
 
+The orchard, vineyard, bench lettuce and high-wire tomato profiles teach one XY planting position per plant. Their labels preserve the base when the canopy leans. See [growing-system targets and fixtures](scanners.md) and the [physical vineyard test](field-datasets.md#replay-the-vineyard-test).
+
 ![Plant labels teach a model to find crop centers in a new scan](../art/scan-learn-find.svg)
 
 A LiDAR return is a 3D point. A cluster of tall returns might be lettuce, a weed or clutter. The generator knows where it planted each plant, so it can provide an answer key. Training adjusts numerical weights to give likely plant centers a higher score. One epoch is one pass over the balanced set of training candidates.
