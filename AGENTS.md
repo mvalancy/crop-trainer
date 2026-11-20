@@ -87,6 +87,14 @@ Open the CPU model benchmark, choose a crop and seed, then expand **Compare cont
 
 For each planting, the scorer adds TP, FP and FN from both soil variants at each distance, computes F1, then averages the three F1 values for `meanF1`. The overall score pools counts across all validation scans first. Count field-level wins, losses and ties using the exported precision, and report the pooled score separately. The CLI and Training Shed also export `byField`; older reports can be reconstructed from `tiles`.
 
+### Trace a model disagreement to a plant
+
+Run `/benchmark/?comparison=models&crop=lettuce&seed=1121&sensor=mixed&validationSensor=os1-64&validationRayBudget=12000`. Open **Which plants did each model find?** The scan picker includes both soil variants for each dataset seed. Choose a distance and one of the boxes exclusive to either model. Follow the 3D link to inspect the highlighted center.
+
+For a local agent, import `compareMatchedBoxes` from `trainer/data.js`. Pair the logistic and neural rows by dataset seed, and their tiles by `tile_id`. Call `compareMatchedBoxes(logisticTile, neuralTile, 15)` on reports containing `missesByTolerance`. The result includes counts `both` and `neither`, zero-based box index arrays `firstOnly` and `secondOnly`, and extra pin counts `firstFP` and `secondFP`. Row order reverses on the second seed. The helper takes distances in centimetres. Sum both shared counts and the two array lengths to recover the label count. For earlier reports, reproduce the run to obtain the assigned box indices.
+
+A generator URL can include `box=0` or another zero-based box index. Include the matching `tile` value when building links from a report. This prevents a stale tile link highlighting an unrelated plant. Box highlighting affects only the camera overlay and shared URL.
+
 ### Compare training duration
 
 Open `/benchmark/?comparison=epochs&crop=artichoke&seed=551`. Each seed generates one dataset. Three neural fits start from the same initial weights with the same examples, scaling, learning rate (0.25) and score cutoff (0.50). Each fit runs from scratch so its training time covers its entire duration. The second seed runs the budgets in reverse order.

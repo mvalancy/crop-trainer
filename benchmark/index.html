@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Benchmark · Crop Trainer</title><link rel="stylesheet" href="../farm.css"></head>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Benchmark · Crop Trainer</title><link rel="stylesheet" href="../farm.css?v=boxpair1"></head>
 <body><header><a class="brand" href="../">Crop Trainer</a><nav aria-label="Farm navigation"><a href="../#field">Data generation</a><a href="../trainer/">Training shed</a><a href="./" aria-current="page">Benchmark</a><a href="../AGENTS.md">For agents</a></nav></header>
 <main><h1>Detector benchmark</h1><p>Use the same synthetic fields to compare training backends, model architectures, training duration, or the detection score needed to keep a candidate pin.</p>
 <section class="panel"><h2>Set up a comparison</h2><form id="benchForm" class="benchForm">
@@ -18,6 +18,12 @@
 <p>Each row combines the scans with and without soil from one held-out planting. Select a field seed to inspect its soil-present scan in 3D.</p>
 <label>Field score<select id="fieldMetric"><option value="mean">Mean F1 across distances</option><option value="7.5">F1 at 7.5 cm</option><option value="10">F1 at 10 cm</option><option value="15">F1 at 15 cm</option></select></label>
 <div class="tableScroll"><table aria-label="Paired field scores"><thead><tr id="fieldHeading"></tr></thead><tbody id="fieldRows"></tbody></table></div></details>
+<details id="modelBoxes" hidden><summary>Which plants did each model find?</summary>
+<p>Compare final one-to-one matches on one scan. Choose a plant found by only one model to highlight its labeled center in the 3D viewer.</p>
+<label>Validation scan<select id="pairScan"></select></label>
+<label>Matching distance<select id="pairDistance"><option value="7.5">7.5 cm</option><option value="10">10 cm</option><option value="15" selected>15 cm</option></select></label>
+<div class="tableScroll"><table aria-label="Plants matched by each model"><thead><tr><th>Both models</th><th>Logistic only</th><th>Neural only</th><th>Missed by both</th></tr></thead><tbody><tr id="pairCounts"></tr></tbody></table></div>
+<p id="pairExtras"></p><label>Plant to inspect<select id="pairBox"></select></label><a id="pairViewer">Open scan in 3D</a></details>
 <button id="export" disabled>Download benchmark JSON</button> <a id="replay" hidden>Link to these settings</a></section>
 <p>Use the <a href="../trainer/">training shed</a> for individual runs, custom workloads, loss curves, weights and field-by-field overlays.</p></main>
-<script type="module" src="main.js?v=misses1"></script></body></html>
+<script type="module" src="main.js?v=boxpair1"></script></body></html>

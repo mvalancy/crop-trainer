@@ -237,3 +237,20 @@ export async function validateModel(set,weights,{threshold=.5,predictScores=pred
  }));
  return {...summarizeTiles(tiles), byGround, byField, preview:previews.values().next().value, previews, tiles};
 }
+
+// Box indices refer to one exact scan and its ordered label array.
+export function compareMatchedBoxes(first, second, cm) {
+ if (!first.tile_id || first.tile_id !== second.tile_id) throw new Error('Choose results for the same tile.');
+ if (![7.5,10,15].includes(cm)) throw new Error('Choose a matching distance of 7.5, 10 or 15 cm.');
+ const misses = tile => {
+  const group = tile.missesByTolerance?.find(group => group.cm === cm);
+  if (!group) throw new Error('Replay this run to obtain missed box indices at the selected distance.');
+  return new Set(group.boxIndices);
+ };
+ const firstMisses = misses(first), secondMisses = misses(second);
+ const firstOnly = [...secondMisses].filter(box => !firstMisses.has(box));
+ const secondOnly = [...firstMisses].filter(box => !secondMisses.has(box));
+ const a = first.byTolerance.find(group => group.cm === cm);
+ const b = second.byTolerance.find(group => group.cm === cm);
+ return {both:a.tp-firstOnly.length, firstOnly, secondOnly, neither:a.fn-secondOnly.length, firstFP:a.fp, secondFP:b.fp};
+}

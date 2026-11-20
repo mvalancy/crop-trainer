@@ -204,6 +204,30 @@ On two fresh mixed-scan artichoke seeds, the neural model beat logistic on seed 
 
 The crop-specific spacing filter was tested on seeds 61 and 62, with six training fields, three validation fields, mixed sampling, 40 neural epochs and 6.5 cm peaks. Increasing artichoke spacing from 12.5 to 40 cm raised mean F1 from 0.536 to 0.600 and from 0.673 to 0.779. On seed 61, 15 cm recall slipped from 85.4% to 84.3%. For young tomato, 22 cm spacing raised mean F1 from 0.730 to 0.757 and from 0.781 to 0.799. These are whole-plant center scores on procedural fields.
 
+### Which plants did only one model find?
+
+Run **Logistic vs neural · CPU**, then expand **Which plants did each model find?** Choose a scan and a matching distance. The table counts every labeled plant once. Select a box found by just one model to open its center in the 3D viewer and earn the **Model scout** stamp. A cyan ring tracks the highlighted plant as you orbit or zoom. **Copy scan link** preserves the box selection. In the Training Shed, you can also open a highlighted missed plant in 3D.
+
+```mermaid
+flowchart LR
+  A[One held-out scan and its ordered boxes] --> B[Logistic misses]
+  A --> C[Neural misses]
+  B --> D[Compare box IDs at the same distance]
+  C --> D
+  D --> E[Open a disputed box in the 3D scan]
+```
+
+In this experiment we used 40 CPU epochs, mixed training layouts and 12,000 rays on the simulated OS1-64 validation layout. Each model used identical examples and normalization. The table pools the three soil-present scans for each dataset seed at 15 cm. Each cell lists plants found **only by logistic / only by neural**.
+
+| Dataset seed | Lettuce | Globe artichoke | Young tomato |
+| ---: | ---: | ---: | ---: |
+| 1121 | 60 / 8 | 0 / 2 | 16 / 0 |
+| 1122 | 0 / 45 | 0 / 13 | 2 / 13 |
+
+On lettuce seed 1121, both models found another 260 plants, and both missed 329. Logistic produced 32 extra pins and neural produced 30. In the first soil-present field, logistic alone matched box 6 and neural alone matched box 112. A match indicates a pin within the chosen horizontal distance. Plant identity follows the scorer’s one-to-one assignment when neighboring labels compete. Plants from one field share a layout and noise, so these counts describe the six synthetic plantings. [Replay the comparison](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=models&crop=lettuce&seed=1121&sensor=mixed&validationSensor=os1-64&validationRayBudget=12000) · [Inspect box 6](https://mvalancy.github.io/crop-trainer/?crop=lettuce&sensor=os1-64&budget=12000&seed=1510546355&ground=true&tile=09a268cecce4eadb&box=6#field) · [Inspect box 112](https://mvalancy.github.io/crop-trainer/?crop=lettuce&sensor=os1-64&budget=12000&seed=1510546355&ground=true&tile=09a268cecce4eadb&box=112#field)
+
+Across both soil settings for lettuce seed 1121, Node CPU logistic F1 was 0.5772 / 0.6630 / 0.6989 at 7.5 / 10 / 15 cm. Neural F1 was 0.5205 / 0.5916 / 0.6106. Generation, training and validation took 2,563 / 32 / 41 ms for logistic and 2,335 / 130 / 42 ms for neural in separate CLI runs. The browser benchmark shares generation across both fits. For background on comparing models on paired examples and accounting for training-set variation, see [Dietterich, 1998](https://doi.org/10.1162/089976698300017197).
+
 ### Does the same model win on every planting?
 
 Run **Logistic vs neural · CPU**, then open **Compare contenders on each planting**. Each row pools the two scans of one field. Choose a match distance to inspect localization accuracy, or select a field seed to open its soil-present scan in 3D. The overall score pools counts across all fields, so a small lead can come from one planting.

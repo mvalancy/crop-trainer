@@ -1,11 +1,11 @@
 import {field} from './trainer/field.js?v=coverage1';
 import {makeRecipe} from './trainer/data.js?v=coverage1';
 import {getSensor, sensorOptions, sensorDetails, rayBudgetOptions} from './trainer/sensors.js?v=rays1';
-import {createViewer} from './viewer.js?v=coverage1';
+import {createViewer} from './viewer.js?v=boxpair1';
 
 const $ = id => document.getElementById(id);
 const viewer = createViewer($('map'), {
-  mode:$('mode'), view:$('view'), color:$('color'), pins:$('pins'), spin:$('spin'),
+  mode:$('mode'), view:$('view'), highlight:$('highlight'), color:$('color'), pins:$('pins'), spin:$('spin'),
   zoomIn:$('zoomIn'), zoomOut:$('zoomOut'), reset:$('fit')
 });
 let scan, previousRayTrial;
@@ -54,7 +54,16 @@ $('copyScan').onclick = async () => {
   if (href === $('scanLink').href) $('shareStatus').textContent = message;
 };
 
-function grow() {
+function updateBoxLink() {
+  const url = new URL($('scanLink').href);
+  if ($('highlight').value === '') url.searchParams.delete('box');
+  else url.searchParams.set('box', $('highlight').value);
+  $('scanLink').href = url.href;
+  $('shareStatus').textContent = '';
+}
+$('highlight').addEventListener('change', updateBoxLink);
+
+function grow(initialBox) {
   const crop = $('crop').value;
   const sensor = getSensor($('scan').value);
   const recipe = makeRecipe(Number($('seed').value), $('ground').checked, sensor, crop);
@@ -65,9 +74,20 @@ function grow() {
   } else if ($('noise').value === 'rough') {
     Object.assign(recipe.scanNoise,{xy:1.1,z:1.2,density:24,gaps:4,stray:.35,cluster:18});
   }
+  const previousTile = scan?.labels.tile_id;
+  const previousBox = $('highlight').value;
   scan = field(recipe);
+  const choices = scan.plantReturns.map((returns, box) => new Option('Box '+box+' · '+returns+' crop returns', String(box)));
+  $('highlight').replaceChildren(new Option('None', ''), ...choices);
+  const matchesRequestedTile = !requested.has('tile') || requested.get('tile') === scan.labels.tile_id;
+  let selectedBox = previousTile === scan.labels.tile_id ? previousBox : '';
+  if (initialBox != null && matchesRequestedTile) selectedBox = initialBox;
+  if (/^\d+$/.test(selectedBox) && Number(selectedBox) < choices.length) {
+    $('highlight').value = String(Number(selectedBox));
+  }
   viewer.setScan(scan);
   updateScanLink();
+  updateBoxLink();
   const trialKey = JSON.stringify({...recipe, points:undefined});
   if (previousRayTrial?.key === trialKey && previousRayTrial.sampledRays !== scan.sampledRays) {
     try { localStorage.setItem('crop-trainer-ray-scout', 'earned'); } catch {}
@@ -103,14 +123,14 @@ $('ply').onclick=()=>{
 function journal(){
   try{
     const history=JSON.parse(localStorage.getItem('crop-trainer-farm-v1')||'{}');
-    for(const [key,done] of [['first',history.seeds?.length],['scout',history.mixed],['saver',history.seeds?.length>=2],['rayScout',localStorage.getItem('crop-trainer-ray-scout')==='earned'],['cutoffScout',localStorage.getItem('crop-trainer-cutoff-scout')==='earned']]){
+    for(const [key,done] of [['first',history.seeds?.length],['scout',history.mixed],['saver',history.seeds?.length>=2],['modelScout',localStorage.getItem('crop-trainer-model-scout')==='earned'],['rayScout',localStorage.getItem('crop-trainer-ray-scout')==='earned'],['cutoffScout',localStorage.getItem('crop-trainer-cutoff-scout')==='earned']]){
       const el=$(key);el.textContent=done?'Stamp earned':'Open';el.parentElement.classList.toggle('earned',Boolean(done));
     }
   }catch{}
 }
 window.addEventListener('pageshow', journal);
 window.addEventListener('storage', journal);
-grow();
+grow(requested.get('box'));
 const expectedTile = requested.get('tile');
 if (/^[0-9a-f]{16}$/.test(expectedTile) && scan.labels.tile_id !== expectedTile) {
   $('shareStatus').textContent = 'This link expected tile ' + expectedTile + '. These settings generated ' + scan.labels.tile_id + '.';

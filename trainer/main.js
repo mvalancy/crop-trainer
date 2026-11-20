@@ -81,6 +81,7 @@ function showField(){
  if (inspectingMisses) {
   const {cm,boxIndices,withCropReturns} = selectedMisses();
   $('previewText').textContent = boxIndices.length+' missed at '+cm+' cm. '+withCropReturns+' had crop returns (red rings). '+(boxIndices.length-withCropReturns)+' had none (dark squares).';
+  $('inspectBox').hidden = true;
   $('missBox').disabled = !boxIndices.length;
   $('missBox').replaceChildren(new Option('All missed plants',''), ...boxIndices.map(box => {
    const [x,y] = lastPreview.truth[box], returns = lastPreview.plantReturns[box];
@@ -96,7 +97,15 @@ function showField(){
 function selectedMisses(){
  return lastPreview.missesByTolerance.find(row => row.cm === Number($('missDistance').value));
 }
-$('missBox').addEventListener('change',draw);
+$('missBox').addEventListener('change', () => {
+ const box = $('missBox').value;
+ const link = $('inspectBox');
+ link.hidden = box === '';
+ const url = new URL($('inspectScan').href);
+ if (box !== '') url.searchParams.set('box', box);
+ link.href = url.href;
+ draw();
+});
 $('missDistance').addEventListener('change',showField);
 $('overlayStage').addEventListener('change',showField);
 function showStages(){

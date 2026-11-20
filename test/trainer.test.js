@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {buildDataset,validateModel,matchedCount} from '../trainer/data.js';
+import {buildDataset,validateModel,matchedCount,compareMatchedBoxes} from '../trainer/data.js';
 import {trainNetworkCPU,predictNetwork} from '../trainer/neural.js';
 import {trainCPU} from '../trainer/model.js';
 
@@ -195,4 +195,18 @@ test('missed box IDs follow the final one-to-one assignment at each tolerance', 
     assert.deepEqual(group.boxIndices, [0,1,2]);
     assert.equal(group.withCropReturns, 2);
   }
+});
+
+test('model comparison identifies complementary matches on the same labeled tile', () => {
+  const tile = (boxIndices,fp) => ({
+    tile_id:'paired', byTolerance:[{cm:10,tp:5-boxIndices.length,fn:boxIndices.length,fp}],
+    missesByTolerance:[{cm:10,boxIndices}]
+  });
+  const a = tile([0,2,4],1), b = tile([1,4],3);
+  assert.deepEqual(compareMatchedBoxes(a,b,10), {both:1, firstOnly:[1], secondOnly:[0,2], neither:1, firstFP:1, secondFP:3});
+  assert.deepEqual(compareMatchedBoxes(b,a,10), {both:1, firstOnly:[0,2], secondOnly:[1], neither:1, firstFP:3, secondFP:1});
+  assert.deepEqual(compareMatchedBoxes(a,a,10), {both:2, firstOnly:[], secondOnly:[], neither:3, firstFP:1, secondFP:1});
+  assert.throws(() => compareMatchedBoxes(a,{...b,tile_id:'other'},10), /same tile/);
+  assert.throws(() => compareMatchedBoxes(a,b,20), /matching distance/);
+  assert.throws(() => compareMatchedBoxes(a,{...b,missesByTolerance:undefined},10), /Replay this run/);
 });

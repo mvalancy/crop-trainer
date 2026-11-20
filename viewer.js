@@ -84,6 +84,16 @@ export function createViewer(canvas, controls) {
         context.stroke();
       }
     }
+    if (controls.highlight.value !== '') {
+      const {min,max} = scan.labels.boxes[Number(controls.highlight.value)];
+      const [px,py] = project((min[0]+max[0])/2, (min[1]+max[1])/2, max[2]);
+      const x = ox+px*scale, y = oy+py*scale;
+      context.strokeStyle = '#9ffaff';
+      context.lineWidth = 2.5;
+      context.beginPath();
+      context.arc(x, y, clamp(scale*.11, 8, 15), 0, 2*Math.PI);
+      context.stroke();
+    }
     if(spinning)schedule();
   }
   function spin(on){
@@ -129,7 +139,7 @@ export function createViewer(canvas, controls) {
   canvas.addEventListener('dblclick',reset);
   controls.reset.onclick=reset;controls.zoomIn.onclick=()=>magnify(1.3);controls.zoomOut.onclick=()=>magnify(1/1.3);
   controls.spin.onclick=()=>spin(!spinning);controls.view.onchange=()=>{spin(false);fit(controls.view.value);};
-  controls.pins.onchange=controls.color.onchange=schedule;
+  controls.highlight.onchange=controls.pins.onchange=controls.color.onchange=schedule;
   document.addEventListener('visibilitychange',()=>{if(document.hidden)spin(false);});
   new ResizeObserver(schedule).observe(canvas);
   fit();

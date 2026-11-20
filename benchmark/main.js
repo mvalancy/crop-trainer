@@ -1,4 +1,4 @@
-import {buildDataset, validateModel} from '../trainer/data.js?v=misses1';
+import {buildDataset, validateModel, compareMatchedBoxes} from '../trainer/data.js?v=boxpair1';
 import {trainNetworkCPU, trainNetworkGPU, predictNetwork} from '../trainer/neural.js';
 import {trainCPU, MAX_EPOCHS} from '../trainer/model.js';
 import {cropProfile} from '../trainer/crops.js';
@@ -156,6 +156,42 @@ function displayFields() {
   }
 }
 $('fieldMetric').addEventListener('change', displayFields);
+function displayModelBoxes() {
+  const [seed, tileId] = JSON.parse($('pairScan').value);
+  const rows = report.rows.filter(row => row.seed === seed);
+  const cm = Number($('pairDistance').value);
+  const tileFor = model => rows.find(row => row.model === model).tiles.find(tile => tile.tile_id === tileId);
+  const logistic = tileFor('linear'), neural = tileFor('neural');
+  const {both, firstOnly:logisticOnly, secondOnly:neuralOnly, neither, firstFP, secondFP} = compareMatchedBoxes(logistic, neural, cm);
+  $('pairCounts').replaceChildren();
+  for (const count of [both, logisticOnly.length, neuralOnly.length, neither]) {
+    $('pairCounts').insertCell().textContent = count;
+  }
+  $('pairExtras').textContent = 'Extra pins at '+cm+' cm · Logistic '+firstFP+' · Neural '+secondFP;
+  const boxOptions = (boxes, model) => boxes.map(box => new Option(model+' only · box '+box, String(box)));
+  $('pairBox').replaceChildren(new Option('Whole scan', ''), ...boxOptions(logisticOnly,'Logistic'), ...boxOptions(neuralOnly,'Neural'));
+  $('pairBox').disabled = !logisticOnly.length && !neuralOnly.length;
+  const query = new URLSearchParams({crop:report.settings.crop, seed:logistic.seed, sensor:logistic.sensor, ground:logistic.ground, tile:tileId});
+  if (report.settings.validationRayBudget) query.set('budget', report.settings.validationRayBudget);
+  $('pairViewer').href = '../?'+query+'#field';
+  $('pairViewer').textContent = 'Open scan in 3D';
+}
+$('pairScan').addEventListener('change',displayModelBoxes);
+$('pairDistance').addEventListener('change',displayModelBoxes);
+$('pairViewer').addEventListener('click', () => {
+  if ($('pairBox').value !== '') {
+    try { localStorage.setItem('crop-trainer-model-scout', 'earned'); } catch {}
+  }
+});
+$('pairBox').addEventListener('change', () => {
+  const url = new URL($('pairViewer').href);
+  const box = $('pairBox').value;
+  if (box === '') url.searchParams.delete('box');
+  else url.searchParams.set('box', box);
+  $('pairViewer').href = url.href;
+  $('pairViewer').textContent = box === '' ? 'Open scan in 3D' : 'Inspect box '+box+' in 3D';
+});
+
 $('benchForm').onsubmit = async event => {
   event.preventDefault(); if(controller)return;
   controller = new AbortController();
@@ -181,6 +217,8 @@ $('benchForm').onsubmit = async event => {
   $('cutoffChanges').open = false;
   $('fieldDetails').hidden = true;
   $('fieldDetails').open = false;
+  $('modelBoxes').hidden = true;
+  $('modelBoxes').open = false;
   report=null;$('export').disabled=true;$('summary').textContent='';$('results').replaceChildren();
   $('scoreDetails').hidden = true;
   $('scoreRows').replaceChildren();
@@ -237,6 +275,13 @@ $('benchForm').onsubmit = async event => {
     $('replay').href = replay.href;
     $('replay').hidden = false;
     report={schema:1,domain:'synthetic',comparison,thresholds,settings,replayUrl:replay.href,datasets,rows};
+    if (comparison === 'models') {
+      const options = rows.filter(row => row.model === 'linear').flatMap(row => row.tiles.map(tile =>
+        new Option('Run '+row.seed+' · field '+tile.seed+' · soil '+(tile.ground?'present':'removed'), JSON.stringify([row.seed,tile.tile_id]))));
+      $('pairScan').replaceChildren(...options);
+      displayModelBoxes();
+      $('modelBoxes').hidden = false;
+    }
     displayFields();
     $('fieldDetails').hidden = false;
     $('export').disabled=false;
