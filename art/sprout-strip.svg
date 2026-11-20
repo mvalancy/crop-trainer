@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 196" role="img" aria-labelledby="title desc">
+  <title id="title">From seed to sprout, five frames</title>
+  <desc id="desc">A filmstrip shows a seed, a shoot, a leaf and two stages of a seedling. The plant in the terracotta pot plays the five drawings in order.</desc>
+  <defs>
+    <g id="seed"><ellipse rx="6" ry="3.5" transform="rotate(-24)" fill="#ab5733"/></g>
+    <g id="shoot"><use href="#seed"/><path d="M1 0Q-2-11 6-11" fill="none" stroke="#497d4d" stroke-width="3" stroke-linecap="round"/></g>
+    <g id="leaf"><path d="M0 0Q4-11 1-18" fill="none" stroke="#356847" stroke-width="3"/><path d="M2-12Q-11-10-11-22Q0-23 2-12Z" fill="#7eaa51"/></g>
+    <g id="pair"><use href="#leaf"/><path d="M1-17Q1-30 14-30Q16-19 1-17Z" fill="#47865a"/></g>
+    <g id="plant"><use href="#pair"/><path d="M2-17Q-1-23 0-32" fill="none" stroke="#356847" stroke-width="2.5"/><path d="M0-26Q-12-26-10-37Q1-37 0-26Z" fill="#739b3a"/></g>
+    <pattern id="holes" width="16" height="7" patternUnits="userSpaceOnUse"><rect width="8" height="5" rx="1" fill="#8dab94"/></pattern>
+  </defs>
+  <style>
+    .cel { opacity: 0 }
+    .last { opacity: 1 }
+    @media (prefers-reduced-motion: no-preference) {
+      .cel { animation: play 5s steps(1,end) infinite; }
+      .b { animation-delay: -4s } .c { animation-delay: -3s } .d { animation-delay: -2s } .last { animation-delay: -1s }
+      @keyframes play { 0% { opacity: 1 } 20%,100% { opacity: 0 } }
+    }
+  </style>
+  <rect width="600" height="196" rx="16" fill="#193e31"/>
+  <circle cx="110" cy="96" r="72" fill="#f5eed4"/>
+  <path d="M65 140Q110 149 155 140" fill="none" stroke="#d6cba9" stroke-width="4"/>
+  <path d="M82 102H138L130 139Q110 147 90 139Z" fill="#c67049"/>
+  <path d="M84 111H136L135 116H85Z" fill="#a75036"/>
+  <rect x="77" y="99" width="66" height="12" rx="3" fill="#e39865"/>
+  <ellipse cx="110" cy="100" rx="29" ry="4" fill="#74472f"/>
+  <g transform="translate(110 100) scale(1.65)">
+    <use class="cel" href="#seed"/><use class="cel b" href="#shoot"/><use class="cel c" href="#leaf"/><use class="cel d" href="#pair"/><use class="cel last" href="#plant"/>
+  </g>
+  <g transform="translate(205 50)">
+    <rect width="367" height="97" rx="8" fill="#0f2d24"/>
+    <rect x="9" y="6" width="349" height="7" fill="url(#holes)"/>
+    <rect x="9" y="84" width="349" height="7" fill="url(#holes)"/>
+    <g fill="#f3f0d9">
+      <rect x="9" y="17" width="65" height="63" rx="3"/><rect x="80" y="17" width="65" height="63" rx="3"/><rect x="151" y="17" width="65" height="63" rx="3"/><rect x="222" y="17" width="65" height="63" rx="3"/><rect x="293" y="17" width="65" height="63" rx="3"/>
+    </g>
+    <path d="M22 65h38m33 0h38m33 0h38m33 0h38m33 0h38" stroke="#c5bc94" stroke-width="3" stroke-linecap="round"/>
+    <use href="#seed" x="41" y="63"/><use href="#shoot" x="112" y="63"/><use href="#leaf" x="183" y="63"/><use href="#pair" x="254" y="63"/><use href="#plant" x="325" y="63"/>
+  </g>
+</svg>

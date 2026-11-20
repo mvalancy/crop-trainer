@@ -1,0 +1,16 @@
+# The illustration patch
+
+![Five cel frames of a seed sprouting, with an animated preview growing in a little pot.](sprout-strip.svg)
+
+The little farm on the front page lives here. Open an SVG to see it move or open its source to see how it works. The diagrams use simple shapes and CSS animation. Each has a still frame for readers who prefer reduced motion.
+
+| Illustration | Where you’ll see it |
+| --- | --- |
+| [Lettuce under a scanning beam](title.svg) | [Repository welcome](../README.md) |
+| [From laser dots to lettuce pins](scan-learn-find.svg) | [Training shed guide](../trainer/README.md) |
+| [Two detectors, one planting](paired-field.svg) | [Benchmark guide](../benchmark/README.md) |
+| [A notebook for exploring a field](field-notebook.svg) | [Field guide](../docs/README.md) |
+| [Two rows from the same seed](seed-replay.svg) | [Test plot](../test/README.md) |
+| [The sprout animation strip](sprout-strip.svg) | This illustration patch |
+
+The [lettuce study](lettuce-study.webp) is the still image used on the field generator’s welcome screen. For a new diagram, give the SVG a title, describe what changes, and make its still frame readable. [Crop Trainer home](../README.md)

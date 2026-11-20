@@ -1,5 +1,7 @@
 # Crop Trainer field guide
 
+![An open field notebook pairs a mapped crop row with a magnified sketch of one plant.](../art/field-notebook.svg)
+
 [Train your first crop](https://mvalancy.github.io/crop-trainer/trainer/) or choose a guide for your next experiment.
 
 | I want to… | Open |

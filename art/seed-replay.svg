@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 196" role="img" aria-labelledby="title desc">
+  <title id="title">One seed, two matching plantings</title>
+  <desc id="desc">A seed packet marked 27 branches into two plots. Four seedlings appear at the same positions in both rows.</desc>
+  <defs>
+    <g id="sprout" stroke="#385f42" stroke-width="2" stroke-linejoin="round">
+      <path d="M0 2V-9" fill="none"/><path d="M0-5C-10-4-15-11-14-17C-5-17 0-13 0-5Z" fill="#a1b765"/><path d="M0-9C0-18 8-22 16-22C16-13 9-9 0-9Z" fill="#639658"/>
+    </g>
+    <g id="bed"><rect width="286" height="63" rx="12" fill="#e2eaca"/><path d="M20 44Q136 40 266 44" fill="none" stroke="#ad8158" stroke-width="7" stroke-linecap="round"/></g>
+    <g id="plants"><use class="a" href="#sprout" x="37" y="43"/><use class="b" href="#sprout" x="99" y="42"/><use class="c" href="#sprout" x="181" y="42"/><use class="d" href="#sprout" x="243" y="43"/></g>
+  </defs>
+  <style>
+    @media (prefers-reduced-motion: no-preference) {
+      .a,.b,.c,.d { animation: emerge 5s ease-out infinite both }
+      .b {animation-delay:.22s} .c {animation-delay:.44s} .d {animation-delay:.66s}
+      @keyframes emerge {0%,100% {opacity:.28} 20%,83% {opacity:1}}
+    }
+  </style>
+  <rect width="600" height="196" rx="16" fill="#193e31"/>
+  <g transform="translate(52 38) rotate(-6 53 59)">
+    <rect width="107" height="122" rx="6" fill="#eddeb2"/><path d="M0 17h107M0 108h107" stroke="#b09666" stroke-width="2" stroke-dasharray="4 3"/>
+    <path d="M21 40Q54 27 86 40V85Q54 99 21 85Z" fill="#345e45"/>
+    <text x="53" y="77" fill="#f5f0ca" text-anchor="middle" font-size="37" font-family="monospace" font-weight="bold">27</text>
+  </g>
+  <g fill="none" stroke="#b4ce9a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M177 98H201Q210 98 210 86V69Q210 57 224 57H249m-9-7 9 7-9 7"/>
+    <path d="M201 98Q210 98 210 109V128Q210 140 224 140H249m-9-7 9 7-9 7"/>
+  </g>
+  <g transform="translate(269 25)"><use href="#bed"/><use href="#plants"/></g>
+  <g transform="translate(269 108)"><use href="#bed"/><use href="#plants"/></g>
+</svg>

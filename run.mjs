@@ -12,7 +12,8 @@ if(command==='serve'){
  const allowed=new Set(['index.html','farm.js','farm.css','viewer.js','benchmark/index.html','benchmark/main.js','benchmark/density.js','art/title.svg','art/lettuce-study.webp','trainer/index.html','trainer/main.js','trainer/data.js','trainer/field.js','trainer/model.js','trainer/neural.js','trainer/network.js','trainer/fit-worker.js','trainer/sandbox.js','trainer/crops.js','trainer/sensors.js','README.md','AGENTS.md','LICENSE']);
  for(const module of ['growing-systems','field-test-ui','field-test-worker','score-scan','inference','ply','references']) allowed.add('trainer/'+module+'.js');
  for(const page of ['README','training','scanners','field-inspection','benchmarks','research','local-setup','field-datasets','field-validation','scan-cli','evidence']) allowed.add('docs/'+page+'.md');
- for(const figure of ['scan-learn-find','paired-field']) allowed.add('art/'+figure+'.svg');
+ for(const folder of ['art','benchmark','test','trainer']) allowed.add(folder+'/README.md');
+ for(const figure of ['scan-learn-find','paired-field','field-notebook','seed-replay','sprout-strip']) allowed.add('art/'+figure+'.svg');
  const types={html:'text/html',js:'text/javascript',css:'text/css',svg:'image/svg+xml',webp:'image/webp',md:'text/plain'};
  const port=Number(output||4173);
  if(!Number.isInteger(port)||port<1||port>65535)throw Error('Choose a port from 1 to 65535.');
