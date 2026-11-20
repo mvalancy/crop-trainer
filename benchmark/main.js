@@ -140,7 +140,8 @@ function displayFields() {
       const field = contenders.get(columns[0]).get(seed);
       tr.insertCell().textContent = dataset.seed;
       const link = document.createElement('a');
-      const query = new URLSearchParams({crop:settings.crop, seed, sensor:field.sensor, ground:true});
+      const scan = dataset.recipeManifest.find(tile => tile.split === 'validation' && tile.seed === seed && tile.recipe.ground);
+      const query = new URLSearchParams({crop:settings.crop, seed, sensor:field.sensor, ground:true, tile:scan.tile_id});
       if (settings.validationRayBudget) query.set('budget', settings.validationRayBudget);
       link.href = '../?'+query+'#field';
       link.textContent = seed;

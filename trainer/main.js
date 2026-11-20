@@ -86,7 +86,7 @@ function showStages(){
  if(!tile)return;
  const totals=tile.byTolerance.at(-1);
  const labels=totals.tp+totals.fn;
- const scanQuery = new URLSearchParams({crop:tile.crop, seed:tile.seed, sensor:tile.sensor, ground:tile.ground});
+ const scanQuery = new URLSearchParams({crop:tile.crop, seed:tile.seed, sensor:tile.sensor, ground:tile.ground, tile:tile.tile_id});
  if (auditRayBudget) scanQuery.set('budget', auditRayBudget);
  $('inspectScan').href = '../?'+scanQuery+'#field';
  $('scanCounts').textContent = tile.requestedRays.toLocaleString()+' rays requested · '+tile.sampledRays.toLocaleString()+' sampled · '+tile.returnCount.toLocaleString()+' scan returns · '+labels+' labeled plants · tile '+tile.tile_id;

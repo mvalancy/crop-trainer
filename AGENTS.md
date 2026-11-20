@@ -49,6 +49,12 @@ Set `sensorMode` to the training layout and `validationSensorMode` to the layout
 
 The browser benchmark exports both layout selections when validation is overridden. Its replay link restores the selection. The training shed’s field audit opens each scored validation tile in the 3D viewer with the original crop, scanner, field seed and ground setting.
 
+### Share or verify a generated scan
+
+From the 3D viewer, copy the scan link after generating. For a validation tile, follow its viewer link from the field audit or benchmark. A generator URL takes the field seed under `seed`, scanner key under `sensor`, and ray count under `budget` (0 selects the seed's budget). Use `ground=true` or `false`, `noise=seeded|clean|rough`, and `weeds`, `sticks`, `boards` each set to `seeded|on|off`. The optional `tile` value is the expected 16-digit hexadecimal tile ID. For a shareable field, use the GitHub Pages base URL. The page rebuilds the scan locally.
+
+To verify reproducibility, open the link in a fresh browser, compare the tile ID and download the PLY and labels. Compare files from the same generator revision byte for byte. To reproduce a model score, use the benchmark URL or training settings as well as the field link. The training run's dataset seed selects multiple field seeds.
+
 ### Change held-out ray density
 
 Use `validationRayBudget` in CLI settings or browser trainer and benchmark URLs. Omit it or set it to 0 for the original seeded budget. Fixed values are 12000, 30000, 60000 and 100000. Training recipes retain their original budgets. To repeat the density experiment, choose mixed training, `validationSensorMode: "os1-64"`, seed 721 and compare validation budgets 12000 and 60000. Repeat at seed 722.

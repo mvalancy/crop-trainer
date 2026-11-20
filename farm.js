@@ -11,7 +11,13 @@ const viewer = createViewer($('map'), {
 let scan, previousRayTrial;
 sensorOptions($('scan'));
 const requested = new URLSearchParams(location.search);
-for (const [id, value] of [['crop', requested.get('crop')], ['scan', requested.get('sensor')]]) {
+const obstacles = ['weeds', 'sticks', 'boards'];
+for (const name of obstacles) {
+  for (const [value,label] of [['seeded','From seed'],['on','Include'],['off','Exclude']]) $(name).add(new Option(label,value));
+}
+const replaySelects = [['crop', 'crop'], ['scan', 'sensor'], ['noise', 'noise'], ...obstacles.map(key => [key, key])];
+for (const [id, key] of replaySelects) {
+  const value = requested.get(key);
   if ([...$(id).options].some(option => option.value === value)) $(id).value = value;
 }
 rayBudgetOptions($('budget'), requested.get('budget'));
@@ -22,10 +28,31 @@ if (/^\d+$/.test(requestedSeed) && Number(requestedSeed) <= 0xffffffff) {
 if (requested.get('ground') === 'false') $('ground').checked = false;
 $('scan').onchange = () => { $('sensorInfo').textContent = sensorDetails($('scan').value); };
 $('scan').onchange();
-const obstacles = ['weeds','sticks','boards'];
-for (const name of obstacles) {
-  for (const [value,label] of [['seeded','From seed'],['on','Include'],['off','Exclude']]) $(name).add(new Option(label,value));
+
+function updateScanLink() {
+  const url = new URL('./', location.href);
+  for (const [id, key] of replaySelects) url.searchParams.set(key, $(id).value);
+  url.searchParams.set('seed', scan.p.seed);
+  url.searchParams.set('ground', scan.p.ground);
+  url.searchParams.set('budget', $('budget').value);
+  url.searchParams.set('tile', scan.labels.tile_id);
+  url.hash = 'field';
+  $('scanLink').href = url.href;
+  $('copyScan').disabled = false;
+  $('shareStatus').textContent = '';
 }
+
+$('copyScan').onclick = async () => {
+  const href = $('scanLink').href;
+  let message;
+  try {
+    await navigator.clipboard.writeText(href);
+    message = 'Scan link copied.';
+  } catch {
+    message = 'Open the scan link and copy the address from your browser.';
+  }
+  if (href === $('scanLink').href) $('shareStatus').textContent = message;
+};
 
 function grow() {
   const crop = $('crop').value;
@@ -40,6 +67,7 @@ function grow() {
   }
   scan = field(recipe);
   viewer.setScan(scan);
+  updateScanLink();
   const trialKey = JSON.stringify({...recipe, points:undefined});
   if (previousRayTrial?.key === trialKey && previousRayTrial.sampledRays !== scan.sampledRays) {
     try { localStorage.setItem('crop-trainer-ray-scout', 'earned'); } catch {}
@@ -78,4 +106,11 @@ function journal(){
     }
   }catch{}
 }
-window.addEventListener('pageshow',journal);window.addEventListener('storage',journal);grow();journal();
+window.addEventListener('pageshow', journal);
+window.addEventListener('storage', journal);
+grow();
+const expectedTile = requested.get('tile');
+if (/^[0-9a-f]{16}$/.test(expectedTile) && scan.labels.tile_id !== expectedTile) {
+  $('shareStatus').textContent = 'This link expected tile ' + expectedTile + '. These settings generated ' + scan.labels.tile_id + '.';
+}
+journal();
