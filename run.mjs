@@ -39,7 +39,7 @@ if(command==='serve'){
  const validation=await validateModel(set,fit.weights,{threshold,predictScores:neural?predictNetwork:undefined});
  const finished=performance.now();
  const timings={generationMs:generated-start,trainingMs:trained-generated,validationMs:finished-trained,totalMs:finished-start};
- const report={schema:3,timings,settings,domain:'synthetic',backend:'CPU',trainer:neural?'crop-mlp-v1':'crop-peak-logistic-v1',...settings,learningRate:.25,stats:set.stats,recipeManifest:set.manifest,scaling:set.scaling,weights:[...fit.weights],loss:fit.loss,meanF1:validation.meanF1,scores:validation.scores,byGround:validation.byGround, tiles:validation.tiles};
+ const report={schema:3,timings,settings,domain:'synthetic',backend:'CPU',trainer:neural?'crop-mlp-v1':'crop-peak-logistic-v1',...settings,learningRate:.25,stats:set.stats,recipeManifest:set.manifest,scaling:set.scaling,weights:[...fit.weights],loss:fit.loss,meanF1:validation.meanF1,scores:validation.scores,byGround:validation.byGround, byField:validation.byField, tiles:validation.tiles};
  await writeFile(output,JSON.stringify(report,null,2)+'\n',{flag:'wx'});
  console.log('Synthetic mean F1 '+report.meanF1.toFixed(4)+' · '+set.stats.valTiles+' validation scans · '+output);
 }else{

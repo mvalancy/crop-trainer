@@ -55,6 +55,45 @@ function appendRow(row) {
     }
   }
 }
+function displayFields() {
+  const {comparison, datasets, rows, settings} = report;
+  function contender(row) {
+    if (comparison === 'cutoffs') return 'Cutoff '+row.threshold;
+    if (comparison === 'models') return row.model === 'linear' ? 'Logistic' : 'Neural';
+    return row.backend;
+  }
+  const columns = rows.filter(row => row.seed === datasets[0].seed).map(contender);
+  const headings = ['Dataset seed', 'Field seed', 'Layout', ...columns];
+  $('fieldHeading').replaceChildren(...headings.map(label => {
+    const th = document.createElement('th');
+    th.scope = 'col';
+    th.textContent = label;
+    return th;
+  }));
+  $('fieldRows').replaceChildren();
+  const metric = $('fieldMetric').value;
+  for (const dataset of datasets) {
+    const contenders = new Map(rows.filter(row => row.seed === dataset.seed).map(row =>
+      [contender(row), new Map(row.byField.map(field => [field.seed, field]))]));
+    for (const seed of dataset.stats.fieldSeeds.validation) {
+      const tr = $('fieldRows').insertRow();
+      const field = contenders.get(columns[0]).get(seed);
+      tr.insertCell().textContent = dataset.seed;
+      const link = document.createElement('a');
+      const query = new URLSearchParams({crop:settings.crop, seed, sensor:field.sensor, ground:true});
+      link.href = '../?'+query+'#field';
+      link.textContent = seed;
+      tr.insertCell().append(link);
+      tr.insertCell().textContent = field.sensor;
+      for (const column of columns) {
+        const result = contenders.get(column).get(seed);
+        const value = metric === 'mean' ? result.meanF1 : result.scores.find(score => score.cm === Number(metric)).f1;
+        tr.insertCell().textContent = value.toFixed(4);
+      }
+    }
+  }
+}
+$('fieldMetric').addEventListener('change', displayFields);
 $('benchForm').onsubmit = async event => {
   event.preventDefault(); if(controller)return;
   controller = new AbortController();
@@ -73,6 +112,8 @@ $('benchForm').onsubmit = async event => {
   const thresholds = comparison === 'cutoffs' ? [.35, .5, .65] : [.5];
   const rows=[],datasets=[];
   $('replay').hidden = true;
+  $('fieldDetails').hidden = true;
+  $('fieldDetails').open = false;
   report=null;$('export').disabled=true;$('summary').textContent='';$('results').replaceChildren();
   $('scoreDetails').hidden = true;
   $('scoreRows').replaceChildren();
@@ -105,7 +146,7 @@ $('benchForm').onsubmit = async event => {
           const row = {
             model, backend:fit.backend, threshold, seed:runSeed, generationMs, trainingMs,
             scoringMs:performance.now()-scoringStart, adapter:fit.adapter,
-            meanF1:result.meanF1, scores:result.scores, byGround:result.byGround, tiles:result.tiles
+            meanF1:result.meanF1, scores:result.scores, byGround:result.byGround, byField:result.byField, tiles:result.tiles
           };
           rows.push(row);
           appendRow(row);
@@ -127,6 +168,8 @@ $('benchForm').onsubmit = async event => {
     $('replay').href = replay.href;
     $('replay').hidden = false;
     report={schema:1,domain:'synthetic',comparison,thresholds,settings,replayUrl:replay.href,datasets,rows};
+    displayFields();
+    $('fieldDetails').hidden = false;
     $('export').disabled=false;
     let stamp = '';
     if (comparison === 'cutoffs') {

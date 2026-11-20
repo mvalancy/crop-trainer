@@ -51,6 +51,12 @@ Each completed Training Shed or CLI report includes `byGround`. Each benchmark r
 
 For an example, train artichoke on seed 308 with the defaults. Subtract ground-present recall from ground-removed recall at 15 cm and multiply by 100 for percentage points. Check the false positives at the same distance. To investigate a specific field, pair tiles by seed and switch soil settings in the field audit. Each pair shares one planting, its labels, scan layout and fitted weights. Report the number of distinct validation fields. Synthetic soil removal uses generator class labels.
 
+### Check whether a model gain holds across plantings
+
+Open the CPU model benchmark, choose a crop and seed, then expand **Compare contenders on each planting**. For automation, each benchmark row includes `byField`. Match rows by dataset seed and model name, then match their field groups by field seed. Contender execution order reverses on the second dataset seed. Check that the two sets of tile IDs are identical before comparing models.
+
+For each planting, the scorer adds TP, FP and FN from both soil variants at each distance, computes F1, then averages the three F1 values for `meanF1`. The overall score pools counts across all validation scans first. Count field-level wins, losses and ties using the exported precision, and report the pooled score separately. The CLI and Training Shed also export `byField`; older reports can be reconstructed from `tiles`.
+
 ## Where to change the app
 
 | File | Role |

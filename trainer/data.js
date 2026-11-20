@@ -189,5 +189,14 @@ export async function validateModel(set,weights,{threshold=.5,predictScores=pred
   const subset = tiles.filter(tile => tile.ground === ground);
   return {ground, tileCount: subset.length, ...summarizeTiles(subset)};
  });
- return {...summarizeTiles(tiles), byGround, preview:previews.values().next().value, previews, tiles};
+ const fields = new Map();
+ for (const tile of tiles) {
+  if (!fields.has(tile.seed)) fields.set(tile.seed, []);
+  fields.get(tile.seed).push(tile);
+ }
+ const byField = Array.from(fields, ([seed, scans]) => ({
+  seed, sensor: scans[0].sensor, tileIds: scans.map(tile => tile.tile_id),
+  ...summarizeTiles(scans)
+ }));
+ return {...summarizeTiles(tiles), byGround, byField, preview:previews.values().next().value, previews, tiles};
 }

@@ -105,3 +105,22 @@ test('soil groups pool counts at every tolerance and recombine into overall scor
     }
   }
 });
+
+test('planting scores use both scans even when the validation order changes', async () => {
+  const set = await buildDataset({crop:'tomato', seed:421, trainFields:2, valFields:2});
+  set.validation.sort((a,b) => Number(a.ground) - Number(b.ground));
+  const result = await validateModel(set, [], {predictScores:X => Array(X.length / set.dims).fill(1)});
+  assert.equal(result.byField.length, 2);
+  for (const field of result.byField) {
+    const scans = result.tiles.filter(tile => tile.seed === field.seed);
+    assert.deepEqual(new Set(scans.map(tile => tile.ground)), new Set([true, false]));
+    assert.deepEqual(field.tileIds, scans.map(tile => tile.tile_id));
+    assert.ok(scans.every(tile => tile.sensor === field.sensor));
+    for (const score of field.scores) {
+      const [a, b] = scans.map(tile => tile.byTolerance.find(t => t.cm === score.cm));
+      for (const key of ['tp','fp','fn']) assert.equal(score[key], a[key] + b[key]);
+      assert.equal(score.f1, 2 * score.tp / (2 * score.tp + score.fp + score.fn));
+    }
+    assert.equal(field.meanF1, field.scores.reduce((sum, score) => sum + score.f1, 0) / 3);
+  }
+});
