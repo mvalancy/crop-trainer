@@ -10,6 +10,15 @@ const viewer = createViewer($('map'), {
 });
 let scan;
 sensorOptions($('scan'));
+const requested = new URLSearchParams(location.search);
+for (const [id, value] of [['crop', requested.get('crop')], ['scan', requested.get('sensor')]]) {
+  if ([...$(id).options].some(option => option.value === value)) $(id).value = value;
+}
+const requestedSeed = requested.get('seed');
+if (/^\d+$/.test(requestedSeed) && Number(requestedSeed) <= 0xffffffff) {
+  $('seed').value = String(Number(requestedSeed));
+}
+if (requested.get('ground') === 'false') $('ground').checked = false;
 $('scan').onchange = () => { $('sensorInfo').textContent = sensorDetails($('scan').value); };
 $('scan').onchange();
 const obstacles = ['weeds','sticks','boards'];

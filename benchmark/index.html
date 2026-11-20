@@ -4,7 +4,7 @@
 <section class="panel"><h2>Set up a comparison</h2><form id="benchForm" class="benchForm">
 <label>Comparison<select id="comparison"><option value="backend">CPU vs WebGPU · neural</option><option value="models">Logistic vs neural · CPU</option><option value="cutoffs">Detection score cutoffs · neural CPU</option></select></label>
 <label>Crop<select id="crop"><option value="lettuce">Lettuce</option><option value="artichoke">Globe artichoke</option><option value="tomato">Young tomato</option></select></label>
-<label>Scanner<select id="sensor"></select></label><label>First seed<input type="number" id="seed" value="27" min="0" max="4294967294" step="1" required></label>
+<label>Training layout<select id="sensor"></select></label><label>Validation layout<select id="validationSensor"></select></label><label>First seed<input type="number" id="seed" value="27" min="0" max="4294967294" step="1" required></label>
 <button id="run" class="primary" disabled>Run benchmark</button><button type="button" id="cancel" disabled>Cancel</button></form>
 <p>Two consecutive seeds · six training fields and three validation fields per seed · ground present and removed · 40 epochs. The second seed reverses comparison order. The cutoff experiment trains once per seed, then scores the same fitted network at 0.35, 0.50 and 0.65.</p><output aria-live="polite" id="status">Checking WebGPU…</output></section>
 <section class="panel"><h2>Results</h2><div class="tableScroll"><table><thead><tr><th>Seed</th><th>Model / backend</th><th>Cutoff</th><th>Generation¹</th><th>Training</th><th>Scoring</th><th>Mean F1</th><th>Precision / recall at 15 cm</th></tr></thead><tbody id="results"></tbody></table></div>

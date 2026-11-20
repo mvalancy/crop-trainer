@@ -2,14 +2,15 @@ import {buildDataset, validateModel} from '../trainer/data.js';
 import {trainNetworkCPU, trainNetworkGPU, predictNetwork} from '../trainer/neural.js';
 import {trainCPU} from '../trainer/model.js';
 import {cropProfile} from '../trainer/crops.js';
-import {sensorOptions} from '../trainer/sensors.js';
+import {sensorOptions, validationSensorOptions} from '../trainer/sensors.js';
 
 const $ = id => document.getElementById(id);
 const formatTime = ms => (ms/1000).toFixed(2)+' s';
 let controller, report, gpuAvailable = false;
 sensorOptions($('sensor'), true);
+validationSensorOptions($('validationSensor'));
 const requested = new URLSearchParams(location.search);
-for (const id of ['comparison', 'crop', 'sensor']) {
+for (const id of ['comparison', 'crop', 'sensor', 'validationSensor']) {
   const value = requested.get(id);
   if ([...$(id).options].some(option => option.value === value)) $(id).value = value;
 }
@@ -59,7 +60,8 @@ $('benchForm').onsubmit = async event => {
   controller = new AbortController();
   const {signal} = controller;
   const seed=Number($('seed').value), crop=$('crop').value, sensorMode=$('sensor').value;
-  const settings={seed,crop,sensorMode,trainFields:6,valFields:3,epochs:40,minimumHeight:cropProfile(crop).peakHeight};
+  const validationSensorMode = $('validationSensor').value === 'follow' ? undefined : $('validationSensor').value;
+  const settings={seed,crop,sensorMode,validationSensorMode,trainFields:6,valFields:3,epochs:40,minimumHeight:cropProfile(crop).peakHeight};
   const comparison=$('comparison').value;
   const neuralCPU = {model:'neural', backend:'CPU', train:trainNetworkCPU};
   const comparisons = {
@@ -121,6 +123,7 @@ $('benchForm').onsubmit = async event => {
     $('summary').textContent='Average mean F1 across both seeds: '+means.join(' · ')+'.'+device;
     const replay = new URL(location.pathname, location.origin);
     replay.search = new URLSearchParams({comparison, crop, sensor:sensorMode, seed});
+    if (validationSensorMode) replay.searchParams.set('validationSensor', validationSensorMode);
     $('replay').href = replay.href;
     $('replay').hidden = false;
     report={schema:1,domain:'synthetic',comparison,thresholds,settings,replayUrl:replay.href,datasets,rows};

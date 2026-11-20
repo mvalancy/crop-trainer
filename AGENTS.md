@@ -18,7 +18,7 @@ To reproduce a completed browser experiment, choose **Download run settings**, t
 
 ## Run a paired experiment
 
-Write settings into a local JSON file. These are the supported keys and default values.
+Write settings into a local JSON file. This example uses the default settings. The optional validationSensorMode override is described below.
 
 ```json
 {"crop":"lettuce","seed":27,"trainFields":6,"valFields":3,"epochs":40,"model":"neural","sensorMode":"mixed","minimumHeight":0.035,"threshold":0.5}
@@ -34,6 +34,16 @@ Valid settings include 2–256 training fields, 1–128 validation fields, 1–5
 For a browser benchmark, open `/benchmark/`, select the crop, scanner and first seed, and run the comparison. Each seed uses one dataset shared by both contenders. Expand **Scores at each matching distance** to see which pins matched, which were extra, and which plants were missed. Use **Link to these settings** after a run to open the same setup on another browser. The JSON includes this URL, timings and tile IDs. A localhost link uses the local server address. GPU rows include available adapter metadata. A software adapter exercises WebGPU kernels on the CPU. Record the device separately when reporting a physical GPU timing.
 
 To isolate the score cutoff, select **Detection score cutoffs**. This fits one CPU neural network per seed and scores the same weights and fields three times. Group the JSON rows by seed and threshold. Each group of three shares the generation and training costs. For a follow-up, pass the desired threshold in CLI settings and check the precision and recall change on fresh fields.
+
+### Pair scanner layouts on identical plantings
+
+Set `sensorMode` to the training layout and `validationSensorMode` to the layout to score. Omitting the second key uses the training selection for validation, including for older settings files. Both accept `mixed` or any key in `trainer/sensors.js`. For a scanner comparison:
+
+1. Use seed 211, a mixed training layout and the reference validation grid. Copy the settings and change just `validationSensorMode` to `os1-64`.
+2. Run both with the CLI. Check that training tile IDs, scaling parameters and CPU weights match. Pair validation tiles by field seed and ground setting. Each layout has its own tile ID. The manifest records each tile’s recipe and final return count.
+3. Repeat at seed 212. Compare mean F1 and the matched-plant counts before the score cutoff and after spacing. For a detector-training comparison instead, keep validation scans fixed and change only the training layout.
+
+The browser benchmark exports both layout selections when validation is overridden. Its replay link restores the selection. The training shed’s field audit opens each scored validation tile in the 3D viewer with the original crop, scanner, field seed and ground setting.
 
 ## Where to change the app
 

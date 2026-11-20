@@ -64,10 +64,10 @@ export function features(tile, minimumHeight=.065){
  }
  return{X:Float32Array.from(vec),pos};
 }
-export async function buildDataset({seed=27,crop='lettuce',trainFields=6,valFields=3,sensorMode='reference',minimumHeight=.065,onProgress=()=>{},signal}={}){
+export async function buildDataset({seed=27,crop='lettuce',trainFields=6,valFields=3,sensorMode='reference',validationSensorMode=sensorMode,minimumHeight=.065,onProgress=()=>{},signal}={}){
  if(![.035,.065].includes(minimumHeight))throw new Error('Choose a supported minimum peak height.');
  if(!Number.isInteger(seed)||seed<0||seed>0xffffffff||!Number.isInteger(trainFields)||trainFields<2||trainFields>FIELD_LIMITS.train||!Number.isInteger(valFields)||valFields<1||valFields>FIELD_LIMITS.validation)throw new Error('Use a valid seed and the available field count limits.');
- const fixedSensor=sensorMode==='mixed'?null:getSensor(sensorMode);
+ const fixedSensors = [sensorMode, validationSensorMode].map(mode => mode === 'mixed' ? null : getSensor(mode));
  const total=2*(trainFields+valFields), training=[],validation=[], trainSeeds=[],valSeeds=[];
  const orders=[sensorOrder(seed^0xe50d735b),sensorOrder(seed^0x75a89521)];
  for(let k=0;k<trainFields+valFields;k++){
@@ -75,12 +75,13 @@ export async function buildDataset({seed=27,crop='lettuce',trainFields=6,valFiel
   const id=mix((seed+Math.imul(slot,0x9e3779b9))>>>0);
   (trainingField?trainSeeds:valSeeds).push(id);
   const idx=trainingField?k:k-trainFields;
-  const profile=sensorMode==='mixed'?orders[trainingField?0:1][idx%SENSORS.length]:fixedSensor;
+  const split = trainingField ? 0 : 1;
+  const profile = fixedSensors[split] ?? orders[split][idx % SENSORS.length];
   for(let v=0;v<2;v++){
    check(signal);
    const t=field(makeRecipe(id,v===0,profile,crop)), f=features(t,minimumHeight), truth=centers(t.labels.boxes), points=[];
    if(!trainingField){const n=t.xyz.length/3,inc=Math.max(1,Math.ceil(n/1500));for(let i=0;i<n;i+=inc)points.push([t.xyz[3*i],t.xyz[3*i+1]]);}
-   const item={...f,truth,seed:id,ground:v===0,recipe:t.p,tile_id:t.labels.tile_id,points};
+   const item={...f,truth,seed:id,ground:v===0,recipe:t.p,tile_id:t.labels.tile_id,returnCount:t.labels.num_points,points};
    (trainingField?training:validation).push(item);
    onProgress({done:2*k+v+1,total,stage:'data'});await pause();
   }
@@ -117,8 +118,8 @@ export async function buildDataset({seed=27,crop='lettuce',trainFields=6,valFiel
  const normalize=a=>{for(let i=0;i<a.length;i++){const j=i%DIMS;a[i]=(a[i]-means[j])/std[j];}};
  normalize(X);for(const t of validation)normalize(t.X);
  return{X,Y,dims:DIMS,validation,scaling:{means:Array.from(means),std:Array.from(std)},
-  stats:{crop,trainFields,valFields,trainTiles:training.length,valTiles:validation.length,minimumHeight,samples:Y.length,sampleLimit:48000,sensorMode,fieldSeeds:{training:trainSeeds,validation:valSeeds},generator:'crop-trainer-v1'},
-  manifest:[...training,...validation].map((t,i)=>({split:i<training.length?'train':'validation',seed:t.seed,tile_id:t.tile_id,recipe:t.recipe}))};
+  stats:{crop,trainFields,valFields,trainTiles:training.length,valTiles:validation.length,minimumHeight,samples:Y.length,sampleLimit:48000,sensorMode,validationSensorMode,fieldSeeds:{training:trainSeeds,validation:valSeeds},generator:'crop-trainer-v1'},
+  manifest:[...training,...validation].map((t,i)=>({split:i<training.length?'train':'validation',seed:t.seed,tile_id:t.tile_id,returnCount:t.returnCount,recipe:t.recipe}))};
 }
 export function matchedCount(pred,truth,radius){
  const r2=radius**2, adj=pred.map(([x,y])=>{const a=[];for(let j=0;j<truth.length;j++){const [tx,ty]=truth[j];if((tx-x)**2+(ty-y)**2<=r2+1e-12)a.push(j);}return a;});
@@ -158,7 +159,7 @@ export async function validateModel(set,weights,{threshold=.5,predictScores=pred
   const stages=detectionStages(t,predictScores(t.X,weights,set.dims),threshold);
   const predictions=stages.selected;
   const byTolerance=TOL.map((radius,j)=>{const tp=matchedCount(predictions,t.truth,radius),fp=predictions.length-tp,fn=t.truth.length-tp;totals[j][0]+=tp;totals[j][1]+=fp;totals[j][2]+=fn;return{cm:100*radius,tp,fp,fn};});
-  tiles.push({seed:t.seed,ground:t.ground,tile_id:t.tile_id,sensor:t.recipe.sampling.key,byTolerance,stages15cm:measureStages(stages,t.truth,byTolerance[2].tp)});
+  tiles.push({seed:t.seed,ground:t.ground,tile_id:t.tile_id,crop:t.recipe.crop,returnCount:t.returnCount,sensor:t.recipe.sampling.key,byTolerance,stages15cm:measureStages(stages,t.truth,byTolerance[2].tp)});
   previews.set(t.tile_id,{truth:t.truth,predictions,ground:t.ground,seed:t.seed,points:t.points,stages});
   onProgress({done:i+1,total:set.validation.length,stage:'validation'});await pause();
  }

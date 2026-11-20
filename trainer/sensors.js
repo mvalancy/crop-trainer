@@ -35,6 +35,12 @@ export function sensorOptions(select, includeMixed = false) {
   }
 }
 
+export function validationSensorOptions(select) {
+  sensorOptions(select, true);
+  select.prepend(new Option('Follow training layout', 'follow'));
+  select.value = 'follow';
+}
+
 export function sensorDetails(key) {
   if (key === 'mixed') return 'Cycles through 14 seeded synthetic profiles. Each field keeps its scanner for both ground variants.';
   const profile = getSensor(key);

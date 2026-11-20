@@ -60,3 +60,25 @@ test('the cutoff includes equal scores and applies before crop spacing', async (
     await assert.rejects(validateModel({}, [], {threshold}), /score cutoff/);
   }
 });
+
+test('changing only the validation scanner preserves training samples and held-out labels', async () => {
+  const settings = {crop:'tomato', seed:211, trainFields:2, valFields:1, sensorMode:'mixed'};
+  const original = await buildDataset(settings);
+  const ring = await buildDataset({...settings, validationSensorMode:'os1-64'});
+  assert.equal(original.stats.validationSensorMode, 'mixed');
+  assert.equal(ring.stats.validationSensorMode, 'os1-64');
+  assert.deepEqual(ring.X, original.X);
+  assert.deepEqual(ring.Y, original.Y);
+  assert.deepEqual(ring.scaling, original.scaling);
+  assert.deepEqual(ring.stats.fieldSeeds, original.stats.fieldSeeds);
+  assert.deepEqual(ring.manifest.filter(t => t.split === 'train'), original.manifest.filter(t => t.split === 'train'));
+  for (const [i, tile] of ring.validation.entries()) {
+    assert.deepEqual(tile.truth, original.validation[i].truth);
+    assert.deepEqual(tile.recipe.scanNoise, original.validation[i].recipe.scanNoise);
+    assert.equal(tile.recipe.sampling.key, 'os1-64');
+    assert.equal(tile.ground, original.validation[i].ground);
+    assert.notEqual(tile.tile_id, original.validation[i].tile_id);
+    assert.ok(tile.returnCount > 0);
+  }
+  await assert.rejects(buildDataset({...settings, validationSensorMode:'missing'}), /Unknown scanner/);
+});

@@ -22,7 +22,7 @@ if(command==='serve'){
  });
  server.listen(port,'127.0.0.1',()=>console.log('Open http://127.0.0.1:'+port+'/'));
 }else if(command==='train'&&output){
- const defaults={crop:'lettuce',seed:27,trainFields:6,valFields:3,epochs:40,model:'neural',sensorMode:'mixed',minimumHeight:.035,threshold:.5};
+ const defaults={crop:'lettuce',seed:27,trainFields:6,valFields:3,epochs:40,model:'neural',sensorMode:'mixed',validationSensorMode:undefined,minimumHeight:.035,threshold:.5};
  const config=configuration?JSON.parse(await readFile(configuration,'utf8')):{};
  if(!config||typeof config!=='object'||Array.isArray(config))throw Error('Expected a JSON settings object.');
  for(const key of Object.keys(config))if(!Object.hasOwn(defaults,key))throw Error('Unknown setting '+key);

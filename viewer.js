@@ -58,7 +58,9 @@ export function createViewer(canvas, controls) {
         const j=3*i,[px,py,depth]=project(scan.xyz[j],scan.xyz[j+1],scan.xyz[j+2]);
         projected[j]=px;projected[j+1]=py;projected[j+2]=depth;
       }
-      order.sort((a,b)=>projected[3*a+2]-projected[3*b+2]);sorted=true;
+      // Equal-depth returns keep their acquisition order when a view is revisited.
+      order.sort((a,b)=>projected[3*a+2]-projected[3*b+2] || a-b);
+      sorted=true;
     }
     for(const i of order){
       const j=i*3;
