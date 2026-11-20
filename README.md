@@ -6,7 +6,7 @@ Browser based synthetic data generation and model training for crop analysis.
 
 Grow a virtual lettuce patch, scan it with LiDAR, and train a small neural network to put one pin on each plant. Change the seed, add ground returns, or thin the scan to see where the detector struggles.
 
-**[Play Crop Trainer](https://mvalancy.github.io/crop-trainer/) · [Open the training shed](https://mvalancy.github.io/crop-trainer/trainer/) · [Agent quickstart](AGENTS.md)**
+**[Start locally](#local-play-and-agent-experiments) · [Download the app](https://github.com/mvalancy/crop-trainer/archive/refs/heads/main.zip) · [Agent quickstart](AGENTS.md)**
 
 ## First harvest
 
@@ -52,6 +52,8 @@ Open **http://127.0.0.1:4173/**. For headless CPU experiments and tests, run:
 node --test
 node run.mjs train first-harvest.json
 ```
+
+Use **Download run settings** in the training shed to replay a browser experiment on another computer. For example, a completed seed 27 run exports its settings as `crop-settings-27.json`. Put that file beside `run.mjs` and run `node run.mjs train replay.json crop-settings-27.json`. The model trains from scratch on the same synthetic fields.
 
 A browser run can use WebGPU on a supported adapter over HTTPS or localhost. Generation and validation use the CPU. The agent guide includes the full settings schema, a paired experiment, and a prompt for Gemini or another local coding agent. [AGENTS.md](AGENTS.md)
 

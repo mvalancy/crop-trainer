@@ -53,7 +53,7 @@ function showStages(){
 $('auditField').addEventListener('change',showStages);
 function clear(){
  $('harvest').textContent='';auditTiles=[];fieldViews.clear();$('overlayStage').value='selected';$('stageAudit').hidden=true;
- losses=[];lastPreview=null;lastRun=null;lastPaint=0;$('downloadRun').hidden=true;$('benchmark').hidden=true;$('exportText').hidden=true;$('exportText').open=false;$('reportText').value='';$('copyReport').textContent='Copy JSON';
+ losses=[];lastPreview=null;lastRun=null;lastPaint=0;$('downloadRun').hidden=true;$('downloadSettings').hidden=true;$('benchmark').hidden=true;$('exportText').hidden=true;$('exportText').open=false;$('reportText').value='';$('copyReport').textContent='Copy JSON';
  for(const id of ['s75','s10','s15']){$(id).textContent='—';$('d'+id.slice(1)).textContent=''}
  $('resultNote').textContent='Run in progress. Validation uses synthetic fields only.';
  $('lossText').textContent='No epochs yet.';
@@ -119,11 +119,22 @@ function display(v){
  $('resultNote').textContent='F1 across held-out synthetic fields only. Not a score on real scans.';draw();
 }
 const reportJSON=()=>JSON.stringify(lastRun,null,2)+'\n';
-$('downloadRun').onclick=()=>{
- if(!lastRun)return;
- const a=document.createElement('a'),url=URL.createObjectURL(new Blob([reportJSON()],{type:'application/json'}));
- a.href=url;a.download='crop-trainer-'+lastRun.backend.toLowerCase()+'-'+lastRun.epochs+'ep-seed'+lastRun.seed+'.json';
- document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
+function downloadJSON(data, filename) {
+ const link = document.createElement('a');
+ const blob = new Blob([JSON.stringify(data, null, 2) + '\n'], {type:'application/json'});
+ const url = URL.createObjectURL(blob);
+ link.href = url;
+ link.download = filename;
+ document.body.append(link);
+ link.click();
+ link.remove();
+ setTimeout(() => URL.revokeObjectURL(url), 30000);
+}
+$('downloadRun').onclick = () => {
+ if (lastRun) downloadJSON(lastRun, 'crop-trainer-' + lastRun.backend.toLowerCase() + '-' + lastRun.epochs + 'ep-seed' + lastRun.seed + '.json');
+};
+$('downloadSettings').onclick = () => {
+ if (lastRun) downloadJSON(lastRun.settings, 'crop-settings-' + lastRun.seed + '.json');
 };
 $('exportText').ontoggle=()=>{if(lastRun&&$('exportText').open)$('reportText').value=reportJSON();};
 $('copyReport').onclick=async()=>{
@@ -174,7 +185,8 @@ $('controls').onsubmit=async e=>{
   signal.throwIfAborted();display(scores);
   const timings={generationMs:generated-start,trainingMs:trained-generated,validationMs:finished-trained,totalMs:finished-start};
   displayBenchmark(timings,fit.backend,epochs,set.stats.samples);
-  lastRun={schema:3,trainer:neural?'crop-mlp-v1':'crop-peak-logistic-v1',domain:'synthetic',backend:fit.backend,requestedBackend,webgpuAvailable,sensorMode,samplePasses:epochs*set.stats.samples,timings,epochsPerSecond:timings.trainingMs>0?epochs*1000/timings.trainingMs:null,seed,epochs,learningRate:.25,threshold:.5,minimumHeight,stats:set.stats,recipeManifest:set.manifest,scaling:set.scaling,weights:Array.from(fit.weights),loss:fit.loss,meanF1:scores.meanF1,scores:scores.scores,tiles:scores.tiles};
+  const settings = {seed, trainFields, valFields, epochs, model: neural ? 'neural' : 'linear', sensorMode, minimumHeight};
+  lastRun={schema:3,settings,trainer:neural?'crop-mlp-v1':'crop-peak-logistic-v1',domain:'synthetic',backend:fit.backend,requestedBackend,webgpuAvailable,sensorMode,samplePasses:epochs*set.stats.samples,timings,epochsPerSecond:timings.trainingMs>0?epochs*1000/timings.trainingMs:null,seed,epochs,learningRate:.25,threshold:.5,minimumHeight,stats:set.stats,recipeManifest:set.manifest,scaling:set.scaling,weights:Array.from(fit.weights),loss:fit.loss,meanF1:scores.meanF1,scores:scores.scores,tiles:scores.tiles};
   let earned=[];
   try{
    const farm=JSON.parse(localStorage.getItem('crop-trainer-farm-v1')||'{"seeds":[],"mixed":false}');
@@ -183,7 +195,7 @@ $('controls').onsubmit=async e=>{
    earned=['First harvest',...(farm.mixed?['Field scout']:[]),...(farm.seeds.length>=2?['Seed saver']:[])];
   }catch{}
   $('harvest').textContent=earned.length?'Farm journal · '+earned.join(' / '):'Harvest complete';
-  $('downloadRun').hidden=false;$('exportText').hidden=false;
+  $('downloadRun').hidden=false;$('downloadSettings').hidden=false;$('exportText').hidden=false;
   status('Run complete',backend+' training · '+(scores.meanF1*100).toFixed(1)+'% mean F1 on held-out synthetic scans.',100);
  }catch(err){
   if(signal.aborted){status('Canceled','No validation result was produced.',0);$('resultNote').textContent='This run was canceled.'}
