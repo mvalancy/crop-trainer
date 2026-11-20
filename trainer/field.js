@@ -1,5 +1,7 @@
-// Procedural lettuce canopy, synthetic geometry and seeded LiDAR returns.
+import {cropProfile, bladeWidth, bladeHeight} from './crops.js';
 export function field(p){
+const crop = p.crop ?? 'lettuce';
+const profile = cropProfile(crop);
 let seed=p.seed>>>0;function rng(s){return ()=>{s=(s+0x6d2b79f5)>>>0;let a=Math.imul(s^(s>>>15),1|s);a^=a+Math.imul(a^(a>>>7),61|a);return ((a^(a>>>14))>>>0)/4294967296}}
 let r=rng(seed),o=rng(seed^54321),s=rng(seed^737373), sensor=p.sampling, active=sensor&&sensor.key!=='reference', nx=active?Math.max(1,Math.round(1000/sensor.along)):0, ny=active?Math.max(1,Math.round(1000/sensor.across)):0;
 if(active&&sensor.alongCount){nx=sensor.alongCount;ny=sensor.acrossCount}
@@ -23,12 +25,32 @@ if(!active){
 }
 function rays(cx,cy,R,fn){for(let y=Math.max(0,(cy-R)*g/sz|0);y<=Math.min(g-1,(cy+R)*g/sz|0);y++)for(let x=Math.max(0,(cx-R)*g/sz|0);x<=Math.min(g-1,(cx+R)*g/sz|0);x++)for(let i=at[y*g+x];i>=0;i=next?next[i]:-1)fn(i,xyz[3*i]-cx,xyz[3*i+1]-cy)}
 function hit(i,h,c,id){if(h>xyz[3*i+2]){xyz[3*i+2]=h;cls[i]=c;ids[i]=id}}
-function plant(x,y,R,weed){let random=weed?o:r,phase=random()*tau,base=terrain(x,y),id=weed?0:boxes.length+1,L=[],aabb=[Infinity,Infinity,Infinity,-Infinity,-Infinity,-Infinity];function sample(a,u){let sin=Math.sin(Math.PI*u),w=(weed?.14:.39)*Math.pow(Math.max(0,sin),.72)*(1+.10*Math.sin(17*u+a.ang)),bend=.13*Math.sin(a.ang)*u*u;return [w,bend]}
-function height(a,u,v){return base+R*(.04+.38*a.f+(.50+.42*a.f)*Math.sin(Math.PI*u*.82)+(.12+.035*Math.cos(16*u+a.ang))*v*v)}
-for(let j=0,m=weed?8:17;j<m;j++){let f=j/(m-1),ang=phase+j*2.39996+(random()-.5)*.25,a={ang,f,len:R*(1-.65*f)*(.90+.20*random()),c:Math.cos(ang),s:Math.sin(ang)};L.push(a);if(!weed)for(let k=0;k<=24;k++){let u=k/24,[w,b]=sample(a,u);for(let v of [-1,0,1]){let vx=a.len*u,vy=a.len*(b+v*w),px=x+a.c*vx-a.s*vy,py=y+a.s*vx+a.c*vy,h=height(a,u,v);for(let [j,vv] of [[0,px],[1,py],[2,h]]){aabb[j]=Math.min(aabb[j],vv);aabb[j+3]=Math.max(aabb[j+3],vv)}}}}
+function plant(x,y,R,weed){let random=weed?o:r,phase=random()*tau,base=terrain(x,y),id=weed?0:boxes.length+1,L=[],aabb=[Infinity,Infinity,Infinity,-Infinity,-Infinity,-Infinity];const shaped = !weed && crop !== 'lettuce';
+function sample(a,u){
+if(shaped) return [bladeWidth(crop,u,a.ang), .08*Math.sin(a.ang)*u*u];
+let sin=Math.sin(Math.PI*u),w=(weed?.14:.39)*Math.pow(Math.max(0,sin),.72)*(1+.10*Math.sin(17*u+a.ang)),bend=.13*Math.sin(a.ang)*u*u;return [w,bend]}
+function height(a,u,v){
+if(shaped) return base + bladeHeight(crop,R,a.f,u,v);
+return base+R*(.04+.38*a.f+(.50+.42*a.f)*Math.sin(Math.PI*u*.82)+(.12+.035*Math.cos(16*u+a.ang))*v*v)}
+for(let j=0,m=weed?8:profile.leafCount;j<m;j++){let f=j/(m-1),ang=phase+j*2.39996+(random()-.5)*.25,a={ang,f,len:R*(1-.65*f)*(.90+.20*random()),c:Math.cos(ang),s:Math.sin(ang)};L.push(a);if(!weed)for(let k=0;k<=24;k++){let u=k/24,[w,b]=sample(a,u);for(let v of [-1,0,1]){let vx=a.len*u,vy=a.len*(b+v*w),px=x+a.c*vx-a.s*vy,py=y+a.s*vx+a.c*vy,h=height(a,u,v);for(let [j,vv] of [[0,px],[1,py],[2,h]]){aabb[j]=Math.min(aabb[j],vv);aabb[j+3]=Math.max(aabb[j+3],vv)}}}}
+if (shaped) {
+  // A raised terminal bud sits above the artichoke rosette. The young tomato
+  // model has a slim upright growing tip above its compound leaves.
+  const artichoke = crop === 'artichoke';
+  const capRadius = R * (artichoke ? .21 : .055);
+  const shoulder = R * (artichoke ? 1.15 : 1.4);
+  const rise = R * (artichoke ? .32 : .08);
+  aabb[5] = Math.max(aabb[5], base + shoulder + rise);
+  rays(x,y,capRadius,(i,dx,dy)=>{
+    const radial = (dx*dx+dy*dy)/(capRadius*capRadius);
+    if(radial <= 1) hit(i,base+shoulder+rise*Math.sqrt(1-radial),1,id);
+  });
+}
 if(!weed){boxes.push({min:aabb.slice(0,3).map(v=>v-.002),max:aabb.slice(3).map(v=>v+.002)});centers.push([x,y])}
 rays(x,y,R*1.2,(i,dx,dy)=>{for(let a of L){let u=(dx*a.c+dy*a.s)/a.len;if(u<=0||u>=1)continue;let [w,b]=sample(a,u),v=((-dx*a.s+dy*a.c)/a.len-b)/w;if(Math.abs(v)<=1)hit(i,height(a,u,v),weed?2:1,id)}})}
-for(let j=0;j<8;j++){let y=1.5+(j>>1)*2.1+(j%2)*.36,ph=r()*tau;for(let x=.25+r()*.12;x<9.74;x+=p.spacing){if(r()<.05)continue;plant(x+(r()-.5)*.04,y+.035*Math.sin(x+ph)+(r()-.5)*.024,p.radius*(.8+.4*r()),false)}}
+for(let j=0;j<profile.rows;j++){let y=crop==='lettuce'?1.5+(j>>1)*2.1+(j%2)*.36:(j+.5)*sz/profile.rows,ph=r()*tau;
+const edge = crop==='lettuce' ? .25 : p.radius*1.45;
+for(let x=edge+r()*.12;x<(crop==='lettuce'?9.74:sz-edge);x+=p.spacing){if(r()<.05)continue;plant(x+(r()-.5)*.04,y+.035*Math.sin(x+ph)+(r()-.5)*.024,p.radius*(.8+.4*r()),false)}}
 let before=cls.slice(),oldIds=ids.slice();
 if(p.weeds)for(let j=0;j<64;j++)plant(.2+o()*9.6,.2+o()*9.6,.08+.13*o(),true);
 if(p.sticks)for(let j=0;j<30;j++){let x=o()*10,y=o()*10,a=o()*tau,c=Math.cos(a),s=Math.sin(a),l=.15+.30*o(),w=.012+.018*o();rays(x,y,l+w,(i,dx,dy)=>{let u=c*dx+s*dy,v=-s*dx+c*dy;if(Math.abs(u)<l&&Math.abs(v)<w)hit(i,terrain(x+dx,y+dy)+w+Math.sqrt(w*w-v*v),3,0)})}
@@ -80,4 +102,4 @@ if(p.ground===false){
  }
  outputN=keep;outXYZ=outXYZ.slice(0,3*keep);outCls=outCls.slice(0,keep);counts[0]=0;
 }
-let canonical=JSON.stringify(['crop-trainer-v1',seed,n,sz,p.spacing,p.radius,8,.36,2.1,.04,.024,.05,.012,.004,!!p.weeds,!!p.sticks,!!p.boards,...(p.ground===false?['ground-removed-v1']:[]),...(active?['sensor-v1',sensor.key,sensor.pattern,nx,ny,sensor.along,sensor.across]:[]),...(noiseActive?['noise-v1',q.seed,q.xy,q.z,q.density,q.gaps,q.stray,...(q.cluster?['cluster-v1',q.cluster]:[])]:[])]);let hash=14695981039346656037n;for(let i=0;i<canonical.length;i++)hash=BigInt.asUintN(64,(hash^BigInt(canonical.charCodeAt(i)))*1099511628211n);let tile_id=hash.toString(16).padStart(16,'0');return {xyz:outXYZ,cls:outCls,counts,lost,groundRemoved,labels:{tile_id,tile_size_m:[10,10],num_points:outputN,boxes},p}}
+let canonical=JSON.stringify(['crop-trainer-v1',...(crop==='lettuce'?[]:['crop-shape-v1',crop]),seed,n,sz,p.spacing,p.radius,8,.36,2.1,.04,.024,.05,.012,.004,!!p.weeds,!!p.sticks,!!p.boards,...(p.ground===false?['ground-removed-v1']:[]),...(active?['sensor-v1',sensor.key,sensor.pattern,nx,ny,sensor.along,sensor.across]:[]),...(noiseActive?['noise-v1',q.seed,q.xy,q.z,q.density,q.gaps,q.stray,...(q.cluster?['cluster-v1',q.cluster]:[])]:[])]);let hash=14695981039346656037n;for(let i=0;i<canonical.length;i++)hash=BigInt.asUintN(64,(hash^BigInt(canonical.charCodeAt(i)))*1099511628211n);let tile_id=hash.toString(16).padStart(16,'0');return {xyz:outXYZ,cls:outCls,counts,lost,groundRemoved,labels:{tile_id,crop,tile_size_m:[10,10],num_points:outputN,boxes},p}}

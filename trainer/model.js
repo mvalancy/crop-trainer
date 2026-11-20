@@ -134,9 +134,21 @@ export async function trainGPU(X,Y,{dims,epochs=25,lr=.25,onEpoch,signal}={}) {
       if(!Number.isFinite(loss.at(-1)))throw new Error('Training diverged; check input features and learning rate.');
       onEpoch?.({epoch,loss:loss.at(-1),backend});
     }
-    return {weights,loss,backend};
+    return {weights,loss,backend,adapter:describeAdapter(adapter)};
   } finally {
     for(const b of buffers)b.destroy();
     device.destroy();
   }
+}
+
+// Browser-reported adapter details may be redacted.
+export function describeAdapter(adapter) {
+  const info = adapter.info || {};
+  const {description = '', architecture = '', vendor = ''} = info;
+  const software = /swiftshader|llvmpipe|lavapipe|software/i.test([description, architecture, vendor].join(' '));
+  const fallback = info.isFallbackAdapter ?? adapter.isFallbackAdapter;
+  let kind = 'hardware type unverified';
+  if (software) kind = 'software';
+  else if (fallback) kind = 'fallback';
+  return {kind, vendor, architecture, description};
 }

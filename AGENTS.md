@@ -1,6 +1,6 @@
 # Crop Trainer agent guide
 
-Help a team answer one LiDAR detection question at a time. Crop Trainer generates lettuce geometry, scanner returns, and center labels from seeds. All training and evaluation in the starter use synthetic data. Read README.md for the human walkthrough.
+Help a team answer one LiDAR detection question at a time. Crop Trainer generates lettuce, globe-artichoke and young-tomato geometry, scanner returns, and center labels from seeds. All training and evaluation in the starter use synthetic data. Read README.md for the human walkthrough.
 
 ## Run your first test
 
@@ -21,7 +21,7 @@ To reproduce a completed browser experiment, choose **Download run settings**, t
 Write settings into a local JSON file. These are the supported keys and default values.
 
 ```json
-{"seed":27,"trainFields":6,"valFields":3,"epochs":40,"model":"neural","sensorMode":"mixed","minimumHeight":0.035}
+{"crop":"lettuce","seed":27,"trainFields":6,"valFields":3,"epochs":40,"model":"neural","sensorMode":"mixed","minimumHeight":0.035}
 ```
 
 1. Save this as control.json. Run `node run.mjs train control-27.json control.json`.
@@ -29,12 +29,17 @@ Write settings into a local JSON file. These are the supported keys and default 
 3. Repeat both configurations at a fresh seed. Use new output filenames. Compare meanF1, each scores entry, and the same seed and ground setting in tiles. For each tile, stages15cm shows losses before classification, after the 0.5 score threshold and after spacing.
 4. Report the direction and size of the difference on each seed, wall time if measured, and which stage explains the change. The two ground variants share one field and belong in the same split.
 
-Valid settings include 2–256 training fields, 1–128 validation fields, 1–5,000 epochs, unsigned 32-bit seeds, neural or linear, mixed or reference sampling, and 0.035 or 0.065 metres for minimumHeight. Large runs can take substantially longer. Browser report times include generation, optimization and validation. Use training-set normalization for every validation tile.
+Valid settings include 2–256 training fields, 1–128 validation fields, 1–5,000 epochs, unsigned 32-bit seeds, neural or linear, mixed sampling or any exact scanner key in trainer/sensors.js, and 0.035 or 0.065 metres for minimumHeight. Crop keys are lettuce, artichoke and tomato. Omitting minimumHeight selects the crop default (0.035 m for lettuce and 0.065 m for artichoke and tomato). Large runs can take substantially longer. Browser report times include generation, optimization and validation. Use training-set normalization for every validation tile.
+
+For a browser benchmark, open `/benchmark/`, select the crop, scanner and first seed, and run the comparison. Each seed uses one dataset shared by both contenders. Expand **Scores at each matching distance** to see which pins matched, which were extra, and which plants were missed. Download the JSON to compare times and tile IDs across machines. GPU rows include available adapter metadata. A software adapter exercises WebGPU kernels on the CPU. Record the device separately when reporting a physical GPU timing.
 
 ## Where to change the app
 
 | File | Role |
 | --- | --- |
+| trainer/crops.js and trainer/sensors.js | Crop shapes, default peak heights and duplicate spacing, plus shared scanner layouts. |
+| viewer.js | Interactive XYZ orbit camera, pan, zoom, touch and keyboard controls. |
+| benchmark/main.js | Two-seed paired CPU/WebGPU and model comparisons with timing and scoring export. |
 | trainer/field.js | Generates original plant surfaces, synthetic XYZ returns and plant boxes. Coordinates use metres. |
 | trainer/data.js | Assigns split-specific field seeds, finds height peaks, extracts 13 features, balances examples, standardizes inputs, filters duplicate pins and scores matches. |
 | trainer/model.js | Linear logistic baseline, including CPU and WebGPU implementations. |

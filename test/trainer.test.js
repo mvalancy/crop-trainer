@@ -22,3 +22,27 @@ test('both CPU models train and each preview follows its scored tile',async()=>{
   }
  }
 });
+
+test('crop selection controls geometry, labels and duplicate filtering', async () => {
+  const {makeRecipe, detectionStages} = await import('../trainer/data.js');
+  const {getSensor} = await import('../trainer/sensors.js');
+  const {field} = await import('../trainer/field.js');
+  const ids = new Set();
+  for (const key of ['lettuce', 'artichoke', 'tomato']) {
+    const recipe = makeRecipe(27, true, getSensor('os1-64'), key);
+    const scan = field(recipe);
+    const bare = field({...recipe, ground:false});
+    assert.equal(scan.labels.crop, key);
+    assert.ok(scan.labels.boxes.length > 10);
+    assert.deepEqual(scan.labels.boxes, bare.labels.boxes);
+    assert.notEqual(scan.labels.tile_id, bare.labels.tile_id);
+    assert.equal(scan.xyz.length, scan.labels.num_points * 3);
+    assert.equal(scan.counts.reduce((a,b) => a+b, 0), scan.labels.num_points);
+    ids.add(scan.labels.tile_id);
+    const stages = detectionStages({recipe, pos:[[0,0],[.17,0]]}, [.8,.7]);
+    assert.equal(stages.selected.length, key === 'lettuce' ? 2 : 1);
+  }
+  assert.equal(ids.size, 3);
+  assert.throws(() => makeRecipe(27, true, getSensor('reference'), 'unknown'));
+  assert.throws(() => getSensor('unknown'));
+});

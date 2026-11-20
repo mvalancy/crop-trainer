@@ -1,5 +1,19 @@
+import {cropProfile} from './crops.js';
+import {allProfiles, sensorOptions, sensorDetails} from './sensors.js';
 if(new URLSearchParams(location.search).has('embed'))document.body.classList.add('embed');
 const $=id=>document.getElementById(id);
+const params = new URLSearchParams(location.search);
+const cropParam = params.get('crop');
+if ([...$('crop').options].some(option => option.value === cropParam)) $('crop').value = cropParam;
+function selectCropDefault() { $('peakHeight').value = String(cropProfile($('crop').value).peakHeight); }
+$('crop').addEventListener('change', selectCropDefault);
+selectCropDefault();
+sensorOptions($('scanner'), true);
+const scannerParam = params.get('sensor');
+$('scanner').value = allProfiles.some(profile => profile.key === scannerParam) ? scannerParam : 'mixed';
+function describeScanner() { $('scannerInfo').textContent = sensorDetails($('scanner').value); }
+$('scanner').addEventListener('change', describeScanner);
+describeScanner();
 let controller=null,losses=[],lastPreview=null,backendReady=false,deps,webgpuAvailable=false,lastRun=null,lastPaint=0;
 try {
  deps=await Promise.all([import('./data.js?v=peak2'),import('./model.js?v=benchmark1'),import('./neural.js')]);
@@ -143,19 +157,20 @@ $('copyReport').onclick=async()=>{
  catch{$('reportText').focus();$('reportText').select();$('reportText').setSelectionRange(0,$('reportText').value.length);$('copyReport').textContent='Selected. Use Copy.'}
 };
 $('cancel').onclick=()=>{if(controller){controller.abort();$('cancel').disabled=true;status('Canceling…','Waiting for the current operation to stop.')}};
-const runInputs=['seed','train','validation','epochs','scanner','peakHeight','architecture','engine','stress'];
+const runInputs=['crop','seed','train','validation','epochs','scanner','peakHeight','architecture','engine','stress'];
 function workload(){
  const n=+$('train').value,v=+$('validation').value,e=+$('epochs').value;
  $('workload').textContent=(2*(n+v)).toLocaleString()+' scan variants · '+e.toLocaleString()+' epochs'+(n+v>=64?' · Large run; keep this tab in the foreground.':'.');
 }
 for(const id of ['train','validation','epochs'])$(id).addEventListener('input',workload);
 $('stress').onclick=()=>{
- $('train').value=128;$('validation').value=64;$('epochs').value=5000;$('scanner').value='mixed';workload();
+ $('train').value=128;$('validation').value=64;$('epochs').value=5000;$('scanner').value='mixed';describeScanner();workload();
 };
 workload();
 $('controls').onsubmit=async e=>{
  e.preventDefault();if(controller||!backendReady)return;
  const [{buildDataset,validateModel},{trainGPU,trainCPU},{trainNetworkCPU,trainNetworkGPU,predictNetwork}]=deps;
+ const crop=$('crop').value;
  const neural=$('architecture').value==='neural';
  const requestedBackend=$('engine').value,sensorMode=$('scanner').value,minimumHeight=Number($('peakHeight').value);
  const backend=requestedBackend==='webgpu'||(requestedBackend==='auto'&&webgpuAvailable)?'WebGPU':'CPU';
@@ -164,7 +179,7 @@ $('controls').onsubmit=async e=>{
  $('run').disabled=true;$('cancel').disabled=false;runInputs.forEach(id=>$(id).disabled=true);clear();status('Generating fields','Building separate training and validation fields.',0);
  try{
   const start=performance.now();
-  const set=await buildDataset({seed,trainFields,valFields,sensorMode,minimumHeight,signal,onProgress:(a,b)=>{
+  const set=await buildDataset({crop,seed,trainFields,valFields,sensorMode,minimumHeight,signal,onProgress:(a,b)=>{
    if(signal.aborted)return;
    if(a.stage==='labels'){status('Labeling training examples',a.done+' / '+a.total+' training scans labeled',27+3*a.done/a.total);return;}
    const current=typeof a==='object'?a.current??a.completed??a.done:a,total=typeof a==='object'?a.total:b;
@@ -185,8 +200,8 @@ $('controls').onsubmit=async e=>{
   signal.throwIfAborted();display(scores);
   const timings={generationMs:generated-start,trainingMs:trained-generated,validationMs:finished-trained,totalMs:finished-start};
   displayBenchmark(timings,fit.backend,epochs,set.stats.samples);
-  const settings = {seed, trainFields, valFields, epochs, model: neural ? 'neural' : 'linear', sensorMode, minimumHeight};
-  lastRun={schema:3,settings,trainer:neural?'crop-mlp-v1':'crop-peak-logistic-v1',domain:'synthetic',backend:fit.backend,requestedBackend,webgpuAvailable,sensorMode,samplePasses:epochs*set.stats.samples,timings,epochsPerSecond:timings.trainingMs>0?epochs*1000/timings.trainingMs:null,seed,epochs,learningRate:.25,threshold:.5,minimumHeight,stats:set.stats,recipeManifest:set.manifest,scaling:set.scaling,weights:Array.from(fit.weights),loss:fit.loss,meanF1:scores.meanF1,scores:scores.scores,tiles:scores.tiles};
+  const settings = {crop, seed, trainFields, valFields, epochs, model: neural ? 'neural' : 'linear', sensorMode, minimumHeight};
+  lastRun={schema:3,settings,trainer:neural?'crop-mlp-v1':'crop-peak-logistic-v1',domain:'synthetic',backend:fit.backend,adapter:fit.adapter,requestedBackend,webgpuAvailable,sensorMode,samplePasses:epochs*set.stats.samples,timings,epochsPerSecond:timings.trainingMs>0?epochs*1000/timings.trainingMs:null,seed,epochs,learningRate:.25,threshold:.5,minimumHeight,stats:set.stats,recipeManifest:set.manifest,scaling:set.scaling,weights:Array.from(fit.weights),loss:fit.loss,meanF1:scores.meanF1,scores:scores.scores,tiles:scores.tiles};
   let earned=[];
   try{
    const farm=JSON.parse(localStorage.getItem('crop-trainer-farm-v1')||'{"seeds":[],"mixed":false}');

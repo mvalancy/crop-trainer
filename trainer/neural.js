@@ -1,3 +1,4 @@
+import {describeAdapter} from './model.js';
 // One hidden layer with four tanh units and a sigmoid output. All parameters learn.
 const H = 4;
 function initial(dims) {
@@ -116,6 +117,6 @@ export async function trainNetworkGPU(x,y,{dims:d,epochs=24,lr=.25,onEpoch,signa
       if(!Number.isFinite(loss.at(-1)))throw Error('Training loss became nonfinite.');
       onEpoch?.({epoch,loss:loss.at(-1),backend:'WebGPU'});
     }
-    return {weights,loss,backend:'WebGPU'};
+    return {weights, loss, backend:'WebGPU', adapter:describeAdapter(adapter)};
   }finally{for(const b of owned)b.destroy();device.destroy();}
 }
