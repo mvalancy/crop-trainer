@@ -18,6 +18,12 @@ To reproduce a completed browser experiment, choose **Download run settings**, t
 
 Browser settings exports include `hiddenLayers`, `activation`, `initSeed`, `optimizer`, `batchSize`, `learningRate` and `momentum`. Earlier settings files select the original four-unit tanh net or the logistic baseline. A time-limited run records its completed epoch count so the CLI can repeat the same number of updates. For the weight format and an inference example, see [the training guide](docs/training.md).
 
+### Reproduce a live pin display
+
+Open the Training shed with the run’s settings. During fitting, the gold rings use the first soil-present validation scan. To check a ring layout at a particular epoch, use the epoch shown **beside the predicted count**. Replay that many epochs from the same initialization, score the first validation tile at the same threshold and compare its selected XY centers. The loss readout can advance between pin updates. Browser previews sample up to 9,000 returns for drawing. Fitting and scoring use the full feature arrays.
+
+For timing comparisons, run both contenders through the same Benchmark entry point. The Training shed also samples model weights and draws a preview during the fit, so its elapsed time includes that work.
+
 ## Test a detector outside the generator
 
 Use a model exported by the Training shed and a local plot scan. If the user supplies an independently surveyed center CSV, run `node score-scan.mjs weights.json plot.ply new-result.json --labels centers.csv`. With no survey, omit `--labels` and describe the resulting pins as predictions. Use the same frame, scan and one-to-one matching for the trained detector and its height-only baseline. The output includes SHA-256 hashes and both source and local coordinates. See the [file and frame contract](docs/scan-cli.md) and [field validation protocol](docs/field-validation.md).
