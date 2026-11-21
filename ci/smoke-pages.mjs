@@ -493,6 +493,18 @@ try {
   }
   console.log('Downloaded example weights, scan and both reference formats; the Field Test scored all 217 held-out lettuce plants.');
 
+  await open('benchmark/');
+  await page.locator('#benchOptions > summary').click();
+  for (const [crop,comparison] of [['lettuce','models'],['apple','forms'],['high-wire-tomato','density']]) {
+    await page.locator('#crop').selectOption(crop);
+    await page.locator('#comparison').selectOption(comparison);
+    for (const width of [320,390,608,844,1024,1440]) {
+      await page.setViewportSize({width,height:844});
+      assert.deepEqual(await clippedValues(page.locator('#benchForm select:enabled:visible'),true),[],
+        comparison+' benchmark choices should fit at '+width+'px');
+    }
+  }
+
   await open('benchmark/?comparison=cutoffs&crop=lettuce&seed=27&sensor=reference&epochs=3&live=off');
   await page.locator('#run').click();
   const report=await downloadJSON(page.locator('#export'));

@@ -113,7 +113,7 @@ function explainComparison() {
   if (mix) mix.disabled = compareForms && structured;
   form.disabled = !structured && !!form.value;
   heldOut.disabled = !structured && !!heldOut.value;
-  heldOut.querySelector('[value="follow"]').textContent = compareForms ? 'Named training form for both fits' : 'Same as training';
+  heldOut.querySelector('[value="follow"]').textContent = compareForms ? 'Selected training form' : 'Same as training';
   $('comparison').setCustomValidity(compareForms && !structured ? 'Choose structured plants to compare growth forms.' : '');
   const compareLayouts = $('comparison').value === 'layouts';
   $('validationLayoutControl').hidden = $('validationBudgetControl').hidden = compareLayouts;

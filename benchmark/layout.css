@@ -1,7 +1,17 @@
+#benchForm > fieldset:first-child .benchFields,
 #benchOptions .benchFields {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16.5rem), 1fr));
 }
+#benchForm .helpField:has(.comparisonChoice) { grid-column: auto; }
 #benchOptions select { min-height: 44px; }
+
+@media (min-width: 865px) {
+  #benchOptions > div { grid-template-columns: repeat(auto-fit, minmax(min(100%, 16.5rem), 1fr)); }
+}
+@media (max-width: 24rem) {
+  .benchSetup { padding-inline: .65rem; }
+  #benchOptions { padding-inline: 0; border-inline: 0; border-radius: 0; }
+}
 
 /* Keep repeatable run settings next to each other even on a phone. */
 .benchRunNumbers {

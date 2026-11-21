@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="../app/farm.css?v=context-help2">
 
 <link rel="stylesheet" href="../app/help.css?v=context-help2">
-<link rel="stylesheet" href="layout.css?v=score-cards2">
+<link rel="stylesheet" href="layout.css?v=option-fit1">
 <script type="module" src="../app/help.js?v=context-help2"></script>
 </head>
 <body class="benchmark"><a class="skip" href="#main" data-help="Jump past the navigation to the benchmark controls.">Skip to content</a>
@@ -42,7 +42,7 @@
 <label>Training plant form<select id="plantForm" data-help="Choose one shape or growth stage for training. In the mixed-form comparison, the second detector sees several forms." required><option value="mixed">Seeded mix</option></select></label>
 <label>Plant condition<select id="plantCondition" data-help="Damaged plants can have missing or bent parts. A seeded mix grows healthy and damaged plants together." required><option value="healthy">Healthy</option><option value="mixed">Seeded damage · about 1 in 4</option><option value="damaged">All damaged</option></select></label>
 <label id="heightControl">Minimum peak height<select id="minimumHeight" data-help="A bump must reach this height to become a possible plant. Lower values can reveal seedlings and pick up more soil bumps."><option value="default">Crop default</option><option value="0.065">6.5 cm</option><option value="0.035">3.5 cm</option></select></label>
-<label id="averagingControl">Peak averaging<select id="peakAveraging" data-help="Smooth nearby heights before looking for peaks. With sparse scans, ignoring empty cells can reveal small plants and extra soil peaks." required><option value="zero-filled">All cells · standard</option><option value="occupied">Sampled cells only · experimental</option></select></label>
+<label id="averagingControl">Peak averaging<select id="peakAveraging" data-help="Smooth nearby heights before looking for peaks. The experimental sampled-cells setting ignores empty cells. On sparse scans this can reveal small plants and extra soil peaks." required><option value="zero-filled">All cells · standard</option><option value="occupied">Sampled cells only</option></select></label>
 </div></fieldset>
 <fieldset><legend>Training scans</legend><div class="benchFields">
 <label>Training layout<select id="sensor" data-help="Chooses how rays cross the training fields. A grid covers the plot evenly while rings can leave gaps between rows of returns."></select></label>
@@ -52,7 +52,7 @@
 <label id="mixedControl" class="check" hidden><input id="includeMixed" data-help="Adds a detector that alternates training scan densities across plantings. It takes one more fit per seed." type="checkbox"> Include a mixed-density fit</label>
 </div></fieldset>
 <fieldset><legend>Validation scans</legend><div class="benchFields">
-<label>Validation plant form<select id="validationPlantForm" data-help="Choose what grows on the fresh test fields. To test whether a model recognizes older plants, train on seedlings and test on branching plants." required><option value="follow">Same as training</option></select></label>
+<label>Validation plant form<select id="validationPlantForm" data-help="Choose what grows on the fresh test fields. Both fits use this validation form. To test whether a model recognizes older plants, train on seedlings and test on branching plants." required><option value="follow">Same as training</option></select></label>
 <label id="validationLayoutControl">Validation layout<select id="validationSensor" data-help="Chooses the ray pattern for the fresh test scans. Change it to test how well training transfers to a different scan layout."></select></label>
 <label id="validationBudgetControl">Validation ray budget<select id="validationRayBudget" data-help="How many rays to attempt on each fresh test scan. Fix this value when comparing how much training data each detector sees."></select></label>
 <label id="layoutBudgetControl" hidden>Rays per scan on both layouts<select id="layoutBudget" data-help="Both layouts get the same number of rays. Changes in matches can then reveal how ray placement affects detection." required><option value="12000">12,000</option><option value="30000" selected>30,000</option><option value="60000">60,000</option></select></label>
@@ -172,6 +172,6 @@
 </main>
 <footer class="siteFoot"><span>Created by Matthew Valancy</span>
 <div><a href="../AGENTS.md" data-help="Read how to reproduce browser experiments and run the project from the command line.">Agent quickstart</a><a href="../#missions" data-help="Open the farm challenges and check your progress.">Farm journal</a><a href="../LICENSE" data-help="Read the permission and attribution terms for the Crop Trainer source code.">MIT license</a></div><small class="contextHint"><span class="hoverHint">Hover or focus a button or score for help.</span><span class="touchHint">Tap a score or hold a button for help. A quick tap runs the action.</span></small></footer>
-<script type="module" src="main.js?v=score-cards1"></script>
+<script type="module" src="main.js?v=option-fit1"></script>
 </body>
 </html>
