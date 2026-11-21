@@ -5,7 +5,7 @@
 <title>Learning studio · Crop Trainer</title>
 <link rel="icon" href="../art/crop-mark.svg"><script src="../app/theme.js"></script>
 <link rel="stylesheet" href="../app/farm.css"><link rel="stylesheet" href="../app/theme.css"><link rel="stylesheet" href="../app/studio.css">
-<link rel="stylesheet" href="../app/studio-narration.css">
+<link rel="stylesheet" href="../app/studio-narration.css"><link rel="stylesheet" href="../app/field-film.css">
 <script type="module" src="../app/studio.js"></script>
 </head>
 <body class="studio">
@@ -20,21 +20,70 @@
 <a href="?view=docs" data-view="docs"><span aria-hidden="true">▤</span>Docs</a>
 </nav>
 <main id="desk" tabindex="-1"><header class="deskHead"><button type="button" id="openSettings" aria-haspopup="dialog" aria-expanded="false" hidden><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M10 4v16M5.5 8h2M5.5 11h2"/></svg>Settings</button><h1 id="activityTitle">Field lessons</h1><nav id="steps" aria-label="Activity sections"></nav></header><div id="panes"><section id="film" aria-label="Follow one lettuce" data-shot="0">
-<div class="filmScreen"><svg class="filmArt" viewBox="0 0 600 400" preserveAspectRatio="xMidYMid slice" role="img" aria-labelledby="sceneDescription"><title id="sceneDescription">Light meets the leaves of a butterhead lettuce in a field at dusk.</title>
-<defs><linearGradient id="filmShade"><stop stop-color="#081713" stop-opacity=".94"/><stop offset=".45" stop-color="#081713" stop-opacity=".66"/><stop offset=".77" stop-color="#081713" stop-opacity="0"/></linearGradient>
-<radialGradient id="scanGlow"><stop stop-color="#315c4d"/><stop offset="1" stop-color="#0d2626"/></radialGradient>
-<pattern id="filmGrid" width="22" height="22" patternUnits="userSpaceOnUse"><path d="M22 0H0V22" fill="none" stroke="#91b7a8" stroke-opacity=".18"/></pattern></defs>
-<g class="shot shotField"><image href="../art/lettuce-at-dusk.webp" width="600" height="400"/>
-<g stroke="#ceefb6" stroke-width="1.1" class="leafRays"><path d="M366 0v158M405 0v136M454 0v117M505 0v120"/><g fill="#e9ffb8"><circle cx="366" cy="158" r="3"/><circle cx="405" cy="136" r="3"/><circle cx="454" cy="117" r="3"/><circle cx="505" cy="120" r="3"/></g></g></g>
-<g class="shot shotCloud"><rect width="600" height="400" fill="url(#scanGlow)"/><rect width="600" height="400" fill="url(#filmGrid)"/><g id="filmReturns"></g>
-<g transform="translate(430 196)" fill="none" stroke="#f3ce76" stroke-width="1.6"><circle class="pinHalo" r="29"/><path d="M-9 0H9M0 -9V9"/></g></g>
-<g class="shot shotHeight"><rect width="600" height="400" fill="#143630"/><rect width="600" height="400" fill="url(#filmGrid)"/>
-</g>
-<rect width="600" height="400" fill="url(#filmShade)" class="filmShade"/></svg>
-<div class="predictionPane"><svg class="predictionArt" viewBox="0 18 400 154" aria-hidden="true">
-<image href="../art/height-clues.svg#plants" width="400" height="188"/>
-<path class="heightLine" d="M23 62H377" stroke="#f1cf79" stroke-width="1.8" stroke-dasharray="5 4"/></svg></div>
-<div class="filmCaption" aria-live="polite"><p class="filmSeries">Follow one lettuce</p><h2 id="shotTitle">Where does the light land?</h2><p id="shotText">A laser samples the first surface it meets. Trace a ray down to the edge of a leaf.</p><a id="tryShot" class="primary" href="?view=learn&amp;step=lessons">Try scanning a row</a></div></div>
+<div class="filmScreen"><div class="filmScenery"><div class="filmStage" role="img" aria-label="A laser pulse meets the canopy of one butterhead lettuce.">
+<svg class="shot shotField" viewBox="-260 -180 520 360" aria-hidden="true">
+  <defs>
+    <linearGradient id="leafEdgeX"><stop stop-color="black"/><stop offset=".09" stop-color="white"/><stop offset=".91" stop-color="white"/><stop offset="1" stop-color="black"/></linearGradient>
+    <linearGradient id="leafEdgeY" x2="0" y2="1"><stop stop-color="black"/><stop offset=".09" stop-color="white"/><stop offset=".9" stop-color="white"/><stop offset="1" stop-color="black"/></linearGradient>
+    <mask id="leafSides"><rect x="-290" y="-192" width="600" height="400" fill="url(#leafEdgeX)"/></mask>
+    <mask id="leafEnds"><rect x="-290" y="-192" width="600" height="400" fill="url(#leafEdgeY)"/></mask>
+  </defs>
+  <g class="leafCamera">
+    <g mask="url(#leafSides)"><image mask="url(#leafEnds)" href="../art/field-film-lettuce.webp" x="-290" y="-192" width="600" height="400"/></g>
+    <g class="leafSamples"></g>
+    <g class="leafNote filmNote"><path d="M96 -96l32 -29h67"/><text x="132" y="-132">First return</text></g>
+  </g>
+</svg>
+<svg class="shot shotCloud" viewBox="-200 -155 400 310" aria-hidden="true">
+  <defs>
+    <image id="canopyPlate" href="../art/field-film-canopy.webp" x="-166" y="-163" width="340" height="340"/>
+    <radialGradient id="scanFalloff"><stop offset=".67" stop-color="white"/><stop offset="1" stop-color="black"/></radialGradient>
+    <mask id="scanEdge" maskUnits="userSpaceOnUse" x="-166" y="-163" width="340" height="340"><rect x="-166" y="-163" width="340" height="340" fill="url(#scanFalloff)"/></mask>
+    <pattern id="soilReturns" width="29" height="31" patternUnits="userSpaceOnUse"><path d="M2 3h.1m15 12h.1m8 10h.1" stroke="#9cba8d" stroke-width="1.2" stroke-linecap="round" opacity=".4"/></pattern>
+    <pattern id="returnGrid" width="3.8" height="5.8" patternUnits="userSpaceOnUse" patternTransform="rotate(-12)"><circle cx=".94" cy="1.25" r="1" fill="white"/><circle cx="2.84" cy="4.15" r=".94" fill="white"/></pattern>
+    <mask id="sampleDots"><rect x="-170" y="-167" width="350" height="350" fill="url(#returnGrid)"/></mask>
+    <filter id="returnInk" color-interpolation-filters="sRGB"><feColorMatrix values=".6 .95 .04 0 -.05  .24 1.25 .22 0 .06  .05 .84 .32 0 .13  0 0 0 1 0"/></filter>
+    <linearGradient id="scanRibbon"><stop stop-color="#80dfbe" stop-opacity="0"/><stop offset="1" stop-color="#bcffe1" stop-opacity=".38"/></linearGradient>
+    <clipPath id="scannedArea"><rect class="scanReveal" x="-220" y="-200" width="440" height="400"/></clipPath>
+    <clipPath id="unscannedArea"><rect class="scanRemaining" x="220" y="-200" width="440" height="400"/></clipPath>
+  </defs>
+  <g class="scanSoil"><rect x="-650" y="-500" width="1300" height="1000" fill="url(#soilReturns)"/>
+    <g transform="rotate(-14)" fill="none" stroke="#83bca0" stroke-width=".8" opacity=".25"><path d="M-480 -126Q0 -118 380 -127M-480 128Q0 120 380 130" stroke-dasharray="5 6"/></g>
+  </g>
+  <g class="scanCanopy"><g mask="url(#scanEdge)">
+    <use href="#canopyPlate" opacity=".29"/>
+    <use href="#canopyPlate" clip-path="url(#unscannedArea)"/>
+    <g clip-path="url(#scannedArea)"><g mask="url(#sampleDots)"><use href="#canopyPlate" filter="url(#returnInk)"/></g></g>
+    <g class="scanBeam"><path d="M-23 -210H0V210h-23Z" fill="url(#scanRibbon)"/><path d="M0 -210V210" stroke="#ccffdf" stroke-width="1.2"/></g>
+  </g></g>
+  <g class="centerFix" fill="none" stroke="#ffe193">
+    <circle class="lockRing" r="21" stroke-width="1.8"/><path d="M-12 0h6m12 0h6M0 -12v6m0 12v6" stroke-width="1.35"/><circle class="targetCenter" r="2.3" fill="#ffe193"/>
+    <g class="filmNote"><path d="M16 -16l62 -85h73"/><text x="77" y="-108">Center estimate</text></g>
+  </g>
+</svg>
+<svg class="shot shotHeight" viewBox="-210 -150 420 300" aria-hidden="true">
+  <defs>
+    <image id="comparisonPlate" href="../art/field-film-height.webp" x="-235" y="-163" width="470" height="313.33"/>
+    <linearGradient id="rootFade" x2="0" y2="1"><stop stop-color="black"/><stop offset=".13" stop-color="white"/><stop offset=".80" stop-color="white"/><stop offset="1" stop-color="black"/></linearGradient>
+    <mask id="rootEdge"><rect x="-235" y="-163" width="470" height="313.33" fill="url(#rootFade)"/></mask>
+    <mask id="comparisonSides"><rect x="-235" y="-163" width="470" height="313.33" fill="url(#leafEdgeX)"/></mask>
+    <clipPath id="cropHalf"><rect x="-235" y="-168" width="236" height="324"/></clipPath>
+    <clipPath id="weedHalf"><rect x="0" y="-168" width="236" height="324"/></clipPath>
+  </defs>
+  <g class="predictionPlants" mask="url(#comparisonSides)"><g mask="url(#rootEdge)">
+    <use href="#comparisonPlate" clip-path="url(#cropHalf)"/>
+    <!-- Register both illustrated tips to the same measurement above the soil. -->
+    <g transform="translate(0 30) scale(1 .975) translate(0 -30)" clip-path="url(#weedHalf)"><use href="#comparisonPlate"/></g>
+  </g></g>
+  <g class="measureRule" fill="none" stroke="#d0e5ce"><path d="M0 30V-76" stroke-width=".8"/><path d="M-5 30H5m-8-21h6m-6-21h6m-6-21h6m-6-21h6m-8-22h10"/></g>
+  <g class="caliper" fill="none" stroke="#ffdf91"><path class="heightLine" d="M-99 0H99" stroke-width="1.5" stroke-dasharray="3 4"/><circle cx="-99" r="3"/><circle cx="99" r="3"/></g>
+  <g class="pairedSamples" fill="#ffe098"><circle r="3"/><circle r="3"/></g>
+  <text class="measureLabel" text-anchor="middle" y="-93">Same height</text>
+  <g class="scoreReadout"></g>
+</svg>
+
+</div>
+</div><div class="filmCaption" aria-live="polite"><div class="sceneCaption"><p class="filmSeries">Follow one lettuce</p><h2 class="shotTitle">Where does the light land?</h2><p class="shotText">A laser samples the first surface it meets. Trace a ray down to the edge of a leaf.</p><a class="tryShot primary" href="?view=learn&amp;step=lessons">Try scanning a row</a></div></div></div>
 <div class="filmControls"><button type="button" id="playFilm">Play story</button><div class="shotList" role="group" aria-label="Choose a scene"><button data-shot-index="0" aria-pressed="true">Leaf</button><button data-shot-index="1" aria-pressed="false">Returns</button><button data-shot-index="2" aria-pressed="false">Prediction</button></div>
 <div class="filmMix" role="group" aria-label="Story audio"><label><input type="checkbox" data-audio-track="narration" checked>Narration</label><label><input type="checkbox" data-audio-track="ambience" checked>Ambience</label></div>
 <span id="filmAudioNotice" role="status"></span></div>

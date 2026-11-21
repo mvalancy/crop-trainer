@@ -28,29 +28,58 @@ export async function checkFieldFilm(browser, base) {
     });
     await page.goto(new URL('studio/',base).href);
     const film = page.locator('#film');
-    await film.getByRole('button',{name:'Prediction',exact:true}).click();
+    const artwork = await film.locator('image[href$=".webp"]').evaluateAll(nodes => Promise.all(nodes.map(async node => {
+      const image = new Image();
+      image.src = node.getAttribute('href');
+      await image.decode();
+      return image.naturalWidth;
+    })));
+    assert.ok(artwork.length === 3 && artwork.every(width=>width>=1000),'Each scene needs its complete botanical plate.');
+    const button = name => film.getByRole('button',{name,exact:true});
     for (const [width,height] of [[320,568],[390,844],[568,320],[667,375],[844,390],[768,1024],[1024,768],[1024,1366],[1366,768],[1920,1080]]) {
       await page.setViewportSize({width,height});
-      const layout = await film.evaluate(el => {
-        const box = selector => el.querySelector(selector).getBoundingClientRect().toJSON();
-        return {screen:box('.filmScreen'),pane:box('.predictionPane'),art:box('.predictionArt'),
-          line:box('.heightLine'),caption:box('.filmCaption'),controls:box('.filmControls'),overflow:el.scrollWidth-el.clientWidth};
-      });
-      const {screen,pane,art,line,caption,controls} = layout;
-      const near = (a,b) => Math.abs(a-b) < 1.5;
-      assert.ok(near(art.x+art.width/2,pane.x+pane.width/2) && near(art.y+art.height/2,pane.y+pane.height/2),'Prediction must be centered at '+width+'×'+height);
-      assert.ok(near(line.x+line.width/2,pane.x+pane.width/2));
-      assert.ok(controls.bottom <= height+1,'Film controls extend to '+controls.bottom+' at '+width+'×'+height);
-      assert.ok(art.width > 200 && art.top >= screen.top && art.bottom <= screen.bottom+1);
-      assert.ok(caption.right <= art.left+1 || caption.top >= art.bottom-1);
-      assert.ok(caption.bottom <= controls.top+1 && layout.overflow < 1);
+      await page.emulateMedia({colorScheme:width%3 ? 'dark' : 'light'});
+      let lastStage;
+      for (const name of ['Leaf','Returns','Prediction']) {
+        await button(name).click();
+        const layout = await film.evaluate((el,scene) => {
+          const box = selector => el.querySelector(selector).getBoundingClientRect().toJSON();
+          // These are the bounds of the painted plant, the scan rosette and the
+          // two measured specimens. Test what the camera shows in screen pixels.
+          const [selector,left,top,right,bottom] = {
+            Leaf:['.leafCamera',-210,-137,210,137],
+            Returns:['.scanCanopy',-134,-131,134,131],
+            Prediction:['.shotHeight',-200,-80,180,120]
+          }[scene];
+          const matrix = el.querySelector(selector).getScreenCTM();
+          const point = (x,y) => new DOMPoint(x,y).matrixTransform(matrix).toJSON();
+          const target = scene === 'Returns' ? box('.targetCenter') : null;
+          const marking = scene === 'Prediction' ? box('.heightLine') : null;
+          return {pane:box('.filmStage'),caption:box('.filmCaption'),controls:box('.filmControls'),
+            center:point(0,0),topLeft:point(left,top),bottomRight:point(right,bottom),target,marking,
+            overflow:el.scrollWidth-el.clientWidth};
+        },name);
+        const {pane,caption,controls,center,topLeft,bottomRight,target,marking} = layout;
+        const near = (a,b) => Math.abs(a-b) < 1.5;
+        const message = name+' at '+width+'×'+height;
+        assert.ok(near(center.x,pane.x+pane.width/2) && near(center.y,pane.y+pane.height/2),message);
+        if (target) assert.ok(near(target.x+target.width/2,center.x) && near(target.y+target.height/2,center.y),message);
+        if (marking) assert.ok(near(marking.x+marking.width/2,center.x),message);
+        assert.ok(topLeft.x >= pane.left-1 && topLeft.y >= pane.top-1 && bottomRight.x <= pane.right+1 && bottomRight.y <= pane.bottom+1,message);
+        assert.ok(bottomRight.x-topLeft.x > 100,message);
+        assert.ok(caption.right <= pane.left+1 || caption.top >= pane.bottom-1,message);
+        assert.ok(controls.bottom <= height+1 && layout.overflow < 1 && caption.bottom <= controls.top+1,message);
+        if (lastStage) assert.deepEqual(pane,lastStage,'Changing scenes moved the stage at '+message);
+        lastStage = pane;
+      }
     }
     await page.setViewportSize({width:390,height:844});
     assert.equal(await page.evaluate(()=>window.filmMeters.length),0,'Opening a film or choosing a still must stay silent');
-    const button = name => film.getByRole('button',{name,exact:true});
+    assert.deepEqual(await film.locator('.scoreValue').allTextContents(),['0.62','0.62']);
     await button('Play story').click();
     await page.waitForFunction(()=>window.filmMeters.length===2 && window.filmMeters.every(read=>read()>.001));
     assert.equal(await film.getAttribute('data-shot'),'2','Play must start the chosen scene');
+    assert.deepEqual(await film.locator('.scoreValue').allTextContents(),['0.62','0.62'],'Reduced motion keeps the explanatory final frame.');
     const voice = film.getByLabel('Narration',{exact:true});
     await voice.uncheck();
     await page.waitForFunction(()=>window.filmMeters[0]()<.0001 && window.filmMeters[1]()>.001);
@@ -70,11 +99,35 @@ export async function checkFieldFilm(browser, base) {
     assert.ok(await film.evaluate(el=>!el.classList.contains('playing')));
     await page.goto(new URL('studio/',base).href);
     assert.equal(await film.getByLabel('Ambience',{exact:true}).isChecked(),false);
+    await page.emulateMedia({reducedMotion:'no-preference'});
+    await button('Play story').click();
+    await page.waitForFunction(() => {
+      const y = Number(document.querySelector('.photon').getAttribute('cy'));
+      return y > -180 && y < -2;
+    });
+    await page.waitForFunction(() => Number(document.querySelector('.reflected').getAttribute('cy')) < -1);
+    await button('Returns').click();
+    await page.waitForFunction(() => {
+      const width = Number(document.querySelector('.scanReveal').getAttribute('width'));
+      return width > 12 && width < 425;
+    });
+    await button('Pause story').click();
+    const stopped = await film.locator('.scanReveal').getAttribute('width');
+    await page.evaluate(() => new Promise(done => requestAnimationFrame(() => requestAnimationFrame(done))));
+    assert.equal(await film.locator('.scanReveal').getAttribute('width'),stopped);
+    await button('Resume story').click();
+    await page.waitForFunction(previous => Number(document.querySelector('.scanReveal').getAttribute('width')) > Number(previous), stopped);
+    await button('Prediction').click();
+    await page.waitForFunction(() => document.querySelector('.scoreValue').textContent === '0.50');
+    await page.waitForFunction(() => [...document.querySelectorAll('.scoreValue')].every(el=>el.textContent === '0.62'),null,{timeout:13000});
+    await button('Pause story').click();
+    await button('Leaf').click();
     await page.route('**/art/audio/*.mp3',route=>route.abort());
+    await page.goto(new URL('studio/',base).href);
     await button('Play story').click();
     await film.getByRole('status').filter({hasText:'captions'}).waitFor();
     await page.waitForFunction(()=>document.querySelector('#film').dataset.shot==='1',{},{timeout:15000});
-    console.log('Verified both soundtrack channels, pause/resume, independent mutes, replay, caption fallback and Prediction framing at ten viewport sizes.');
+    console.log('Verified both soundtrack channels, pause/resume, independent mutes, replay, caption fallback and static and moving frames for all three centered subjects at ten viewport sizes.');
   } finally {
     await page.close();
   }

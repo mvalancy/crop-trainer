@@ -1,42 +1,50 @@
+import {createFilmArt} from './field-film-art.js';
 import {createNarrationPlayer} from './narration-player.js';
 
 // The English voice tracks use Kokoro v1.0 (af_heart). The field and instrument sounds are original.
 const scenes = [
   {id:'leaf', duration:8, title:'Where does the light land?',
     text:'A laser samples the first surface it meets. Trace a ray down to the edge of a leaf.',
-    action:'Try scanning a row', lesson:'sampleRow', description:'Light meets the leaves of a butterhead lettuce in a field at dusk.'},
+    action:'Try scanning a row', lesson:'sampleRow', description:'Four light pulses strike the curved canopy of a butterhead lettuce. The first surfaces they encounter send echoes back.'},
   {id:'returns', duration:8.23, title:'Where is the plant?',
     text:'Seen from above, the returns form clusters. The gold ring marks one guess at a plant center.',
-    action:'Place a pin', lesson:'placePin', description:'An illustrated overhead scan shows clusters of green dots with a gold ring on one cluster.'},
+    action:'Place a pin', lesson:'placePin', description:'An illustrated scan sweeps across a lettuce, replacing its leaf surfaces with sample dots. A gold ring settles over its estimated center.'},
   {id:'prediction', duration:9.49, title:'Can height fool a detector?',
     text:'A lettuce and a weed reach the same height. Teach a model using only that clue and watch both scores change.',
-    action:'Try one model update', lesson:'learnWeight', description:'A side view of a lettuce and a weed shows their leaves meeting the same height line.'}
+    action:'Try one model update', lesson:'learnWeight', description:'A measuring line meets the lettuce and weed at the same height. One learning step raises both crop scores from 0.50 to 0.62.'}
 ];
-
-function drawReturns(container) {
-  // A schematic overhead scan. A leaf's centerline curves outward, with returns spreading across its blade.
-  const marks=[];
-  for (const [cx,cy,scale] of [[430,196,1.1],[333,84,.73],[528,80,.8],[337,308,.82],[548,288,.94],[156,160,.65]]) {
-    for (let leaf=0;leaf<12;leaf++) {
-      const angle=leaf*2.4, length=(leaf<6?57:35)*scale;
-      for (let i=1;i<=16;i++) for (let j=-2;j<=2;j++) {
-        const t=i/17, reach=t*length, across=j*Math.sin(t*Math.PI)*length*.087;
-        const x=cx+reach*Math.cos(angle)-across*Math.sin(angle+t*.3);
-        const y=cy+reach*Math.sin(angle)+across*Math.cos(angle+t*.3);
-        marks.push('<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r=".96" fill="'+(j===0?'#daeaa3':i%3===0?'#9acc86':'#70ac8c')+'"/>');
-      }
-    }
-  }
-  container.innerHTML=marks.join('');
-}
 
 export function initFieldFilm(practice) {
   const film = document.getElementById('film');
   const play = film.querySelector('#playFilm');
-  const link = film.querySelector('#tryShot');
   const notice = film.querySelector('#filmAudioNotice');
   const buttons = [...film.querySelectorAll('[data-shot-index]')];
+  const stage = film.querySelector('.filmStage');
+  const draw = createFilmArt(stage);
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  let request;
   let index = 0, offset = 0, playing = false, finished = false;
+
+  // Sharing one grid cell reserves the tallest caption at the current width.
+  // Changing shots never moves the lens or the playback controls.
+  const caption = film.querySelector('.filmCaption');
+  const first = caption.firstElementChild;
+  const pages = scenes.map((scene,i) => {
+    const page = i ? first.cloneNode(true) : first;
+    page.querySelector('.shotTitle').textContent = scene.title;
+    page.querySelector('.shotText').textContent = scene.text;
+    const link = page.querySelector('.tryShot');
+    link.textContent = scene.action;
+    link.href = '?view=learn&step=lessons&open=' + encodeURIComponent('#' + scene.lesson);
+    link.addEventListener('click', event => {
+      if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+      event.preventDefault();
+      pause();
+      practice(scene.lesson);
+    });
+    if (i) caption.append(page);
+    return page;
+  });
 
   const player = createNarrationPlayer({
     onEnded() {
@@ -46,6 +54,7 @@ export function initFieldFilm(practice) {
       } else {
         finished = true;
         pause();
+        draw(scenes[index].id,1);
       }
     },
     onAudioError() { notice.textContent = 'Some audio is unavailable. The story continues with captions.'; }
@@ -57,16 +66,29 @@ export function initFieldFilm(practice) {
     finished = false;
     const scene = scenes[index];
     film.dataset.shot = String(index);
-    film.querySelector('#shotTitle').textContent = scene.title;
-    film.querySelector('#shotText').textContent = scene.text;
-    film.querySelector('#sceneDescription').textContent = scene.description;
-    link.textContent = scene.action;
-    link.href = '?view=learn&step=lessons&open=' + encodeURIComponent('#' + scene.lesson);
+    pages.forEach((page,i) => { page.inert = i !== index; });
+    stage.setAttribute('aria-label', scene.description);
+    draw(scene.id,1);
     buttons.forEach((button, i) => button.setAttribute('aria-pressed', String(i === index)));
   }
 
+  function tick() {
+    const scene = scenes[index];
+    draw(scene.id,player.position()/scene.duration);
+    request = requestAnimationFrame(tick);
+  }
+
+  function syncMotion() {
+    cancelAnimationFrame(request);
+    if (reduced.matches || finished) draw(scenes[index].id,1);
+    else if (playing) tick();
+    else draw(scenes[index].id,offset ? offset/scenes[index].duration : 1);
+  }
+  reduced.addEventListener('change',syncMotion);
+
   function pause() {
     if (playing) offset = player.pause();
+    cancelAnimationFrame(request);
     playing = false;
     film.classList.remove('playing');
     play.textContent = finished ? 'Replay story' : offset > 0 ? 'Resume story' : 'Play story';
@@ -80,6 +102,7 @@ export function initFieldFilm(practice) {
     play.textContent = 'Pause story';
     notice.textContent = '';
     player.play({duration, narration:track('voice'), ambience:track('ambience')}, offset);
+    syncMotion();
   }
 
   for (const input of film.querySelectorAll('[data-audio-track]')) {
@@ -102,15 +125,8 @@ export function initFieldFilm(practice) {
     if (playing) start();
     else pause();
   }));
-  link.addEventListener('click', event => {
-    if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
-    event.preventDefault();
-    pause();
-    practice(scenes[index].lesson);
-  });
   document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
   window.addEventListener('pagehide', pause);
-  drawReturns(film.querySelector('#filmReturns'));
   select(0);
   return pause;
 }

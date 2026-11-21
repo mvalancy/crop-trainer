@@ -1,4 +1,14 @@
 // One logistic unit. These two examples share a height input of 1 and a fixed bias of 0.
+const height = 1, label = 1, learningRate = 1;
+
+export function heightScore(weight) {
+  return 1 / (1 + Math.exp(-weight * height));
+}
+
+export function learnHeightWeight(weight) {
+  return weight + learningRate * (label - heightScore(weight)) * height;
+}
+
 export function setupWeightLesson() {
   const figure = document.getElementById('weightBench');
   const learn = document.getElementById('oneUpdate');
@@ -7,8 +17,6 @@ export function setupWeightLesson() {
   const weightValue = document.getElementById('lessonWeight');
   const scores = ['practiceScore', 'weedScore'].map(id => document.getElementById(id));
   const motion = matchMedia('(prefers-reduced-motion: reduce)');
-  const height = 1, label = 1, learningRate = 1;
-  const predict = weight => 1 / (1 + Math.exp(-weight * height));
   let stepTimer, weight;
 
   function show(phase, message) {
@@ -17,7 +25,7 @@ export function setupWeightLesson() {
     document.getElementById('lessonPlantLabel').textContent = phase==='ready' ? 'Labeled crop' : 'Crop target 1.00';
   }
   function scoreBoth() {
-    const result = predict(weight).toFixed(2);
+    const result = heightScore(weight).toFixed(2);
     for (const score of scores) score.textContent = result;
   }
   function startOver() {
@@ -30,7 +38,7 @@ export function setupWeightLesson() {
     learn.textContent = 'Learn from the plant';
   }
   function updateWeight() {
-    weight += learningRate * (label - predict(weight)) * height;
+    weight = learnHeightWeight(weight);
     weightValue.textContent = weight.toFixed(2);
   }
   function finish() {

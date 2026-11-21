@@ -24,9 +24,16 @@ export function createNarrationPlayer({onEnded, onAudioError}) {
     return buffer;
   }
 
+  function position() {
+    if (!current) return 0;
+    const elapsed = current.started == null ? 0 : current.now() - current.started;
+    return Math.min(current.duration, current.offset + Math.max(0, elapsed));
+  }
+
   function pause() {
     generation++;
     if (!current) return 0;
+    const stoppedAt = position();
     const item = current;
     current = null;
     item.request.abort();
@@ -37,8 +44,7 @@ export function createNarrationPlayer({onEnded, onAudioError}) {
       source.disconnect();
     }
     if (context?.state === 'running') context.suspend().catch(() => {});
-    const elapsed = item.started == null ? 0 : item.now() - item.started;
-    return Math.min(item.duration, item.offset + Math.max(0, elapsed));
+    return stoppedAt;
   }
 
   async function play(cue, offset = 0) {
@@ -105,5 +111,5 @@ export function createNarrationPlayer({onEnded, onAudioError}) {
     }
   }
 
-  return {play, pause, setEnabled};
+  return {play, pause, position, setEnabled};
 }
