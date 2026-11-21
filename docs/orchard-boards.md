@@ -36,6 +36,27 @@ We repeated the placement test on four fresh seeds and changed the same 39 trees
 
 On field `23484467`, independent boards moved the closest pin to the second healthy tree (Tree 1) from 7.9 to 46.4 cm on the grid and from 1.0 to 45.3 cm on rings. Masking low board returns recovered the match in each layout. Those are two views of one tree. The paired results show how this overhead generator can reward a location clue. Accuracy in a physical orchard still needs surveyed tree bases and measured scan geometry. In a separate handheld avocado study, the same low band contained both woody and leafy returns. One tree had no focal-tree returns there on the second date. [Field observations and replay](field-datasets.md#how-often-does-a-low-return-actually-hit-wood)
 
+## Does the board advantage persist at one million rays?
+
+**On six new fields it disappeared.** At 60,000 rays, tree-centered boards gave the low-return rule three more matches than independent boards at 15 cm. At one million rays they cost one match. Clear plots and independently scattered boards both yielded 66 matches among the same 67 trees at the higher budget. Five of the six fields had identical matched-tree counts for both board placements at that budget.
+
+| Actual rays | Rule and placement | 7.5 cm | 10 cm | 15 cm |
+| ---: | --- | ---: | ---: | ---: |
+| 60,000 | Low returns, clear or independent | 34 / 36 / 33 | 40 / 30 / 27 | 48 / 22 / 19 |
+| 60,000 | Low returns, centered | 35 / 34 / 32 | 42 / 27 / 25 | 51 / 18 / 16 |
+| 60,000 | Usual support, any placement | 34 / 36 / 33 | 39 / 31 / 28 | 47 / 23 / 20 |
+| 60,000 | Height peaks, clear or centered | 5 / 125 / 62 | 6 / 124 / 61 | 6 / 124 / 61 |
+| 60,000 | Height peaks, independent | 5 / 152 / 62 | 6 / 151 / 61 | 6 / 151 / 61 |
+| 1,000,000 | Low returns, clear or independent | 62 / 8 / 5 | 66 / 4 / 1 | 66 / 4 / 1 |
+| 1,000,000 | Low returns, centered | 61 / 9 / 6 | 65 / 5 / 2 | 65 / 5 / 2 |
+| 1,000,000 | Usual support, any placement | 61 / 9 / 6 | 65 / 5 / 2 | 65 / 5 / 2 |
+| 1,000,000 | Height peaks, clear or centered | 36 / 86 / 31 | 51 / 71 / 16 | 52 / 70 / 15 |
+| 1,000,000 | Height peaks, independent | 36 / 107 / 31 | 51 / 92 / 16 | 52 / 91 / 15 |
+
+Cells give **matched pins / extra pins / missed trees**. With centered boards, masking the board returns removed three matches at 60,000 rays and restored one at a million. On field `24264701` at a million rays, the low-return pin for Tree 2 lay 3.1 cm from the base on clear and independently scattered plots. Centered boards produced 298 low board returns within 15 cm of that base. The closest pin moved to 37.8 cm. [Inspect Tree 2 at one million rays](https://mvalancy.github.io/crop-trainer/?crop=apple&plantArchitecture=4&plantForm=central-leader&plantCondition=healthy&appleCanopy=leafy&seed=24264701&sensor=reference&budget=1000000&ground=true&noise=clean&weeds=off&sticks=off&boards=off&tile=49029a391415170e&studyMode=boards&studyMetric=orchard&studyCloud=on&studyBox=2&studyZoom=tree#scan-study)
+
+The detector settings and six field seeds were fixed before scoring. Both budgets used identical healthy, leafy trees and board geometry. The overhead reference grid sampled fresh XY positions at each budget and kept those positions fixed across the three placements. The OS1-64 layout tops out at 65,536 rays, so this comparison covers the reference grid only. On the same Node CPU host, generating the 18 scans took 0.70 s at 60,000 rays and 9.40 s at one million. Height, usual support and low-return inference respectively took 0.11, 0.30 and 0.19 s at the lower budget and 0.55, 0.40 and 0.46 s at the higher budget. These are synthetic single-host wall times. Run `node benchmark/studies/orchard-board-placement.mjs density > orchard-density.json` to reproduce the paired fields, pins and counts.
+
 ## Repeat the study
 
 From the repository root, run the following command with Node.js 22 or later. The JSON includes seeds, tile IDs, per-field and per-distance counts, retained pins, board-return attribution and phase timings. For a single cohort, append `development`, `confirmation` or `damage` before redirecting the output. [Study source](../benchmark/studies/orchard-board-placement.mjs)

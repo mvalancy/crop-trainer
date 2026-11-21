@@ -13,6 +13,8 @@ const seeds = {
   confirmation: [22153127, 22264243, 22375361, 22486489, 22597597, 22708711],
   damage: [23151119, 23262233, 23373349, 23484467]
 };
+const densitySeeds = [24153583, 24264701, 24375817, 24486931, 24598049, 24709163];
+const rayBudgets = [60000, 1000000];
 const layouts = ['reference', 'os1-64'];
 const placements = ['clear', 'plant', 'independent'];
 const methods = ['height', 'support', 'lowReturns', 'maskedBoards'];
@@ -126,7 +128,7 @@ function summarize(scans) {
   }));
 }
 
-function run(split) {
+function run(split, {fieldSeeds=seeds[split], points=settings.points, scanLayouts=layouts, densityGeometry}={}) {
   const started=performance.now(), scans=[];
   const timingsMs={generation:0, height:0, support:0, lowReturns:0, attribution:0, scoring:0};
   function timed(phase,op) {
@@ -135,18 +137,18 @@ function run(split) {
     return value;
   }
   const conditions=split==='damage'?['healthy','damaged']:['healthy'];
-  for (const seed of seeds[split]) {
+  for (const seed of fieldSeeds) {
     let basePositions;
     const raysByLayout=new Map();
-    for (const condition of conditions) for (const layout of layouts) {
+    for (const condition of conditions) for (const layout of scanLayouts) {
       let clear, clearSupport;
       const ids=new Set();
       for (const placement of placements) {
-        const recipe={...makeRecipe(seed,true,getSensor(layout),'apple',4,'central-leader',condition),...settings,
+        const recipe={...makeRecipe(seed,true,getSensor(layout),'apple',4,'central-leader',condition),...settings,points,
           boards:placement!=='clear', ...(placement==='independent'?{boardPlacement:placement}:{})};
         const scan=timed('generation',()=>field(recipe));
-        assert.equal(scan.sampledRays,settings.points);
-        assert.equal(scan.xyz.length,3*settings.points);
+        assert.equal(scan.sampledRays,points);
+        assert.equal(scan.xyz.length,3*points);
         const targets=targetCenters(scan.labels.boxes);
         if (basePositions) assert.deepEqual(targets,basePositions);
         else {basePositions=targets; verifyBoardGeometry(seed,targets);}
@@ -155,6 +157,11 @@ function run(split) {
         if (clear) verifyBoardPair(clear,scan);
         else {
           clear=scan;
+          if (densityGeometry) {
+            const geometry={boxes:scan.labels.boxes,skeleton:scan.skeleton};
+            if (densityGeometry.has(seed)) assert.deepEqual(geometry,densityGeometry.get(seed),'Tree changed across ray budgets');
+            else densityGeometry.set(seed,geometry);
+          }
           const first=raysByLayout.get(layout);
           if (first) for(let i=0;i<scan.xyz.length;i+=3) {
             assert.equal(scan.xyz[i],first[i]); assert.equal(scan.xyz[i+1],first[i+1]);
@@ -169,14 +176,27 @@ function run(split) {
     }
   }
   const byCondition=Object.fromEntries(conditions.map(c=>[c,summarize(scans.filter(s=>s.condition===c))]));
-  const byField=Object.fromEntries(seeds[split].map(seed=>[seed,Object.fromEntries(conditions.map(c=>
+  const byField=Object.fromEntries(fieldSeeds.map(seed=>[seed,Object.fromEntries(conditions.map(c=>
     [c,summarize(scans.filter(s=>s.condition===c && s.seed===seed))]))]));
   timingsMs.total=performance.now()-started;
   return {timingsMs,byCondition,byField,scans};
 }
 
 const splits=process.argv.slice(2);
-if (splits.length>1 || splits.some(s=>!Object.hasOwn(seeds,s))) throw Error('Choose development, confirmation or damage.');
-const results=Object.fromEntries((splits.length?splits:Object.keys(seeds)).map(s=>[s,run(s)]));
-console.log(JSON.stringify({domain:'synthetic', backend:'CPU', runtime:{node:process.version, cpu:cpus()[0]?.model},
-  settings, seeds,layouts,placements,peakHeightM,separationM,proximityM,results}));
+if (splits.length>1 || splits.some(s=>s!=='density' && !Object.hasOwn(seeds,s))) {
+  throw Error('Choose development, confirmation, damage or density.');
+}
+const runtime={node:process.version,cpu:cpus()[0]?.model};
+if (splits[0]==='density') {
+  const densityGeometry=new Map(), scanLayouts=['reference'];
+  const byRayBudget=Object.fromEntries(rayBudgets.map(points=>[points,run('density',{
+    fieldSeeds:densitySeeds,points,scanLayouts,densityGeometry
+  })]));
+  const {points,...commonSettings}=settings;
+  console.log(JSON.stringify({domain:'synthetic',backend:'CPU',runtime,settings:{...commonSettings,rayBudgets},
+    seeds:{density:densitySeeds},layouts:scanLayouts,placements,peakHeightM,separationM,proximityM,results:{density:{byRayBudget}}}));
+} else {
+  const results=Object.fromEntries((splits.length?splits:Object.keys(seeds)).map(s=>[s,run(s)]));
+  console.log(JSON.stringify({domain:'synthetic',backend:'CPU',runtime,
+    settings,seeds,layouts,placements,peakHeightM,separationM,proximityM,results}));
+}
