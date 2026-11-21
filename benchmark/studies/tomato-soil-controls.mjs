@@ -136,6 +136,7 @@ export function scoreFields(fits,fieldSeeds) {
           record.height=result.baselineEvaluation.scores;
         }
         record.models.push({seed:fit.seed,sampling:fit.sampling,sampleLimit:fit.sampleLimit,
+          ...(fit.epochs === undefined ? {} : {epochs:fit.epochs}),
           accepted:result.acceptedCount,scores:result.evaluation.scores});
       }
       fields.push(record);
@@ -145,7 +146,8 @@ export function scoreFields(fits,fieldSeeds) {
     const scans=fields.filter(f=>f.layout===layout && f.plantForm===plantForm);
     summary.push({layout,plantForm,targets:scans.reduce((s,f)=>s+f.targets,0),
       proposalMatches15:scans.reduce((s,f)=>s+f.proposalMatches15,0),height:pool(scans,s=>s.height),
-      models:fits.map(({seed,sampling,sampleLimit},i)=>({seed,sampling,sampleLimit,scores:pool(scans,s=>s.models[i].scores)}))});
+      models:fits.map(({seed,sampling,sampleLimit,epochs},i)=>({seed,sampling,sampleLimit,
+        ...(epochs === undefined ? {} : {epochs}),scores:pool(scans,s=>s.models[i].scores)}))});
   }
   return {fields,summary,timingsMs};
 }

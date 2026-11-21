@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 470 358" width="470" height="358" role="img" aria-labelledby="title desc">
+  <title id="title">What did more training change on ring scans?</title>
+  <desc id="desc">On six held-out simulated fields at 15 cm, 40, 160 and 640 passes found 0.3%, 9.4% and 39.6% of the seedlings. On separate scans of branching plants at the same settings, 84.5%, 79.0% and 70.3% of the predicted pins were correct. All fits used identical examples and a cutoff of 0.50.</desc>
+  <style>
+    text {font-family: system-ui, sans-serif;fill:#e6f3df}
+    .heading {font-weight:700;font-size:23px}.label,.axis {font-size:15px}
+    .axis,.sub {fill:#c9d9cb}.sub {font-size:15px}
+    .value {font:650 15px system-ui,sans-serif;paint-order:stroke;stroke:#173a32;stroke-width:4px;stroke-linejoin:round}
+    .grid {fill:none;stroke:#4a6b60;stroke-width:1}
+    .trace {fill:none;stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round}
+    .branch {stroke:#ffbd81}.small {stroke:#aae19a}
+    .branch.dot {fill:#ffbd81}.small.dot {fill:#aae19a}
+    @media (prefers-reduced-motion:no-preference) {
+      .trace {stroke-dasharray:1;animation:grow 1.3s ease-out}
+      @keyframes grow {from{stroke-dashoffset:1} to{stroke-dashoffset:0}}
+    }
+  </style>
+  <rect width="470" height="358" rx="16" fill="#173a32"/>
+  <text x="19" y="34" class="heading">What did more training change?</text>
+  <text x="19" y="59" class="sub">Simulated tomato ring scans · 15 cm match distance</text>
+  <rect x="21" y="80" width="9" height="9" class="branch dot"/>
+  <text x="39" y="91" class="label">Correct branching-plant pins</text>
+  <circle cx="279" cy="85" r="5" class="small dot"/>
+  <text x="292" y="91" class="label">Seedlings found</text>
+  <path d="M54 121.0H448" class="grid"/><text x="45" y="126.0" text-anchor="end" class="axis">100%</text>
+  <path d="M54 197.0H448" class="grid"/><text x="45" y="202.0" text-anchor="end" class="axis">50%</text>
+  <path d="M54 273.0H448" class="grid"/><text x="45" y="278.0" text-anchor="end" class="axis">0%</text>
+  <polyline class="branch trace" points="76,144.5 239,152.9 412,166.1" pathLength="1"/>
+  <rect class="branch dot" x="72" y="140.5" width="8" height="8"/>
+  <text x="76" y="132.5" text-anchor="middle" class="value">84.5%</text>
+  <rect class="branch dot" x="235" y="148.9" width="8" height="8"/>
+  <text x="239" y="140.9" text-anchor="middle" class="value">79.0%</text>
+  <rect class="branch dot" x="408" y="162.1" width="8" height="8"/>
+  <text x="412" y="154.1" text-anchor="middle" class="value">70.3%</text>
+  <polyline class="small trace" points="76,272.5 239,258.7 412,212.8" pathLength="1"/>
+  <circle class="small dot" cx="76" cy="272.5" r="5"/>
+  <text x="76" y="260.5" text-anchor="middle" class="value">0.3%</text>
+  <circle class="small dot" cx="239" cy="258.7" r="5"/>
+  <text x="239" y="246.7" text-anchor="middle" class="value">9.4%</text>
+  <circle class="small dot" cx="412" cy="212.8" r="5"/>
+  <text x="412" y="200.8" text-anchor="middle" class="value">39.6%</text>
+  <text x="76" y="298" text-anchor="middle" class="axis">40</text>
+  <text x="239" y="298" text-anchor="middle" class="axis">160</text>
+  <text x="412" y="298" text-anchor="middle" class="axis">640</text>
+  <text x="239" y="324" text-anchor="middle" class="label">Training passes over the same 600 examples</text>
+  <text x="239" y="346" text-anchor="middle" class="sub">6 plantings · 657 targets per stage · 0.50 cutoff</text>
+</svg>

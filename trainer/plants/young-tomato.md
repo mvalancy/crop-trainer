@@ -35,3 +35,5 @@ These patches come from a healthy seedling field with soil present. One peak lan
 ![The same planting supplies two draws of 300 positive peaks. Balancing by stage and soil gives each group 50 places.](../../art/tomato-training-draw.svg)
 
 A small plant can have fewer eligible height peaks than a branching plant. These counts come from six mixed-stage fields. When you change the draw, the plants and laser returns stay fixed. Look at the held-out scans to see whether the extra seedling examples change which plants get pins. [Try the experiment and inspect one ring scan](../../docs/tomato-soil-sampling.md)
+
+On six new plantings, the four-unit network found more seedlings with longer training, especially under the simulated ring scanner. Check the extra pins on branching plants before choosing an epoch count. [Training duration across growth stages](../../docs/tomato-training-duration.md)

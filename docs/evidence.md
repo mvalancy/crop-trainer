@@ -35,6 +35,10 @@ We trained three new models on reference grids. For each fit, we chose a cutoff 
 
 Calibration recovered recall at the cost of precision. This used labeled examples from the target layout. The result supports calibrating a crop and scan setup on separate fields before trusting its operating point.
 
+## What did longer training change for tomatoes?
+
+On six new synthetic plantings, the same four-unit network trained for 40, 160 or 640 passes over 600 examples. At 15 cm on ring scans it found **2, 62 and 260 of 657 seedlings** respectively. On branching plants, the corresponding runs placed 115, 167 and 263 extra pins. Grid seedlings remained harder even after 640 passes (58 of 657). A useful duration depends on the crop stage, scanner and acceptable cost of a wrong pin. [Study, settings and field replay](tomato-training-duration.md)
+
 ## Does a grid-trained artichoke detector transfer to rings?
 
 In a smaller browser test at **12,000 sampled rays per scan**, the CPU and WebGPU fits agreed on every tile’s match counts. Changing the held-out scan from a reference grid to simulated OS1-64 rings reduced pooled mean F1 from **.455 to .422**. At 15 cm the rings produced 43 fewer matches and nine fewer extra pins. The difference varied by fit. For seed `14512693`, mean F1 went from .490 to .424. For `14512694` it went from .417 to .420.
