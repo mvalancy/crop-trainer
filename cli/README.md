@@ -13,4 +13,4 @@ From the project root, start the browser app with `npm start` or `node cli/run.m
 
 Give each output a fresh filename. The scoring command accepts surveyed locations via `--labels centers.csv`. [Local setup](../docs/local-setup.md) · [Field-scoring options](../docs/scan-cli.md)
 
-Compare how far an orchard pin moves between two physical scans of the same apple tree using your own copy of LFuji-air. [Replay the fan-off and fan-on comparison](../docs/field-datasets.md#do-pins-stay-in-the-same-place-when-the-foliage-moves)
+Compare how far an orchard pin moves between two physical scans of the same apple tree using your own copy of LFuji-air. [Compare airflow](../docs/field-datasets.md#do-pins-stay-in-the-same-place-when-the-foliage-moves) · [Compare scanner sides and detector rankings](../docs/field-datasets.md#what-changes-when-the-scanner-moves-to-the-other-side-of-the-row)

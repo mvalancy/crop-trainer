@@ -2,12 +2,22 @@
 import {open} from 'node:fs/promises';
 import {join} from 'node:path';
 import {inflateSync} from 'node:zlib';
-import {detectOrchardBases, ORCHARD_SPACINGS} from '../trainer/models/orchard.js';
+import {detectOrchardBases, DEFAULT_ORCHARD_SPACING, ORCHARD_SPACINGS} from '../trainer/models/orchard.js';
 
 const directory = process.argv[2];
-if (!directory || process.argv.length !== 3) {
-  throw Error('Usage: node cli/fuji-repeatability.mjs /path/to/AllTrees_pcloud');
+const compareSides = process.argv[3] === '--compare-sides';
+const westGround = compareSides && process.argv[4] === '--west-ground';
+if (!directory || process.argv.length !== 3 + Number(compareSides) + Number(westGround)) {
+  throw Error('Usage: node cli/fuji-repeatability.mjs /path/to/AllTrees_pcloud [--compare-sides [--west-ground]]');
 }
+
+// Both protocols use the 1.8 m scanner. The east, fan-off scan always sets the horizontal frame.
+const pairedPass = compareSides ? 'n_W' : 'af_E';
+const trials = compareSides
+  ? ['support', 'low-wood'].map(ranking => ({ranking, spacingMeters: DEFAULT_ORCHARD_SPACING}))
+  : ORCHARD_SPACINGS.map(spacingMeters => ({spacingMeters}));
+const countA = compareSides ? 'eastPins' : 'fanOffPins';
+const countB = compareSides ? 'westPins' : 'fanOnPins';
 
 // This archive uses regular MATLAB v5 tags, each padded to eight bytes within the matrix.
 function element(buffer, offset, type) {
@@ -19,8 +29,8 @@ function element(buffer, offset, type) {
   return {bytes: buffer.subarray(offset + 8, offset + 8 + size), next: offset + 8 + Math.ceil(size / 8) * 8};
 }
 
-async function scan(tree, airflow) {
-  const filename = 'Tree' + String(tree).padStart(2, '0') + '_H1_' + airflow + '_E.mat';
+async function scan(tree, pass) {
+  const filename = 'Tree' + String(tree).padStart(2, '0') + '_H1_' + pass + '.mat';
   const file = await open(join(directory, filename));
   let mat;
   try {
@@ -59,36 +69,38 @@ function quantile(sorted, fraction) {
   return sorted[lower] + (index - lower) * (sorted[Math.ceil(index)] - sorted[lower]);
 }
 
-function referenceFrame(scans) {
-  const heights = new Float64Array(scans.reduce((sum, xyz) => sum + xyz.length / 3, 0));
+function referenceFrame(pairs) {
+  const reference = westGround ? 1 : 0;
+  const heights = new Float64Array(pairs.reduce((sum, pair) => sum + pair[reference].length / 3, 0));
   let x = Infinity, y = Infinity, row = 0;
-  for (const xyz of scans) {
-    for (let i = 0; i < xyz.length; i += 3) {
-      x = Math.min(x, xyz[i]);
-      y = Math.min(y, xyz[i + 1]);
-      heights[row++] = xyz[i + 2];
+  for (const pair of pairs) {
+    const east = pair[0], ground = pair[reference];
+    for (let i = 0; i < east.length; i += 3) {
+      x = Math.min(x, east[i]);
+      y = Math.min(y, east[i + 1]);
     }
+    for (let i = 2; i < ground.length; i += 3) heights[row++] = ground[i];
   }
   return [Math.floor(x) - 3, Math.floor(y) - 3, quantile(heights.sort(), .01)];
 }
 
 function compare(trees, pairs) {
-  const origin = referenceFrame(pairs.map(pair => pair.off));
-  const passes = {};
-  for (const side of ['off', 'on']) {
+  const origin = referenceFrame(pairs);
+  const passes = [0, 1].map(side => {
     const local = new Float32Array(pairs.reduce((sum, pair) => sum + pair[side].length, 0));
     let offset = 0;
     for (const pair of pairs) {
       const xyz = pair[side];
       for (let i = 0; i < xyz.length; i++) local[offset++] = xyz[i] - origin[i % 3];
     }
-    passes[side] = ORCHARD_SPACINGS.map(separationMeters => detectOrchardBases(local, {separationMeters}).pins);
-  }
-  const scores = ORCHARD_SPACINGS.map((spacingMeters, index) => {
-    const off = passes.off[index], on = passes.on[index];
-    const shiftCm = trees.length === 1 && off.length === 1 && on.length === 1
-      ? Math.hypot(off[0].x - on[0].x, off[0].y - on[0].y) * 100 : null;
-    return {spacingMeters, fanOffPins: off.length, fanOnPins: on.length, shiftCm};
+    return trials.map(({ranking, spacingMeters}) =>
+      detectOrchardBases(local, {ranking, separationMeters: spacingMeters}).pins);
+  });
+  const scores = trials.map((trial, index) => {
+    const a = passes[0][index], b = passes[1][index];
+    const shiftCm = trees.length === 1 && a.length === 1 && b.length === 1
+      ? Math.hypot(a[0].x - b[0].x, a[0].y - b[0].y) * 100 : null;
+    return {...trial, [countA]: a.length, [countB]: b.length, shiftCm};
   });
   return {trees, origin, scores};
 }
@@ -97,18 +109,21 @@ const individual = [], adjacent = [];
 for (const trees of [[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11]]) {
   const pairs = [];
   for (const tree of trees) {
-    const pair = {off: await scan(tree, 'n'), on: await scan(tree, 'af')};
+    const pair = [await scan(tree, 'n_E'), await scan(tree, pairedPass)];
     individual.push(compare([tree], [pair]));
     pairs.push(pair);
   }
   adjacent.push(compare(trees, pairs));
 }
 
-const summary = ORCHARD_SPACINGS.map((spacingMeters, index) => {
+const summary = trials.map((trial, index) => {
   const shifts = individual.map(item => item.scores[index].shiftCm).filter(n => n !== null).sort((a, b) => a - b);
   const sum = key => adjacent.reduce((total, item) => total + item.scores[index][key], 0);
-  return {spacingMeters, singlePinPairs: shifts.length, pairsWithin15cm: shifts.filter(cm => cm <= 15).length,
-    medianShiftCm: shifts.length ? quantile(shifts, .5) : null, adjacentFanOffPins: sum('fanOffPins'),
-    adjacentFanOnPins: sum('fanOnPins')};
+  const groupCounts = compareSides
+    ? {adjacentEastPins: sum(countA), adjacentWestPins: sum(countB)}
+    : {adjacentFanOffPins: sum(countA), adjacentFanOnPins: sum(countB)};
+  return {...trial, singlePinPairs: shifts.length, pairsWithin15cm: shifts.filter(cm => cm <= 15).length,
+    medianShiftCm: shifts.length ? quantile(shifts, .5) : null, ...groupCounts};
 });
-console.log(JSON.stringify({source: 'https://hdl.handle.net/10459.1/68782', summary, individual, adjacent}, null, 2));
+console.log(JSON.stringify({source: 'https://hdl.handle.net/10459.1/68782',
+  ...(compareSides ? {comparison: 'east-west', passes: ['H1_n_E', 'H1_n_W'], groundHeightFrom: westGround ? 'west' : 'east'} : {}), summary, individual, adjacent}, null, 2));
