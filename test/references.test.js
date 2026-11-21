@@ -68,6 +68,7 @@ test('score radii and saved match IDs use maximum one-to-one XY matching', () =>
     {cm:10, tp:2, fp:1, fn:0, precision:2/3, recall:1, f1:4/5},
     {cm:15, tp:2, fp:1, fn:0, precision:2/3, recall:1, f1:4/5}
   ]);
+  assert.deepEqual(report.pinByReferenceAtCm, {7.5:[1,-1],10:[1,0],15:[1,0]});
   assert.deepEqual(report.pinByReference15, [1,0]);
   assert.equal(report.signedCountError, 1);
   const single = evaluatePins([local(.15,0)], [local(0,0),local(.01,0)]);

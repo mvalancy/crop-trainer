@@ -1,6 +1,6 @@
 import {detectScan} from './inference.js?v=terrain1';
-import {checkScoreThreshold,measureStages} from '../models/data.js?v=terrain1';
-import {parseReferences,evaluatePins} from './references.js?v=systems1';
+import {checkScoreThreshold,measureStages} from '../models/data.js?v=stage-distance1';
+import {parseReferences,evaluatePins} from './references.js?v=map-distance1';
 import {MAX_PLY_POINTS} from './ply.js';
 
 export function runFieldTest({model,xyz,alignment,labels=null,tileId,thresholdOverride}) {
@@ -15,7 +15,7 @@ export function runFieldTest({model,xyz,alignment,labels=null,tileId,thresholdOv
   const captureStages = stages => { learnedStages = stages; };
   const result = detectScan(xyz,detector,alignment,labels === null ? undefined : captureStages);
   if (thresholdOverride !== undefined) result.detector.savedThreshold = model.threshold;
-  if (labels === null) return {...result,references:null,evaluation:null,baselineEvaluation:null,stages15cm:null,
+  if (labels === null) return {...result,references:null,evaluation:null,baselineEvaluation:null,stagesAtCm:null,stages15cm:null,
     ...(result.orchard ? {orchardEvaluation:null} : {})};
   if (typeof labels?.text !== 'string' || typeof labels.filename !== 'string')
     throw Error('Supply the reference file name and contents.');
@@ -25,10 +25,12 @@ export function runFieldTest({model,xyz,alignment,labels=null,tileId,thresholdOv
   const evaluation = evaluatePins(result.pins,references);
   const baselineEvaluation = evaluatePins(result.baselinePins,references);
   const truth = references.map(p => [p.localX,p.localY]);
-  const finalMatches = evaluation.scores.find(row => row.cm === 15).tp;
-  const stages15cm = measureStages(learnedStages,truth,finalMatches).map(row => ({
-    ...row, recall:truth.length ? row.matched/truth.length : null
-  }));
+  const stagesAtCm = {};
+  for (const {cm, tp} of evaluation.scores) {
+    stagesAtCm[cm] = measureStages(learnedStages,truth,tp,cm/100).map(row => ({
+      ...row, recall:truth.length ? row.matched/truth.length : null
+    }));
+  }
   const orchardEvaluation = result.orchard ? evaluatePins(result.orchard.pins,references) : null;
-  return {...result,references,evaluation,baselineEvaluation,stages15cm,...(orchardEvaluation?{orchardEvaluation}:{})};
+  return {...result,references,evaluation,baselineEvaluation,stagesAtCm,stages15cm:stagesAtCm[15],...(orchardEvaluation?{orchardEvaluation}:{})};
 }

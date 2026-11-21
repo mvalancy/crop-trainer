@@ -88,11 +88,11 @@ export function evaluatePins(pins, references) {
   }
   const xy = p => [p.localX,p.localY];
   const predictions = pins.map(xy), truth = references.map(xy);
-  let pinByReference15;
+  const pinByReferenceAtCm = {};
   const scores = MATCH_RADII_METERS.map(radius => {
     const cm = radius * 100;
     const {count:tp,pinByBox} = matchCenters(predictions,truth,radius);
-    if (cm === 15) pinByReference15 = Array.from(pinByBox);
+    pinByReferenceAtCm[cm] = Array.from(pinByBox);
     const fp = pins.length-tp, fn = references.length-tp;
     const countSum = pins.length + references.length;
     return {
@@ -102,5 +102,6 @@ export function evaluatePins(pins, references) {
       f1: countSum ? 2*tp/countSum : null
     };
   });
-  return {scores,signedCountError:pins.length-references.length,pinByReference15};
+  return {scores,signedCountError:pins.length-references.length,pinByReferenceAtCm,
+    pinByReference15:pinByReferenceAtCm[15]};
 }

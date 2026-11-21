@@ -1,9 +1,10 @@
 import {scanSession} from './generator/scan-session.js?v=plants3';
 import {setupPlantControls, setupValidationPlantForm, plantSettings} from './generator/plant-version.js?v=orchard4';
 import {createLiveScene} from './ui/live-scene.js?v=context-help2';
-import {initFieldTest} from './field-test/field-test-ui.js?v=cutoff1';
+import {initFieldTest} from './field-test/field-test-ui.js?v=tomato-example1';
 import {initSandbox, modelSettings, duration, trainInWorker, inspectWeights, runPresets, startingPreset} from './ui/sandbox.js?v=sampling1';
 import {showSamplingReceipt} from './ui/sampling-receipt.js';
+import {createLossCurve} from './ui/loss-curve.js';
 import {MAX_SANDBOX_EPOCHS, trainerId, weightArtifact} from './models/network.js?v=terrain1';
 import {returnBand,sampleCloud} from './generator/field.js?v=plants3';
 import {cropProfile} from './generator/crops.js?v=systems1';
@@ -116,6 +117,15 @@ $('scanner').value = allProfiles.some(profile => profile.key === scannerParam) ?
 function describeScanner() { $('scannerInfo').textContent = sensorDetails($('scanner').value); }
 $('scanner').addEventListener('change', describeScanner);
 describeScanner();
+function setEpochLink(link, query, epochs) {
+ const reference = Number.isInteger(epochs) && epochs >= 1 && epochs <= 5000 ? epochs : 40;
+ const short = reference > 500 ? Math.max(1, Math.floor(reference / 10)) : reference;
+ const long = reference > 500 ? reference : reference * 10;
+ query.set('shortEpochs', short);
+ query.set('longEpochs', long);
+ link.textContent = 'Compare '+short.toLocaleString()+' and '+long.toLocaleString()+' epochs';
+ link.href = '../benchmark/?'+query;
+}
 function updateBenchmarkLinks() {
  const seed = $('seed').valueAsNumber;
  const validSeed = Number.isInteger(seed) && seed >= 0 && seed < 0xffffffff;
@@ -153,8 +163,12 @@ function updateBenchmarkLinks() {
   if (comparison === 'forms') {
    link.textContent = fixedEpochs ? 'Compare this training form with a mix' : 'Compare this form with a mix at 40 epochs';
   }
-  if (comparison !== 'epochs') query.set('epochs', starterEpochs && !fixedEpochs ? '40' : $('epochs').value);
-  link.href = '../benchmark/?'+query;
+  if (comparison === 'epochs') {
+   setEpochLink(link, query, fixedEpochs ? $('epochs').valueAsNumber : undefined);
+  } else {
+   query.set('epochs', starterEpochs && !fixedEpochs ? '40' : $('epochs').value);
+   link.href = '../benchmark/?'+query;
+  }
  }
 }
 $('crop').addEventListener('change', updateBenchmarkLinks);
@@ -164,7 +178,8 @@ for (const id of ['plantForm','validationPlantForm','plantCondition','peakHeight
 const setFieldTestModel=initFieldTest(downloadJSON);
 initSandbox(params);
 let finishTraining=null, calibration=null;
-let controller=null,losses=[],lastPreview=null,backendReady=false,deps,webgpuAvailable=null,lastRun=null,lastPaint=0;
+let controller=null,lastPreview=null,backendReady=false,deps,webgpuAvailable=null,lastRun=null,lastPaint=0;
+const showLossCurve = createLossCurve($('loss'), $('lossEpoch'), $('lossText'));
 function updateRunAvailability() {
  backendReady = !!deps && ($('engine').value === 'cpu' || webgpuAvailable !== null);
  if (!controller) {
@@ -349,7 +364,7 @@ function clear(){
 
  $('peakTrace').hidden = true; $('missControls').hidden = true; $('missDistance').value = '15'; $('missBand').value = replayMisses ? requestedBand : 'all'; $('missBox').replaceChildren();
  $('harvest').textContent='';auditTiles=[];fieldViews.clear();$('overlayStage').value=replayMisses ? 'misses' : 'selected';$('stageAudit').hidden=true;
- losses=[];$('weightInspector').hidden=true;$('weightInspector').open=false;$('downloadWeights').hidden=true;lastPreview=null;lastRun=null;lastPaint=0;$('downloadRun').hidden=true;$('downloadSettings').hidden=true;$('benchmark').hidden=true;$('exportText').hidden=true;$('exportText').open=false;$('reportText').value='';$('copyReport').textContent='Copy JSON';
+ $('weightInspector').hidden=true;$('weightInspector').open=false;$('downloadWeights').hidden=true;lastPreview=null;lastRun=null;lastPaint=0;$('downloadRun').hidden=true;$('downloadSettings').hidden=true;$('benchmark').hidden=true;$('exportText').hidden=true;$('exportText').open=false;$('reportText').value='';$('copyReport').textContent='Copy JSON';
  for(const id of ['s75','s10','s15']){$(id).textContent='—';$('d'+id.slice(1)).textContent=''}
  $('resultNote').textContent='Run in progress. Validation uses synthetic fields only.';
  $('lossText').textContent='No epochs yet.';
@@ -362,17 +377,7 @@ function frame(id){
 }
 function coords(x){if(Array.isArray(x)||ArrayBuffer.isView(x))return x;if(x?.center)return x.center;if(x&&Number.isFinite(x.x))return [x.x,x.y];return null}
 function draw(){
- let [g,w,h]=frame('loss'),b=12;
- g.strokeStyle='#c5d0c0';for(let i=1;i<4;i++){let y=i*h/4;g.beginPath();g.moveTo(b,y);g.lineTo(w-b,y);g.stroke()}
- if (losses.length) {
-  const hi = Math.max(1e-9,...losses.map(p=>p.loss));
-  const x = epoch => b+(epoch-1)*(w-2*b)/Math.max(1,losses.at(-1).epoch-1);
-  const y = loss => h-b-loss/hi*(h-2*b);
-  g.strokeStyle='#2d5738';g.lineWidth=2;g.beginPath();
-  losses.forEach((p,i)=>i?g.lineTo(x(p.epoch),y(p.loss)):g.moveTo(x(p.epoch),y(p.loss)));g.stroke();
-  const last=losses.at(-1);g.fillStyle='#2d5738';g.beginPath();g.arc(x(last.epoch),y(last.loss),3,0,2*Math.PI);g.fill();
- }
- [g,w,h]=frame('preview');
+ const [g,w,h]=frame('preview');
  const side=Math.max(1,Math.min(w-18,h-18)), left=(w-side)/2,top=(h-side)/2;
  g.strokeStyle='#c5d0c0';g.strokeRect(left,top,side,side);
  if(lastPreview){
@@ -607,10 +612,15 @@ function workload() {
  const key=JSON.stringify([settings,backend]);
  if(calibration?.key === key){
   const fit=timed?ms:epochs*calibration.perEpoch;
+  const visits = new Intl.NumberFormat(undefined,{maximumSignificantDigits:2});
+  const passes = timed ? Math.max(1, Math.round(ms/calibration.perEpoch)) : epochs;
+  const exposure = timed && Number.isFinite(passes)
+   ? ' About '+visits.format(passes)+' epochs in '+duration(ms)+' of fitting, revisiting the same '+calibration.samples.toLocaleString()+' examples each pass.'
+   : ' Each pass revisits the same '+calibration.samples.toLocaleString()+' examples.';
   $('estimateText').textContent='Estimated total '+duration(calibration.overhead+fit)+' on '+backend+
-    ' · '+duration(calibration.overhead)+' setup and scoring. Based on this device’s last measurement.';
+    ', including '+duration(calibration.overhead)+' setup and scoring.'+exposure;
  }else{
-  $('estimateText').textContent=timed?'Field generation and scoring take extra time. Time a trial for an estimate on this device.':
+  $('estimateText').textContent=timed?'Time a trial to estimate how many passes fit in this training time on your device. Field generation and scoring take extra time.':
     'Time a 16-epoch trial to estimate this run on your device.';
  }
 }
@@ -660,6 +670,7 @@ async function runFit(trial){
  const [{buildDataset,validateModel,detectionStages},,{trainNetworkGPU,predictNetwork}]=deps;
  const settings=readSettings(), backend=selectedBackend(), requestedBackend=$('engine').value;
  const {crop,seed,threshold,validationRayBudget,minimumHeight,sensorMode}=settings;
+ const epochQuestion = $('epochBench').hidden ? null : new URL($('epochBench').href);
  const targetEpochs=trial?16:$('epochs').valueAsNumber;
  const timeLimitMs=!trial && $('stopMode').value==='time'?$('minutes').valueAsNumber*60000:0;
  const key=JSON.stringify([settings,backend]);
@@ -733,12 +744,6 @@ async function runFit(trial){
    status(trial?'Timing '+backend+' trial':'Training on '+backend,set.stats.samples.toLocaleString()+' examples per epoch · Epoch '+p.epoch.toLocaleString()+
     (timeLimitMs?'':' / '+targetEpochs.toLocaleString())+' · '+duration(p.elapsedMs)+' elapsed · '+
     (p.epoch<4 && !timeLimitMs?'measuring speed…':'about '+duration(remaining)+' of training left'),30+55*Math.min(1,fraction));
-   if(!trial){
-    losses.push({epoch:p.epoch,loss:p.loss});
-    if(losses.length>1024)losses=losses.filter((_,i)=>i%2===0);
-    $('lossText').textContent='Epoch '+p.epoch.toLocaleString()+' · loss '+p.loss.toPrecision(4);
-    draw();
-   }
   };
   let fit;
   if(backend==='WebGPU'){
@@ -764,16 +769,17 @@ async function runFit(trial){
   const finished=performance.now();
   signal.throwIfAborted();
   const perEpoch=warm && epochs>warm.epoch?(latest.elapsedMs-warm.elapsedMs)/(epochs-warm.epoch):latest.elapsedMs/epochs;
-  calibration={key,perEpoch,overhead:Math.max(0,finished-start-latest.elapsedMs)};
+  calibration={key,perEpoch,samples:set.stats.samples,overhead:Math.max(0,finished-start-latest.elapsedMs)};
   live.show({title:trial?'Trial harvest':'Harvest complete',metric:(100*scores.meanF1).toFixed(1)+'% mean F1',fraction:1,
    metricHelp:'The average of the three validation F1 scores at 7.5, 10 and 15 cm. Each score balances missed plants and extra pins across all held-out scans.'});
   if(trial){
    status('Trial complete','Timed 16 training epochs and scored the validation fields. See the estimate in Run setup.',100);
    return;
   }
-  losses=fit.loss.map((loss,i)=>({epoch:fit.lossEpochs[i],loss}));
-  if(losses.length>1024){const skip=Math.ceil(losses.length/1024);losses=losses.filter((_,i)=>i%skip===0||i===losses.length-1);}
   display(scores,settings);
+  showLossCurve(fit, set.stats.samples);
+  $('resultEpochQuestion').hidden = !epochQuestion;
+  if (epochQuestion) setEpochLink($('resultEpochBench'), epochQuestion.searchParams, epochs);
   const timings={generationMs:generated-start,trainingMs:trained-generated,validationMs:finished-trained,totalMs:finished-start};
   displayBenchmark(timings,fit.backend,epochs,set.stats.samples);
   showFitData(set,fit.weights.length,epochs);

@@ -391,14 +391,35 @@ tbody tr:nth-child(even) { background: #f6f8f0; }
 .testSlope { margin-top: .85rem; }
 .testSlope .testInputs { grid-template-columns: repeat(2,minmax(0,1fr)); max-width: 28rem; }
 .testFrame legend { font-weight: 650; padding-right: .5rem; }
+#testTomatoExample .action { align-items: flex-end; }
 .testFrame .testInputs { grid-template-columns: repeat(4,minmax(0,1fr)); }
 #testStatus { margin: 1rem 0; color: var(--muted); }
-.testView { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(0,1fr); gap: 1rem 2rem; align-items: start; margin-block: 1rem; }
+.testView { display: grid; grid-template-areas: "plot controls" "plot readout"; grid-template-rows: auto 1fr; grid-template-columns: minmax(0,1.1fr) minmax(0,1fr); gap: 1rem 2rem; align-items: start; margin-block: 1rem; }
+.testView figure { grid-area: plot; min-width: 0; }
+.testMapControls { grid-area: controls; display: flex; flex-wrap: wrap; align-items: end; gap: .65rem 1rem; }
+.testMapControls label { min-width: 0; max-width: 100%; }
+.testReadout { grid-area: readout; }
+.testReadout > :first-child { margin-top: 0; }
+.mapKey { display: flex; flex-wrap: wrap; gap: .3rem 1rem; }
+.mapKey > span { display: inline-flex; align-items: center; gap: .35rem; }
+.mapKey i { display: inline-block; width: .7rem; height: .7rem; }
+.mapKey .matchedPin { border-radius: 50%; background: #00664e; }
+.mapKey .extraPin { background: #a1381e; }
+.mapKey .matchedCenter { border: 2px solid #644883; border-radius: 50%; }
+.mapKey .missedCenter { color: #644883; font: bold 1rem/.65rem system-ui; }
+.testStageCard { margin-block: 1rem; padding: .9rem 1rem; background: var(--wash); border-radius: .5rem; }
+.testStageCard h4 { margin: 0; }
+.testStageCard .hint { margin: .2rem 0 .7rem; }
+.testStageRows { display: grid; gap: .55rem; margin: 0; }
+.testStageRows > div { display: grid; grid-template-columns: 1fr auto; gap: .2rem .75rem; align-items: baseline; }
+.testStageRows > div::after { content: ""; grid-column: 1 / -1; height: .32rem; border-radius: .2rem; background: linear-gradient(to right,#39705a var(--portion), #d5ddcb var(--portion)); }
+.testStageRows dt { font-size: .89rem; }
+.testStageRows dd { margin: 0; font-variant-numeric: tabular-nums; font-weight: 650; }
 .testView canvas { display: block; width: 100%; height: auto; background: #f1f4ea; border-radius: .6rem; }
 .testView figcaption { font-size: .85rem; color: var(--muted); margin-top: .5rem; }
 #testMetrics caption { text-align: left; font-weight: 650; }
 @media (max-width: 650px) {
-  .testView { grid-template-columns: 1fr; }
+  .testView { grid-template-areas: "controls" "plot" "readout"; grid-template-columns: 1fr; grid-template-rows: auto; }
   .testFrame .testInputs { grid-template-columns: repeat(2,minmax(0,1fr)); }
 }
 

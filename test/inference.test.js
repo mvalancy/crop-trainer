@@ -159,6 +159,18 @@ test('survey stage coverage isolates the candidate, cutoff and spacing losses', 
   ]);
   assert.equal(run.stages15cm[2].matched,run.evaluation.scores.find(s => s.cm===15).tp);
   assert.equal(run.stages,undefined);
+  assert.deepEqual(run.stages15cm,run.stagesAtCm[15]);
+
+  const offsetSurvey = 'x,y\n1.025,1.105\n1.275,1.145\n4.025,6.025\n8,8';
+  const offsets = runFieldTest({model,xyz,labels:{filename:'plants.csv',text:offsetSurvey}});
+  const expectedMatches = {7.5:[1,0,0],10:[2,1,0],15:[3,2,1]};
+  for (const {cm,tp} of offsets.evaluation.scores) {
+    const stages = offsets.stagesAtCm[cm];
+    assert.deepEqual(stages.map(row=>row.matched),expectedMatches[cm]);
+    assert.deepEqual(stages.map(row=>row.count),[3,2,1]);
+    assert.deepEqual(stages.map(row=>row.recall),expectedMatches[cm].map(n=>n/4));
+    assert.equal(stages.at(-1).matched,tp);
+  }
 });
 
 test('each peak covers at most one overlapping survey reference', () => {
@@ -169,7 +181,12 @@ test('each peak covers at most one overlapping survey reference', () => {
 
 test('unlabeled and surveyed-empty stage coverage remain distinguishable', () => {
   const scan = {model:weights(),xyz:[2,2,.25]};
-  assert.equal(runFieldTest(scan).stages15cm,null);
+  const unlabeled = runFieldTest(scan);
+  assert.equal(unlabeled.stages15cm,null);
+  assert.equal(unlabeled.stagesAtCm,null);
   const empty = runFieldTest({...scan,labels:{filename:'survey.csv',text:'x,y'}});
-  assert.ok(empty.stages15cm.every(row => row.count===1 && row.matched===0 && row.recall===null));
+  for (const cm of [7.5,10,15]) {
+    assert.ok(empty.stagesAtCm[cm].every(row => row.count===1 && row.matched===0 && row.recall===null));
+  }
+  assert.deepEqual(empty.stages15cm,empty.stagesAtCm[15]);
 });

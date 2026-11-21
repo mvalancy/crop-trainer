@@ -23,10 +23,11 @@ function explainFieldTest() {
     ['#testStatus','Field test status','Shows which input the field test needs, what it is processing, or which file and method produced the visible plot.'],
     ['#testSummary','Predicted plant count','The selected method placed this many pins. Multiple pins can land near one plant, and a plant can receive no pin.'],
     ['#testMap','Field test map','Top view of a 10 m square. Moving right increases plot X and moving up increases plot Y. The grey dots show a sample of the scan.'],
-    ['#testLegend','Map symbols','When reference centers are loaded, the map uses the 15 cm matching distance. The score table also shows results at the other distances.'],
+    ['#testLegend','Map symbols','The symbols distinguish matched plants, missed centers and extra pins at the distance selected above the map. Grey dots are sampled laser returns.'],
     ['#testOutcome','Field test outcome','Compare the selected method’s pins with the reference centers. Every plant and pin can match once. With only a scan and weights, the map shows the predicted locations.'],
     ['#testRule','Pin placement rule','The height floor controls which peaks qualify. The saved model then uses a score cutoff. Spacing controls how close two surviving pins can be.'],
-    ['#testStageSummary','Detection stages','Read from left to right to see where plant centers lost a nearby pin, first when finding peaks, then when filtering by score and spacing. For a plot with zero reference centers, the counts are pins at each step.'],
+    ['#testMatchDistance','Map and stage matching distance','Choose how close an estimated pin must land to a surveyed center. Changing the distance pairs pins and centers again and updates the model’s stage bars.'],
+    ['#testStageSummary','Detection stages','Each row pairs the remaining peaks with reference centers at the match distance selected above the map. Each peak and each center can match once. With an empty survey the rows show how many candidates remain.'],
     ['#testOrchardHelp a','Orchard locator study','See how the tree-base rule performed on synthetic orchard scans and how branch shape affects the estimates.'],
     ['.fieldEvidence > summary','Evidence from physical fields','Open two measured examples of how counts and location accuracy can differ in physical crops.'],
     ['.fieldEvidence a[href*="iris.uniss"]','Published artichoke study','Read the researchers’ aerial-image study and see how they checked plant detections in a field.'],
@@ -72,7 +73,7 @@ function methodsFor(report) {
   return methods;
 }
 
-function drawPlot(report, sampled, {pins,evaluation}) {
+function drawPlot(report, sampled, pins, assignment) {
   const canvas = byId('testMap'), ctx = canvas.getContext('2d');
   const inset = 26, side = canvas.width-2*inset;
   const px = x => inset+x*side/10, py = y => inset+(10-y)*side/10;
@@ -95,14 +96,25 @@ function drawPlot(report, sampled, {pins,evaluation}) {
   for (let i = 0; i < sampled.length; i += 2) {
     ctx.fillRect(px((sampled[i]-origin[0])*scale),py((sampled[i+1]-origin[1])*scale),1.6,1.6);
   }
-  const assigned = new Set(evaluation?.pinByReference15);
+  const assigned = new Set(assignment);
   if (report.references) {
+    ctx.strokeStyle = '#887899';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    report.references.forEach(({localX,localY},i) => {
+      const pin = pins[assignment[i]];
+      if (pin) {
+        ctx.moveTo(px(localX),py(localY));
+        ctx.lineTo(px(pin.localX),py(pin.localY));
+      }
+    });
+    ctx.stroke();
     ctx.lineWidth = 1.8;
     report.references.forEach(({localX,localY},i) => {
       const x = px(localX), y = py(localY);
       ctx.strokeStyle = '#644883';
       ctx.beginPath();
-      if (evaluation.pinByReference15[i] === -1) {
+      if (assignment[i] === -1) {
         ctx.moveTo(x-3,y-3); ctx.lineTo(x+3,y+3);
         ctx.moveTo(x-3,y+3); ctx.lineTo(x+3,y-3);
       } else ctx.arc(x,y,4.3,0,2*Math.PI);
@@ -111,15 +123,37 @@ function drawPlot(report, sampled, {pins,evaluation}) {
   }
   pins.forEach(({localX,localY},i) => {
     const x = px(localX), y = py(localY);
-    if (evaluation && !assigned.has(i)) {
+    if (assignment && !assigned.has(i)) {
       ctx.fillStyle = '#a1381e'; ctx.fillRect(x-2.5,y-2.5,5,5);
     } else {
       ctx.fillStyle = '#00664e'; ctx.beginPath(); ctx.arc(x,y,2.6,0,2*Math.PI); ctx.fill();
     }
   });
-  byId('testLegend').textContent = evaluation
-    ? 'At 15 cm: green dots are matched pins, rust squares are extra pins, purple rings are matched centers, and crosses are missed centers.'
-    : 'Green dots mark predicted centers. Grey dots show a sample of the scan returns. The plot spans 10 m on each axis.';
+}
+
+function renderStages(stages, centers, distance) {
+  byId('testStagesTitle').textContent = centers ? 'Where did the model lose plants?' : 'How many pins survived?';
+  const names = {
+    proposals:[centers ? 'Within reach of a peak' : 'Candidate peaks', 'Peaks found in the point cloud before applying the model.'],
+    accepted:['After score cutoff', 'Peaks that scored at or above this model’s cutoff.'],
+    selected:['After spacing', 'Pins kept after the detector removed nearby duplicates.']
+  };
+  byId('testStageSummary').textContent = centers
+    ? 'Reference centers matched within '+distance+' cm, out of '+centers.toLocaleString()+'.'
+    : 'This survey lists no plants. Each row counts candidate pins.';
+  const total = centers || stages[0].count;
+  byId('testStageRows').replaceChildren(...stages.map(({stage,count,matched}) => {
+    const [label,help] = names[stage];
+    const value = centers ? matched : count;
+    const row = document.createElement('div'), name = document.createElement('dt'), stat = document.createElement('dd');
+    name.textContent = label;
+    stat.textContent = value.toLocaleString();
+    stat.dataset.helpLabel = label;
+    stat.dataset.help = help+' '+(centers ? value+' of '+centers+' surveyed centers have a match within '+distance+' cm.' : value+' candidates remain.');
+    row.style.setProperty('--portion',(total ? 100*value/total : 0)+'%');
+    row.append(name,stat);
+    return row;
+  }));
 }
 
 function renderScores(report) {
@@ -158,7 +192,11 @@ export function initFieldTest(downloadJSON) {
   const weights = byId('testWeights'), ply = byId('testPly'), labels = byId('testLabels');
   const cutoff = byId('testCutoff'), resetCutoff = byId('testResetCutoff');
   const status = byId('testStatus'), results = byId('testResults'), cancel = byId('testCancel');
+  const example = byId('testExample'), tryExample = byId('testRunExample');
+  const sharedExample = new URLSearchParams(location.search).get('fieldExample');
+  if ([...example.options].some(option => option.value === sharedExample)) example.value = sharedExample;
   const fields = [...form.querySelectorAll('input,select')];
+  let exampleLoad, autoRunFile, exampleResultLabel;
   let currentModelFile, runningModel, worker, sampled, loaded = false, running = false, report;
 
   function updateControls() {
@@ -167,13 +205,16 @@ export function initFieldTest(downloadJSON) {
     byId('testWeightsLabel').hidden = !useFile;
     for (const field of fields) field.disabled = running;
     weights.disabled = running || !useFile;
+    tryExample.disabled = running || Boolean(exampleLoad);
+    tryExample.textContent = exampleLoad ? 'Preparing example…' : 'Run example';
     resetCutoff.disabled = running || (cutoff.value === '' && !cutoff.validity.badInput);
-    byId('testDetect').disabled = running || !loaded || !(useFile ? weights.files[0] : currentModelFile);
-    cancel.hidden = !worker || (loaded && !running);
+    byId('testDetect').disabled = running || Boolean(exampleLoad) || !loaded || !(useFile ? weights.files[0] : currentModelFile);
+    cancel.hidden = !exampleLoad && (!worker || (loaded && !running));
   }
   function clearReport() {
     report = null;
     results.hidden = true;
+    byId('testExampleResult').hidden = true;
   }
   function renderOverlay() {
     if (!report) return;
@@ -185,16 +226,22 @@ export function initFieldTest(downloadJSON) {
     byId('testRule').textContent = method.rule;
     byId('testRule').dataset.help = method.help;
     byId('testOrchardHelp').hidden = selected!=='orchard';
-    byId('testStages').hidden = selected!=='model' || !report.stages15cm;
+    const distance = Number(byId('testMatchDistance').value);
+    const stages = selected==='model' && report.stagesAtCm?.[distance];
+    byId('testStages').hidden = !stages;
+    if (stages) renderStages(stages, report.references.length, distance);
+    byId('testDistanceControl').hidden = !evaluation;
+    byId('testMatchedKey').hidden = !evaluation;
+    byId('testUnscoredKey').hidden = Boolean(evaluation);
     let message = 'Add reference centers to score these predictions.';
     if (evaluation) {
-      const at15 = evaluation.scores.find(score=>score.cm===15);
-      message = at15.tp+' of '+report.references.length+' reference centers matched within 15 cm. '+
-        at15.fp+' extra '+(at15.fp===1?'pin':'pins')+' · '+at15.fn+' missed '+(at15.fn===1?'center':'centers')+'.';
+      const score = evaluation.scores.find(row=>row.cm===distance);
+      message = score.tp+' of '+report.references.length+' reference centers matched within '+distance+' cm. '+
+        score.fp+' extra '+(score.fp===1?'pin':'pins')+' · '+score.fn+' missed '+(score.fn===1?'center':'centers')+'.';
     }
     byId('testOutcome').textContent = message;
     status.textContent = 'Showing '+method.label.toLowerCase()+' pins on '+report.files.scan.name+'.';
-    drawPlot(report,sampled,method);
+    drawPlot(report,sampled,pins,evaluation?.pinByReferenceAtCm[distance]);
   }
   function loadScan() {
     worker?.terminate(); worker = null;
@@ -207,7 +254,7 @@ export function initFieldTest(downloadJSON) {
       updateControls(); return;
     }
     status.textContent = 'Reading '+file.name+'…';
-    const active = worker = new Worker(new URL('./field-test-worker.js?v=cutoff1',import.meta.url),{type:'module'});
+    const active = worker = new Worker(new URL('./field-test-worker.js?v=stage-distance1',import.meta.url),{type:'module'});
     updateControls();
     function fail(message) {
       if (active !== worker) return;
@@ -236,29 +283,76 @@ export function initFieldTest(downloadJSON) {
           updateControls(); return;
         }
         report = data.report;
-        if (report.stages15cm) {
-          const [peaks,passed,kept] = report.stages15cm;
-          byId('testStageSummary').textContent = report.references.length
-            ? 'Of '+report.references.length+' labeled plants, '+peaks.matched+' could be matched to raw peaks, '+passed.matched+' after the score cutoff, and '+kept.matched+' after spacing.'
-            : 'The reference file lists zero plants. The detector found '+peaks.count+' raw peaks, '+passed.count+' passed the cutoff, and '+kept.count+' pins remained after spacing.';
-        }
         byId('testOverlay').replaceChildren(...Object.entries(methodsFor(report)).map(([id,m])=>new Option(m.label,id)));
         results.hidden = false; renderOverlay(); renderScores(report);
+        if (exampleResultLabel) {
+          const receipt = byId('testExampleResult');
+          receipt.querySelector('span').textContent = exampleResultLabel+' · '+byId('testOutcome').textContent;
+          receipt.hidden = false;
+        }
       }
       updateControls();
+      if (data.type === 'loaded' && autoRunFile === file) {
+        autoRunFile = null;
+        form.requestSubmit(byId('testDetect'));
+      }
     };
     active.postMessage({type:'load',file});
   }
-  ply.addEventListener('change',loadScan);
+  function stopExampleLoad() {
+    exampleLoad?.abort();
+    exampleLoad = null;
+    autoRunFile = null;
+    exampleResultLabel = null;
+  }
+  tryExample.addEventListener('click',async () => {
+    stopExampleLoad();
+    clearReport();
+    const pending = exampleLoad = new AbortController();
+    const choice = example.value;
+    updateControls();
+    status.textContent = 'Growing the example planting and loading its saved weights…';
+    try {
+      const {tomatoExampleFiles,selectFile} = await import('./tomato-example.js');
+      const files = await tomatoExampleFiles(choice,pending.signal);
+      pending.signal.throwIfAborted();
+      selectFile(weights,files.model);
+      selectFile(labels,files.labels);
+      selectFile(ply,files.ply);
+      modelSource.value = 'file';
+      byId('testUnits').value = 'm';
+      for (const id of ['testX','testY','testZ','testGradeX','testGradeY']) byId(id).value = '0';
+      cutoff.value = '';
+      byId('testMatchDistance').value = '15';
+      autoRunFile = ply.files[0];
+      exampleResultLabel = example.selectedOptions[0].textContent;
+      exampleLoad = null;
+      loadScan();
+    } catch (error) {
+      if (exampleLoad !== pending) return;
+      exampleLoad = null;
+      status.textContent = error.message || 'Could not prepare the tomato example. Try again.';
+      updateControls();
+    }
+  });
+  ply.addEventListener('change',() => {stopExampleLoad(); loadScan();});
   resetCutoff.addEventListener('click',()=>{
     cutoff.value='';
     cutoff.dispatchEvent(new Event('input',{bubbles:true}));
     cutoff.focus();
   });
   form.addEventListener('input',event => {
-    if (event.target === ply || running) return;
+    if (running) return;
+    const hadPendingExample = Boolean(exampleLoad);
+    stopExampleLoad();
+    if (event.target === example || event.target === ply) {
+      updateControls();
+      if (hadPendingExample) status.textContent = 'Example canceled. The selected files were kept.';
+      return;
+    }
     clearReport(); updateControls();
     if (loaded) status.textContent = 'Ready to run with the selected inputs.';
+    else if (hadPendingExample) status.textContent = 'Example canceled. Choose a scan and a model to begin.';
   });
   form.addEventListener('submit', event => {
     event.preventDefault();
@@ -274,9 +368,16 @@ export function initFieldTest(downloadJSON) {
       thresholdOverride:cutoff.value==='' ? undefined : cutoff.valueAsNumber});
   });
   cancel.addEventListener('click',() => {
+    if (exampleLoad) {
+      stopExampleLoad();
+      status.textContent = 'Example canceled. The selected files were kept.';
+      updateControls(); return;
+    }
+    autoRunFile = null;
     if (!loaded) {ply.value = ''; loadScan(); return;}
     loadScan();
   });
+  byId('testMatchDistance').addEventListener('change',renderOverlay);
   byId('testOverlay').addEventListener('change',renderOverlay);
   byId('testExport').addEventListener('click',() => {
     if (!report) return;

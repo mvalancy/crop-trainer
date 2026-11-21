@@ -533,6 +533,9 @@ try {
   const exampleWeights=await uploadExample('#exampleWeights','#testWeights','application/json');
   const exampleScan=await uploadExample('#examplePly','#testPly','application/octet-stream');
   assert.match(exampleScan,/^[a-f0-9]{16}\.ply$/);
+  await page.locator('#testDetect').click();
+  await page.locator('#testResults:visible').waitFor();
+  assert.ok(await page.locator('#testMatchDistance').isHidden(),'scan-only predictions have no reference tolerance');
   const exampleCounts=[[7.5,88,100,129],[10,117,71,100],[15,137,51,80]];
   for (const [link,type,extension] of [['#exampleCentersCsv','text/csv','.csv'],['#exampleLabelsJson','application/json','.json']]) {
     const referenceName=await uploadExample(link,'#testLabels',type);
@@ -548,12 +551,41 @@ try {
     const scoreRows=await page.locator('#testRows tr').evaluateAll(rows=>rows.slice(0,3).map(row=>
       Array.from(row.cells).slice(1,5).map(cell=>cell.textContent)));
     assert.deepEqual(scoreRows,exampleCounts.map(([cm,...counts])=>[cm+' cm',...counts.map(String)]));
+    await page.locator('#testMatchDistance').selectOption('7.5');
+    assert.match(await page.locator('#testOutcome').textContent(),/88 of 217 reference centers matched within 7\.5 cm/);
+    assert.match(await page.locator('#testStageSummary').textContent(),/7\.5 cm/);
+    assert.deepEqual(await page.locator('#testStageRows dd').allTextContents(),fieldReport.stagesAtCm['7.5'].map(s=>String(s.matched)));
+    await page.locator('#testOverlay').selectOption('baseline');
+    const baselineMatches=fieldReport.baselineEvaluation.scores.find(s=>s.cm===7.5).tp;
+    assert.ok((await page.locator('#testOutcome').textContent()).includes(baselineMatches+' of 217 reference centers matched within 7.5 cm'));
+    await page.locator('#testOverlay').selectOption('model');
+    await page.locator('#testMatchDistance').selectOption('15');
+    assert.match(await page.locator('#testOutcome').textContent(),/137 of 217 reference centers matched within 15 cm/);
+    assert.deepEqual(await page.locator('#testStageRows dd').allTextContents(),fieldReport.stages15cm.map(s=>String(s.matched)));
   }
   console.log('Downloaded example weights, scan and both reference formats; the Field Test scored all 217 held-out lettuce plants.');
+
+  await open('trainer/?fieldExample=tomato-640#field-test');
+  const runExample = page.locator('#testRunExample:enabled');
+  await runExample.waitFor();
+  assert.equal(await page.locator('#testExample').inputValue(),'tomato-640');
+  for (const [fit, matches, extras] of [['tomato-640',53,23],['tomato-40',1,4]]) {
+    await page.locator('#testExample').selectOption(fit);
+    await runExample.click();
+    await page.locator('#testExampleResult:visible').waitFor();
+    const example = await downloadJSON(page.locator('#testExport'));
+    assert.equal(example.files.model.name,fit+'.json');
+    assert.equal(example.files.scan.name,'56b872a50fcac3ab.ply');
+    assert.equal(example.references.length,110);
+    const at15 = example.evaluation.scores.find(score=>score.cm===15);
+    assert.deepEqual([at15.tp,at15.fp],[matches,extras]);
+  }
+  console.log('Both saved tomato fits placed the documented pins on the same regenerated seedling scan.');
 
   // Re-run one of the shed's own held-out scans from its saved scan and weights.
   // This catches a mismatch between training, the downloadable model and Field Test extraction.
   await open('trainer/?plan=quick&engine=cpu&crop=tomato&plantArchitecture=2&plantForm=mixed&validationPlantForm=seedling&seed=687139&sensor=reference&validationSensor=os1-64&epochs=3&minimumHeight=0.035&featureMode=local-ground&sampleLimit=600&positiveSampling=form-soil&valFields=1');
+  await page.locator('#run:enabled').waitFor();
   const mode=page.locator('#featureMode');
   assert.equal(await mode.inputValue(),'local-ground');
   const guide=page.locator('#localGroundGuide');
@@ -727,6 +759,50 @@ try {
   assert.deepEqual(repeated.recipeManifest,sampling.datasets[balancedRow.datasetIndex].recipeManifest);
   assert.deepEqual(repeated.scores,balancedRow.scores,'refitting from a benchmark row should reproduce its held-out scores');
   console.log('Both sampling rules used equal budgets, and the Training shed reproduced a benchmark row on the same scans.');
+
+  await open('benchmark/?comparison=epochs');
+  assert.equal(await page.locator('#epochSchedule').inputValue(),'classic','older links should keep their 10/40/100 comparison');
+  await open('benchmark/?comparison=epochs&shortEpochs=2&longEpochs=5&crop=tomato&plantArchitecture=2&plantForm=mixed&validationPlantForm=seedling&seed=820713&sensor=reference&validationSensor=os1-64&minimumHeight=0.035&featureMode=local-ground&sampleLimit=240&live=off');
+  assert.equal(await page.locator('#epochSchedule').inputValue(),'pair');
+  await page.locator('#longEpochs').fill('2');
+  await page.locator('#run').click();
+  assert.ok(await page.locator('#longEpochs').evaluate(el=>!el.validity.valid),'equal comparison lengths should be rejected');
+  await page.locator('#longEpochs').fill('5');
+  await page.locator('#run').click();
+  const epochRun=await downloadJSON(page.locator('#export'));
+  assert.deepEqual(epochRun.rows.map(row=>[row.seed,row.epochs]),[[820713,2],[820713,5],[820714,5],[820714,2]]);
+  for (const seed of [820713,820714]) {
+    const rows=epochRun.rows.filter(r=>r.seed===seed);
+    assert.equal(rows[0].datasetIndex,rows[1].datasetIndex,'both durations must use the same generated dataset');
+  }
+  await page.locator('#scoreDetails').evaluate(el=>el.open=true);
+  await page.locator('#scoreDistance').selectOption('all');
+  for (const ground of ['present','removed']) {
+    await page.locator('#scoreGround').selectOption(ground);
+    const expected=epochRun.rows.flatMap(r=>r.byGround.find(g=>g.ground===(ground==='present')).scores);
+    const actual=await page.locator('#scoreRows tr').evaluateAll(rows=>rows.map(r=>Array.from(r.cells).slice(-3).map(c=>Number(c.textContent))));
+    assert.deepEqual(actual,expected.map(s=>[s.tp,s.fp,s.fn]),'visible counts should come from the selected ground condition');
+  }
+  const fiveEpochs=epochRun.rows[1];
+  const epochLink=new URL(await page.locator('#results a').nth(1).getAttribute('href'),page.url());
+  assert.equal(epochLink.searchParams.get('epochs'),String(fiveEpochs.epochs));
+  await page.goto(epochLink.href);
+  // The shed applies replay settings after it loads the training modules.
+  await page.locator('#run:enabled').waitFor();
+  assert.equal(await page.locator('#epochs').inputValue(),String(fiveEpochs.epochs));
+  await page.locator('#run:enabled').click();
+  const epochReplay=await downloadJSON(page.locator('#downloadRun'));
+  assert.deepEqual(epochReplay.recipeManifest,epochRun.datasets[fiveEpochs.datasetIndex].recipeManifest);
+  assert.deepEqual(epochReplay.scores,fiveEpochs.scores);
+  await page.locator('#lossEpoch').press('Home');
+  const firstLoss='Epoch 1 · loss '+epochReplay.loss[0].toPrecision(4)+' · 240 example visits';
+  assert.equal(await page.locator('#lossEpoch').getAttribute('aria-valuetext'),firstLoss);
+  await page.locator('#lossEpoch').press('End');
+  assert.match(await page.locator('#lossText').textContent(),/Epoch 5 .*1,200 example visits/);
+  const nextExperiment=new URL(await page.locator('#resultEpochBench').evaluate(a=>a.href)).searchParams;
+  assert.deepEqual(['comparison','seed','sampleLimit','shortEpochs','longEpochs'].map(key=>nextExperiment.get(key)),
+    ['epochs','820713','240','5','50']);
+  console.log('Custom epoch lengths shared both datasets, exposed each soil condition and refit identically in the Training shed.');
   assert.deepEqual(errors,[]);
   console.log('Direct file and result help worked with hover, touch and keyboard; the first export tap downloaded its file.');
 } finally {

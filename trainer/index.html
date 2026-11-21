@@ -6,9 +6,9 @@
 <link rel="icon" type="image/png" sizes="32x32" href="../art/crop-mark-32.png">
 <link rel="icon" type="image/svg+xml" sizes="any" href="../art/crop-mark.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="../art/crop-touch.png">
-<link rel="stylesheet" href="../app/farm.css?v=context-help2">
+<link rel="stylesheet" href="../app/farm.css?v=map-distance1">
 <link rel="stylesheet" href="../app/help.css?v=context-help2">
-<link rel="stylesheet" href="./ui/training-layout.css?v=sampling1">
+<link rel="stylesheet" href="./ui/training-layout.css?v=epoch2">
 <link rel="stylesheet" href="./ui/network-diagram.css">
 <script type="module" src="../app/help.js?v=context-help2"></script>
 </head>
@@ -84,7 +84,7 @@
 <label id="epochsLabel" hidden>Epochs<input id="epochs" inputmode="numeric" data-help-label="Epochs" data-help="One epoch shows the model every retained training example once. Increasing this value practices longer on the same fields. To see new plantings, increase Training fields." type="number" min="1" max="100000000" step="1" value="40" required disabled><span>One epoch uses every training example once.</span></label>
 <label id="minutesLabel">Training minutes<input id="minutes" inputmode="decimal" data-help-label="Training minutes" data-help="For a two-hour fit, enter 120. Keep this tab open and the device awake. The timer covers fitting and stops at a completed training step. Allow extra time for generation and scoring." type="number" min="0.5" max="1440" step="0.5" value="0.5" required><span>0.5–1,440 minutes. Keep the tab open and the device awake.</span></label>
 </div>
-<a data-help="Train for three fixed durations on the same dataset to measure whether additional passes improve validation scores." id="epochBench" href="../benchmark/?comparison=epochs">Compare 10, 40 and 100 training epochs</a>
+<a data-help="Compare two epoch counts using the current crop, seeds, scans and example settings. Each fit uses the CPU starter network, six training fields, three test fields and a 0.50 cutoff." id="epochBench" href="../benchmark/?comparison=epochs&amp;shortEpochs=40&amp;longEpochs=400">Compare 40 and 400 epochs</a>
 </fieldset>
 <fieldset class="settingGroup"><legend>Weight updates</legend>
 <div class="selectPair">
@@ -267,8 +267,13 @@
 <tr><th data-help="Successive steps find candidate peaks, keep those above the score cutoff and remove nearby duplicates.">Detector stage</th><th data-help="Number of candidate or predicted XY positions remaining after this stage on the selected scan.">Centers</th><th data-help="Labeled plants matched one to one to a remaining candidate or pin within 15 cm.">Plants matched</th><th data-help="Matched plants divided by all labeled plants in this scan. A drop between stages shows where coverage was lost.">Recall</th></tr></thead>
 <tbody id="auditRows"></tbody></table></div></div>
 <div class="viz" hidden="" id="charts">
-<article class="lossChart"><h3 data-help-label="Training loss" data-help="This measures how far the model scores are from the known plant and background labels during fitting. Check validation F1 as well to see whether the fitted detector finds centers on fresh fields.">Training loss</h3><canvas id="loss" aria-label="Training loss by epoch" role="img"></canvas>
-<p id="lossText" data-help-label="Epoch and loss" data-help="An epoch revisits all retained practice examples. Loss measures how closely their predicted scores agree with their known labels.">No epochs yet.</p></article>
+<article class="lossChart"><h3 data-help-label="Training loss" data-help="The curve shows binary cross-entropy on the training examples. Confident mistakes increase this loss.">Training loss</h3>
+<div class="lossWorkspace"><div><canvas id="loss" aria-label="Training loss by epoch" aria-describedby="lossText" role="img"></canvas>
+<label class="lossSlider" hidden>Inspect a saved epoch<input id="lossEpoch" type="range" min="0" max="0" value="0" data-help="Drag or use the arrow keys to read the loss measured at a saved epoch. Longer runs save points at wider intervals."></label>
+<p id="lossText" data-help-label="Epoch, loss and example visits" data-help="Example visits count each pass over the retained peaks. The same plantings supplied every epoch.">No epochs yet.</p></div>
+<div class="lossReading"><p>As loss falls, the scores fit the practice labels more closely. To see whether extra passes find more plants, compare misses and extra pins on held-out scans.</p>
+<div id="resultEpochQuestion" hidden><a id="resultEpochBench" href="../benchmark/?comparison=epochs&amp;shortEpochs=40&amp;longEpochs=400" data-help="Open a paired epoch benchmark with the crop, seed, scans, features and example sampling from this completed fit.">Compare 40 and 400 epochs</a>
+<small>CPU starter network · 6 training fields and 3 test fields per seed · cutoff 0.50</small></div></div></div></article>
 <article class="fieldInspector"><h3 id="fieldMapTitle">Selected field</h3>
 <div class="mapWorkspace"><div class="mapTools">
 <label class="fine">Map overlay<select id="overlayStage" data-help-label="Map overlay" data-help="Compare all possible peaks, peaks passing the model cutoff, or final pins after spacing. Choose Missed plants to investigate where a particular center was lost."><option value="selected">Final detections</option><option value="misses">Missed plants</option><option value="accepted">Passed score cutoff</option><option value="proposals">All height peaks</option></select></label>
@@ -293,9 +298,15 @@
 <section id="field-test" class="fieldTest panel" aria-labelledby="fieldTestTitle">
 <div class="sectionHead"><h2 id="fieldTestTitle">Field test</h2><p>See where your detector places pins in a scan of your own plot. Add surveyed plant centers to count misses and extra pins. Your files stay in this browser.</p></div>
 <form id="fieldTestForm">
+<fieldset class="testFrame" id="testTomatoExample"><legend>Try a tomato planting</legend>
+<p class="hint">Can a longer-trained detector find more seedlings in the same ring scan? Load 110 labeled plants and a saved model. This fills the inputs below and runs Field Test.</p>
+<div class="action"><label>Saved tomato fit<select id="testExample" data-help="Both networks learned on the same six synthetic training fields. Only their number of training epochs differs."><option value="tomato-40">40 epochs</option><option value="tomato-640">640 epochs</option></select></label>
+<button type="button" id="testRunExample" disabled data-help="Replace the selected files with this synthetic scan, its labels and the chosen tomato weights. Use the saved cutoff and level ground in metres, then find plants.">Run example</button></div>
+<p class="hint" id="testExampleResult" hidden><span role="status"></span> <a href="#testResults" data-help="Jump to the map, missed seedlings and per-distance scores from this run.">Inspect map and scores</a></p>
+</fieldset>
 <div class="testSource">
 <label>Detector<select id="testModelSource" data-help-label="Field test detector" data-help="Choose the completed fit in this tab, or load a weights JSON from an earlier run. The same detector can be used on multiple plot scans."><option value="file">Saved weights JSON</option><option value="current" disabled>Most recent completed fit</option></select></label>
-<p class="hint">To try the lettuce example, select <strong>Saved weights JSON</strong>. Download the weights, scan and either center file. Choose those files below, keep the default coordinates and select <strong>Find plants</strong>.</p>
+<p class="hint">Use your own files, or download the lettuce practice files beside each upload. For lettuce, keep the default coordinates and select <strong>Find plants</strong>.</p>
 </div>
 <div class="testInputs testUploads">
 <div class="testUpload" id="testWeightsLabel">
@@ -334,15 +345,20 @@
 <p id="testStatus" role="status">Choose a scan and a model to begin.</p>
 <div id="testResults" hidden>
 <h3 id="testSummary">Detections</h3>
-<div class="testView"><figure><canvas id="testMap" width="500" height="500" aria-label="Top view of the imported scan and plant detections" role="img"></canvas>
-<figcaption id="testLegend"></figcaption></figure>
-<div><label>Show pins from<select id="testOverlay" data-help-label="Field test pin method" data-help="Compare trained model pins with peaks chosen by height. Apple scans also offer a geometric locator that looks for a tree base across several height bands."><option value="model">Trained model</option><option value="baseline">Height-only baseline</option></select></label>
-<p id="testOutcome"></p><p class="hint" id="testRule"></p>
+<div class="testView">
+<div class="testMapControls"><label>Show pins from<select id="testOverlay" data-help-label="Field test pin method" data-help="Compare trained model pins with peaks chosen by height. Apple scans also offer a geometric locator that looks for a tree base across several height bands."><option value="model">Trained model</option><option value="baseline">Height-only baseline</option></select></label>
+<label id="testDistanceControl" hidden>Match distance<select id="testMatchDistance" data-help-label="Map matching distance" data-help="Choose how close a pin must land to a reference center to count as a match. The pins stay in place as the map updates."><option value="7.5">7.5 cm</option><option value="10">10 cm</option><option value="15" selected>15 cm</option></select></label></div>
+<figure><canvas id="testMap" width="500" height="500" aria-label="Top view of the imported scan and plant detections" role="img"></canvas>
+<figcaption id="testLegend"><span class="mapKey" id="testMatchedKey" hidden><span><i class="matchedPin"></i>Matched pin</span><span><i class="extraPin"></i>Extra pin</span><span><i class="matchedCenter"></i>Matched center</span><span><i class="missedCenter" aria-hidden="true">×</i>Missed center</span></span><span id="testUnscoredKey">Green dots mark predicted centers. Grey dots are laser returns.</span></figcaption></figure>
+<div class="testReadout"><p id="testOutcome" aria-live="polite"></p><p class="hint" id="testRule"></p>
 <p id="testOrchardHelp" hidden>The orchard locator looks for returns at several heights around a tree base. Its support score measures this geometric evidence. <a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/orchard-bases.md">Read the orchard study</a></p>
+<section id="testStages" class="testStageCard" aria-labelledby="testStagesTitle" hidden>
+<h4 id="testStagesTitle">Where did the model lose plants?</h4>
+<p id="testStageSummary" class="hint"></p>
+<dl id="testStageRows" class="testStageRows"></dl></section>
 <button type="button" id="testExport" data-help-label="Download field test JSON" data-help="Save predicted positions in local and file coordinates along with the scan frame and file fingerprints. Providing reference centers adds per-distance scores.">Download field test JSON</button></div></div>
 <div id="testMetrics" class="tableScroll" hidden><table><caption>One-to-one matches against supplied centers</caption><thead><tr><th>Method</th><th>Distance</th><th>Matched</th><th>Extra</th><th>Missed</th><th>Precision</th><th>Recall</th><th>F1</th></tr></thead><tbody id="testRows"></tbody></table></div>
-<div id="testStages" hidden><h3>Trained model detection stages</h3>
-<p id="testStageSummary"></p><p class="hint">Each stage matches peaks to surveyed centers one to one within 15 cm. A plant needs a nearby candidate before the network can score it.</p></div>
+
 </div>
 <details class="fieldEvidence">
 <summary>Can a model find plants on a real farm?</summary>
@@ -358,6 +374,6 @@
 </main>
 <footer class="siteFoot"><span>Created by Matthew Valancy</span>
 <div><a data-help="Open commands and reproducibility instructions for an agent working with Crop Trainer." href="../AGENTS.md">Agent quickstart</a><a data-help="View the farming challenges and achievements stored on this device." href="../#missions">Farm journal</a><a data-help="Read the terms for using and sharing Crop Trainer’s source code." href="../LICENSE">MIT license</a></div><small class="contextHint"><span class="hoverHint">Hover or focus a button or score for help.</span><span class="touchHint">Tap a score or hold a button for help. A quick tap runs the action.</span></small></footer>
-<script type="module" src="./main.js?v=sampling1"></script>
+<script type="module" src="./main.js?v=epoch2"></script>
 </body>
 </html>

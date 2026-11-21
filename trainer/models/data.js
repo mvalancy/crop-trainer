@@ -320,10 +320,10 @@ export function nearbyPeaks(preview, box, cm) {
  return {proposals, accepted:preview.stages.accepted.filter(withinRange), selected:preview.stages.selected.filter(withinRange), bestScore};
 }
 
-export function measureStages(stages,truth,finalMatches){
+export function measureStages(stages,truth,finalMatches,radius=.15){
  return Object.entries(stages).map(([stage,points])=>({
   stage,count:points.length,
-  matched:stage==='selected'&&finalMatches!==undefined?finalMatches:matchedCount(points,truth,.15)
+  matched:stage==='selected'&&finalMatches!==undefined?finalMatches:matchedCount(points,truth,radius)
  }));
 }
 export function checkScoreThreshold(value) {

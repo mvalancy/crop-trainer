@@ -75,7 +75,7 @@
 }
 #controls .settingGroup + .settingGroup { padding-top: .25rem; }
 #controls .settingGroup legend {
-  inline-size: 100%;
+  inline-size: auto;
   margin: 0 0 .45rem;
   padding: 0 0 .3rem;
   border-bottom: 1px solid var(--line);
@@ -215,6 +215,39 @@
 #localGroundGuide figcaption { margin-top: .5rem; }
 
 #controls #sampleSettings { align-content: start; }
+.lossWorkspace {
+  display: grid;
+  gap: .9rem clamp(1rem, 4vw, 3rem);
+  align-items: start;
+}
+.lossWorkspace > div { min-width: 0; }
+.lossWorkspace canvas { height: 9rem; }
+.lossWorkspace .lossSlider {
+  display: grid;
+  gap: 0;
+  margin: .25rem 0;
+  font-size: .85rem;
+}
+.lossWorkspace .lossSlider[hidden] { display: none; }
+.lossSlider input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0;
+  accent-color: #286349;
+}
+.lossReading small {
+  display: block;
+  max-width: 36ch;
+  margin-top: .15rem;
+  color: var(--muted);
+  font-size: .83rem;
+  line-height: 1.45;
+}
+.lossReading a { display: inline-flex; align-items: center; min-height: 44px; }
+.lossWorkspace #lossText { font-variant-numeric: tabular-nums; color: var(--forest); }
+@media (min-width: 55rem) {
+  .lossWorkspace { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); }
+}
 #sampleSettings .hint { margin: 0; }
 #sampleLimit { --digits: 5; }
 .samplingBody {

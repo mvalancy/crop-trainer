@@ -185,9 +185,13 @@ Use `/benchmark/?comparison=sampling&sampleLimit=600` for two matched CPU runs. 
 
 ### Compare training duration
 
-Open `/benchmark/?comparison=epochs&crop=artichoke&seed=551`. Each seed generates one dataset. Three neural fits start from the same initial weights with the same examples, scaling, learning rate (0.25) and score cutoff (0.50). Each fit runs from scratch so its training time covers its entire duration. The second seed runs the budgets in reverse order.
+For a frozen-weight browser check, open `/trainer/?fieldExample=tomato-640#field-test` and click **Run example**. At 15 cm expect 53 matches and 23 extra pins on the synthetic ring scan `56b872a50fcac3ab`. The 40-epoch choice matches one plant and places four extra pins. The report records both exact matches (`evaluation.pinByReferenceAtCm`) and where plants dropped out (`stagesAtCm`) at each distance.
+
+Open `/benchmark/?comparison=epochs&crop=artichoke&seed=551`. Each seed generates one dataset. That link replays the original 10/40/100 settings. To request two lengths, set `shortEpochs=40&longEpochs=640`. Add `scoreGround=present&scoreDistance=15` to inspect the held-out scans that include ground returns. The neural fits start from the same initial weights with the same examples, scaling, learning rate (0.25) and score cutoff (0.50). Each fit runs from scratch so its training time covers its entire duration. The second seed runs the budgets in reverse order.
 
 Group exported rows by `seed` and `epochs`. Read the duration from the row. The report's shared settings omit a single epoch value for this comparison. `trainingLoss` is the loss on the final pass before its update, while `scores` use the updated weights. For a CLI replay, copy the crop, layouts, field counts and peak height from `settings`, then set the specific row's seed and epochs in your settings JSON. Check the tile IDs and per-tolerance counts. In the browser, clicking the epoch count opens the matching Training Shed setup on CPU.
+
+To test whether extra epochs helped on independent tomato plantings, follow the development and confirmation commands in the [duration study](docs/tomato-training-duration.md). The browser benchmark grows its own validation fields. The guide supplies a particular clean scan for replaying the frozen weights in Field Test. Its **Match distance** control shows the one-to-one assignment at 7.5, 10 or 15 cm. The downloaded evaluation gives the zero-based pin index for each reference in `pinByReferenceAtCm[cm]`; `-1` means that center was missed.
 
 ### Train on one growth stage and score on another
 
