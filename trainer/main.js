@@ -686,7 +686,7 @@ async function runFit(trial){
  live.show({title:'Growing '+cropProfile(crop).name,metric:'Preparing terrain',detail:'Seed '+seed,legend:'Sampled laser returns',fraction:0,
   metricHelp:'The generator is preparing the ground and crops before sampling them with laser rays.',
   detailHelp:'This dataset seed chooses the separate practice and validation plantings. Keep it fixed when comparing model settings.'});
- if(narrow.matches && sceneHost.getBoundingClientRect().bottom>innerHeight)sceneHost.scrollIntoView({block:'end'});
+ if(!sceneHost.closest('.instrument') && narrow.matches && sceneHost.getBoundingClientRect().bottom>innerHeight)sceneHost.scrollIntoView({block:'end'});
  let previewCloud, lastFrame=-Infinity;
 
  status(trial?'Timing a trial':'Generating fields','Building separate training and validation fields.',0);

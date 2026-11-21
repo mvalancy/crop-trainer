@@ -161,7 +161,7 @@ $('focusPlant').onclick = () => {
   }
   viewer.focusPlant();
   $('map').focus({preventScroll:true});
-  if (narrowField.matches) $('scan-viewer').scrollIntoView({block:'start'});
+  if (narrowField.matches && !$('map').closest('.instrument')) $('scan-viewer').scrollIntoView({block:'start'});
 };
 
 function grow(checkReplay = false) {
@@ -219,7 +219,7 @@ async function showScan(recipe, url, selectedBox, expectedTile, checkReplay = fa
     detailHelp:'This field seed controls the planting. Keep the same seed when comparing scanner settings.'};
   live.show(scene);
   $('generationStatus').textContent = 'Building the scan…';
-  if(!checkReplay && narrowField.matches) $('scan-viewer').scrollIntoView({block:'start'});
+  if(!checkReplay && narrowField.matches && !$('map').closest('.instrument')) $('scan-viewer').scrollIntoView({block:'start'});
   try {
     const value=await session.generate(recipe,frame=>{
       const finishing=frame.row===frame.rows;
@@ -348,6 +348,7 @@ function applyScan(value, recipe, url, selectedBox, expectedTile) {
   if (Number(budget)) training.set('validationRayBudget', budget);
   $('trainLayout').textContent=recipe.infrastructure===false?'Train this crop and layout with fixtures →':'Train this crop and layout →';
   if(recipe.appleCanopy==='dormant') $('trainLayout').textContent='Train on leafy orchard fields →';
+  if (recipe.appleCanopy!=='dormant' && recipe.infrastructure!==false && $('trainLayout').closest('.instrument')) $('trainLayout').textContent='Train this setup →';
   $('trainLayout').href = 'trainer/?'+training;
   $('lessonTrain').href = $('trainLayout').href;
   $('lessonCrop').textContent = profile.name;

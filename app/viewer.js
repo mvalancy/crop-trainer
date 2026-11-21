@@ -147,7 +147,7 @@ export function createViewer(canvas, controls) {
   }
   canvas.addEventListener('pointerdown',e=>{
     if(e.button!==0&&e.button!==1&&e.button!==2)return;
-    const pageSwipe=e.pointerType==='touch' && !canvas.closest('.viewExpanded');
+    const pageSwipe=e.pointerType==='touch' && !canvas.closest('.viewExpanded,.instrumentStage');
     if(pageSwipe && !e.isPrimary){
       pointers.clear(); // Leave two-finger pinch to the browser on the page.
       return;
@@ -182,7 +182,7 @@ export function createViewer(canvas, controls) {
   for(const name of ['lostpointercapture','pointercancel','pointerup'])canvas.addEventListener(name,e=>{if(pointers.delete(e.pointerId))schedule();});
   canvas.addEventListener('contextmenu',e=>e.preventDefault());
   canvas.addEventListener('wheel',e=>{
-    if(!canvas.closest('.viewExpanded') || e.ctrlKey)return;
+    if(!canvas.closest('.viewExpanded,.instrumentStage') || e.ctrlKey)return;
     e.preventDefault();const box=canvas.getBoundingClientRect();
     const delta=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?box.height:1);
     magnify(Math.exp(-clamp(delta,-400,400)*.0015),e.clientX-box.left-box.width/2,e.clientY-box.top-box.height/2);

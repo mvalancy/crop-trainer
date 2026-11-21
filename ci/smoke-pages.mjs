@@ -1,4 +1,5 @@
 // Serve only the built artifact at the same project path used by GitHub Pages.
+import {checkStudioLayout} from './studio-layout.mjs';
 import assert from 'node:assert/strict';
 import {readFile,stat} from 'node:fs/promises';
 import {createServer} from 'node:http';
@@ -145,6 +146,11 @@ try {
   await page.goto(new URL('studio/',base).href);
   const activities=page.getByRole('navigation',{name:'Studio activities'});
   const sections=page.getByRole('navigation',{name:'Activity sections'});
+  const menu=page.getByRole('button',{name:'Switch activity'});
+  async function switchActivity(name) {
+    if (await menu.isVisible()) await menu.click();
+    await activities.getByRole('link',{name,exact:true}).click();
+  }
   await page.getByRole('button',{name:'Play story'}).click();
   await page.getByRole('button',{name:'Pause story'}).click();
   await page.getByRole('button',{name:'Prediction',exact:true}).click();
@@ -152,29 +158,34 @@ try {
   const instrument=()=>page.frameLocator('iframe:not([hidden])');
   await instrument().locator('#oneUpdate').click();
   await instrument().locator('#practiceScore').filter({hasText:'0.62'}).waitFor();
-  await activities.getByRole('link',{name:'Scan',exact:true}).click();
+  await switchActivity('Scan');
   await instrument().locator('#seed').fill('49');
   await sections.getByRole('link',{name:'Plant & scanner'}).click();
   await instrument().locator('#noise').selectOption('clean');
   await sections.getByRole('link',{name:'Generate'}).click();
   assert.equal(await instrument().locator('#seed').inputValue(),'49');
-  await activities.getByRole('link',{name:'Train',exact:true}).click();
+  await switchActivity('Train');
   await sections.getByRole('link',{name:'Model',exact:true}).click();
   await instrument().locator('#architecture').selectOption('linear');
-  await activities.getByRole('link',{name:'Field test'}).click();
-  await instrument().locator('#fieldTestForm').waitFor({state:'visible'});
+  await switchActivity('Field test');
+  await instrument().getByRole('button',{name:'Run example',exact:true}).waitFor();
   await page.goBack();
   assert.equal(await instrument().locator('#architecture').inputValue(),'linear');
   await sections.getByRole('link',{name:'Results',exact:true}).click();
   await instrument().getByText('Score a fresh planting',{exact:true}).waitFor();
-  await activities.getByRole('link',{name:'Learn',exact:true}).click();
+  await switchActivity('Learn');
   assert.equal(await instrument().locator('#practiceScore').textContent(),'0.62');
   for (const width of [320,1366]) {
     await page.setViewportSize({width,height:800});
     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+    if (await menu.isVisible()) await menu.click();
     assert.ok(await activities.getByRole('link',{name:'Docs'}).isVisible());
+    if (await menu.isVisible()) await page.keyboard.press('Escape');
   }
   await page.setViewportSize({width:390,height:844});
+  await checkStudioLayout(page,base);
+  await page.setViewportSize({width:390,height:844});
+  console.log('Scan and Train kept the canvas, inspector and primary action stationary throughout live runs.');
   console.log('The film entered a live lesson, and the studio preserved a scan, model choice and lesson across tasks and browser Back.');
 
   // Follow a real lesson at the Pages subpath and keep the reader's palette across workspaces.

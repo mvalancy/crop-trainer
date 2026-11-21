@@ -72,3 +72,31 @@ html:has(.studio) {scroll-behavior:auto;}
  .studioBar .themeChoice {font-size:0;gap:0;}
  .studioBar .themeChoice select {font-size:.83rem;}
 }
+
+.studioFrame:not([data-styled]) {visibility:hidden;}
+#activityMenu {display:none;}
+@media(max-width:760px) {
+  .studio {grid-template:"bar" 3.25rem "desk" minmax(0,1fr) / minmax(0,1fr);}
+  .studioBar.barInner {gap:.6rem;position:relative;z-index:3;}
+  #activityMenu {display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .65rem;min-height:40px;background:var(--wash);border:1px solid var(--line);}
+  #activityMenu strong {font-weight:650;}
+  #activities {display:none;}
+  #activities.isOpen {position:absolute;inset:3.25rem auto auto .5rem;z-index:4;display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));width:min(23rem,calc(100% - 1rem));gap:.2rem;
+    padding:.55rem;border-radius:0 0 .7rem .7rem;box-shadow:0 .65rem 1.8rem #112e2a55;}
+  #activities a {flex-direction:row;justify-content:flex-start;gap:.55rem;padding:.45rem .55rem;font-size:.91rem;}
+  .deskHead {display:flex;padding:.27rem .65rem;gap:.4rem;}
+  #steps {margin:0;}
+  .deskHead:has(#steps a) #activityTitle {position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);}
+  #steps a {min-height:40px;padding-inline:.54rem;}
+  .studioBar .repoLink {font-size:.78rem;}
+}
+@media(max-width:480px) {
+  .studioBar .brand {font-size:0;gap:0;}
+  .studioBar .brand img {width:28px;height:28px;}
+  .studioBar .brand {min-height:44px;}
+}
+#desk {grid-template-columns:minmax(0,1fr);}
+.deskHead {min-height:4rem;}
+@media(max-width:760px) {.deskHead {min-height:3.1rem;}}
+.deskHead,#panes {min-width:0;}

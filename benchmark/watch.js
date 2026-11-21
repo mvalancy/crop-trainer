@@ -36,8 +36,10 @@ export function benchmarkView(host) {
       }
       badge.textContent='0 / '+total+' scored';
       host.querySelector('.inspectHelp').hidden=true;
-      host.focus({preventScroll:true});
-      host.scrollIntoView({block:'start'});
+      if (!host.closest('.instrument')) {
+        host.focus({preventScroll:true});
+        host.scrollIntoView({block:'start'});
+      }
     },
     growing(runSeed){
       phase(0);scene.reset();field=null;lastScan=-Infinity;

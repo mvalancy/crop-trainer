@@ -259,7 +259,13 @@ function place() {
   const viewport = window.visualViewport;
   const left = viewport?.offsetLeft || 0, top = viewport?.offsetTop || 0;
   const width = viewport?.width || document.documentElement.clientWidth;
-  const height = viewport?.height || document.documentElement.clientHeight;
+  let height = viewport?.height || document.documentElement.clientHeight;
+  // A field tooltip may extend across the scene, but leave the fixed run action reachable.
+  const workbench = anchor.closest('.instrumentPanel')?.closest('.instrument');
+  if (workbench) {
+    const bar = workbench.querySelector('.instrumentTransport').getBoundingClientRect();
+    if (box && box.left < bar.right && box.right > bar.left) height = Math.min(height, bar.top - top);
+  }
   if (!box?.width || !anchor.isConnected || box.bottom <= top || box.top >= top + height || box.right <= left || box.left >= left + width) {
     close();
     return;

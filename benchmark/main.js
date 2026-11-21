@@ -856,7 +856,7 @@ $('benchForm').onsubmit = async event => {
   $('scoreDetails').hidden = true;
   completedScores.length = 0;
   $('scoreRows').replaceChildren();
-  const lockedControls = [...$('benchForm').querySelectorAll('input:enabled,select:enabled,button:enabled:not(.helpTrigger,.helpDisabledProxy)')];
+  const lockedControls = [...$('benchForm').elements].filter(el => el.matches('input:enabled,select:enabled,button:enabled:not(.helpTrigger,.helpDisabledProxy)'));
   for (const input of lockedControls) input.disabled = true;
   $('cancel').disabled = false;
   const benchStart = performance.now();

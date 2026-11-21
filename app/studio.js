@@ -1,13 +1,14 @@
+import {installInstrument} from './studio-instrument.js';
 import {initFieldFilm} from './field-film.js';
 // Keep each instrument's DOM, files, canvas and running worker alive while readers switch activities.
 const root = new URL('../', import.meta.url);
 const tasks = {
-  learn:{title:'Field lessons', tool:'field', path:'', steps:{film:['Field film','fieldFilm'],lessons:['Practice','guide'],journal:['Journal','missions']}},
-  scan:{title:'Field generator', tool:'field', path:'', steps:{generate:['Generate','field'],recipe:['Plant & scanner','advanced-scan'],study:['Compare scans','scan-study']}},
-  train:{title:'Training shed', tool:'trainer', path:'trainer/', steps:{fit:['Fit & monitor','controls'],model:['Model','detector'],settings:['Settings','settingsTitle'],results:['Results','resultsTitle']}},
-  compare:{title:'Detector benchmark', tool:'benchmark', path:'benchmark/', steps:{experiment:['Experiment','benchForm'],presets:['Presets','benchExamples'],'compare-results':['Results','benchResults']}},
-  test:{title:'Field test', tool:'trainer', path:'trainer/', steps:{test:['Test a plot','field-test']}},
-  docs:{title:'Illustrated field guide', tool:'docs', path:'guide/', steps:{docs:['Chapters','']}}
+  learn:{label:'Learn',title:'Field lessons', tool:'field', path:'', steps:{film:['Field film','fieldFilm'],lessons:['Practice','guide'],journal:['Journal','missions']}},
+  scan:{label:'Scan',title:'Field generator', tool:'field', path:'', steps:{generate:['Generate','field'],recipe:['Plant & scanner','advanced-scan'],study:['Compare scans','scan-study']}},
+  train:{label:'Train',title:'Training shed', tool:'trainer', path:'trainer/', steps:{fit:['Fit & monitor','controls'],model:['Model','detector'],settings:['Settings','settingsTitle'],results:['Results','resultsTitle']}},
+  compare:{label:'Compare',title:'Detector benchmark', tool:'benchmark', path:'benchmark/', steps:{experiment:['Experiment','benchForm'],presets:['Presets','benchExamples'],'compare-results':['Results','benchResults']}},
+  test:{label:'Field test',title:'Field test', tool:'trainer', path:'trainer/', steps:{test:['Test a plot','field-test']}},
+  docs:{label:'Docs',title:'Illustrated field guide', tool:'docs', path:'guide/', steps:{docs:['Chapters','']}}
 };
 const paths = {
   learn:'M3 4q5-2 9 1 4-3 9-1v14q-5-2-9 1-4-3-9-1z M12 5v14',
@@ -19,7 +20,7 @@ const paths = {
 };
 const panes = new Map(), remembered = new Map();
 const paneHost = document.querySelector('#panes');
-let active;
+let active, referenceScan;
 const firstStep = view => Object.keys(tasks[view].steps)[0];
 
 function address(view, step = firstStep(view)) {
@@ -109,6 +110,7 @@ function showFrame(pane) {
   const disclosures = {recipe:['anatomySettings','sensorSettings','obstacleSettings'], study:['scan-study'], model:['modelOptions'],settings:['fitOptions','datasetOptions','scanOptions','detectorOptions'],presets:['benchExamples']};
   for (const id of disclosures[step] || []) doc.getElementById(id).open = true;
   const target = doc.getElementById(url.hash.slice(1));
+  pane.reveal?.(target);
   if (target && url.hash.slice(1) !== tasks[view].steps[step][1]) {
     for (let el=target;el;el=el.parentElement) if (el.tagName==='DETAILS') el.open=true;
     target.scrollIntoView({behavior:'instant',block:'start'});
@@ -125,8 +127,19 @@ function mount(tool) {
     if (!doc || !toolFor(new URL(doc.URL))) return;
     const css=doc.createElement('link');
     css.rel='stylesheet'; css.href=new URL('app/studio-frame.css',root);
+    css.addEventListener('load', () => {frame.dataset.styled='true';});
     doc.head.append(css);
+    if (tool!=='docs') pane.reveal=installInstrument(doc,tool,referenceScan);
     if (tool==='trainer') {
+      const revealFit=pane.reveal;
+      const revealTest=installInstrument(doc,'test');
+      pane.reveal=target=>{revealFit(target);revealTest(target);};
+      doc.getElementById('runPreset').addEventListener('change', event => {
+        if (event.target.value==='custom') {
+          navigate(address('train','settings'));
+          doc.getElementById('stopMode').focus();
+        }
+      });
       const empty=doc.createElement('section');
       empty.className='panel resultEmpty';
       empty.innerHTML='<img src="../art/scan-learn-find.svg" alt="A field scan becomes measurements, then plant predictions."><h2>Score a fresh planting</h2><p>Fit a detector to see its matches, extra pins and missed plants here.</p><a href="#controls">Set up a training run</a>';
@@ -146,7 +159,25 @@ function mount(tool) {
       if (!link || event.defaultPrevented || event.button || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || link.hasAttribute('download') || link.target==='_blank') return;
       const url=new URL(link.href);
       const next=classify(url, url.pathname===doc.location.pathname ? doc : null);
-      if (next) {event.preventDefault();navigate(next);}
+      if (next) {
+        if (link.id==='trainLayout' && !doc.getElementById('ply').disabled) {
+          const trainer=panes.get('trainer');
+          const trainerDoc=trainer?.ready && trainer.frame.contentDocument;
+          if (trainerDoc && !trainerDoc.getElementById('cancel').disabled) {
+            event.preventDefault();
+            navigate(address('train','fit'));
+            return;
+          }
+          const map=doc.getElementById('map');
+          const thumb=doc.createElement('canvas');
+          thumb.width=Math.min(900,map.width);
+          thumb.height=Math.max(1,Math.round(thumb.width*map.height/map.width));
+          thumb.getContext('2d').drawImage(map,0,0,thumb.width,thumb.height);
+          referenceScan={image:thumb.toDataURL('image/webp'),label:doc.getElementById('fieldCaption').textContent,search:url.search};
+          if (trainerDoc) trainerDoc.dispatchEvent(new CustomEvent('studio-scan-reference',{detail:referenceScan}));
+        }
+        event.preventDefault();navigate(next);
+      }
       else if (['https:','http:'].includes(url.protocol)) {link.target='_blank';link.rel='noopener';}
     });
     doc.addEventListener('invalid',event=>{
@@ -177,7 +208,9 @@ function navigate(route,historyMode='push') {
   const pane=isFilm ? null : panes.get(config.tool) || mount(config.tool);
   document.getElementById('film').hidden=!isFilm;
   if (!isFilm) pauseFilm();
+  closeActivityMenu();
   active=route;
+  menuButton.querySelector('strong').textContent=tasks[view].label;
   remembered.set(view,route);
   if (historyMode!=='restore' && shellURL(route).href!==location.href) {
     history[historyMode==='replace'?'replaceState':'pushState'](null,'',shellURL(route));
@@ -201,7 +234,7 @@ function navigate(route,historyMode='push') {
   if (isFilm) return;
   const reload=!pane.url || pane.url.pathname!==url.pathname || pane.url.search!==url.search;
   pane.url=new URL(url);
-  if (reload) {pane.ready=false;pane.frame.contentWindow.location.replace(url.href);}
+  if (reload) {delete pane.frame.dataset.styled;pane.ready=false;pane.frame.contentWindow.location.replace(url.href);}
   else showFrame(pane);
 }
 for (const link of document.querySelectorAll('#activities a')) {
@@ -211,6 +244,27 @@ for (const link of document.querySelectorAll('#activities a')) {
     const status=document.createElement('small');status.className='runIndicator';status.hidden=true;link.append(status);
   }
 }
+const menuButton=document.getElementById('activityMenu');
+const navigation=document.getElementById('activities');
+function closeActivityMenu() {
+  navigation.classList.remove('isOpen');
+  menuButton.setAttribute('aria-expanded','false');
+}
+menuButton.addEventListener('click',()=>{
+  const open=navigation.classList.toggle('isOpen');
+  menuButton.setAttribute('aria-expanded',String(open));
+  if (open) navigation.querySelector('[aria-current]')?.focus();
+});
+navigation.addEventListener('keydown',event=>{
+  if (event.key==='Escape') {closeActivityMenu();menuButton.focus();}
+});
+navigation.addEventListener('focusout',event=>{
+  if (!navigation.contains(event.relatedTarget) && event.relatedTarget!==menuButton) closeActivityMenu();
+});
+document.addEventListener('pointerdown',event=>{
+  if (!navigation.contains(event.target) && !menuButton.contains(event.target)) closeActivityMenu();
+});
+matchMedia('(max-width:760px)').addEventListener('change',closeActivityMenu);
 document.addEventListener('click',event=>{
   const link=event.target.closest('a[data-view],a[data-step]');
   if (!link || event.button || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;

@@ -38,3 +38,148 @@ html[data-activity] {scroll-behavior:auto;}
  [data-step=lessons] #guide .sectionHead p {font-size:.92rem;}
 }
 [data-activity]:not([data-step=results]) .resultEmpty {display:none;}
+
+/* The live stage, inspector and transport have independent geometry. Only the
+   inspector scrolls when lesson text, measurements or available controls change. */
+.instrument {display:none;}
+html:is([data-step=generate],[data-step=fit],[data-step=experiment],[data-step=test]) {overflow:hidden;}
+:is([data-step=generate],[data-step=fit],[data-step=experiment],[data-step=test]) main {
+  width:100%;max-width:none;margin:0;padding:0;height:100dvh;min-height:0;
+}
+[data-step=generate] #field,[data-step=fit] #controls {
+  display:block;width:100%;height:100%;padding:0;margin:0;border:0;
+}
+[data-step=generate] #field > .lab,[data-step=fit] #controls > .monitorPanel {display:none;}
+:is([data-step=generate],[data-step=fit],[data-step=experiment],[data-step=test]) .instrument {
+  --dock-width:clamp(15rem,29%,23rem);
+  display:grid;width:100%;height:100%;min-height:0;overflow:hidden;
+  grid-template:"scene inspector" minmax(0,1fr) "transport inspector" 4.6rem / minmax(0,1fr) var(--dock-width);
+}
+.instrumentStage {
+  grid-area:scene;position:relative;min-width:0;min-height:0;isolation:isolate;
+  overflow:hidden;background:#132e27;color:#edf6dc;
+}
+.instrumentStage #scan-viewer,.instrumentStage .viewer,.instrumentStage .viewer #map {
+  display:block;position:absolute;inset:0;width:100%;height:100%;min-height:0;
+  max-height:none;margin:0;padding:0;border:0;border-radius:0;
+}
+.instrumentStage .plotHead {display:none;}
+.instrumentStage .firstRun,.instrumentStage .liveScene:not([hidden]) {
+  position:absolute;inset:0;width:100%;height:100%;min-height:0;
+  margin:0;border:0;border-radius:0;
+}
+.instrumentStage .firstRun {
+  display:grid;grid-template-rows:minmax(0,1fr) auto;place-items:center;
+  background:#e2edca;color:#203b2a;
+}
+.instrumentStage .firstRun img {height:100%;width:100%;max-width:48rem;object-fit:contain;border-radius:0;margin:0;}
+.instrumentStage .firstRun figcaption {
+  justify-self:stretch;margin:0;padding:.8rem 1rem;color:#eff5df;background:#1b392f;
+  max-width:none;font-size:.91rem;line-height:1.4;
+}
+.instrumentStage .firstRun[hidden] {display:none;}
+.instrumentStage .liveScene:not([hidden]) {
+  display:grid;grid-template-rows:3.7rem minmax(0,1fr) 4px;grid-template-columns:minmax(0,1fr);
+}
+.instrumentStage .liveScene figcaption {
+  display:grid;align-content:center;grid-template-columns:minmax(0,1fr);gap:0;
+  padding:.3rem .85rem;line-height:1.2;font-variant-numeric:tabular-nums;
+}
+.instrumentStage .liveScene :is(strong,.sceneMetric) {overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+.instrumentStage .liveScene canvas {grid-area:2/1;width:100%;height:100%;min-height:0;}
+.instrumentStage .sceneFooter,.instrumentStage .sceneLoss {
+  grid-area:2/1;align-self:end;z-index:1;margin:0;background:#102b24e8;
+}
+.instrumentStage .sceneFooter {
+  display:grid;grid-template-columns:minmax(0,1fr);gap:0;padding:.25rem .8rem;
+  line-height:1.25;font-variant-numeric:tabular-nums;
+}
+.instrumentStage .sceneLoss {align-self:center;justify-self:start;max-width:48%;border-radius:0 1rem 1rem 0;}
+.instrumentStage .sceneTrack {grid-area:3/1;}
+.instrumentTransport {
+  grid-area:transport;display:grid;grid-template-columns:minmax(0,1fr) clamp(7.4rem,30%,11rem);
+  align-items:center;gap:.8rem;padding:.5rem .9rem;background:var(--surface);border-top:1px solid var(--line);
+}
+.instrumentReadout {min-width:0;max-height:100%;overflow:auto;font-variant-numeric:tabular-nums;}
+.instrumentReadout :is(p,strong) {display:block;margin:0;font-size:.97rem;line-height:1.25;font-weight:650;}
+.instrumentReadout #generationStatus {margin:0;color:var(--muted);font-size:.83rem;}
+.instrumentReadout progress {display:block;width:100%;height:.38rem;margin:.35rem 0 0;}
+.instrumentResult {font-size:.84rem;font-weight:650;}
+.instrumentAction {position:relative;z-index:1001;display:grid;min-width:0;height:2.8rem;align-content:stretch;}
+.instrumentAction button {width:100%;height:100%;min-height:44px;margin:0;padding:.45rem;line-height:1.15;}
+.instrumentAction :is(#cancel:disabled,.helpDisabledProxy),
+.instrumentAction:has(#cancel:not(:disabled)) #run {display:none;}
+.instrumentInspector {
+  grid-area:inspector;display:grid;grid-template-rows:3rem minmax(0,1fr);
+  min-width:0;min-height:0;border-left:1px solid var(--line);background:var(--surface);
+}
+.instrumentTopics {display:flex;align-items:stretch;gap:.1rem;padding-inline:.6rem;border-bottom:1px solid var(--line);}
+.instrumentTopics .topicButton {
+  min-width:0;margin:0;padding:.35rem .6rem;border:0;border-radius:0;
+  background:transparent;color:var(--muted);font-size:.89rem;
+}
+.instrumentTopics .topicButton[aria-pressed=true] {color:var(--forest);box-shadow:inset 0 -3px var(--forest);}
+.instrumentPanel {margin:0;padding:.85rem;overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable;min-height:0;min-width:0;}
+.instrumentPanel[hidden] {display:none;}
+.instrumentPanel :is(#scan-settings,.viewOptions,.scanSummary,.setupPanel) {
+  display:block;min-width:0;width:100%;margin:0;padding:0;border:0;border-radius:0;background:transparent;
+}
+.instrumentPanel :is(#scan-settings>h3,.setupPanel>h2,#scan-view-controls>summary,.growActions,.mobileShortcut) {display:none;}
+.instrumentPanel :is(.setupChoices,.viewTools,.scanSummary .scanDownloads) {grid-template-columns:minmax(0,1fr);}
+.instrumentPanel :is(.scanTotals,.scanCoverage,.scanFiles) {margin:0 0 1.2rem;}
+.instrumentPanel #scan-view-controls .viewTools {display:grid;padding:0;}
+.instrumentPanel #gpu {margin:0 0 .65rem;}
+.instrumentPanel p {overflow-wrap:anywhere;}
+.instrumentPanel #status {font-variant-numeric:tabular-nums;}
+.instrumentPanel .scanSummary .readouts {grid-template-columns:repeat(2,minmax(0,1fr));}
+.instrumentPanel :is(.reviewLink,.advancedJump) {display:inline-block;margin-block:.5rem;}
+.instrumentPanel [hidden],.instrumentReadout [hidden] {display:none;}
+@media(max-width:680px) {
+  :is([data-step=generate],[data-step=fit],[data-step=experiment],[data-step=test]) .instrument {
+    grid-template:"scene" minmax(0,1.55fr) "inspector" minmax(0,1fr) "transport" 3.8rem / minmax(0,1fr);
+  }
+  .instrumentInspector {grid-template-rows:2.8rem minmax(0,1fr);border-left:0;border-top:1px solid var(--line);}
+  .instrumentPanel {padding:.7rem .85rem;}
+  .instrumentPanel .setupChoices {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));}
+  .instrumentTransport {padding:.35rem .75rem;}
+}
+@media(max-height:390px) and (min-width:480px) {
+  :is([data-step=generate],[data-step=fit],[data-step=experiment],[data-step=test]) .instrument {
+    grid-template:"scene inspector" minmax(0,1fr) "transport inspector" 3.2rem / minmax(0,1fr) 42%;
+  }
+}
+[data-step=fit] #controls > .instrument {border:0;border-radius:0;padding:0;}
+.instrumentReadout #trainLayout {display:inline-block;font-size:.85rem;font-weight:650;}
+.instrument:has(#scanScene:not([hidden])) #trainLayout {visibility:hidden;}
+.instrumentStage .firstRun.scanReference {background:#142e27;}
+.instrumentStage .firstRun.scanReference img {max-width:none;}
+
+[data-step=experiment] #main > :is(.benchSetup,.benchResults) {display:none;}
+.instrumentPanel .benchForm .benchFields,.instrumentPanel .benchForm .benchRunNumbers {grid-template-columns:minmax(0,1fr);}
+.instrumentPanel #benchWatch,.instrumentPanel .watchGrid {margin:0;padding:0;border:0;display:block;}
+.instrumentPanel .watchHead {display:block;}
+.instrumentPanel .watchHead h2 {font-size:1.15rem;}
+.instrumentPanel .watchSteps {padding:0;flex-wrap:wrap;}
+.instrumentPanel .scoreboard {padding:.65rem 0;border:0;background:transparent;}
+.instrumentPanel #watchCancel {display:none;}
+.instrumentPanel:has(#benchWatch[hidden])::before {content:"Scores appear here as each detector finishes a seed.";}
+.instrumentReadout .benchStatus {height:1.8rem;overflow:auto;padding:0;background:transparent;border:0;color:var(--ink);}
+.instrument:has(#benchWatch[hidden]) .instrumentStage .liveScene {display:none;}
+
+[data-step=test] #field-test {width:100%;height:100%;margin:0;padding:0;border:0;border-radius:0;}
+[data-step=test] #field-test > .sectionHead {display:none;}
+.instrumentStage #testMap {width:100%;height:100%;position:absolute;inset:0;object-fit:contain;background:var(--paper);}
+.instrumentPanel #testResults .testView,.instrumentPanel #fieldTestForm .practiceLayout,.instrumentPanel #fieldTestForm .testUploads {display:block;}
+.instrumentPanel #fieldTestForm .testUpload {margin-block:.75rem;}
+.instrumentPanel :is(#testResults,.testSource,.practicePicker,.testFrame) {min-width:0;}
+.instrumentReadout #testStatus {max-height:2.55em;overflow:auto;font-size:.87rem;line-height:1.25;}
+.instrumentResult:is(button) {padding:0;min-height:auto;border:0;color:var(--forest);background:transparent;text-decoration:underline;}
+.instrumentAction:has(#testCancel:not([hidden])) #testDetect {display:none;}
+[data-instrument=test] .instrumentStage {container-type:size;display:grid;place-items:center;background:var(--wash);}
+.instrumentStage #testMap {position:static;width:min(100cqw,100cqh);height:min(100cqw,100cqh);}
+.instrumentStage .viewer #map {touch-action:none;}
+
+[data-instrument=test][data-panel=test-inspector-example] #testDetect,
+[data-instrument=test]:not([data-panel=test-inspector-example]) #testRunExample,
+.instrumentAction:has(#testCancel:not([hidden])) #testRunExample {display:none;}
+[data-theme=dark] .instrumentStage .firstRun:not(.scanReference) {background:#234234;}
