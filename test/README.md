@@ -16,6 +16,10 @@ node --test
 | Plant geometry, fixtures or field replay | [Growing systems](growing-systems.test.js) · [Trainer](trainer.test.js) |
 | Network settings or saved-weight predictions | [Networks](network.test.js) · [Inference](inference.test.js) |
 | Scan files or survey coordinates | [PLY reader](ply.test.js) · [Reference labels](references.test.js) · [Field-test command](field-test-cli.test.js) |
+| Plant attachments and earlier generator versions | [Lettuce, buds and greenhouse supports](plant-attachments.test.js) |
+| Comparing scans or locating an apple trunk | [Two ray budgets](scan-study.test.js) · [Orchard geometry and survey frames](orchard.test.js) |
 | Pairing benchmark results | [Density comparisons](density.test.js) |
 
 [Crop Trainer home](../README.md) · [Local setup](../docs/local-setup.md)
+
+To check a slow browser start, open **Field test** with network throttling. Select a PLY and saved weights immediately. **Find plants** should become available as soon as the scan has been read, even while the trainer is checking its GPU. With labeled apple data, switch between the three overlays and check the counts against the saved CLI report. [Field test](https://mvalancy.github.io/crop-trainer/trainer/#field-test) · [Score a scan locally](../docs/scan-cli.md)

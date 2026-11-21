@@ -203,7 +203,9 @@ export function initFieldTest(downloadJSON) {
   byId('testExport').addEventListener('click',() => {
     if (report) downloadJSON(report,'field-test-'+report.crop+'-'+report.files.scan.sha256.slice(0,10)+'.json');
   });
-  updateControls();
+  // A visitor can pick a file before this module finishes loading.
+  if (ply.files.length) loadScan();
+  else updateControls();
   return (artifact,seed) => {
     currentModelFile = new File([JSON.stringify(artifact,null,2)+'\n'],'crop-weights-'+artifact.crop+'-'+seed+'.json',{type:'application/json'});
     const option = modelSource.querySelector('[value=current]');

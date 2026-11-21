@@ -1,7 +1,7 @@
 import {scanSession} from './scan-session.js?v=plants3';
 import {setupPlantControls, plantSettings} from './plant-version.js?v=plants3';
 import {createLiveScene} from './live-scene.js';
-import {initFieldTest} from './field-test-ui.js?v=orchard2';
+import {initFieldTest} from './field-test-ui.js?v=orchard3';
 import {initSandbox, modelSettings, duration, trainInWorker, inspectWeights, runPresets, startingPreset} from './sandbox.js?v=field-practice1';
 import {MAX_SANDBOX_EPOCHS, trainerId, weightArtifact} from './network.js?v=plants2';
 import {returnBand,sampleCloud} from './field.js?v=plants3';
@@ -66,6 +66,8 @@ function updateBenchmarkLinks() {
 $('crop').addEventListener('change', updateBenchmarkLinks);
 $('plantArchitecture').addEventListener('change', updateBenchmarkLinks);
 for (const id of ['plantForm','plantCondition','peakHeight','scanner','validationSensor','trainingRayBudget','validationRayBudget','seed','epochs','stopMode']) $(id).addEventListener('input', updateBenchmarkLinks);
+// File uploads work independently of training imports and GPU discovery.
+const setFieldTestModel=initFieldTest(downloadJSON);
 initSandbox(params);
 let finishTraining=null, calibration=null;
 let controller=null,losses=[],lastPreview=null,backendReady=false,deps,webgpuAvailable=false,lastRun=null,lastPaint=0;
@@ -442,7 +444,6 @@ function downloadJSON(data, filename) {
 $('downloadRun').onclick = () => {
  if (lastRun) downloadJSON(lastRun, 'crop-trainer-' + lastRun.backend.toLowerCase() + '-' + lastRun.epochs + 'ep-seed' + lastRun.seed + '.json');
 };
-const setFieldTestModel=initFieldTest(downloadJSON);
 $('downloadWeights').onclick=()=>{
  if(lastRun)downloadJSON(weightArtifact(lastRun),'crop-weights-'+lastRun.settings.crop+'-'+lastRun.seed+'.json');
 };
