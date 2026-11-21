@@ -1,13 +1,13 @@
 import {encodePly} from '../trainer/field-test/ply.js?v=export1';
 import {setupFirstSteps} from './first-steps.js?v=context-help2';
-import {initScanStudy} from '../trainer/study/scan-study-ui.js?v=orchard-spacing2';
+import {initScanStudy} from '../trainer/study/scan-study-ui.js?v=orchard-ranking1';
 import {createFieldLesson} from './field-lesson.js?v=generator-guide3';
 import {cropProfile} from '../trainer/generator/crops.js?v=systems1';
 import {scanSession} from '../trainer/generator/scan-session.js?v=plants3';
 import {makeRecipe} from '../trainer/models/data.js?v=plants3';
 import {formsFor} from '../trainer/plants/forms.js';
 import {setupFieldPlants} from '../trainer/plants/field-controls.js?v=drag-orbit1';
-import {getSensor, sensorOptions, sensorDetails, rayBudgetOptions, layoutCapacity, DEFAULT_GENERATOR_RAYS} from '../trainer/generator/sensors.js?v=dense1';
+import {getSensor, sensorOptions, sensorDetails, rayBudgetOptions, layoutCapacity, DEFAULT_GENERATOR_RAYS} from '../trainer/generator/sensors.js?v=option-fit1';
 import {createLiveScene} from '../trainer/ui/live-scene.js?v=context-help2';
 import {createViewer} from './viewer.js?v=context-help2';
 
@@ -71,7 +71,7 @@ for (const [id, key] of replaySelects) {
 showSystemControls();
 $('fixtures').checked=requested.get('fixtures')!=='off';
 // Links from earlier versions without a budget replay the original seeded scan.
-rayBudgetOptions($('budget'), requested.size ? requested.get('budget') : DEFAULT_GENERATOR_RAYS);
+rayBudgetOptions($('budget'), requested.size ? requested.get('budget') : DEFAULT_GENERATOR_RAYS, 'From seed');
 const requestedSeed = requested.get('seed');
 if (/^\d+$/.test(requestedSeed) && Number(requestedSeed) <= 0xffffffff) {
   $('seed').value = String(Number(requestedSeed));

@@ -163,6 +163,8 @@ For apple **Tree-base pin spacing**, both arms score one generated point cloud. 
 
 Choose **Height pin · sampled cells only** on the maps to inspect another height detector. Its kernel omits empty cells and still counts a measured zero-height return. Compare extra pins as well as matches. The soil-only check can be replayed with `node benchmark/studies/seedling-peaks.mjs`. [Measured peak and soil examples](docs/seedling-peaks.md)
 
+For an apple scan, choose **Tree-base ranking** and run the comparison on one point cloud. The usual arm uses the original support order. The trial adds a priority bonus for low occupied cells, and both arms keep the original crop spacing. The shared link preserves the selected tree and view. Reproduce the clean held-out study with `node benchmark/studies/orchard-ranking.mjs confirmation` and the paired clutter check with `node benchmark/studies/orchard-ranking-clutter.mjs`. [Worked examples and limits](docs/orchard-ranking.md)
+
 ### Replay a model trained with a different peak rule
 
 Open `/benchmark/?comparison=averaging` to refit on the same scans using both rules. Each fit gets its own candidate examples, normalization and weights. In Training Shed, the advanced peak-averaging control applies to training, validation and downloaded weights. Preserve `peakAveraging: "occupied"` in custom settings when replaying the sampled-cell rule. The standard weight schema is `crop-peak-13-v1`. Sampled-cell weights use `crop-peak-13-occupied-v1`. The Field Test import reads the schema before extracting peaks. [Seedling classifier results and soil controls](docs/seedling-peaks.md#can-training-reject-the-extra-soil-peaks)

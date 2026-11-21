@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="396" height="542" viewBox="0 0 396 542" role="img" aria-labelledby="title desc">
+  <title id="title">Which tree-base guess gets tried first?</title>
+  <desc id="desc">Example of the low-return ranking trial. The side view marks five laser returns between 15 centimetres inclusive and 48 centimetres exclusive above the plot’s zero-height plane. The local soil surface can vary. The top view places those five returns in three distinct 5 centimetre cells near a candidate. The trial adds two points to that candidate’s ranking score, the maximum bonus. It considers the same qualifying candidates and keeps their usual 1.05 metre spacing. A weed can contribute low returns too.</desc>
+  <style>
+    text { fill: #183f34; font-family: system-ui, sans-serif }
+    .title { font-size: 22px; font-weight: 720 }
+    .head { font-size: 18px; font-weight: 670 }
+    .body { font-size: 17px }
+    .measure { font-size: 16px; fill: #3e5e50 }
+    .hit { fill: #f5ae46; stroke: #593b1d; stroke-width: 1.6 }
+    .cell { fill: #f5dfad }
+    .sweep { opacity: 0 }
+    @media (prefers-reduced-motion: no-preference) {
+      .sweep { animation: sweep 1.7s ease-out .2s both }
+      .cell { animation: fill-cell .4s ease-out both }
+      .first { animation-delay: 1.45s }
+      .second { animation-delay: 1.8s }
+      .third { animation-delay: 2.15s }
+      @keyframes sweep {
+        0% { opacity: 0; transform: translateY(0) }
+        15% { opacity: .8 }
+        85% { opacity: .8 }
+        100% { opacity: 0; transform: translateY(60px) }
+      }
+      @keyframes fill-cell { from { fill: #fffdf4 } to { fill: #f5dfad } }
+    }
+  </style>
+
+  <rect x="1" y="1" width="394" height="540" rx="16" fill="#faf8ee" stroke="#bfcdbb"/>
+  <text x="18" y="34" class="title">Which guess gets tried first?</text>
+  <text x="18" y="59" class="measure">Schematic of a candidate near an apple trunk</text>
+  <path d="M18 74h360" stroke="#c3cfbe"/>
+
+  <text x="18" y="101" class="head">Side view · keep the low returns</text>
+  <rect x="28" y="137" width="233" height="60" fill="#e1ecdf"/>
+  <!-- The enlarged side view follows the trunk down to the soil. -->
+  <path d="M70 225Q88 217 92 197L101 168Q104 154 93 131L88 114L99 113
+           Q110 142 120 144Q130 140 145 117L150 121Q144 140 130 155
+           Q125 162 125 177L129 210Q132 219 146 225Z" fill="#915c3a" stroke="#64452e" stroke-width="1.8" stroke-linejoin="round"/>
+  <path d="M109 211Q110 193 115 180M110 161Q117 154 122 152" fill="none" stroke="#b38a5e" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M200 223Q199 199 182 180Q199 184 203 204Q205 180 215 166Q213 183 208 201
+           Q223 185 235 184Q214 199 207 216L206 223Z" fill="#609469" stroke="#3f6c4c" stroke-width="1.5"/>
+  <g fill="none" stroke="#6b8978">
+    <path d="M28 137h237" stroke-dasharray="4 4"/>
+    <path d="M28 197h237"/>
+  </g>
+  <path class="sweep" d="M28 137h233" stroke="#37746b" stroke-width="2"/>
+  <g class="hit">
+    <circle cx="109" cy="159" r="3.6"/><circle cx="112" cy="167" r="3.6"/>
+    <circle cx="120" cy="179" r="3.6"/><circle cx="135" cy="147" r="3.6"/>
+    <circle cx="204" cy="186" r="3.6"/>
+  </g>
+  <path d="M28 224h237" stroke="#536446" stroke-width="2"/>
+  <text x="274" y="142" class="measure">Below 48 cm</text>
+  <text x="274" y="202" class="measure">From 15 cm</text>
+  <text x="274" y="229" class="measure">Plot zero</text>
+
+  <path d="M18 248h360" stroke="#c3cfbe"/>
+  <text x="18" y="277" class="head">Top view · count occupied cells</text>
+  <g transform="translate(24 296)">
+    <rect width="108" height="108" rx="2" fill="#fffdf4"/>
+    <rect class="cell first" y="36" width="36" height="36"/>
+    <rect class="cell second" x="36" width="36" height="36"/>
+    <rect class="cell third" x="72" y="72" width="36" height="36"/>
+    <path d="M0 0h108v108H0ZM36 0v108M72 0v108M0 36h108M0 72h108" fill="none" stroke="#819788" stroke-width="1.3"/>
+    <g class="hit">
+      <circle cx="12" cy="46" r="3.6"/><circle cx="21" cy="53" r="3.6"/>
+      <circle cx="27" cy="62" r="3.6"/><circle cx="49" cy="16" r="3.6"/>
+      <circle cx="88" cy="85" r="3.6"/>
+    </g>
+    <path d="M47 54h14m-7-7v14" stroke="#145768" stroke-width="2.8"/>
+    <path d="M0 114v4h36v-4" fill="none" stroke="#526f60"/>
+    <text x="18" y="138" text-anchor="middle" class="measure">5 cm</text>
+  </g>
+  <path d="M154 309h13m-6.5-6.5v13" stroke="#145768" stroke-width="2.8"/>
+  <text x="177" y="315" class="body">Candidate</text>
+  <text x="153" y="348" class="body">5 returns</text>
+  <text x="153" y="373" class="body">in 3 cells</text>
+  <rect x="153" y="386" width="184" height="34" rx="6" fill="#e1ecdf"/>
+  <text x="164" y="409" class="head">+2 ranking points</text>
+
+  <path d="M18 452h360" stroke="#c3cfbe"/>
+  <text x="18" y="481" class="head">Try higher scores first</text>
+  <text x="18" y="506" class="body">Add one point per occupied cell, up to two.</text>
+  <text x="18" y="529" class="body">Keep candidates at least 1.05 m apart.</text>
+</svg>

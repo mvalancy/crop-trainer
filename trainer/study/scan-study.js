@@ -1,5 +1,5 @@
 import {features, matchCenters, detectionStages, targetCenters} from '../models/data.js?v=peak-study1';
-import {detectOrchardBases, inspectOrchardBases} from '../models/orchard.js?v=orchard-spacing1';
+import {detectOrchardBases, inspectOrchardBases, ORCHARD_GRID_SIDE} from '../models/orchard.js?v=orchard-ranking1';
 import {cropProfile} from '../generator/crops.js';
 import {evaluatePins} from '../field-test/references.js';
 import {RAY_BUDGETS, getSensor} from '../generator/sensors.js';
@@ -12,9 +12,21 @@ function heightResult(peaks, separation, references) {
   return {pins,...evaluatePins(pins.map(localPoint),references)};
 }
 
+function treeTrace(tree, comparison, ranking) {
+  const trace={state:tree.state,supportCellCount:tree.supportCellCount,spacedCellCount:tree.spacedCellCount};
+  if(comparison==='ranking'){
+    trace.topCandidate=tree.strongestCell;
+    if(ranking==='low-wood'){
+      const cell=tree.strongestCell, scale=ORCHARD_GRID_SIDE/10;
+      trace.bestCellId=cell?Math.floor(cell.y*scale)*ORCHARD_GRID_SIDE+Math.floor(cell.x*scale):null;
+    }
+  }
+  return trace;
+}
+
 export function studyRecipes(recipe, mode, budgets) {
-  if (mode === 'spacing') {
-    if (recipe.crop !== 'apple') throw Error('Choose an apple orchard to compare base pin spacing.');
+  if (mode === 'spacing' || mode === 'ranking') {
+    if (recipe.crop !== 'apple') throw Error('Choose an apple orchard to compare tree-base rules.');
     return [recipe, recipe];
   }
   if (mode === 'scaffolds') {
@@ -38,7 +50,7 @@ export function studyRecipes(recipe, mode, budgets) {
 
 // Only the observation counts use the simulator's point origins. The detectors
 // see the same XYZ a visitor would find in an exported PLY.
-export function analyzeStudyScan(scan, comparison, orchardSeparationMeters) {
+export function analyzeStudyScan(scan, comparison, orchardOptions={}) {
   const profile = cropProfile(scan.p.crop);
   const centers = targetCenters(scan.labels.boxes);
   const references = centers.map(localPoint);
@@ -47,8 +59,10 @@ export function analyzeStudyScan(scan, comparison, orchardSeparationMeters) {
   const sampled = heightResult(features({xyz:scan.xyz},profile.peakHeight,'occupied'),profile.pinSeparation,references);
   const proposals = matchCenters(peaks.pos,centers,.15);
 
+  // Earlier callers passed the spacing as a number.
+  const options=typeof orchardOptions==='number' ? {separationMeters:orchardOptions} : orchardOptions;
   const orchardStages = scan.p.crop === 'apple'
-    ? detectOrchardBases(scan.xyz,{includeStages:true, separationMeters:orchardSeparationMeters}) : null;
+    ? detectOrchardBases(scan.xyz,{...options,includeStages:true}) : null;
   const orchardPins = orchardStages?.pins.map(({x,y})=>[x,y]);
   const orchard = orchardStages && evaluatePins(orchardPins.map(localPoint),references);
   const orchardTrace = orchard && inspectOrchardBases(orchardStages,centers,orchard.pinByReference15);
@@ -59,8 +73,7 @@ export function analyzeStudyScan(scan, comparison, orchardSeparationMeters) {
     sampledHeight:sampled.pinByReference15[i] !== -1,
     ...(orchard ? {orchard:orchard.pinByReference15[i] !== -1,
       nearestOrchardPinM:orchardTrace[i].nearestPinMeters,
-      orchardTrace:{state:orchardTrace[i].state,supportCellCount:orchardTrace[i].supportCellCount,
-        spacedCellCount:orchardTrace[i].spacedCellCount}} : {})
+      orchardTrace:treeTrace(orchardTrace[i],comparison,orchardStages.ranking)} : {})
   }));
   return {
     tileId:scan.labels.tile_id,recipe:scan.p,sampledRays:scan.sampledRays,
@@ -73,6 +86,8 @@ export function analyzeStudyScan(scan, comparison, orchardSeparationMeters) {
     ...(comparison==='scaffolds' && scan.parts ? {
       orchardWoodReturns:scan.parts.reduce((n,part,i)=>n+(part===1 && scan.cls[i]===1),0)
     } : {}),
+    ...(orchard && comparison==='ranking' ? {orchardRanking:orchardStages.ranking ?? 'support'} : {}),
+    ...(orchardStages?.lowCellIds ? {orchardLowCellIds:orchardStages.lowCellIds} : {}),
     ...(orchard ? {orchardScores:orchard.scores,orchardPins,orchardSeparationMeters:orchardStages.separationMeters,orchardMethod:'height-band-occupancy-v1'} : {})
   };
 }

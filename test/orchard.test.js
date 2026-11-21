@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {detectOrchardBases,inspectOrchardBases} from '../trainer/models/orchard.js';
+import {detectOrchardBases,inspectOrchardBases,isLowOrchardReturn} from '../trainer/models/orchard.js';
 import {field} from '../trainer/generator/field.js';
 import {getSensor} from '../trainer/generator/sensors.js';
 import {makeRecipe,matchCenters,targetCenters} from '../trainer/models/data.js';
@@ -35,6 +35,35 @@ test('bare soil and an isolated high return do not supply vertical support',()=>
   for(const spacing of [0, Infinity, '0.75']) {
     assert.throws(()=>detectOrchardBases([], {separationMeters:spacing}),/orchard candidate spacing/);
   }
+});
+
+test('low-return evidence changes only the ranking of already eligible orchard cells',()=>{
+  const upper=[...syntheticColumn(3.025,4.025),...syntheticColumn(3.825,4.025)];
+  const lower=[3.825,4.025,.15,3.875,4.025,.45,3.775,4.025,.46];
+  const trace={includeStages:true}, experiment={...trace,ranking:'low-wood'};
+  const ordinary=detectOrchardBases(upper,trace);
+  assert.deepEqual(detectOrchardBases([...upper,...lower],{...trace,ranking:'support'}),ordinary);
+  assert.deepEqual(detectOrchardBases(upper,experiment).pins,ordinary.pins);
+  assert.deepEqual(detectOrchardBases(lower,experiment).pins,[]);
+  assert.throws(()=>detectOrchardBases(upper,{ranking:'unknown'}),/ranking/);
+
+  const trial=detectOrchardBases([...upper,...lower],experiment);
+  assert.equal(trial.ranking,'low-wood');
+  assert.deepEqual(trial.lowCellIds,[80*200+75,80*200+76,80*200+77]);
+  assert.ok(!('lowCellIds' in ordinary));
+  assert.ok(!('lowCellIds' in detectOrchardBases(upper,{ranking:'low-wood'})));
+  assert.equal(trial.candidateCount,ordinary.candidateCount);
+  assert.equal(trial.pins.length,1);
+  assert.equal(ordinary.pins.length,1);
+  assert.ok(ordinary.pins[0].x<3.2 && trial.pins[0].x>3.7);
+  assert.deepEqual(detectOrchardBases([...upper,...lower,...lower],experiment),trial);
+  const originalScores=new Map(ordinary.supportCells.map(p=>[[p.x,p.y].join(','),p.score]));
+  assert.ok(trial.supportCells.some(cell=>cell.lowCellCount>2));
+  for(const cell of trial.supportCells){
+    assert.equal(cell.score,originalScores.get([cell.x,cell.y].join(',')));
+    assert.equal(cell.rankScore,cell.score+Math.min(cell.lowCellCount,2));
+  }
+  assert.deepEqual([.149999,.15,.479999,.48].map(isLowOrchardReturn),[false,true,true,false]);
 });
 
 test('collecting the support trace preserves every prediction in a paired v3/v4 orchard',()=>{

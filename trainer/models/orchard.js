@@ -1,11 +1,16 @@
 // Geometric challenger for a ground-referenced 10 m × 10 m apple plot.
 // Inputs are only XYZ in metres. The score is an occupancy index.
-const size = 200, step = .05, stride = size+1;
+export const ORCHARD_GRID_SIDE = 200;
+const size = ORCHARD_GRID_SIDE, step = 10/size, stride = size+1;
 const lowerHeights = [.48, .78, 1.12, 1.55, 2.04];
 const weights = [1.5, 1.5, 1, .35, .35];
 const threshold = 4;
 export const DEFAULT_ORCHARD_SPACING = 1.05;
 export const ORCHARD_SPACINGS = Object.freeze([.75, DEFAULT_ORCHARD_SPACING, 1.35]);
+
+export function isLowOrchardReturn(z) {
+  return z>=.15 && z<lowerHeights[0];
+}
 
 function integral(mask) {
   const sums = new Uint32Array(stride*stride);
@@ -24,9 +29,10 @@ function area(sums, x0, y0, x1, y1) {
   return sums[y1*stride+x1]-sums[y1*stride+x0]-sums[y0*stride+x1]+sums[y0*stride+x0];
 }
 
-function occupiedBands(xyz) {
+function occupiedBands(xyz, useLowReturns) {
   const bands = lowerHeights.map(() => new Uint8Array(size*size));
   const crown = new Uint8Array(size*size);
+  const low = useLowReturns ? new Uint8Array(size*size) : null;
   for (let i=0; i<xyz.length; i+=3) {
     const x=xyz[i], y=xyz[i+1], z=xyz[i+2];
     // Survey-origin subtraction can put a boundary coordinate a fraction of a
@@ -37,14 +43,17 @@ function occupiedBands(xyz) {
     }
     let band=lowerHeights.length-1;
     while (band>=0 && z<lowerHeights[band]) band--;
-    if (band<0) continue;
+    if (band<0 && (!low || !isLowOrchardReturn(z))) continue;
     const col=Math.min(size-1,Math.max(0,Math.floor(x/step)));
     const row=Math.min(size-1,Math.max(0,Math.floor(y/step)));
     const cell=row*size+col;
-    bands[band][cell]=1;
-    if (band>=1) crown[cell]=1;
+    if (band<0) low[cell]=1;
+    else {
+      bands[band][cell]=1;
+      if (band>=1) crown[cell]=1;
+    }
   }
-  return {bands:bands.map(integral), crown:integral(crown)};
+  return {bands:bands.map(integral), crown:integral(crown), low:low && integral(low), lowMask:low};
 }
 
 function supportAt(bands, crown, x, y) {
@@ -66,19 +75,28 @@ function supportAt(bands, crown, x, y) {
   return support*(.20+.80*occupied/4)*(1+2.5*balance);
 }
 
-export function detectOrchardBases(xyz, {includeStages=false, separationMeters=DEFAULT_ORCHARD_SPACING}={}) {
+export function detectOrchardBases(xyz, {includeStages=false, separationMeters=DEFAULT_ORCHARD_SPACING, ranking='support'}={}) {
+  if (ranking!=='support' && ranking!=='low-wood') throw Error('Choose support or low-wood orchard ranking.');
   if (!ORCHARD_SPACINGS.includes(separationMeters)) throw Error('Choose orchard candidate spacing of 0.75, 1.05 or 1.35 metres.');
   if ((!Array.isArray(xyz) && !ArrayBuffer.isView(xyz)) || !Number.isInteger(xyz.length) ||
       xyz.length%3!==0 || xyz.length>3_000_000) throw Error('Provide up to one million interleaved XYZ returns.');
-  const {bands,crown}=occupiedBands(xyz), support=new Float32Array(size*size), candidates=[];
+  const {bands,crown,low,lowMask}=occupiedBands(xyz,ranking==='low-wood');
+  const support=new Float32Array(size*size), candidates=[];
   for (let y=0; y<size; y++) for (let x=0; x<size; x++) {
     const score=supportAt(bands,crown,x,y);
     if (score>=threshold) {
-      candidates.push({x,y,score});
+      const cell={x,y,score};
+      // The trial ranks already eligible cells. One low return can influence
+      // nearby cells; repeated hits in the same 5 cm bin count only once.
+      if (low) {
+        cell.lowCellCount=area(low,x-1,y-1,x+2,y+2);
+        cell.rankScore=score+Math.min(2,cell.lowCellCount);
+      }
+      candidates.push(cell);
       support[y*size+x]=score;
     }
   }
-  candidates.sort((a,b)=>b.score-a.score);
+  candidates.sort(low ? (a,b)=>b.rankScore-a.rankScore : (a,b)=>b.score-a.score);
   const selected=[];
   for (const cell of candidates) {
     if (!selected.some(p=>((p.x-cell.x)**2+(p.y-cell.y)**2)*step**2<separationMeters**2)) selected.push(cell);
@@ -95,10 +113,16 @@ export function detectOrchardBases(xyz, {includeStages=false, separationMeters=D
     return {x:wx/sum, y:wy/sum, score};
   });
   const result = {pins,candidateCount:candidates.length,threshold,separationMeters};
+  if (low) result.ranking=ranking;
   if (includeStages) {
-    const center = cell => ({x:(cell.x+.5)*step, y:(cell.y+.5)*step, score:cell.score});
+    const center = cell => ({x:(cell.x+.5)*step, y:(cell.y+.5)*step, score:cell.score,
+      ...(low ? {lowCellCount:cell.lowCellCount,rankScore:cell.rankScore} : {})});
     result.supportCells = candidates.map(center);
     result.spacedCells = selected.map(center);
+    if (lowMask) {
+      result.lowCellIds=[];
+      lowMask.forEach((occupied,id)=>{if(occupied)result.lowCellIds.push(id);});
+    }
   }
   return result;
 }
@@ -125,7 +149,7 @@ export function inspectOrchardBases(result, referenceXY, pinByReference15) {
         const cell=cells[j*size+i];
         if (!cell || squaredDistance(cell)>limit) continue;
         supportCellCount++;
-        if (!strongestCell || cell.score>strongestCell.score) strongestCell=cell;
+        if (!strongestCell || (cell.rankScore??cell.score)>(strongestCell.rankScore??strongestCell.score)) strongestCell=cell;
       }
     }
     let spacedCellCount=0, nearestSquared=Infinity, nearestPinIndex=null;

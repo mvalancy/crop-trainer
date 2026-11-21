@@ -77,6 +77,15 @@
 .hitKey { color: #a44930; margin-inline-start: .5rem; }
 .scanSummary .scanFiles { grid-column: 1 / -1; align-items: start; }
 
+@media (max-width: 28rem) {
+  .viewTools .helpField:has(#color, #highlight) { grid-column: 1 / -1; }
+  .viewTools .helpField:has(#color) { grid-template-columns: 6.8rem minmax(0,1fr); }
+  .viewTools .helpField:has(#color) > label { grid-column: 1 / -1; grid-template-columns: subgrid; align-items: center; }
+  .viewTools .helpField:has(#color) > .helpTrigger { align-self: center; }
+}
+@media (min-width: 28.01rem) and (max-width: 43.99rem) {
+  .viewOptions .viewTools { grid-template-columns: minmax(8.5rem,1fr) minmax(15rem,1.5fr); }
+}
 @media (min-width: 44rem) {
   #grow {
     grid-template-columns: 1fr 1fr;
@@ -85,7 +94,7 @@
   #grow .advancedJump { align-self: center; }
   #grow .quickScanner { grid-template-columns: minmax(0, 1.4fr) minmax(6rem, 1fr); }
   #generationStatus { grid-column: 1 / -1; }
-  .viewOptions .viewTools { grid-template-columns: repeat(3, minmax(6rem, 1fr)) minmax(10rem, 1.5fr); }
+  .viewOptions .viewTools { grid-template-columns: minmax(5.2rem,.85fr) minmax(7.25rem,1.15fr) minmax(8.5rem,1fr) minmax(15rem,1.7fr); }
   .cameraInputs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .cameraInputs strong { display: block; }
   .scanSummary .scanFiles {

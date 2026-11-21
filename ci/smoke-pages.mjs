@@ -62,17 +62,19 @@ try {
     return JSON.parse(file.buffer.toString('utf8'));
   }
 
-  function clippedValues(controls) {
-    return controls.evaluateAll(elements=>{
+  function clippedValues(controls, allOptions=false) {
+    return controls.evaluateAll((elements, checkAllOptions)=>{
       const measure=document.createElement('canvas').getContext('2d');
       return elements.filter(control=>{
         const style=getComputedStyle(control);
         measure.font=style.font;
-        const text=control.selectedOptions?.[0]?.text ?? control.value;
+        const options=checkAllOptions && control.options
+          ? Array.from(control.options).filter(o=>!o.hidden && !o.disabled).map(o=>o.text)
+          : [control.selectedOptions?.[0]?.text ?? control.value];
         const available=control.clientWidth-parseFloat(style.paddingLeft)-parseFloat(style.paddingRight);
-        return measure.measureText(text).width+16>available; // Allow for the arrow or spinner.
+        return options.some(text=>measure.measureText(text).width+16>available); // Allow for the arrow or spinner.
       }).map(control=>control.id);
-    });
+    }, allOptions);
   }
 
   async function checkDirectHelp(target, gesture, expected) {
@@ -342,6 +344,68 @@ try {
   assert.deepEqual(await page.locator('#studyScoreBody tbody th[scope=row]').allTextContents(),['Fixed','Fixed','1.05 m','1.35 m']);
   assert.deepEqual([standard.reusedScan,wider.reusedScan,wider.timingsMs.generation],[false,true,0]);
   assert.equal(new URL(spacingReport.source).searchParams.get('studySpacing'),'1.35');
+
+  const rankQuery=new URLSearchParams(traceQuery);
+  for (const [key,value] of Object.entries({plantArchitecture:4,seed:19105417,sensor:'os1-64',studyMode:'ranking',
+    studyMetric:'orchard',studyBox:9,studyZoom:'tree',studyCloud:'on'})) rankQuery.set(key,value);
+  await open('?'+rankQuery+'#scan-study');
+  await page.locator('#studyRun').tap();
+  await trace.waitFor();
+  const ranking=await downloadJSON(page.locator('#studySave'),'tap');
+  const [usual,low]=ranking.arms;
+  assert.equal(ranking.format,'crop-trainer-orchard-ranking-study-v1');
+  assert.deepEqual([usual.tileId,low.tileId],Array(2).fill('9bf8d00c2d9b6d4b'));
+  assert.deepEqual([usual.orchardRanking,low.orchardRanking],['support','low-wood']);
+  assert.equal(usual.orchardSeparationMeters,low.orchardSeparationMeters);
+  assert.deepEqual(usual.heightPins,low.heightPins);
+  assert.deepEqual(usual.sampledHeightScores,low.sampledHeightScores);
+  assert.equal(usual.reusedScan,false);
+  assert.equal(low.reusedScan,true);
+  assert.equal(low.timingsMs.generation,0);
+  for (const [side,arm,distance,matched] of [['A',usual,'50.4 cm',false],['B',low,'4.6 cm',true]]) {
+    assert.equal(await page.locator('#studyNearest'+side).innerText(),distance);
+    assert.equal(arm.plants[9].orchard,matched);
+  }
+  assert.equal(low.plants[9].orchardTrace.topCandidate.lowCellCount,1);
+  const patch=page.locator('#studyLowPatch');
+  assert.equal(low.plants[9].orchardTrace.bestCellId,33315);
+  assert.deepEqual(low.orchardLowCellIds,[19917,33115]);
+  // 33115 is one 200-cell row south of the candidate, in the bottom-middle square.
+  const squares=patch.locator('.lowPatchGrid span');
+  assert.equal(await squares.count(),9);
+  assert.deepEqual(await squares.evaluateAll(nodes=>nodes.flatMap((node,i)=>node.classList.contains('occupied')?[i]:[])),[7]);
+  assert.match(await patch.innerText(),/1 of 9 cells occupied/);
+  assert.ok(await page.locator('#studyZoom').isChecked());
+  assert.ok(await page.locator('#studyLowReturnsKey').isVisible());
+  await page.locator('#studyCloud').uncheck();
+  assert.ok(await page.locator('#studyLowReturnsKey').isHidden());
+  assert.ok(await patch.isVisible(), 'The 3×3 inset uses the full detector mask independently of point preview');
+  await page.locator('#studyMetric').selectOption('returns');
+  assert.ok(await patch.isHidden());
+  assert.deepEqual(await page.locator('#studyScoreBody tbody th[scope=row]').allTextContents(),['Fixed','Fixed','Usual rule','Low returns']);
+  const source=new URL(ranking.source);
+  assert.equal(source.searchParams.get('studyMode'),'ranking');
+  assert.equal(source.searchParams.get('studyZoom'),'tree');
+  assert.equal(source.searchParams.get('studyBox'),'9');
+  assert.ok(!new URL(await page.locator('#studyLinkA').getAttribute('href')).searchParams.has('studyMode'));
+  await page.locator('#field details').evaluateAll(groups=>groups.forEach(group=>{group.open=true;}));
+  for (const width of [320,390,704,1024,1440]) {
+    await page.setViewportSize({width,height:844});
+    assert.deepEqual(await clippedValues(page.locator('#budget, .viewTools select, #advanced-scan select:enabled:visible'),true),
+      [],'Generator options should fit the controls at '+width+'px');
+  }
+  rankQuery.set('seed','18101637');
+  rankQuery.set('sensor','reference');
+  rankQuery.set('plantCondition','damaged');
+  rankQuery.set('plantForm','open-vase');
+  rankQuery.set('studyBox','1');
+  await open('?'+rankQuery+'#scan-study');
+  await page.locator('#studyRun').click();
+  await trace.waitFor();
+  assert.equal(await page.locator('#scanId').textContent(),'e648f678bc2c34a5');
+  assert.equal(await page.locator('#studySupportB').innerText(),'0');
+  assert.ok(await patch.isHidden(), 'A tree with no candidate should show no candidate patch');
+  console.log('The lower-return study replayed one orchard scan and checked the visible low-cell evidence, fixed controls and saved result.');
 
   await open('trainer/?plan=quick&engine=cpu&crop=lettuce&seed=27&sensor=reference&epochs=3');
   {

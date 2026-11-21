@@ -154,3 +154,39 @@ test('apple pin-spacing arms use one scan and preserve the height-only control',
   assert.deepEqual(closer.sampledHeightScores,control.sampledHeightScores);
   assert.deepEqual([control,closer].map(r=>[r.orchardScores.at(-1).tp,r.orchardScores.at(-1).fp]),[[7,3],[7,5]]);
 });
+
+test('ranking rules use the same scan and show every low cell that can affect priority',()=>{
+  const recipe={...makeRecipe(18101637,true,getSensor('os1-64'),'apple',4,'central-leader','healthy'),
+    points:60000, appleCanopy:'leafy', weeds:false, sticks:false, boards:false, scanNoise:null};
+  const [first,second]=studyRecipes(recipe,'ranking');
+  assert.equal(first,second);
+  assert.equal(first,recipe);
+  assert.throws(()=>studyRecipes(seedlingRecipe('reference'),'ranking'),/apple orchard/);
+  const scan=field(first);
+  const usual=analyzeStudyScan(scan,'ranking');
+  const trial=analyzeStudyScan(scan,'ranking',{ranking:'low-wood'});
+  checkStudyPair(usual,trial);
+  assert.equal(usual.tileId,'f89d8eafa9371fd6');
+  assert.deepEqual([usual.orchardRanking,trial.orchardRanking],['support','low-wood']);
+  assert.deepEqual([usual.orchardSeparationMeters,trial.orchardSeparationMeters],[1.05,1.05]);
+  assert.deepEqual(usual.heightScores,trial.heightScores);
+  assert.deepEqual(usual.sampledHeightPins,trial.sampledHeightPins);
+  assert.ok(!('orchardLowCellIds' in usual));
+  const cells=new Set();
+  for(let i=0;i<scan.xyz.length;i+=3){
+    if(scan.xyz[i+2]>=.15 && scan.xyz[i+2]<.48){
+      cells.add(200*Math.floor(scan.xyz[i+1]/.05)+Math.floor(scan.xyz[i]/.05));
+    }
+  }
+  assert.equal(cells.size,6);
+  assert.deepEqual(trial.orchardLowCellIds,[...cells].sort((a,b)=>a-b));
+  const usualTree=usual.plants[0],trialTree=trial.plants[0];
+  assert.equal(usualTree.orchard,false);
+  assert.equal(trialTree.orchard,true);
+  assert.equal(trialTree.orchardTrace.topCandidate.lowCellCount,1);
+  assert.ok(!('bestCellId' in usualTree.orchardTrace));
+  assert.equal(trialTree.orchardTrace.bestCellId,200*32+26);
+  assert.equal(trialTree.orchardTrace.topCandidate.rankScore,usualTree.orchardTrace.topCandidate.score+1);
+  assert.equal(usualTree.orchardTrace.supportCellCount,trialTree.orchardTrace.supportCellCount);
+  assert.deepEqual([usual,trial].map(r=>[r.orchardScores.at(-1).tp,r.orchardScores.at(-1).fp]),[[11,3],[12,2]]);
+});

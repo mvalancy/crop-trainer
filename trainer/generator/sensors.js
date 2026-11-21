@@ -70,8 +70,8 @@ export function layoutCapacity(sensor) {
   return size ? Math.min(MAX_SCAN_RAYS, size[0] * size[1]) : MAX_SCAN_RAYS;
 }
 
-export function rayBudgetOptions(select, requested) {
-  select.replaceChildren(new Option('Seeded · 26–42k rays', '0'));
+export function rayBudgetOptions(select, requested, seededLabel = 'Seeded · 26–42k rays') {
+  select.replaceChildren(new Option(seededLabel, '0'));
   for (const rays of RAY_BUDGETS) select.add(new Option(rays.toLocaleString(), String(rays)));
   if (RAY_BUDGETS.includes(Number(requested))) select.value = String(Number(requested));
 }

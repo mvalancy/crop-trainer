@@ -12,6 +12,7 @@
 }
 .studyPanel .studyMaps figcaption { display: grid; padding: .6rem .65rem .15rem; }
 .studyPanel .studyMaps canvas { width: 100%; max-width: none; }
+.studyLowDot { width: .6rem; height: .6rem; border: 1px solid #26737b; background: #64deea; }
 .studyMapView { display: none; }
 #scan-study #studyInspect:not([hidden]) { display: contents; }
 .studyFocus { display: grid; align-content: start; gap: .3rem; }
@@ -101,3 +102,34 @@
   }
   #studyForm:has(#studySpacing:enabled) .helpField:has(#studySpacing) { grid-column: auto; }
 }
+
+#studyLowPatch:not([hidden]) {
+  display: grid;
+  grid-template-columns: 4.5rem minmax(0, 1fr);
+  align-items: center;
+  gap: .75rem;
+  border-top: 1px solid var(--line);
+  margin-top: .65rem;
+  padding-block: .65rem .15rem;
+}
+#studyLowPatch .lowPatchGrid {
+  display: grid;
+  grid-template: repeat(3, 1fr) / repeat(3, 1fr);
+  gap: 1px;
+  aspect-ratio: 1;
+  padding: 2px;
+  border-radius: .25rem;
+  overflow: hidden;
+  background: #5b796c;
+}
+.lowPatchGrid span {
+  display: grid;
+  place-items: center;
+  background: #19382f;
+  color: #fff;
+  font: 700 1rem/1 system-ui, sans-serif;
+}
+.lowPatchGrid .occupied { background: #64deea; color: #123b3e; }
+.lowPatchGrid .outside { background: repeating-linear-gradient(45deg,#394941 0 2px,#26362c 2px 5px); }
+#studyLowPatch strong { font-size: .9rem; }
+#studyLowPatch p { margin: .15rem 0 0; font-size: .86rem; }

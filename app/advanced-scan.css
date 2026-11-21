@@ -16,7 +16,7 @@
   padding-bottom: 1rem;
 }
 #anatomySettings .detailFields {
-  grid-template-columns: repeat(auto-fit,minmax(min(100%,13rem),1fr));
+  grid-template-columns: repeat(auto-fit,minmax(min(100%,16rem),1fr));
   margin: 0;
 }
 #anatomySettings .detailFields:has(#plantForm:disabled) {
@@ -51,13 +51,13 @@
 .scanEnvironment .sensorFacts { display: grid; gap: .35rem; }
 #advanced-scan .sensorFacts > p { margin: 0; }
 #advanced-scan .scannerSetup .detailFields {
-  grid-template-columns: repeat(auto-fit,minmax(min(100%,12rem),1fr));
+  grid-template-columns: repeat(auto-fit,minmax(min(100%,16rem),1fr));
   align-items: end;
   margin: .65rem 0 1rem;
 }
 .scanEnvironment .check { min-height: 44px; }
 #advanced-scan .clutter {
-  grid-template-columns: repeat(auto-fit,minmax(min(100%,6.4rem),1fr));
+  grid-template-columns: repeat(auto-fit,minmax(min(100%,7.7rem),1fr));
   gap: .35rem .6rem;
   margin: .4rem 0 1rem;
 }
@@ -79,7 +79,7 @@
   #advanced-scan .specimenComparison h4 { grid-area: 1 / 2; align-self: end; }
   #advanced-scan .specimenStudyControls { grid-area: 2 / 2; }
 }
-@media (min-width: 34rem) and (max-width: 61rem) {
+@media (min-width: 38rem) and (max-width: 72rem) {
   #anatomySettings .detailFields:has(#appleCanopy:enabled) {
     grid-template-columns: repeat(2,minmax(0,1fr));
   }
