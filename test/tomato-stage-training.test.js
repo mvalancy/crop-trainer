@@ -53,3 +53,32 @@ test('invalid balanced row limits fail before generating a scan',async()=>{
     await assert.rejects(buildDataset({sampleLimit,generate:()=>assert.fail('unexpected scan')}),/sample limit/i);
   }
 });
+
+test('a study can pick shuffled background rows using only raw features',async()=>{
+  let pool;
+  const config={seed:82173,crop:'tomato',plantArchitecture:2,trainFields:2,valFields:1,sampleLimit:24};
+  const ordinary=await buildDataset(config);
+  const first=await buildDataset({...config,selectNegativeRows(raw,n,dims) {
+    assert.ok(raw instanceof Float32Array);
+    assert.equal(dims,ordinary.dims);
+    assert.equal(raw.length/dims,ordinary.stats.trainingExamplesByField.reduce((sum,f)=>sum+f.availableNegative,0));
+    pool=raw;
+    return Array.from({length:n},(_,i)=>i);
+  }});
+  assert.deepEqual(ordinary,first);
+  const other=await buildDataset({...config,selectNegativeRows(raw,n,dims) {
+    assert.deepEqual(raw,pool);
+    return Array.from({length:n},(_,i)=>raw.length/dims-1-i);
+  }});
+  assert.deepEqual(ordinary.manifest,other.manifest);
+  assert.deepEqual(ordinary.Y,other.Y);
+  assert.notDeepEqual(ordinary.X,other.X);
+  for (let row=0;row<ordinary.Y.length;row+=2) for (let k=0;k<ordinary.dims;k++) {
+    const raw=set=>set.X[row*set.dims+k]*set.scaling.std[k]+set.scaling.means[k];
+    assert.ok(Math.abs(raw(ordinary)-raw(other))<1e-5);
+  }
+  for (const selectNegativeRows of [(_,n)=>Array(n).fill(0),(_,n)=>Array(n),
+    (raw,n,dims)=>Array.from({length:n},(_,i)=>raw.length/dims+i)]) {
+    await assert.rejects(buildDataset({...config,selectNegativeRows}),/distinct negative training row indices/);
+  }
+});

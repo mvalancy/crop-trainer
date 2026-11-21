@@ -183,6 +183,14 @@ Use Training Shed URLs or settings JSON with `positiveSampling=form-soil` and `s
 
 Use `/benchmark/?comparison=sampling&sampleLimit=600` for two matched CPU runs. Replay individual rows in Training Shed. The fixed-field study also includes a growth-form-only control and a separate sample-budget experiment. [Tomato study, code and browser presets](docs/tomato-soil-sampling.md)
 
+### Compare difficult background examples
+
+Run `node benchmark/studies/tomato-hard-negatives.mjs fit > fit.json` to train on synthetic weedy plots. The ordinary fit draws background examples at random. The others reserve a quarter or half of the same budget for background peaks a preliminary detector scored highly. Check the positive row, negative pool and weight hashes in the fit file. Run `node benchmark/studies/tomato-hard-negatives.mjs confirm fit.json > confirmation.json` to replay the frozen weights on paired clean and weedy test fields. For an equal number of pins on four more plantings, run `node benchmark/studies/tomato-hard-negative-ranking.mjs fit.json > ranking.json`. The score for each distance includes matched plants, extra pins and misses. [What changed at the fixed cutoff](docs/tomato-hard-negatives.md)
+
+In Field Test, `?fieldExample=tomato-weed-random#field-test` and `?fieldExample=tomato-weed-hard#field-test` load two fits for the same weedy ring scan. Choose **Run example**, then **Try the other fit**. The table uses both observed 15 cm scores. Use the map’s extra-pin filter to check an individual prediction against its nearest surveyed center.
+
+To examine why a training peak looked convincing, run `node benchmark/studies/tomato-hard-negatives.mjs surfaces fit.json > surfaces.json`. This checks the original feature hashes before looking up the simulated surface under each peak. The fitting and scoring paths use XYZ.
+
 ### Choose a cutoff on separate plantings
 
 An override in Field Test or `cli/score-scan.mjs --score-cutoff` scores the saved cutoff and the trial from the same candidate scores. Compare `savedCutoff.evaluation.scores` against `evaluation.scores` at the chosen distance. In the unlabelled case both evaluations are null and both pin lists remain available.

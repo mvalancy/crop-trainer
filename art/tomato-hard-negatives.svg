@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="444" height="310" viewBox="0 0 444 310" role="img" aria-labelledby="title description">
+  <title id="title">Choosing practice examples for the tomato detector</title>
+  <desc id="description">A starter model scores peaks known to be background. Of the 300 background examples in each final fit, ordinary sampling reserves no places for high scores, quarter-hard reserves 75 and half-hard reserves 150. Each model also sees the same 300 plant examples.</desc>
+  <defs>
+    <pattern id="ranked" width="8" height="8" patternUnits="userSpaceOnUse">
+      <rect width="8" height="8" fill="#a84e2f"/>
+      <path d="m-2 2 4-4m-4 12L10-2m-4 12 4-4" fill="none" stroke="#d58d63" stroke-width="2"/>
+    </pattern>
+  </defs>
+  <style>
+    text { font-family: system-ui, sans-serif; fill: #233d32 }
+    .heading { font-size: 20px; font-weight: 720 }
+    .label { font-size: 16px; font-weight: 640 }
+    .small { font-size: 15px }
+    .score { fill: #829381 }
+    .difficult { fill: #a84e2f }
+    .mix { fill: #a7bdad }
+    .outline { stroke: #698472; stroke-width: 1; fill: none }
+    @media (prefers-reduced-motion: no-preference) {
+      .rank { animation: rank 2.5s ease-out 1 }
+      .allocation { animation: seats 2.5s ease-out 1 }
+      @keyframes rank { 0%,15% { opacity: .4 } 54%,100% { opacity: 1 } }
+      @keyframes seats { 0%,46% { opacity: .45 } 88%,100% { opacity: 1 } }
+    }
+  </style>
+  <rect width="444" height="310" rx="16" fill="#f6f7ed"/>
+  <text x="20" y="31" class="heading">Which background peaks get practice?</text>
+  <text x="20" y="57" class="small">The starter gives each peak a plant score.</text>
+  <path d="M24 95H415m-5-4 6 4-6 4" fill="none" stroke="#68816e" stroke-width="1.6"/>
+  <g class="score">
+    <circle cx="43" cy="87" r="4"/><circle cx="58" cy="87" r="4"/><circle cx="75" cy="87" r="4"/>
+    <circle cx="75" cy="77" r="4"/><circle cx="91" cy="87" r="4"/><circle cx="108" cy="87" r="4"/>
+    <circle cx="139" cy="87" r="4"/><circle cx="176" cy="87" r="4"/><circle cx="230" cy="87" r="4"/>
+  </g>
+  <g class="difficult rank">
+    <path d="m320 82 5 5-5 5-5-5Zm34 0 5 5-5 5-5-5Zm30 0 5 5-5 5-5-5Z"/>
+    <path d="M308 80v-4h88v4" stroke="#a84e2f" stroke-width="1.5" fill="none"/>
+  </g>
+  <text x="22" y="119" class="small">Lower</text>
+  <text x="416" y="119" text-anchor="end" class="label">Most plant-like</text>
+  <path d="M18 135H426" fill="none" stroke="#d3dbc9"/>
+  <text x="20" y="159" class="label">300 background places per fit</text>
+  <text x="20" y="190" class="label">Ordinary</text>
+  <text x="20" y="220" class="label">25% hard</text>
+  <text x="20" y="250" class="label">50% hard</text>
+  <g class="mix">
+    <rect x="119" y="175" width="208" height="17" rx="2"/>
+    <rect x="119" y="205" width="208" height="17" rx="2"/>
+    <rect x="119" y="235" width="208" height="17" rx="2"/>
+  </g>
+  <g class="allocation" fill="url(#ranked)">
+    <rect x="119" y="205" width="52" height="17" rx="2"/>
+    <rect x="119" y="235" width="104" height="17" rx="2"/>
+  </g>
+  <g class="outline">
+    <rect x="119" y="175" width="208" height="17" rx="2"/>
+    <rect x="119" y="205" width="208" height="17" rx="2"/>
+    <rect x="119" y="235" width="208" height="17" rx="2"/>
+  </g>
+  <text x="340" y="190" class="small">0 reserved</text>
+  <text x="340" y="220" class="small">75 ranked</text>
+  <text x="340" y="250" class="small">150 ranked</text>
+  <path d="M18 267H426" fill="none" stroke="#d3dbc9"/>
+  <text x="20" y="292" class="label">Each fit also sees the same 300 plant examples.</text>
+</svg>

@@ -17,10 +17,10 @@ export function setupSamplingControls(query) {
   if (editedLimit || query.has('positiveSampling')) options.open = true;
 
   return {
-    show(paired) {
+    show(paired, compareBackground) {
       method.disabled = paired;
       document.getElementById('samplingMethodControl').hidden = paired;
-      if (!editedLimit) limit.value = paired ? 600 : limit.max;
+      if (!editedLimit) limit.value = paired || compareBackground ? 600 : limit.max;
       if (paired) options.open = true;
     },
     settings(paired) {

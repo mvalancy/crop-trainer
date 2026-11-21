@@ -391,8 +391,23 @@ tbody tr:nth-child(even) { background: #f6f8f0; }
 .testSlope { margin-top: .85rem; }
 .testSlope .testInputs { grid-template-columns: repeat(2,minmax(0,1fr)); max-width: 28rem; }
 .testFrame legend { font-weight: 650; padding-right: .5rem; }
+#testTomatoExample { container: tomato-practice / inline-size; }
 #testTomatoExample .action { align-items: flex-end; }
+@container tomato-practice (min-width: 47rem) {
+  .practiceLayout:has(.testExampleReceipt:not([hidden])) {
+    display: grid;
+    grid-template-columns: minmax(0, 4fr) minmax(0, 5fr);
+    gap: clamp(1.25rem, 3.5cqi, 3rem);
+    align-items: start;
+  }
+  .practiceLayout > .testExampleReceipt { margin-top: 0; }
+}
 .testExampleReceipt { margin-top: .85rem; padding: .75rem .9rem; border-inline-start: 3px solid #86a285; background: var(--wash); }
+.weedFitResults { margin-top: .8rem; }
+.weedFitResults table { table-layout: auto; width: 100%; max-width: 29rem; font-variant-numeric: tabular-nums; }
+.weedFitResults caption { text-align: start; font-weight: 650; padding-bottom: .35rem; }
+.weedFitResults th, .weedFitResults td { padding: .35rem .22rem; text-align: end; }
+.weedFitResults th:first-child { text-align: start; }
 .testExampleReceipt p { margin: 0 0 .35rem; }
 #testTomatoExample .testExampleReceipt .action { align-items: center; gap: .45rem 1rem; }
 .testExampleReceipt a { display: inline-flex; align-items: center; min-height: 2.75rem; }
@@ -410,6 +425,19 @@ tbody tr:nth-child(even) { background: #f6f8f0; }
 .mapKey i { display: inline-block; width: .7rem; height: .7rem; }
 .mapKey .matchedPin { border-radius: 50%; background: #00664e; }
 .mapKey .extraPin { background: #a1381e; }
+.mapKey .surveyPoint { width: .4rem; height: .4rem; border-radius: 50%; background: #88808e; }
+.mapKey .selectedExtraPin { box-sizing: border-box; border: 2px solid #14291e; background: #a1381e; box-shadow: inset 0 0 0 1px white; }
+.testExtraInspector { padding: .85rem 1rem; border: 1px solid var(--line); border-inline-start: .25rem solid #a1381e; border-radius: .5rem; }
+.testExtraInspector h4 { margin: 0; }
+.testExtraInspector p { margin: .4rem 0 0; }
+.testExtraStepper { display: grid; grid-template-columns: 2.75rem minmax(0,4.7rem) max-content 2.75rem; gap: .35rem; align-items: end; margin-block: .7rem; }
+.testExtraStepper button { min-width: 2.75rem; min-height: 2.75rem; padding: .4rem .65rem; font-size: 1.05rem; }
+.testExtraStepper .testExtraPosition { min-width: 0; }
+.testExtraStepper #testExtraCount { align-self: flex-end; display: flex; align-items: center; min-height: 2.75rem; font-variant-numeric: tabular-nums; }
+.testExtraInspector #testExtraDetail { font-variant-numeric: tabular-nums; }
+#testExtraDetail span { display: block; }
+#testExtraDetail span:first-child { font-weight: 620; }
+.testView .pickExtraPin { cursor: crosshair; }
 .mapKey .matchedCenter { border: 2px solid #644883; border-radius: 50%; }
 .mapKey .missedCenter { color: #644883; font: bold 1rem/.65rem system-ui; }
 .mapKey .gainedCenter, .mapKey .lostCenter { width: .9rem; height: .9rem; border-radius: 50%; color: white; background: #00664e; text-align: center; font: bold .83rem/.9rem system-ui; }

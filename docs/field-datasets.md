@@ -9,9 +9,31 @@ Crop Trainer predicts one horizontal position per plant. To score a real plot, y
 | **Apple fruit · Fuji-SfM** | Image-based 3D reconstructions of 11 trees with 1,455 annotated apples. Use for fruit localization or canopy geometry. It supplies no equivalent set of trunk-base targets. HOPS also uses Fuji-SfM in its tests. | **Conflicting license statements.** The catalog lists CC BY 4.0 and the deposited license specifies CC BY-NC-SA 4.0. Seek clarification before redistributing or using commercially. [Deposit](https://zenodo.org/records/3712808) · [Catalog](https://api.datacite.org/dois/10.5281/zenodo.3712808) · [Deposited license](https://zenodo.org/records/3712808/files/LICENSE.txt?download=1) |
 | **Open-field lettuce · AgRibotLeafyVeg** | 112 overhead RealSense RGB-D frames and 128 focal plant masks over four dates in Bari. Each mask selects one harvested plant. [Measure how much of the canopy has depth](#how-much-of-a-lettuce-plant-has-measured-depth). | CC0 1.0. [Authors’ data and label definitions](https://github.com/ispstiima/AgRibotLeafyVeg/tree/6a1b5e79ffef06bd7d9444280d2e4243d62d1500) · [License](https://github.com/ispstiima/AgRibotLeafyVeg/blob/6a1b5e79ffef06bd7d9444280d2e4243d62d1500/LICENSE) |
 | **Greenhouse lettuce · IoT4Lettuce** | Hydroponic growing trial with 45 plants, two cultivars and several sensors, including Livox and depth cameras. One corrected Flexx2 plant PLY loaded as 5,941 XYZ points in the app parser. For a whole-bench test, establish the frame and obtain all planting positions. | CC BY 4.0. The multi-sensor archive is roughly 39 GB. [Deposit](https://zenodo.org/records/20759414) · [License metadata](https://api.datacite.org/dois/10.5281/zenodo.20759414) |
+| **Field tomato and weeds · GROUNDBASED_WEED** | Overhead photos of young plants in commercial tomato fields in Spain. The 2021 labels distinguish tomatoes from five named weeds. [Check how often crop and weed boxes overlap](#how-often-do-weeds-share-a-photo-with-a-young-tomato). | ODbL 1.0, with attribution and database share-alike terms. [Deposit](https://doi.org/10.20350/digitalCSIC/17475) · [Authors’ license and class guide](https://digital.csic.es/bitstream/10261/396144/9/README.txt) |
 | **High-wire tomato greenhouse** | RGB images of Tasty Tom trusses with fruit, stem and organ annotations. Inspect stem lean, overlap and occlusion when designing the simulator. These images alone cannot supply registered metric trunk locations. | Authors specify CC BY 4.0. [Dataset and annotation guide](https://github.com/akshaykburusa/tomato_greenhouse_dataset) |
 | **Tomato plant geometry · TomatoPGT** | 42 reconstructed scans from three vegetative plants with part labels and graph structure. Group scans by original plant when comparing geometry. Mature greenhouse rows require separate validation. | CC BY 4.0. [Versioned deposit](https://data.mendeley.com/datasets/72md54c7n7/1) · [License metadata](https://api.datacite.org/dois/10.17632/72md54c7n7.1) |
 | **Globe artichoke** | Aerial imagery studies can inform spacing and count experiments. A field-scale XYZ survey with complete metric plant centers and verified reuse terms remains an open gap. [Published artichoke center errors and missed plants](research-evidence.md#what-researchers-have-measured) | Dataset terms unconfirmed. [Field study](https://www.sciencedirect.com/science/article/pii/S0168169923005732) |
+
+## How often do weeds share a photo with a young tomato?
+
+Moreno, Rivera Cárdenas and Andújar photographed early-season tomato fields in Santa Amalia, Spain, from about 1–1.5 m overhead. Experts drew a rectangle around each recognized plant. We read the two COCO annotation files and checked their class names against the accompanying YOLO lists. The scans in Crop Trainer measure height. These field photos measure a plant’s **projected footprint in pixels**. [Dataset and authors](https://doi.org/10.20350/digitalCSIC/17475) · [Acquisition and annotation paper](https://doi.org/10.1016/j.dib.2025.112249)
+
+| Annotation file | Photos | Tomato boxes | Named weed boxes | Unidentified boxes |
+| --- | ---: | ---: | ---: | ---: |
+| TOMATO_1 · 2021 | 938 | 1,075 | 7,293 | 692 |
+| TOMATO_2 · 2022 | 278 | No tomato class | 11,689 | 242 |
+
+Of the 626 photos with a labeled tomato in 2021, **620 also contained a named weed**. On 111 of those 620 photos, the largest named weed box covered more pixels than every tomato box in the frame. And 205 of the 1,075 tomato boxes intersected at least one named weed box. We counted each tomato once when the rectangles shared positive area. Rectangle overlap can occur where the leaves themselves do not touch.
+
+For a synthetic test, include weeds beside seedlings and vary their size independently. A rule that picks the largest plant in a patch will sometimes pick a weed even with perfectly drawn boxes. The photos provide neither a soil-height map nor surveyed stem centers, so they cannot score the browser detector in centimeters.
+
+**Match classes by name when comparing years.** COCO category 6 means tomato (`LYPES`) in 2021 and unidentified (`NR`) in 2022. The 2022 export tells us which weeds were labeled. Tomato presence in those frames is unknown. Using those frames as crop-free examples or testing second-year tomato recall would require additional labeling.
+
+**Replay with the small download.** Extract only `Annotations_extra.zip` from the deposit. From the repository root run the following command with Node. The database license calls for attribution and has share-alike terms for publicly used adapted databases. The app distributes the counting code and aggregate results. [Annotation archive](https://digital.csic.es/bitstream/10261/396144/8/Annotations_extra.zip) · [License and citation](https://digital.csic.es/bitstream/10261/396144/9/README.txt) · [Counting code](../benchmark/studies/tomato-field-boxes.mjs)
+
+```sh
+node benchmark/studies/tomato-field-boxes.mjs /path/to/Annotations_extra/coco_Annotations/*.json
+```
 
 ## How much of a lettuce plant has measured depth?
 
@@ -221,6 +243,8 @@ node benchmark/studies/vineyard-low-band.mjs /path/to/extracted-dataset vine-sou
 ### Can stacked returns locate a vine trunk?
 
 Imagine viewing a stake from the side. Several laser returns can form a narrow vertical column. From above, that column might look like just one dot. We tested whether a rule that keeps this vertical information can find the surveyed vine bases. We reserved the April 19 and January 30 scans before evaluating the rule. Both revisit the same 52 vines from April 9. They test a different acquisition and season at one site. [Gomes and colleagues’ acquisition methods](https://doi.org/10.1016/j.dib.2026.112614) · [TLS-Grapevine2024 data and attribution, CC BY 4.0](https://doi.org/10.5281/zenodo.18259014)
+
+**Are there unused surveyed vines for a new test?** Matching the published trunk coordinates against the three strip CSVs accounts for all 52 distinct horizontal positions once each (18 central, 17 north, 17 south). The other point layers record registration targets and scanner stations. Another visit here can test changes in visibility over time. An independent planting test needs newly surveyed positions. [Survey files and description](https://doi.org/10.5281/zenodo.18259014)
 
 We divided the space 15–55 cm above the fitted soil plane into eight 5 cm layers. At every occupied ground cell, the rule looks in a 15 × 15 cm neighborhood and counts the longest sequence of occupied layers. It ranks longer stacks first, breaking ties by the number of occupied 3D cells and then by ground-cell index. A footprint rule uses only the number of occupied ground cells in that same neighborhood. Both place pins at least 65 cm apart, with a pin budget equal to the existing synthetic-trained model’s prediction count on each strip. All methods use the same April ground planes and plot boundaries at all dates.
 

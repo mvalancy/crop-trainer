@@ -115,7 +115,14 @@ export function validationFormSettings({crop,plantArchitecture=1,plantForm='mixe
  plantSettings({crop,plantArchitecture,plantForm:validationPlantForm});
  return validationPlantForm===plantForm ? {} : {validationPlantForm};
 }
-export async function buildDataset({seed=27,crop='lettuce',plantArchitecture=1,plantForm='mixed',plantCondition='healthy',validationPlantForm,trainFields=6,valFields=3,sensorMode='reference',validationSensorMode=sensorMode,trainingRayBudget=0,validationRayBudget=0,minimumHeight=.065,peakAveraging='zero-filled',featureMode='absolute',sampleLimit=MAX_SAMPLE_LIMIT,positiveSampling='ordinary',auditPositiveSampling=false,selectPositiveRows,generate,onScan,onProgress=()=>{},signal}={}){
+function selectRows(pool,count,indices,label) {
+ if (!Array.isArray(indices) || indices.length!==count || new Set(indices).size!==count ||
+     Array.from(indices).some(i=>!Number.isInteger(i) || i<0 || i>=pool.length)) {
+  throw Error(`Select exactly the requested number of distinct ${label} training row indices.`);
+ }
+ return indices.map(i=>pool[i]);
+}
+export async function buildDataset({seed=27,crop='lettuce',plantArchitecture=1,plantForm='mixed',plantCondition='healthy',validationPlantForm,trainFields=6,valFields=3,sensorMode='reference',validationSensorMode=sensorMode,trainingRayBudget=0,validationRayBudget=0,minimumHeight=.065,peakAveraging='zero-filled',featureMode='absolute',sampleLimit=MAX_SAMPLE_LIMIT,positiveSampling='ordinary',auditPositiveSampling=false,selectPositiveRows,selectNegativeRows,generate,onScan,onProgress=()=>{},signal}={}){
  const geometry = plantSettings({crop,plantArchitecture,plantForm,plantCondition});
  const holdout = validationFormSettings({crop,plantArchitecture,plantForm,validationPlantForm});
  checkPeakAveraging(peakAveraging);
@@ -205,14 +212,17 @@ export async function buildDataset({seed=27,crop='lettuce',plantArchitecture=1,p
  let positiveRows=positiveSampling==='form-soil' ? balanceFormSoil(pos,n) : pos;
  if (selectPositiveRows) {
   const indices=selectPositiveRows(pos.map(([tile,i])=>({tileId:tile.tile_id,xy:tile.pos[i]})),n);
-  if (!Array.isArray(indices) || indices.length!==n || new Set(indices).size!==n ||
-      Array.from(indices).some(i=>!Number.isInteger(i) || i<0 || i>=pos.length)) {
-   throw Error('Select exactly the requested number of distinct positive training row indices.');
-  }
-  positiveRows=indices.map(i=>pos[i]);
+  positiveRows=selectRows(pos,n,indices,'positive');
+ }
+ let negativeRows=neg;
+ if (selectNegativeRows) {
+  // Studies may score the shuffled training background using only its raw XYZ features.
+  const rawFeatures=new Float32Array(neg.length*DIMS);
+  neg.forEach(([tile,i],j)=>rawFeatures.set(tile.X.subarray(i*DIMS,(i+1)*DIMS),j*DIMS));
+  negativeRows=selectRows(neg,n,selectNegativeRows(rawFeatures,n,DIMS),'negative');
  }
  const X=new Float32Array(n*2*DIMS),Y=new Float32Array(n*2);
- for(const [pool,label,used] of [[positiveRows,1,'usedPositive'],[neg,0,'usedNegative']]){
+ for(const [pool,label,used] of [[positiveRows,1,'usedPositive'],[negativeRows,0,'usedNegative']]){
   for(let i=0;i<n;i++){
    const [tile,peak,group] = pool[i];
    if (group) group.selected++;

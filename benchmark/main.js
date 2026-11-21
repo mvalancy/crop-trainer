@@ -1,6 +1,7 @@
+import {backgroundLabels, backgroundFit, backgroundCutoff, backgroundWeights, prepareBackgroundPair, showBackgroundModels} from './background.js';
 import {setupCutoffControls, displayCutoffChanges} from './cutoffs.js';
 import {formsFor} from '../trainer/plants/forms.js';
-import {samplingLabels, setupSamplingControls, checkSamplingPair, displaySamplingMix} from './sampling.js';
+import {samplingLabels, setupSamplingControls, checkSamplingPair, displaySamplingMix} from './sampling.js?v=negative1';
 import {benchmarkView} from './watch.js?v=context-help2';
 import {scanSession} from '../trainer/generator/scan-session.js?v=plants3';
 import {setupPlantControls, setupValidationPlantForm, plantSettings} from '../trainer/generator/plant-version.js?v=orchard4';
@@ -63,7 +64,7 @@ for (const id of ['comparison', 'crop', 'sensor', 'validationSensor', 'minimumHe
 const readPlantControls = setupPlantControls($('crop'), $('plantArchitecture'), $('plantForm'), $('plantCondition'),
   requested, replayKeys.some(key => requested.has(key)) && !proposedLengths &&
   !(requested.get('comparison') === 'cutoffs' && requested.has('trialCutoff')) &&
-  !['forms','features','sampling'].includes(requested.get('comparison')) ? 1 : 3);
+  !['forms','features','sampling','negatives'].includes(requested.get('comparison')) ? 1 : 3);
 const readValidationForm = setupValidationPlantForm($('validationPlantForm'), $('crop'), $('plantArchitecture'), $('plantForm'), requested);
 trainingRayOptions($('trainingRayBudget'), requested.get('trainingRayBudget'));
 rayBudgetOptions($('validationRayBudget'), requested.get('validationRayBudget'));
@@ -130,7 +131,7 @@ function epochCounts() {
   return epochSchedule.value === 'classic' ? [10,40,100] : [shortEpochs.valueAsNumber,longEpochs.valueAsNumber];
 }
 function explainComparison() {
-  samplingControls.show($('comparison').value === 'sampling');
+  samplingControls.show($('comparison').value === 'sampling', $('comparison').value === 'negatives');
   cutoffControls.show($('comparison').value === 'cutoffs');
   const compareForms = $('comparison').value === 'forms';
   const structured = Number($('plantArchitecture').value) >= 2;
@@ -176,6 +177,7 @@ function explainComparison() {
     forms: structured ? 'Train one network on '+(form.selectedOptions[0]?.textContent ?? 'one form')+' alone and another on a mix. Both get six training fields. Test both on identical fresh fields of '+(heldOut.value === 'follow' ? form.selectedOptions[0]?.textContent : heldOut.selectedOptions[0]?.textContent)+'.'
       : 'Choose connected or structured plants in the settings to compare a single training form with a mix.',
     sampling: 'Give two networks the same scans and '+budget+' each. One shuffles peaks near labeled plants together. The other shares their slots across growth forms with ground returns included and removed. Both see the same background peaks.',
+    negatives: 'A practice model scores background peaks in weedy training plots. One final model gets a shuffled draw. The other fills half its background slots with peaks the practice model mistook for crops most strongly. Both learn from the same crop peaks, then score fresh fields at a 0.65 cutoff.',
     features: 'Train two CPU networks on identical peak locations. One uses the usual height measurements. The other measures how far each peak rises above nearby low returns and how uneven that surface is. Repeat on two sets of plantings.',
     averaging: 'Train two CPU networks on the same scans. One averages heights across every cell. The other averages only cells that received a point. Each learns from the peaks its own rule found.',
     heights: 'Both detectors look for high points in the same scans. One starts at 6.5 cm and one at 3.5 cm. Check whether including shorter peaks recovers plants or adds stray pins.',
@@ -202,18 +204,21 @@ explainComparison();
 showReadyState();
 discoverGpu();
 $('cancel').onclick = () => controller?.abort();
-$('export').onclick = () => {
-  if (!report) return;
-  const url = URL.createObjectURL(new Blob([JSON.stringify(report,null,2)+'\n'],{type:'application/json'}));
+function downloadJSON(data, filename) {
+  const url = URL.createObjectURL(new Blob([JSON.stringify(data,null,2)+'\n'],{type:'application/json'}));
   const link = document.createElement('a'); link.href = url;
-  link.download = 'crop-benchmark-'+report.settings.crop+'-'+report.settings.seed+'.json';
+  link.download = filename;
   link.click(); setTimeout(()=>URL.revokeObjectURL(url),10000);
+}
+$('export').onclick = () => {
+  if (report) downloadJSON(report, 'crop-benchmark-'+report.settings.crop+'-'+report.settings.seed+'.json');
 };
 function contenderLabel(row, comparison) {
   if (comparison === 'forms') return row.trainingLabel;
   if (comparison === 'heights') return (100 * row.minimumHeight).toFixed(1)+' cm peaks';
   if (comparison === 'density') return row.trainingRayBudget === ALTERNATING_BUDGET ? 'Alternating 12k / 60k' : row.trainingRayBudget.toLocaleString()+' training rays';
   if (comparison === 'layouts') return layoutNames.get(row.validationSensorMode);
+  if (comparison === 'negatives') return backgroundLabels.get(row.negativeSampling);
   if (comparison === 'sampling') return samplingLabels.get(row.positiveSampling);
   if (comparison === 'features') return featureLabels.get(row.featureMode);
   if (comparison === 'averaging') return averagingNames.get(row.peakAveraging);
@@ -383,7 +388,7 @@ function appendRow(row, comparison, settings) {
   const widest=row.scores.at(-1);
   tr.insertCell().textContent = row.seed;
   const modelCell = tr.insertCell();
-  const modelLabel = ['density','heights','layouts','averaging','features','sampling','forms'].includes(comparison) ? contenderLabel(row, comparison) : row.model+' / '+row.backend;
+  const modelLabel = ['density','heights','layouts','averaging','features','sampling','forms','negatives'].includes(comparison) ? contenderLabel(row, comparison) : row.model+' / '+row.backend;
   modelCell.textContent = modelLabel;
   const duration = tr.insertCell();
   const cutoff = tr.insertCell();
@@ -684,6 +689,7 @@ function boxFits(seed) {
     const lengths = report.settings.epochCounts;
     return [lengths[0],lengths.at(-1)].map(epochs => rows.find(row => row.epochs === epochs));
   }
+  if (report.comparison === 'negatives') return [...backgroundLabels.keys()].map(mode => rows.find(row => row.negativeSampling === mode));
   if (report.comparison === 'sampling') return [...samplingLabels.keys()].map(mode => rows.find(row => row.positiveSampling === mode));
   if (report.comparison === 'features') return [...featureLabels.keys()].map(mode => rows.find(row => row.featureMode === mode));
   if (report.comparison === 'forms') return report.settings.trainingForms.map(form => rows.find(row => row.plantForm === form));
@@ -767,6 +773,7 @@ $('benchForm').onsubmit = async event => {
   const geometry = readPlantControls();
   const compareForms = comparison === 'forms';
   const compareSampling = comparison === 'sampling';
+  const compareBackground = comparison === 'negatives';
   const settings={seed,crop,...geometry,...samplingControls.settings(compareSampling),...readValidationForm(),sensorMode,validationSensorMode,trainingRayBudget,validationRayBudget,trainFields:6,valFields:3};
   if (compareForms) {
     settings.trainingForms = [geometry.plantForm, 'mixed'];
@@ -780,6 +787,7 @@ $('benchForm').onsubmit = async event => {
     settings.epochCounts = epochCounts();
     settings.fit = {hiddenLayers:[4], activation:'tanh', optimizer:'sgd', batchSize:0, initSeed:12345, lr:.25};
   } else settings.epochs = $('fitEpochs').valueAsNumber;
+  if (compareBackground) settings.fit = backgroundFit;
   const neuralCPU = {model:'neural', backend:'CPU', train:trainNetworkCPU};
   const includeMixed = comparison === 'density' && trainingPair.value === CLASSIC_TRAINING_PAIR && $('includeMixed').checked;
   const trainingBudgets = TRAINING_RAY_PAIRS.get(trainingPair.value) ?? [];
@@ -795,6 +803,7 @@ $('benchForm').onsubmit = async event => {
     backend: [neuralCPU, {model:'neural', backend:'WebGPU', train:trainNetworkGPU}],
     models: [{model:'linear', backend:'CPU', train:trainCPU}, neuralCPU],
     cutoffs: [neuralCPU],
+    negatives: [...backgroundLabels.keys()].map(negativeSampling => ({...neuralCPU, negativeSampling})),
     sampling: [...samplingLabels.keys()].map(positiveSampling => ({...neuralCPU,positiveSampling})),
     features: [...featureLabels.keys()].map(featureMode => ({...neuralCPU,featureMode})),
     averaging: [...averagingNames.keys()].map(peakAveraging=>({...neuralCPU,peakAveraging})),
@@ -809,7 +818,7 @@ $('benchForm').onsubmit = async event => {
       ?? (geometry.plantArchitecture >= 2 ? 'Seeded mix' : 'Original canopy');
   $('scoreScope').textContent = 'Held-out plants · '+cropProfile(crop).name+' · '+stage;
   if (compareLayouts) settings.validationSensorModes = [...layoutNames.keys()];
-  const thresholds = comparison === 'cutoffs' ? cutoffControls.thresholds() : [.5];
+  const thresholds = comparison === 'cutoffs' ? cutoffControls.thresholds() : [compareBackground ? backgroundCutoff : .5];
   const customCutoff = comparison === 'cutoffs' && thresholds.length === 2;
   const rows=[],datasets=[];
   const livePreview=$('livePreview').checked;
@@ -821,6 +830,7 @@ $('benchForm').onsubmit = async event => {
   $('robustnessTable').hidden = true;
   $('heightStudy').hidden = true;
   $('samplingMix').hidden = true;
+  $('negativeReview').hidden = true;
   $('densityStudy').hidden = true;
   $('cutoffChanges').hidden = true;
   $('cutoffChanges').open = false;
@@ -840,6 +850,20 @@ $('benchForm').onsubmit = async event => {
     for(const offset of [0,1]){
       const runSeed=seed+offset;
       let set, generationMs, datasetIndex, pairedIds, fit;
+      const scanOptions = {signal, ...(view ? {generate:recipe=>scans.generate(recipe),onScan:view.scan} : {})};
+      const backgroundPair = compareBackground ? await prepareBackgroundPair({...settings, seed:runSeed}, {
+        ...scanOptions,
+        onStage(stage) {
+          if (stage === 'pilot') {
+            $('status').textContent = 'Fitting the 40-epoch practice model for seed '+runSeed+'…';
+            view?.fitting('Background practice model',40);
+          } else {
+            $('status').textContent = stage === 'ordinary' ? 'Growing the background training plots for seed '+runSeed+'…' : 'Selecting difficult background peaks for seed '+runSeed+'…';
+            view?.growing(runSeed);
+          }
+        },
+        onEpoch:view ? progress=>view.epoch(progress,40) : undefined
+      }) : null;
       const order=offset?[...contenders].reverse():contenders;
       for(const contender of order){
         signal.throwIfAborted();
@@ -847,11 +871,14 @@ $('benchForm').onsubmit = async event => {
         const positiveSampling = contender.positiveSampling ?? settings.positiveSampling;
         const validationLayout = contender.validationSensorMode ?? validationSensorMode;
         const reuseFit = compareLayouts && Boolean(fit);
-        if (!set || comparison === 'density' || comparison === 'heights' || comparison === 'averaging' || comparison === 'features' || compareSampling || compareForms || compareLayouts) {
+        if (backgroundPair) {
+          ({set, generationMs} = backgroundPair[contender.negativeSampling]);
+          datasetIndex = datasets.length;
+          datasets.push({seed:runSeed, stats:set.stats, recipeManifest:set.manifest});
+        } else if (!set || comparison === 'density' || comparison === 'heights' || comparison === 'averaging' || comparison === 'features' || compareSampling || compareForms || compareLayouts) {
           $('status').textContent = reuseFit ? 'Rescanning the held-out fields on '+layoutNames.get(validationLayout)+'…' : 'Growing fields for seed '+runSeed+'…';
           view?.growing(runSeed);
           const start=performance.now();
-          const scanOptions = {signal, ...(view?{generate:recipe=>scans.generate(recipe),onScan:view.scan}:{})};
           set = reuseFit ? await rescanValidation(set,validationLayout,scanOptions) :
             await buildDataset({...settings,seed:runSeed,plantForm:contender.plantForm ?? geometry.plantForm,trainingRayBudget,minimumHeight,peakAveraging,featureMode,positiveSampling,auditPositiveSampling:compareSampling,validationSensorMode:validationLayout,...scanOptions});
           generationMs=performance.now()-start;
@@ -886,7 +913,10 @@ $('benchForm').onsubmit = async event => {
           const result = await validateModel(set, fit.weights, {
             threshold, predictScores:model === 'neural' ? predictNetwork : undefined, signal,onProgress:view?.tile
           });
+          const scoringMs = performance.now()-scoringStart;
           const row = {
+            ...(backgroundPair ? {negativeSampling:contender.negativeSampling, backgroundSelection:backgroundPair[contender.negativeSampling].selection,
+              weightArtifact:backgroundWeights(set,fit.weights,settings,epochs)} : {}),
             ...(compareForms ? {plantForm:contender.plantForm,validationPlantForm:settings.validationPlantForm,trainingLabel:contender.trainingLabel,trainingSamples:set.stats.samples} : {}),
             ...(comparison === 'epochs' ? {trainingSamples:set.stats.samples, samplePasses:set.stats.samples * epochs} : {}),
             ...(positiveSampling ? {positiveSampling} : {}),
@@ -896,7 +926,7 @@ $('benchForm').onsubmit = async event => {
             ...(compareLayouts?{validationSensorMode:validationLayout,sharedFitSeed:runSeed,reusedFit:reuseFit}:{}),
             ...(customCutoff ? {sharedFitSeed:runSeed, reusedFit:threshold !== cuts[0]} : {}),
             model, backend:fit.backend, datasetIndex, minimumHeight, trainingRayBudget, epochs, trainingLoss:fit.loss.at(-1), threshold, seed:runSeed, generationMs, trainingMs,
-            scoringMs:performance.now()-scoringStart, adapter:fit.adapter,
+            scoringMs, adapter:fit.adapter,
             meanF1:result.meanF1, scores:result.scores, countError:result.countError, byGround:result.byGround, byField:result.byField, tiles:result.tiles
           };
           view?.score(contenderLabel(row,comparison),row,result.preview);
@@ -933,6 +963,10 @@ $('benchForm').onsubmit = async event => {
     $('replay').href = replay.href;
     $('replay').hidden = false;
     report={schema:1,elapsedMs:performance.now()-benchStart,livePreview,domain:'synthetic',comparison,thresholds,settings,replayUrl:replay.href,datasets,rows};
+    if (compareBackground) {
+      showBackgroundModels(report, downloadJSON);
+      $('negativeReview').hidden = false;
+    }
     if (compareSampling) {
       displaySamplingMix(report);
       $('samplingMix').hidden = false;
@@ -940,11 +974,12 @@ $('benchForm').onsubmit = async event => {
     if (comparison === 'heights') displayHeightStudy();
     if (comparison === 'density') displayDensityStudy();
     if (comparison === 'heights' || comparison === 'density') displayValidationComparison();
-    if (comparison === 'models' || comparison === 'heights' || comparison === 'features' || comparison === 'epochs' || customCutoff || compareSampling || compareForms) {
+    if (comparison === 'models' || comparison === 'heights' || comparison === 'features' || comparison === 'epochs' || customCutoff || compareBackground || compareSampling || compareForms) {
       const heights = comparison === 'heights';
       $('pairTitle').textContent = heights ? 'Which plants changed match when the peak height dropped?' :
         comparison === 'epochs' ? 'Which plants changed between the shortest and longest fits?' :
         customCutoff ? 'Which plants changed match at the trial cutoff?' :
+        compareBackground ? 'Which plants changed after training on difficult backgrounds?' :
         compareSampling ? 'Which plants did each training sample find?' :
         comparison === 'features' ? 'Which plants changed match with local ground?' :
         compareForms ? 'Which plants did each training mix find?' : 'Which plants did each model find?';

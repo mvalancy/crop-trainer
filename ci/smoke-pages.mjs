@@ -536,6 +536,7 @@ try {
   await page.locator('#testDetect').click();
   await page.locator('#testResults:visible').waitFor();
   assert.ok(await page.locator('#testMatchDistance').isHidden(),'scan-only predictions have no reference tolerance');
+  assert.ok(await page.locator('#testExtraControl').isHidden(),'surveyed centers are required to call a pin extra');
   const exampleCounts=[[7.5,88,100,129],[10,117,71,100],[15,137,51,80]];
   for (const [link,type,extension] of [['#exampleCentersCsv','text/csv','.csv'],['#exampleLabelsJson','application/json','.json']]) {
     const referenceName=await uploadExample(link,'#testLabels',type);
@@ -602,11 +603,42 @@ try {
         await page.locator('#testOverlay').selectOption('model');
         assert.ok((await page.locator('#testOutcome').textContent()).includes(after.tp+' of 110'));
       }
+      await page.locator('#testExtraOnly').check();
+      assert.equal(await page.locator('#testExtraCount').textContent(),'of 5');
+      const detail=page.locator('#testExtraDetail');
+      assert.match(await detail.textContent(),/Pin 3\b.*4\.82 m.*5\.18 m.*0\.937.*32\.6 cm/);
+      await page.locator('#testExtraNext').click();
+      assert.match(await detail.textContent(),/Pin 4\b.*0\.923.*25\.4 cm/);
+      await page.locator('#testMatchDistance').selectOption('7.5');
+      assert.equal(await page.locator('#testExtraCount').textContent(),'of 8');
+      assert.match(await detail.textContent(),/Pin 4\b/,'the same extra pin stays selected when the tolerance changes');
+      await page.locator('#testOverlay').selectOption('changes');
+      assert.ok(await page.locator('#testExtraInspector').isHidden());
+      await page.locator('#testOverlay').selectOption('model');
       await page.locator('#testAdjustCutoff').click();
       assert.equal(await page.locator('#testCutoff').evaluate(input=>input===document.activeElement && input.closest('details').open),true);
     }
   }
   console.log('Both saved tomato fits placed the documented pins on the same regenerated seedling scan.');
+
+  await open('trainer/?fieldExample=tomato-weed-random#field-test');
+  await runExample.click();
+  const randomFit=await downloadJSON(page.locator('#testExport'));
+  assert.ok(await page.locator('#testWeedComparison').isHidden(),'the comparison needs measured results for both fits');
+  await page.locator('#testOtherFit').click();
+  const hardFit=await downloadJSON(page.locator('#testExport'));
+  assert.deepEqual(randomFit.files.scan,hardFit.files.scan);
+  assert.deepEqual(randomFit.files.labels,hardFit.files.labels);
+  assert.equal(randomFit.files.scan.name,'3b07cf65952362c6.ply');
+  assert.notEqual(randomFit.files.model.sha256,hardFit.files.model.sha256);
+  for (const [fit,expected] of [[randomFit,[[35,42,79],[41,36,73],[44,33,70]]],
+                                [hardFit,[[23,29,91],[28,24,86],[30,22,84]]]]) {
+    assert.equal(fit.detector.threshold,.65);
+    assert.deepEqual(fit.evaluation.scores.map(({tp,fp,fn})=>[tp,fp,fn]),expected);
+  }
+  assert.deepEqual(await page.locator('#testWeedComparison tbody tr').evaluateAll(rows=>
+    rows.map(row=>Array.from(row.cells).slice(1).map(cell=>Number(cell.textContent)))),[[44,33,70],[30,22,84]]);
+  console.log('Both background-sampling examples reproduced their frozen scores on the same weedy planting.');
 
   // Re-run one of the shed's own held-out scans from its saved scan and weights.
   // This catches a mismatch between training, the downloadable model and Field Test extraction.
@@ -805,6 +837,46 @@ try {
   assert.deepEqual(repeated.recipeManifest,sampling.datasets[balancedRow.datasetIndex].recipeManifest);
   assert.deepEqual(repeated.scores,balancedRow.scores,'refitting from a benchmark row should reproduce its held-out scores');
   console.log('Both sampling rules used equal budgets, and the Training shed reproduced a benchmark row on the same scans.');
+
+  await open('benchmark/?comparison=negatives&crop=tomato&plantArchitecture=2&seed=2103181&sensor=reference&validationSensor=os1-64&validationPlantForm=seedling&epochs=3&sampleLimit=240&minimumHeight=0.035&featureMode=local-ground&live=off');
+  await page.locator('#run').click();
+  await page.locator('#cancel:enabled').click();
+  await page.locator('#run:enabled').click();
+  const backgrounds=await downloadJSON(page.locator('#export'));
+  assert.equal(backgrounds.rows.length,4,'restarting should leave one pair per seed');
+  for (const seed of [2103181,2103182]) {
+    const arms=backgrounds.rows.filter(row=>row.seed===seed);
+    assert.deepEqual(arms.map(row=>row.negativeSampling).sort(),['half-hard','ordinary']);
+    const [first,second]=arms.map(row=>backgrounds.datasets[row.datasetIndex]);
+    assert.deepEqual(first.recipeManifest,second.recipeManifest);
+    for (const row of arms) {
+      const draw=row.backgroundSelection;
+      assert.equal(draw.selected,120);
+      assert.equal(draw.hardCount,row.negativeSampling==='half-hard'?60:0);
+      assert.equal(draw.scoreBins.reduce((sum,n)=>sum+n,0),draw.selected);
+    }
+  }
+  const hardIndex=backgrounds.rows.findIndex(row=>row.negativeSampling==='half-hard');
+  const hardRow=backgrounds.rows[hardIndex];
+  await page.locator('#negativeModel').selectOption(String(hardIndex));
+  const negativeWeights=await downloadFile(page.locator('#downloadNegative'),'click');
+  assert.deepEqual(JSON.parse(negativeWeights.buffer),hardRow.weightArtifact);
+  const negativeTile=hardRow.tiles.find(tile=>tile.ground);
+  const viewer=await page.locator('#fieldRows a').evaluateAll((links,id)=>
+    links.find(link=>new URL(link.href).searchParams.get('tile')===id)?.href,negativeTile.tile_id);
+  assert.ok(viewer,'a scored benchmark planting should open in the viewer');
+  await page.goto(viewer);
+  const negativeScan=await downloadFile(page.locator('#ply:enabled'),'click');
+  const negativeLabels=await downloadFile(page.locator('#labels'),'click');
+  await open('trainer/#field-test');
+  for (const [id,file,mimeType] of [['testWeights',negativeWeights,'application/json'],
+       ['testPly',negativeScan,'application/octet-stream'],['testLabels',negativeLabels,'application/json']]) {
+    await page.locator('#'+id).setInputFiles({...file,mimeType});
+  }
+  await page.locator('#testDetect:enabled').click();
+  const backgroundReplay=await downloadJSON(page.locator('#testExport'));
+  assert.deepEqual(matchCounts(backgroundReplay.evaluation.scores),matchCounts(negativeTile.byTolerance));
+  console.log('A canceled background benchmark restarted, exported its selected model and reproduced a held-out scan in Field Test.');
 
   await open('benchmark/?comparison=epochs');
   assert.equal(await page.locator('#epochSchedule').inputValue(),'classic','older links should keep their 10/40/100 comparison');

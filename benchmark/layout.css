@@ -201,3 +201,16 @@
 .scoreFilters { margin-bottom: .75rem; }
 #modelBoxes .pairControls .helpField:has(#pairScan) { flex: 0 1 28rem; }
 #pairScan { width: 100%; }
+
+.negativeActions { display: flex; flex-wrap: wrap; align-items: end; gap: .6rem 1rem; }
+.negativeActions :is(select, button, a) { min-height: 44px; }
+.negativeActions a { display: inline-flex; align-items: center; }
+.negativeActions .helpField, #negativeModel { max-inline-size: 100%; }
+
+.negativeGrid { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,26rem),1fr)); gap: 1rem 2rem; align-items: start; }
+.backgroundHistogram { margin: 0; max-width: 31rem; }
+.backgroundHistogram figcaption { font-weight: 650; }
+.backgroundHistogram p { margin: .4em 0 .65em; font-size: .92rem; }
+.backgroundHistogram table { width: 100%; }
+.backgroundHistogram td { color: var(--ink); font-variant-numeric: tabular-nums; background-image: linear-gradient(to right, #889d81 var(--fraction), transparent var(--fraction)); background-size: 100% .25rem; background-repeat: no-repeat; background-position: left bottom; }
+.backgroundHistogram td:last-child { background-image: linear-gradient(to right, #227154 var(--fraction), transparent var(--fraction)); }

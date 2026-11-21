@@ -1,3 +1,7 @@
+import {drawExtraPins, initExtraPins, plotCoordinates} from './extra-pins.js';
+
+import {tomatoPractice} from './tomato-practice.js';
+
 const byId = id => document.getElementById(id);
 const rate = v => v === null ? '—' : (100*v).toFixed(1)+'%';
 const cutoffText = value => Number.isInteger(value*100) ? value.toFixed(2) : String(value);
@@ -80,10 +84,9 @@ function methodsFor(report) {
   return methods;
 }
 
-function drawPlot(report, sampled, pins, assignment, changes) {
+function drawPlot(report, sampled, pins, assignment, changes, extras) {
   const canvas = byId('testMap'), ctx = canvas.getContext('2d');
-  const inset = 26, side = canvas.width-2*inset;
-  const px = x => inset+x*side/10, py = y => inset+(10-y)*side/10;
+  const {px,py} = plotCoordinates(canvas);
   ctx.fillStyle = '#f2f3e9';
   ctx.fillRect(0,0,canvas.width,canvas.height);
   ctx.strokeStyle = '#d1d7c5';
@@ -102,6 +105,10 @@ function drawPlot(report, sampled, pins, assignment, changes) {
   ctx.fillStyle = '#acb79f';
   for (let i = 0; i < sampled.length; i += 2) {
     ctx.fillRect(px((sampled[i]-origin[0])*scale),py((sampled[i+1]-origin[1])*scale),1.6,1.6);
+  }
+  if (extras) {
+    drawExtraPins(ctx,px,py,pins,report.references,extras);
+    return;
   }
   if (changes) {
     report.references.forEach(({localX,localY},i) => {
@@ -246,7 +253,10 @@ export function initFieldTest(downloadJSON) {
   if ([...example.options].some(option => option.value === sharedExample)) example.value = sharedExample;
   const fields = [...form.querySelectorAll('input,select')];
   let exampleLoad, autoRunFile, exampleResultLabel;
+  const showPractice = tomatoPractice(example,tryExample);
   let currentModelFile, runningModel, worker, sampled, loaded = false, running = false, report;
+
+  const extraInspector = initExtraPins(renderOverlay);
 
   function updateControls() {
     const useFile = modelSource.value === 'file';
@@ -262,6 +272,7 @@ export function initFieldTest(downloadJSON) {
   }
   function clearReport() {
     report = null;
+    extraInspector.reset();
     results.hidden = true;
     byId('testExampleResult').hidden = true;
   }
@@ -277,11 +288,14 @@ export function initFieldTest(downloadJSON) {
     byId('testRule').dataset.help = showChanges ? 'A plant gains or loses a match when one cutoff places a matching pin and the other does not.' : method.help;
     byId('testOrchardHelp').hidden = selected!=='orchard';
     const distance = Number(byId('testMatchDistance').value);
-    const stages = selected==='model' && report.stagesAtCm?.[distance];
+    const assignment = evaluation?.pinByReferenceAtCm[distance];
+    const extras = extraInspector.render(pins,showChanges ? null : assignment,report.references,distance);
+    const stages = !extras && selected==='model' && report.stagesAtCm?.[distance];
     byId('testStages').hidden = !stages;
     if (stages) renderStages(stages, report.references.length, distance);
     byId('testDistanceControl').hidden = !evaluation;
-    byId('testMatchedKey').hidden = !evaluation || showChanges;
+    byId('testMatchedKey').hidden = !evaluation || showChanges || Boolean(extras);
+    byId('testExtraKey').hidden = !extras;
     byId('testUnscoredKey').hidden = Boolean(evaluation);
     byId('testChangedKey').hidden = !showChanges;
     const modelView = selected==='model' || selected==='saved' || showChanges;
@@ -289,7 +303,6 @@ export function initFieldTest(downloadJSON) {
     comparison.hidden = !modelView || !report.savedCutoff;
     if (!comparison.hidden) renderCutoffComparison(report,distance);
     byId('testAdjustCutoff').hidden = !modelView;
-    const assignment = evaluation?.pinByReferenceAtCm[distance];
     let changes;
     let message = 'Add reference centers to score these predictions.';
     if (showChanges) {
@@ -304,7 +317,7 @@ export function initFieldTest(downloadJSON) {
     }
     byId('testOutcome').textContent = message;
     status.textContent = showChanges ? 'Comparing both cutoffs on '+report.files.scan.name+'.' : 'Showing '+method.label.toLowerCase()+' pins on '+report.files.scan.name+'.';
-    drawPlot(report,sampled,pins,assignment,changes);
+    drawPlot(report,sampled,pins,assignment,changes,extras);
   }
   function loadScan() {
     worker?.terminate(); worker = null;
@@ -355,6 +368,7 @@ export function initFieldTest(downloadJSON) {
           const threshold = report.detector.threshold;
           receipt.querySelector('[role="status"]').textContent = exampleResultLabel+' · cutoff '+cutoffText(threshold)+' · '+byId('testOutcome').textContent;
           exampleCutoff.hidden = Boolean(report.savedCutoff) || threshold!==.50;
+          showPractice(example.value,report);
           receipt.hidden = false;
         }
       }
@@ -391,7 +405,7 @@ export function initFieldTest(downloadJSON) {
     updateControls();
     status.textContent = 'Growing the example planting and loading its saved weights…';
     try {
-      const {tomatoExampleFiles,selectFile} = await import('./tomato-example.js');
+      const {tomatoExampleFiles,selectFile} = await import('./tomato-example.js?v=weed-replay1');
       const files = await tomatoExampleFiles(choice,pending.signal);
       pending.signal.throwIfAborted();
       selectFile(weights,files.model);
@@ -424,6 +438,7 @@ export function initFieldTest(downloadJSON) {
     const hadPendingExample = Boolean(exampleLoad);
     stopExampleLoad();
     if (event.target === example || event.target === ply) {
+      byId('testExampleResult').hidden = true;
       updateControls();
       if (hadPendingExample) status.textContent = 'Example canceled. The selected files were kept.';
       return;

@@ -8,6 +8,12 @@ With **Live view** checked, watch the sampled fields, the training loss and the 
 
 For a timing comparison, turn **Live view** off before starting. This skips preview sampling and drawing and uses the original in-page generator. The JSON records the setting as `livePreview`, and the replay link restores it.
 
+### Can a detector learn from a false alarm?
+
+Choose **Do difficult backgrounds help?** to grow weedy training plots in your browser. A practice model ranks the background peaks by how much they resemble a crop. Two new models learn from the same crop examples. One takes a random background sample, and the other spends half those places on peaks the practice model ranked highest. After the run, inspect which tomatoes changed on the map and download either model for Field Test. [Train a pair](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=negatives&crop=tomato&plantArchitecture=2&plantForm=mixed&plantCondition=healthy&validationPlantForm=seedling&sensor=reference&validationSensor=os1-64&trainingRayBudget=60000&validationRayBudget=60000&minimumHeight=0.035&featureMode=local-ground&sampleLimit=600&epochs=640&seed=2103181&scoreGround=present) · [Try the saved models and see what was under their peaks](tomato-hard-negatives.md)
+
+## Reading benchmark results
+
 On two fresh mixed-scan artichoke seeds, the neural model beat logistic on seed 81 (0.757 vs 0.734 mean F1), and logistic edged ahead on seed 82 (0.708 vs 0.701). On tomato, CPU and Chromium’s SwiftShader software WebGPU adapter matched at all three tolerances on both seeds. These runs check numerical agreement. Physical GPU speed requires a run on that device. [Repeat the artichoke model comparison](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=models&crop=artichoke&sensor=mixed&seed=81) · [Repeat the tomato backend comparison](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=backend&crop=tomato&sensor=mixed&seed=81)
 
 The crop-specific spacing filter was tested on seeds 61 and 62, with six training fields, three validation fields, mixed sampling, 40 neural epochs and 6.5 cm peaks. Increasing artichoke spacing from 12.5 to 40 cm raised mean F1 from 0.536 to 0.600 and from 0.673 to 0.779. On seed 61, 15 cm recall slipped from 85.4% to 84.3%. For young tomato, 22 cm spacing raised mean F1 from 0.730 to 0.757 and from 0.781 to 0.799. These are whole-plant center scores on procedural fields.

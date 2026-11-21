@@ -13,6 +13,7 @@ The little farm on the front page lives here. Open an SVG to see it move or open
 | [Two detectors, one planting](paired-field.svg) | [Benchmark guide](../benchmark/README.md) |
 | [From a surveyed plot to a local detector](field-deployment.svg) | [Field deployment guide](../docs/edge-deployment.md) |
 | [A longer fit on two tomato growth stages](tomato-epochs.svg) | [Training-duration experiment](../docs/tomato-training-duration.md) |
+| [Learn from difficult background examples](tomato-hard-negatives.svg) | [Tomato and weed study](../docs/tomato-hard-negatives.md) |
 | [Fit, calibrate and test](tomato-calibration.svg) · [Which fields chose which cutoff?](tomato-calibration-panels.svg) | [Three tomato detectors on separate calibration and test plantings](../docs/tomato-calibration.md) |
 | [Two fits score the same 405 peaks](tomato-score-cutoff.svg) | [How a fixed cutoff changes which plants get pins](../docs/tomato-training-duration.md#was-it-the-planting-or-the-trained-model) |
 | [Two training draws on one set of tomatoes](tomato-training-draw.svg) | [Soil-present seedling study](../docs/tomato-soil-sampling.md) |

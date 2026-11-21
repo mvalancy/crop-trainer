@@ -69,6 +69,8 @@ Where did those extra pins land? After scoring, we looked up the highest raw las
 
 These measurements cover synthetic young tomatoes in soil on reference-grid and simulated OS1-64 ring scans. Whether these cutoffs work in a field requires independently measured plant positions on physical scans.
 
+The follow-up experiment trained the detector on the weeds it was most likely to mistake for tomatoes. On fresh fields it sometimes reduced false alarms at the cost of missing more seedlings. [Compare the two training draws and inspect their pins](tomato-hard-negatives.md)
+
 ## Try one cutoff in Field Test
 
 Open the saved 640-epoch detector, click **Run example**, then **Try 0.70 on this planting**. At 15 cm, **What changed with this cutoff?** shows 53 → 26 matches, 23 → 5 extra pins and 57 → 84 missed seedlings. Choose **Changed matches** under **Map view** to see the 27 seedlings that lost a match. To try your own value, open **Try a different model cutoff**, set **Score cutoff** and choose **Find plants**. This practice plot comes from the earlier study. It is separate from the six test plantings used here. [Try the saved tomato detector](https://mvalancy.github.io/crop-trainer/trainer/?fieldExample=tomato-640#field-test)

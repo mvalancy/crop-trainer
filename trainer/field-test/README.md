@@ -10,6 +10,8 @@ With **Trained model** selected, the three bars follow the map’s match distanc
 
 To test a new cutoff, start with a saved tomato fit, run the example, then choose **Try 0.70 on this planting**. At 15 cm the 640-epoch fit goes from 53 matches and 23 extra pins to 26 matches and five extras. In **Map view**, compare the saved cutoff with the trial and inspect which plants changed. On your own plot, enter a trial value in the cutoff control and run **Find plants**. A trial scores both cutoffs on the same returns with the same weights and spacing. [Try the two-click example](https://mvalancy.github.io/crop-trainer/trainer/?fieldExample=tomato-640#field-test)
 
+Choose **Inspect extra pins** to see which predictions were left without a match. Tap a rust-colored square, use the arrows, or enter its position in the list. The outlined pin gets a distance to the nearest surveyed center and, for learned detectors, a model score. Two predictions close to the same plant can leave one extra. An empty survey counts every pin as extra. A plot without a reference file has no extra-pin score.
+
 The export stores the map assignments in `evaluation.pinByReferenceAtCm` and the stage counts in `stagesAtCm`, keyed by centimeters. The 15 cm results are also available under the older `evaluation.pinByReference15` and `stages15cm` keys.
 
 | To inspect | Open |
@@ -18,7 +20,7 @@ The export stores the map assignments in `evaluation.pinByReferenceAtCm` and the
 | Coordinate conversion, saved detector and baseline predictions | [Inference](inference.js) |
 | Optional survey loading and one-to-one matches | [Reference centers](references.js) |
 | The shared browser and command-line scoring pipeline | [Score a scan](score-scan.js) |
-| File inputs, map overlays and the processing worker | [Field test controls](field-test-ui.js) · [Worker](field-test-worker.js) |
+| File inputs, map overlays and the processing worker | [Field test controls](field-test-ui.js) · [Extra pin inspector](extra-pins.js) · [Worker](field-test-worker.js) |
 
 The weights file records how to extract the detector’s inputs. The trained-model readout identifies fits that measure height above nearby low returns and the spread of surrounding heights, or average over sampled cells. Field test applies those settings automatically. The height-only baseline uses the same candidate locations and ranks them by smoothed height.
 

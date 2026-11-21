@@ -6,7 +6,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="../art/crop-mark-32.png">
 <link rel="icon" type="image/svg+xml" sizes="any" href="../art/crop-mark.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="../art/crop-touch.png">
-<link rel="stylesheet" href="../app/farm.css?v=saved-cutoff1">
+<link rel="stylesheet" href="../app/farm.css?v=weed-replay1">
 <link rel="stylesheet" href="../app/help.css?v=context-help2">
 <link rel="stylesheet" href="./ui/training-layout.css?v=epoch2">
 <link rel="stylesheet" href="./ui/network-diagram.css">
@@ -299,12 +299,17 @@
 <div class="sectionHead"><h2 id="fieldTestTitle">Field test</h2><p>See where your detector places pins in a scan of your own plot. Add surveyed plant centers to count misses and extra pins. Your files stay in this browser.</p></div>
 <form id="fieldTestForm">
 <fieldset class="testFrame" id="testTomatoExample"><legend>Try a tomato planting</legend>
-<p class="hint">Can a longer-trained detector find more seedlings in the same ring scan? Load 110 labeled plants and a saved model. This fills the inputs below and runs Field Test.</p>
-<div class="action"><label>Saved tomato fit<select id="testExample" data-help="Both networks learned on the same six synthetic training fields. Only their number of training epochs differs."><option value="tomato-40">40 epochs</option><option value="tomato-640">640 epochs</option></select></label>
-<button type="button" id="testRunExample" disabled data-help="Replace the selected files with this synthetic scan, its labels and the chosen tomato weights. Use the saved cutoff and level ground in metres, then find plants.">Run example</button></div>
+<div class="practiceLayout"><div class="practicePicker">
+<p id="testExampleHelp" class="hint">Grow 110 seedlings and compare two detectors trained for different numbers of epochs on the same examples.</p>
+<div class="action"><label>Saved tomato fit<select id="testExample" aria-describedby="testExampleHelp" data-help="Choose a practice planting and a saved model. Each pair scores the same plants with two different fits.">
+<optgroup label="Clean plot · training time"><option value="tomato-40">40 epochs</option><option value="tomato-640">640 epochs</option></optgroup>
+<optgroup label="Weedy plot · training examples"><option value="tomato-weed-random">Random backgrounds</option><option value="tomato-weed-hard">Half difficult backgrounds</option></optgroup></select></label>
+<button type="button" id="testRunExample" disabled data-help="Replace the selected files with this synthetic scan, its labels and the chosen tomato weights. Use the saved cutoff and level ground in metres, then find plants.">Run example</button></div></div>
 <div id="testExampleResult" class="testExampleReceipt" hidden><p role="status"></p>
 <div class="action"><a href="#testResults" data-help="Jump to the map, missed seedlings and per-distance scores from this run.">Inspect map and scores</a>
-<button type="button" id="testExampleCutoff" hidden data-help="Keep this planting and the same weights. Compare the saved 0.50 cutoff with a 0.70 trial to see which seedlings change.">Try 0.70 on this planting</button></div></div>
+<button type="button" id="testExampleCutoff" hidden data-help="Keep this planting and the same weights. Compare the saved 0.50 cutoff with a 0.70 trial to see which seedlings change.">Try 0.70 on this planting</button>
+<button type="button" id="testOtherFit" hidden data-help="Keep this weedy planting and compare both models at the same 0.65 cutoff. The only training change was how the background examples were selected.">Try the other fit</button></div>
+<div id="testWeedComparison" class="weedFitResults" hidden><table><caption>Both fits on this planting within 15 cm</caption><thead><tr><th scope="col" data-help="How the model’s background training peaks were chosen. Both fits received the same number of examples.">Training mix</th><th scope="col" data-help="Tomatoes paired with a model pin within 15 cm.">Found</th><th scope="col" data-help="Model pins left over after pairing each tomato with at most one pin.">Extra</th><th scope="col" data-help="Labeled tomatoes that received no matching pin.">Missed</th></tr></thead><tbody></tbody></table></div></div></div>
 </fieldset>
 <div class="testSource">
 <label>Detector<select id="testModelSource" data-help-label="Field test detector" data-help="Choose the completed fit in this tab, or load a weights JSON from an earlier run. The same detector can be used on multiple plot scans."><option value="file">Saved weights JSON</option><option value="current" disabled>Most recent completed fit</option></select></label>
@@ -349,10 +354,23 @@
 <h3 id="testSummary">Detections</h3>
 <div class="testView">
 <div class="testMapControls"><label>Map view<select id="testOverlay" data-help-label="Field test map view" data-help="Show the trained model or a simpler pin-placement rule. Trying a cutoff also lets you view the original model pins and see which surveyed plants gained or lost a match."><option value="model">Trained model</option><option value="baseline">Height-only baseline</option></select></label>
-<label id="testDistanceControl" hidden>Match distance<select id="testMatchDistance" data-help-label="Map matching distance" data-help="Choose how close a pin must land to a reference center to count as a match. The pins stay in place as the map updates."><option value="7.5">7.5 cm</option><option value="10">10 cm</option><option value="15" selected>15 cm</option></select></label></div>
-<figure><canvas id="testMap" width="500" height="500" aria-label="Top view of the imported scan and plant detections" role="img"></canvas>
-<figcaption id="testLegend"><span class="mapKey" id="testMatchedKey" hidden><span><i class="matchedPin"></i>Matched pin</span><span><i class="extraPin"></i>Extra pin</span><span><i class="matchedCenter"></i>Matched center</span><span><i class="missedCenter" aria-hidden="true">×</i>Missed center</span></span><span class="mapKey" id="testChangedKey" hidden><span><i class="gainedCenter" aria-hidden="true">+</i>Gained match</span><span><i class="lostCenter" aria-hidden="true">−</i>Lost match</span><span><i class="steadyCenter" aria-hidden="true"></i>Same status</span></span><span id="testUnscoredKey">Green dots mark predicted centers. Grey dots are laser returns.</span></figcaption></figure>
-<div class="testReadout"><p id="testOutcome" aria-live="polite"></p><p class="hint" id="testRule"></p>
+<label id="testDistanceControl" hidden>Match distance<select id="testMatchDistance" data-help-label="Map matching distance" data-help="Choose how close a pin must land to a reference center to count as a match. The pins stay in place as the map updates."><option value="7.5">7.5 cm</option><option value="10">10 cm</option><option value="15" selected>15 cm</option></select></label>
+<div id="testExtraControl" hidden><label class="check"><input id="testExtraOnly" aria-controls="testExtraInspector" type="checkbox" data-help-label="Inspect extra pins" data-help="Show predictions left over after pairing pins with surveyed plants. Tap a square on the map or use the pin navigator.">Inspect extra pins</label></div></div>
+<figure><canvas id="testMap" width="500" height="500" aria-label="Top view of the imported scan and plant detections" aria-describedby="testLegend testOutcome" role="img"></canvas>
+<figcaption id="testLegend"><span class="mapKey" id="testMatchedKey" hidden><span><i class="matchedPin"></i>Matched pin</span><span><i class="extraPin"></i>Extra pin</span><span><i class="matchedCenter"></i>Matched center</span><span><i class="missedCenter" aria-hidden="true">×</i>Missed center</span></span><span class="mapKey" id="testChangedKey" hidden><span><i class="gainedCenter" aria-hidden="true">+</i>Gained match</span><span><i class="lostCenter" aria-hidden="true">−</i>Lost match</span><span><i class="steadyCenter" aria-hidden="true"></i>Same status</span></span><span class="mapKey" id="testExtraKey" hidden><span><i class="extraPin"></i>Extra pin</span><span id="testSelectedExtraKey"><i class="selectedExtraPin"></i>Selected pin</span><span id="testSurveyKey"><i class="surveyPoint"></i>Surveyed center</span><span id="testNearestKey"><i class="matchedCenter"></i>Nearest surveyed center</span></span><span id="testUnscoredKey">Green dots mark predicted centers. Grey dots are laser returns.</span></figcaption></figure>
+<div class="testReadout"><p id="testOutcome" aria-live="polite"></p>
+<section class="testExtraInspector" id="testExtraInspector" aria-labelledby="testExtraTitle" hidden>
+<h4 id="testExtraTitle">Why is this pin extra?</h4>
+<div id="testExtraNavigation"><p class="hint">Tap a square on the map or choose a pin below.</p>
+<div class="testExtraStepper">
+<button type="button" id="testExtraPrev" aria-label="Previous extra pin" data-help="Inspect the previous extra pin. From the first, go to the last.">←</button>
+<label class="testExtraPosition">Pin<input id="testExtraIndex" aria-label="Extra pin position" aria-describedby="testExtraCount" type="number" min="1" step="1" inputmode="numeric" data-help="Enter an extra pin’s position in this list. Its original prediction number and coordinates appear below."></label>
+<span id="testExtraCount" data-help-label="Number of extra pins" data-help="Total predictions left without a one-to-one match for this detector at the selected distance."></span>
+<button type="button" id="testExtraNext" aria-label="Next extra pin" data-help="Inspect the next extra pin. From the last, return to the first.">→</button>
+</div></div>
+<div aria-live="polite" aria-atomic="true"><p id="testExtraDetail" data-help="Positions are metres from the plot origin. For learned models the score is the model’s output for the candidate. The distance is horizontal."></p>
+<p class="hint" id="testExtraReason"></p></div>
+</section><p class="hint" id="testRule"></p>
 <p id="testOrchardHelp" hidden>The orchard locator looks for returns at several heights around a tree base. Its support score measures this geometric evidence. <a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/orchard-bases.md">Read the orchard study</a></p>
 <section id="testCutoffComparison" class="testCutoffCard" aria-labelledby="testCutoffTitle" hidden>
 <h4 id="testCutoffTitle">What changed with this cutoff?</h4>
@@ -381,6 +399,6 @@
 </main>
 <footer class="siteFoot"><span>Created by Matthew Valancy</span>
 <div><a data-help="Open commands and reproducibility instructions for an agent working with Crop Trainer." href="../AGENTS.md">Agent quickstart</a><a data-help="View the farming challenges and achievements stored on this device." href="../#missions">Farm journal</a><a data-help="Read the terms for using and sharing Crop Trainer’s source code." href="../LICENSE">MIT license</a></div><small class="contextHint"><span class="hoverHint">Hover or focus a button or score for help.</span><span class="touchHint">Tap a score or hold a button for help. A quick tap runs the action.</span></small></footer>
-<script type="module" src="./main.js?v=saved-cutoff1"></script>
+<script type="module" src="./main.js?v=weed-replay1"></script>
 </body>
 </html>

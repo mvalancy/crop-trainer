@@ -31,3 +31,11 @@ To replay the original export in a browser, open the planting link above, check 
 Choose **Run example** in Field Test to regrow the same 110 seedlings with soil and 60,000 simulated ring-scanner rays. The 40-epoch detector finds one seedling within 15 cm. The 640-epoch detector finds 53 and places 23 extra pins. Both fit the same 600 labeled examples from six synthetic training fields at dataset seed 987149. The example planting uses seed 40117063 and scan ID `56b872a50fcac3ab`. [Run the 40-epoch example](https://mvalancy.github.io/crop-trainer/trainer/?fieldExample=tomato-40#field-test) · [Run the 640-epoch example](https://mvalancy.github.io/crop-trainer/trainer/?fieldExample=tomato-640#field-test)
 
 These two small JSON files are CPU exports from Crop Trainer. You can inspect them, try them on another plot or reproduce them with the Training Shed settings in the study. [40-epoch weights](tomato-40.json) · [640-epoch weights](tomato-640.json) · [Training settings and study](../../../docs/tomato-training-duration.md#recreate-the-files-yourself)
+
+## Try two models on a weedy planting
+
+On this soil-present plot, 60,000 simulated ring rays scan 114 young tomatoes growing among weeds. Both saved models practiced on the same 300 tomato examples and 300 background examples for 640 epochs. One drew its background examples randomly. The other reserved half of those places for examples a preliminary detector mistook for crops.
+
+Choose **Run example**, then **Try the other fit**. Within 15 cm the random draw finds 44 tomatoes with 33 extra pins. The half-difficult draw finds 30 with 22 extras. Each model uses a cutoff of 0.65. Open the map to inspect individual extra pins. [Try the planting](https://mvalancy.github.io/crop-trainer/trainer/?fieldExample=tomato-weed-random#field-test) · [Download the random fit](tomato-weed-random.json) · [Download the half-difficult fit](tomato-weed-hard.json)
+
+To reproduce both weights, use the study's fit phase and take the ordinary and half-hard `model` objects for training seed `2103181`. The reserved planting uses seed `51112017` and its scan ID is `3b07cf65952362c6`. [Study commands and results on all six plantings](../../../docs/tomato-hard-negatives.md)
