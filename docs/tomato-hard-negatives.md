@@ -65,6 +65,36 @@ We grew four more plantings and kept the trained weights frozen. On each scan, t
 
 On weedy seedlings, the first 50% hard fit found 82 grid tomatoes in 124 stops, compared with 78 for ordinary training. On rings it found 160 in 304 stops, compared with 168. The third fit improved on both layouts, with 76 versus 45 grid matches and 122 versus 115 ring matches. On branching plants, the 50% hard fit found **fewer tomatoes at equal visit counts in all 12 comparisons** across training seeds, layouts and weed settings at 15 cm. Its lower false-alarm counts at a fixed cutoff therefore tell only part of the story. [Equal-visit ranking experiment](../benchmark/studies/tomato-hard-negative-ranking.mjs)
 
+## Does it help to keep the same mix of near and far peaks?
+
+The first experiment gave extra practice to peaks on tomato leaves near a center. To test whether that mattered, we fixed a new rule before growing **six new test plantings**. For each of three fresh training seeds we fit models using ordinary sampling, unrestricted 50% hard sampling and 50% hard sampling with a distance rule. We froze all nine before scoring them.
+
+The new rule copies the ordinary draw’s **number of near and far background peaks**. A near peak lies more than 15 cm and less than 30 cm from the nearest planted center. A far peak lies at least 30 cm away. If the ordinary draw has 100 near and 200 far examples, 50 of the 150 hard places go to near peaks and 100 to far peaks. The remaining places are drawn in shuffled order within each group. Training centers determine the groups. A saved detector can run on XYZ alone.
+
+The rule changed which surfaces the models practiced on. Across these three fits, **267 of 450** deliberately selected hard peaks had tomato tissue as their highest return under unrestricted sampling. With the distance rule that fell to **107 of 450**. Weed-topped peaks rose from **182 to 342**. Each set had one empty cell. This audit uses the new training seeds and reads surface labels only after fitting.
+
+Each layout had **655 test tomatoes per stage**. The table gives **matched seedlings / extra pins** on the same six weedy ring scans at 15 cm.
+
+| Training seed | Ordinary | 50% hard | 50% hard with distance rule |
+| --- | ---: | ---: | ---: |
+| 2805643 | 286 / 463 | 256 / 457 | 148 / 154 |
+| 2916761 | 11 / 33 | 272 / 363 | 31 / 14 |
+| 3027871 | 61 / 101 | 146 / 193 | 97 / 100 |
+
+For every training seed, the distance rule cut both extra pins and real seedling matches on **each of the six weedy ring plantings** relative to unrestricted sampling. For seed 2916761, each field lost 29–53 matches and shed 54–63 extra pins. This fit still found more seedlings with fewer extras than the ordinary fit, but its branching-plant precision on weedy rings fell 8.38 percentage points below ordinary.
+
+Neither form of hard sampling met the original 15 cm goal for any of the three training seeds. Keeping the same distance mix moved training examples off tomato tissue and onto weeds. That change alone did not reliably preserve seedling recall and branching precision at the fixed 0.65 cutoff.
+
+From the repository root, reproduce this separate cohort with its own saved fits.
+
+```sh
+node benchmark/studies/tomato-distance-mining.mjs fit > bands-fit.json
+node benchmark/studies/tomato-distance-mining.mjs confirm bands-fit.json > bands-confirmation.json
+node benchmark/studies/tomato-distance-mining.mjs surfaces bands-fit.json > bands-surfaces.json
+```
+
+In one CPU run, generating the three training sets’ scans took 2.13 s in total and each final 640-epoch fit took 0.27–0.46 s. The 48 confirmation scans took 2.01 s to generate and 9.69 s to score. The frozen fit hash was `b52894fefe4b1cdea45a7df973b6f284afdebad483c220f9db8fa2deacd77b28`. [Distance rules, seeds and study design](../benchmark/studies/tomato-distance-mining.mjs)
+
 ## Look at one planting in Field Test
 
 Open the ordinary fit and choose **Run example**. Look at the map of planting **51112017** and its 114 seedlings, then choose **Try the other fit**. Both use the same returned points, the same 0.65 cutoff and the same matching distance. Turn on **Inspect extra pins** to examine where each unmatched prediction landed. [Open ordinary training](https://mvalancy.github.io/crop-trainer/trainer/?fieldExample=tomato-weed-random#field-test) · [Open 50% hard training](https://mvalancy.github.io/crop-trainer/trainer/?fieldExample=tomato-weed-hard#field-test)

@@ -20,6 +20,7 @@ node benchmark/studies/orchard-visibility.mjs
 | Where does the detector lose young tomatoes? | [Detection stages](seedling-stages.mjs) · [Peak rules](seedling-peaks.mjs) · [Trained peak rules](seedling-peak-fit.mjs) · [Training by growth stage](tomato-stage-training.mjs) | [Tomato results](../../docs/tomato-stage-training.md) |
 | Can nearby heights distinguish a seedling from soil? | [Compare local and absolute heights](tomato-local-ground.mjs) · [Select a cutoff on separate fields](tomato-terrain-cutoffs.mjs) | [Seedling matches and branching-plant precision](../../docs/tomato-local-ground.md) |
 | Can hard background examples help tell weeds from seedlings? | [Freeze the training draws and confirm on fresh fields](tomato-hard-negatives.mjs) · [Compare ranked pins with equal visit counts](tomato-hard-negative-ranking.mjs) | [Field results and visual replay](../../docs/tomato-hard-negatives.md) |
+| Does matching the distance of the background peaks help? | [Keep the ordinary draw’s near and far counts on fresh training seeds](tomato-distance-mining.mjs) | [Weedy ring results and training surfaces](../../docs/tomato-hard-negatives.md#does-it-help-to-keep-the-same-mix-of-near-and-far-peaks) |
 | Can each trained detector choose its own cutoff? | [Freeze on calibration fields and test on fresh plantings](tomato-fit-calibration.mjs) · [Compare 70 four-planting panels](tomato-calibration-panels.mjs) | [Cutoff choice and held-out results](../../docs/tomato-calibration.md) |
 | How long should the tomato network train? | [Select an epoch count](tomato-training-duration.mjs) · [Check candidate ranking before spacing](tomato-epoch-ranking.mjs) · [Select a cutoff for the longer fit](tomato-duration-cutoffs.mjs) | [Seedling gains and extra pins on older plants](../../docs/tomato-training-duration.md) |
 | Does changing the training draw rescue seedlings? | [Paired sampler and stage-only control](tomato-soil-sampling.mjs) · [Sample-budget follow-up](tomato-soil-budget.mjs) · [Trace the plant hit by each peak](tomato-label-support.mjs) | [Scores and frozen-weight field replay](../../docs/tomato-soil-sampling.md) |
@@ -27,5 +28,13 @@ node benchmark/studies/orchard-visibility.mjs
 | How much can the orchard detector see? | [Trunk visibility](orchard-visibility.mjs) · [Base detection](orchard-bases.mjs) · [Broken scaffolds](orchard-damage.mjs) · [Near-base support](orchard-support.mjs) · [Spacing sweep](orchard-spacing.mjs) · [Low-return ranking and ray density](orchard-ranking.mjs) · [Clutter origins](orchard-ranking-clutter.mjs) · [Board placement and damage](orchard-board-placement.mjs) | [Tree-base results](../../docs/orchard-bases.md) · [Low-return field replays](../../docs/orchard-ranking.md) |
 | Do the simulated branches vary enough within a tree? | [Branch measurements](orchard-branch-caliber.mjs) · [Version comparison](orchard-architecture.mjs) · [Shared measurement code](orchard-measurements.mjs) | [Apple dimensions and source measurements](../../trainer/plants/apple.md) |
 | How does an incorrect ground height affect a detector? | [Ground-reference test](ground-reference.mjs) | [Field validation guide](../../docs/field-validation.md) |
+
+To replay the near/far tomato comparison, run these commands from the repository root. The last command looks up the surface under each selected training peak after the models have been frozen.
+
+```sh
+node benchmark/studies/tomato-distance-mining.mjs fit > bands-fit.json
+node benchmark/studies/tomato-distance-mining.mjs confirm bands-fit.json > bands-confirmation.json
+node benchmark/studies/tomato-distance-mining.mjs surfaces bands-fit.json > bands-surfaces.json
+```
 
 For a physical scan, the [vineyard preparation script](prepare-vineyard.mjs) takes a separately downloaded survey and prepares a local test strip. The field dataset guide links to the source, license and measured results. [Replay the vineyard test](../../docs/field-datasets.md#replay-the-vineyard-test) · [Measure low returns on the surveyed rows](vineyard-low-band.mjs) · [Count vertically stacked returns across three visits](vineyard-vertical-support.mjs)

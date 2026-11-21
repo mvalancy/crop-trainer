@@ -10,7 +10,7 @@ import {hash} from './tomato-cutoff-controls.mjs';
 
 const floatBytes = (values,from=0,count=values.length) =>
   Buffer.from(values.buffer,values.byteOffset+4*from,4*count);
-const bytesHash = values => createHash('sha256').update(floatBytes(values)).digest('hex');
+const bytesHash = values => createHash('sha256').update(new Uint8Array(values.buffer,values.byteOffset,values.byteLength)).digest('hex');
 const rowKey = (features,idx,dims) => floatBytes(features,idx*dims,dims).toString('base64');
 
 function addTrainingPeaks(lookup,scan,config,dims) {
@@ -46,22 +46,23 @@ function describe(peaks,indices) {
   return {count:indices.length,surface,within30cm,cropHighWithin30cm};
 }
 
-export async function auditTrainingSurfaces(training,design) {
+export async function auditTrainingSurfaces(training,design,selectExamples) {
   const records=[];
   for (const t of training) {
     const start=performance.now(),lookup=new Map(),dims=t.pilot.model.inputs;
-    let raw,count;
-    const set=await buildDataset({...design.settings,seed:t.seed,
+    let raw,count,distancesSquared;
+    const set=await buildDataset({...design.settings,seed:t.seed,includeNegativeDistances:!!selectExamples,
       generate:recipe=>field({...recipe,...design.captures}),
       onScan(scan,step) {
         if (step.split==='Training') addTrainingPeaks(lookup,scan,design.settings,dims);
       },
-      selectNegativeRows(values,n) {
-        raw=values; count=n;
+      selectNegativeRows(values,n,dims,distances) {
+        raw=values; count=n; distancesSquared=distances;
         return Array.from({length:n},(_,i)=>i);
       }});
     assert.equal(hash(set.manifest),hash(t.manifest));
     assert.equal(bytesHash(raw),t.negativePoolHash);
+    if (distancesSquared) assert.equal(bytesHash(distancesSquared),t.distanceHash);
     const scores=scoreSavedWeights(raw,t.pilot.model,design.settings.peakAveraging,design.settings.featureMode);
     assert.equal(bytesHash(scores),t.pilotScoresHash);
     assert.equal(lookup.size,scores.length);
@@ -73,10 +74,13 @@ export async function auditTrainingSurfaces(training,design) {
     });
     assert.equal(lookup.size,0);
     const arms=t.fits.map(({sampling,hardCount,negativeIndexHash})=>{
-      const indices=selectHardNegatives(scores,count,hardCount);
+      const {indices,hardIndices}=selectExamples
+        ? selectExamples(scores,count,{sampling,hardCount},distancesSquared,true)
+        : {indices:selectHardNegatives(scores,count,hardCount),
+          hardIndices:hardCount ? selectHardNegatives(scores,hardCount,hardCount) : []};
       assert.equal(hash(indices),negativeIndexHash);
       return {sampling,selected:describe(peaks,indices),
-        ...(hardCount ? {hardOnly:describe(peaks,selectHardNegatives(scores,hardCount,hardCount))} : {})};
+        ...(hardCount ? {hardOnly:describe(peaks,hardIndices)} : {})};
     });
     records.push({seed:t.seed,eligible:describe(peaks,Array.from(scores.keys())),arms,elapsedMs:performance.now()-start});
   }
