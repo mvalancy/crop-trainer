@@ -1,6 +1,6 @@
 # Fields, scanners and ray budgets
 
-Choose a crop in **Scan settings**. Drag with a mouse or swipe sideways to orbit the scan. Swipe vertically to move down the page, or use the + and − buttons to zoom in on a plant. In full screen you can also zoom with the wheel or pinch. Coral rings mark plants with crop returns. Gold crosses mark plants with none. [Open the field generator](https://mvalancy.github.io/crop-trainer/)
+Choose a crop in **Scan settings**. Drag right to pull the near edge of the field to the right. A sideways swipe turns the scan the same way. Drag up or down with a mouse to tilt. Swipe vertically to move down the page, or use the + and − buttons to zoom in on a plant. In full screen you can also zoom with the wheel or pinch. Coral rings mark plants with crop returns. Gold crosses mark plants with none. [Open the field generator](https://mvalancy.github.io/crop-trainer/)
 
 | Crop | Synthetic geometry | Starting peak height | Minimum distance between final pins |
 | --- | --- | ---: | ---: |

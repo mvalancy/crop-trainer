@@ -103,7 +103,7 @@ export function setupFieldPlants(params) {
     });
     canvas.addEventListener('pointermove',event => {
       if (!start || event.pointerId!==start.id) return;
-      const degrees=start.angle+180*(event.clientX-start.x)/Math.max(1,canvas.clientWidth);
+      const degrees=start.angle-180*(event.clientX-start.x)/Math.max(1,canvas.clientWidth);
       angle.value=String((Math.round(degrees/5)*5 % 360 + 360) % 360);
       redraw();
     });

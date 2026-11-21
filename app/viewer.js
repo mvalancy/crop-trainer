@@ -176,7 +176,7 @@ export function createViewer(canvas, controls) {
       if(a>2&&b>2)magnify(b/a,(old.x+other.x)/2-rect.left-rect.width/2,(old.y+other.y)/2-rect.top-rect.height/2);
       panX+=dx/2;panY+=dy/2;schedule();
     }else if(old.pan||e.shiftKey){panX+=dx;panY+=dy;schedule();}
-    else orbit(dx,dy);
+    else orbit(-dx,dy);
     old.x=e.clientX;old.y=e.clientY;
   });
   for(const name of ['lostpointercapture','pointercancel','pointerup'])canvas.addEventListener(name,e=>{if(pointers.delete(e.pointerId))schedule();});

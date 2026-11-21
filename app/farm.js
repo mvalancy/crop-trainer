@@ -6,10 +6,10 @@ import {cropProfile} from '../trainer/generator/crops.js?v=systems1';
 import {scanSession} from '../trainer/generator/scan-session.js?v=plants3';
 import {makeRecipe} from '../trainer/models/data.js?v=plants3';
 import {formsFor} from '../trainer/plants/forms.js';
-import {setupFieldPlants} from '../trainer/plants/field-controls.js?v=scan-settings2';
+import {setupFieldPlants} from '../trainer/plants/field-controls.js?v=drag-orbit1';
 import {getSensor, sensorOptions, sensorDetails, rayBudgetOptions, layoutCapacity, DEFAULT_GENERATOR_RAYS} from '../trainer/generator/sensors.js?v=dense1';
 import {createLiveScene} from '../trainer/ui/live-scene.js';
-import {createViewer} from './viewer.js?v=wood2';
+import {createViewer} from './viewer.js?v=drag-orbit1';
 
 const $ = id => document.getElementById(id);
 let fieldLesson;

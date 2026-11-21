@@ -58,6 +58,49 @@ try {
     return JSON.parse((await buffer(await download.createReadStream())).toString('utf8'));
   }
 
+  async function checkOrbitDirection(canvas, boxes) {
+    // In the side preset a tree on the near edge should follow a rightward drag.
+    const tree = boxes.findIndex(box => box.base_xy_m[1] > 7);
+    assert.ok(tree >= 0, 'use a tree on the near side of this 10 m planting');
+    async function markerPosition() {
+      // Compare the same rendered pose with/without the highlight ring. This
+      // tracks the actual image independently of the ring color or line width.
+      return canvas.evaluate(async (el, tree) => {
+        const select = document.querySelector('#highlight');
+        async function pixels(value) {
+          select.value = value;
+          select.dispatchEvent(new Event('change'));
+          await new Promise(requestAnimationFrame);
+          return new Uint32Array(el.getContext('2d').getImageData(0,0,el.width,el.height).data.buffer);
+        }
+        const plain = await pixels(''), highlighted = await pixels(String(tree));
+        let x = 0, y = 0, count = 0;
+        for (let i=0; i<plain.length; i++) if (plain[i] !== highlighted[i]) {
+          x += i % el.width; y += Math.floor(i / el.width); count++;
+        }
+        if (!count) throw Error('The selected tree has no visible highlight on the canvas.');
+        return {x:x/count, y:y/count};
+      }, tree);
+    }
+    async function dragFromSide(dx,dy) {
+      await page.locator('#view').selectOption('side');
+      await canvas.scrollIntoViewIfNeeded();
+      const start = await markerPosition();
+      const rect = await canvas.boundingBox(), x = rect.x+rect.width/2, y = rect.y+rect.height/2;
+      await page.mouse.move(x,y);
+      await page.mouse.down();
+      await page.mouse.move(x+dx,y+dy);
+      await page.mouse.up();
+      const end = await markerPosition();
+      return {x:end.x-start.x, y:end.y-start.y};
+    }
+    assert.ok((await dragFromSide(24,0)).x > 2, 'rightward drag should turn the near tree right');
+    assert.ok((await dragFromSide(-24,0)).x < -2, 'leftward drag should turn the near tree left');
+    const tilt = await dragFromSide(0,24);
+    assert.ok(tilt.y > 2 && Math.abs(tilt.x) < 1, 'downward drag should still tilt the near tree down without sideways movement');
+    console.log('The rendered tree followed left and right drags and retained its vertical tilt direction.');
+  }
+
   await open('?crop=lettuce&seed=27&sensor=reference&budget=12000');
   const id=page.locator('#scanId');
   await id.filter({hasText:/^[0-9a-f]{16}$/}).waitFor();
@@ -96,9 +139,10 @@ try {
     await page.locator('.scanSummary').evaluate(el=>scrollTo({top:el.getBoundingClientRect().top+scrollY-innerHeight/2,behavior:'instant'}));
     assert.ok(await page.evaluate(()=>document.querySelector('#scan-viewer').getBoundingClientRect().bottom <=
       document.querySelector('.scanSummary').getBoundingClientRect().top+1), 'Apple viewer overlaps scan summary at '+viewport.width+'px');
-    assert.equal((await downloadJSON(page.locator('#labels'))).crop,'apple');
-
+    const labels=await downloadJSON(page.locator('#labels'));
+    assert.equal(labels.crop,'apple');
     const canvas=page.locator('#map');
+    if (viewport.width===1366) await checkOrbitDirection(canvas,labels.boxes);
     await canvas.evaluate(el=>el.scrollIntoView({block:'center',behavior:'instant'}));
     await canvas.hover();
     const before=await page.evaluate(()=>({y:scrollY,top:document.querySelector('#scan-viewer').getBoundingClientRect().top}));
