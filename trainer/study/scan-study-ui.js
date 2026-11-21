@@ -174,9 +174,21 @@ export function initScanStudy(params) {
       if(a && !b)lost++;
     });
     const sameScan=comparison.value==='spacing';
-    el('studyChange').textContent=sameScan
-      ? gained+' plants gained and '+lost+' lost when candidate spacing changed.'
-      : gained+' plants marked only in the second scan · '+lost+' marked only in the first.';
+    const change=el('studyChange');
+    if(sameScan && mode==='orchard'){
+      const [standard,trial]=results.map(r=>r.orchardScores.find(s=>s.cm===15));
+      const matches=gained || lost
+        ? 'At 15 cm the trial gained '+gained+(gained===1?' match':' matches')+' and lost '+lost+'.'
+        : 'Both settings matched the same '+standard.tp+(standard.tp===1?' tree.':' trees.');
+      const extras=trial.fp===standard.fp
+        ? 'Both produced '+trial.fp+(trial.fp===1?' extra pin.':' extra pins.')
+        : 'Extra pins '+(trial.fp>standard.fp?'rose':'fell')+' from '+standard.fp+' to '+trial.fp+'.';
+      change.textContent=matches+' '+extras;
+    }else if(sameScan){
+      change.textContent='Both maps use the same returns and height peaks. Select Orchard base pin to see what changed with spacing.';
+    }else{
+      change.textContent=gained+' plants marked only in the second scan · '+lost+' marked only in the first.';
+    }
     const p=results[0].plants[selected],q=results[1].plants[selected];
     el('studyTargetDetail').textContent=p?'Plant '+selected+' received '+p.returns+' and '+q.returns+' crop returns.':'Select a plant on either map or use the list to inspect its returns.';
     if (sameScan && p) el('studyTargetDetail').textContent='Tree '+selected+' received '+format(p.returns)+' crop returns in the shared scan.';
