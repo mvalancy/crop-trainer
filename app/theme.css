@@ -1,6 +1,13 @@
 .siteBar .barInner { column-gap:clamp(.8rem,2.5vw,2.5rem); }
 .themeChoice { display:flex; align-items:center; gap:.45rem; font-size:.83rem; color:var(--muted); }
 .themeChoice select { width:auto; min-height:44px; font-size:.85rem; }
+@media(min-width:741px) and (max-width:960px) {
+  .siteBar .barInner { display:grid; grid-template-columns:1fr auto auto; row-gap:0; padding-top:.35rem; }
+  .siteBar .sourceLinks { grid-area:1 / 2; }
+  .siteBar .themeChoice { grid-area:1 / 3; }
+  .siteBar nav { grid-area:2 / 1 / auto / -1; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:0; }
+  .siteBar nav a { justify-content:center; min-height:44px; }
+}
 @media(max-width:740px) {
   .barInner { grid-template-columns:1fr auto auto; }
   .themeChoice { grid-area:1 / 3; }
