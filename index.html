@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="app/farm.css?v=context-help2">
 <link rel="stylesheet" href="app/weight-lesson.css">
 <link rel="stylesheet" href="app/field-guide.css">
-<link rel="stylesheet" href="app/scan-comparison.css?v=orchard-ranking1">
+<link rel="stylesheet" href="app/scan-comparison.css?v=paired-inspector1">
 <link rel="stylesheet" href="trainer/plants/portrait.css?v=scan-settings2">
 <link rel="stylesheet" href="app/advanced-scan.css?v=option-fit1">
 <link rel="stylesheet" href="app/help.css?v=context-help2">
@@ -177,12 +177,14 @@
 <div class="studyChoices"><label>Mark plants by<select id="studyMetric" data-help="Choose what counts as finding a plant. A single crop return shows it was measured. A matched pin means a detector also located it within the stated distance." aria-describedby="studyMetricHelp studyChange"><option value="returns">At least one crop return</option><option value="peaks">Matched height peak · 15 cm</option><option value="pins">Height-only pin · 15 cm</option><option value="sampledPins">Sampled-cell pin · 15 cm</option><option value="orchard">Orchard base pin · 15 cm</option></select></label>
 <label class="studyOverlay"><input id="studyCloud" data-help="Show up to 9,000 sample points. In Tree-base ranking, cyan squares show every 5 cm cell that recorded a low return. Wood, weeds and other surfaces can all supply low returns. Both rules score the full scan." type="checkbox"> Show up to 9,000 scan points</label>
 <p id="studyLegend"><span><i class="studyDot" aria-hidden="true"></i>Dot meets the measure</span><span><i class="studyCross" aria-hidden="true">×</i>Cross misses it</span><span id="studyLowReturnsKey" hidden><i class="studyLowDot" aria-hidden="true"></i><span id="studyLowReturnsCount"></span></span><span id="studyZoomKey" hidden>2.5 m view · white circle = 15 cm · gold line to nearest pin</span></p>
-<p id="studyChange" data-help="Counts each plant that passes the selected measure in just one scan. Two equal totals can hide different missed plants." data-help-label="Plants gained or lost"></p><p id="studyMetricHelp"></p><p id="studyPeakGuide" hidden><a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/seedling-peaks.md" data-help="See why neighborhood peaks in sparse tomato scans can produce extra crop pins.">When do these extra peaks help?</a></p>
+</div>
+<div class="studyFinding"><p id="studyChange" data-help="Counts each plant that passes the selected measure in just one scan. Two equal totals can hide different missed plants." data-help-label="Plants gained or lost"></p><p id="studyMetricHelp"></p><p id="studyPeakGuide" hidden><a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/seedling-peaks.md" data-help="See why neighborhood peaks in sparse tomato scans can produce extra crop pins.">When do these extra peaks help?</a></p>
 </div>
 <div class="studyFocus"><label>Inspect a plant<select id="studyTarget" data-help="Pick the same planting position on both maps to compare its crop returns and nearby pins." aria-describedby="studyTargetDetail"><option value="">All plants</option></select></label>
 <div id="studyZoomTools" hidden><label class="check"><input type="checkbox" id="studyZoom" data-help="See a 2.5 m square around the selected base in both maps. The white circle is the 15 cm match radius. A gold line connects the base to its nearest predicted pin.">Zoom both maps to this tree</label></div>
 <p id="studyTargetDetail" data-help-label="Selected plant returns" data-help="Compare the points recorded from the same plant in each scan. The plant can still be present when either count is zero." role="status" aria-atomic="true"></p>
 <div class="studyDistances"><span id="studyDistanceA" data-help="Read the distance to the nearest estimated base and whether a pin matched this plant in the one-to-one score." data-help-label="First scan pin distance" hidden></span><span id="studyDistanceB" data-help="Use the same plant in both scans to see whether the nearest pin moved and whether a match was awarded." data-help-label="Second scan pin distance" hidden></span></div>
+</div>
 <div id="studyOrchardTrace" hidden>
 <table class="orchardTrace"><caption id="studyTraceTitle">How the orchard locator placed its pins</caption>
 <thead><tr><th scope="col">At this tree</th><th scope="col" id="studyTraceArmA">First scan</th><th scope="col" id="studyTraceArmB">Second scan</th></tr></thead>
@@ -191,7 +193,7 @@
 <tr><th scope="row" data-help="The locator keeps stronger cells first, removing close neighbors. This counts the kept cells within 15 cm before each pin receives its final position.">Cells after spacing</th><td id="studySpacedA"></td><td id="studySpacedB"></td></tr>
 <tr><th scope="row" data-help="Distance from this base to the closest pin after the locator refines its position. A pin can move into or out of the 15 cm circle during this final step.">Nearest final pin</th><td id="studyNearestA"></td><td id="studyNearestB"></td></tr>
 <tr><th scope="row" data-help="A final pin within 15 cm can match one planted base. Each pin and base may be used once.">15 cm match</th><td id="studyOutcomeA"></td><td id="studyOutcomeB"></td></tr>
-</tbody></table><p id="studyTraceNote" class="hint"></p><div id="studyLowPatch" hidden></div></div></div>
+</tbody></table><div class="studyTraceDetail"><p id="studyTraceNote" class="hint"></p><div id="studyLowPatch" hidden></div></div></div>
 <div class="studyActions"><a id="studyLinkA" data-help="Open the first scan in the field viewer, with the selected plant highlighted.">First scan in 3D</a><a id="studyLinkB" data-help="Open the second scan in the field viewer with the same highlighted plant.">Second scan in 3D</a><a id="studyShare" data-help="Open a replay link for this pair, including the selected measure and plant.">Comparison link</a><button type="button" id="studySave" data-help="Save both scan recipes and comparison measurements as JSON so you can check or repeat the result.">Download results</button></div></div></div>
 <details id="studyScores" hidden><summary data-help="See how many estimated centers qualify as matches when the allowed distance changes." data-help-label="Pin scores at each matching distance">Pin scores at each matching distance</summary><div class="studyScoreLayout"><div class="scoreSettings"><label>Matching distance<select id="studyScoreDistance" data-help="Switch the maximum distance between a pin and a plant. Each score uses a one-to-one match. The plant markers on the maps use 15 cm for pin comparisons."><option value="7.5">7.5 cm</option><option value="10">10 cm</option><option value="15" selected>15 cm</option></select></label>
 <div id="studyScoreArms"></div></div>

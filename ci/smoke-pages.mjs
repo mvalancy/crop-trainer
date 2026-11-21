@@ -375,6 +375,16 @@ try {
   assert.equal(await squares.count(),9);
   assert.deepEqual(await squares.evaluateAll(nodes=>nodes.flatMap((node,i)=>node.classList.contains('occupied')?[i]:[])),[7]);
   assert.match(await patch.innerText(),/1 of 9 cells occupied/);
+  for (const width of [1024,1440,320,390]) {
+    await page.setViewportSize({width,height:844});
+    const tableBox=await trace.locator('table').boundingBox(), patchBox=await patch.boundingBox();
+    if (width>=1024) {
+      assert.ok(patchBox.x>=tableBox.x+tableBox.width-1, 'Show the low-return evidence beside the tree table on a laptop');
+    } else {
+      assert.ok(patchBox.y>=tableBox.y+tableBox.height-1, 'Read the low-return evidence after the tree table on a phone');
+    }
+    assert.ok(patchBox.x>=0 && patchBox.x+patchBox.width<=width+1, 'Keep the low-return evidence inside the viewport');
+  }
   assert.ok(await page.locator('#studyZoom').isChecked());
   assert.ok(await page.locator('#studyLowReturnsKey').isVisible());
   await page.locator('#studyCloud').uncheck();
