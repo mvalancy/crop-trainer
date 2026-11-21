@@ -2,34 +2,12 @@
 import assert from 'node:assert/strict';
 import {pathToFileURL} from 'node:url';
 import {field} from '../../trainer/generator/field.js';
-import {buildDataset, features, PEAK_GRID_SIZE, PEAK_CELL_METERS, targetCenters} from '../../trainer/models/data.js';
+import {buildDataset, features, PEAK_GRID_SIZE, targetCenters} from '../../trainer/models/data.js';
 import {settings} from './tomato-soil-controls.mjs';
 
-const seeds = [443731, 687139];
-const cell = meters => Math.max(0, Math.min(PEAK_GRID_SIZE - 1, Math.floor(meters / PEAK_CELL_METERS)));
+import {indexReturns} from './tomato-return-cells.mjs';
 
-function indexReturns(scan) {
-  const ownerSets = new Map();
-  const cellCount = PEAK_GRID_SIZE ** 2;
-  const heights = new Float32Array(cellCount).fill(-Infinity);
-  const topOwners = new Uint16Array(cellCount);
-  const topClasses = new Uint8Array(cellCount);
-  for (let i = 0; i < scan.plantIds.length; i++) {
-    const j = cell(scan.xyz[3*i]) + PEAK_GRID_SIZE*cell(scan.xyz[3*i+1]);
-    const owner = scan.plantIds[i];
-    if (owner) {
-      if (!ownerSets.has(j)) ownerSets.set(j,new Set());
-      ownerSets.get(j).add(owner);
-    }
-    const z = scan.xyz[3*i+2];
-    if (z > heights[j]) {
-      heights[j] = z;
-      topOwners[j] = owner;
-      topClasses[j] = scan.cls[i];
-    }
-  }
-  return {ownerSets, heights, topOwners, topClasses};
-}
+const seeds = [443731, 687139];
 
 export function measureScan(scan, groups) {
   const index = indexReturns(scan);

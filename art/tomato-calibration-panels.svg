@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 430 368" role="img" aria-labelledby="title description">
+  <title id="title">Which cutoff did four plantings choose?</title>
+  <desc id="description">All 70 ways of choosing four of eight calibration plantings were scored for three frozen models. The starter was retained 18, 9 and 35 times, respectively. The most frequent longer-fit cutoffs were 0.70, 0.75 and 0.70. Each cell gives a count of panels.</desc>
+  <style>
+    text {font-family:system-ui,sans-serif;fill:#233d30}
+    .heading {font-size:19px;font-weight:700}
+    .caption,.head {font-size:13px}
+    .head,.number {font-weight:650}
+    .number,.row {font-size:15px}
+    @media (prefers-reduced-motion:no-preference) {
+      .cell {animation:enter .5s ease-out both}
+      @keyframes enter {from{opacity:.2}to{opacity:1}}
+    }
+  </style>
+  <rect width="430" height="368" rx="15" fill="#f7f8f0"/>
+  <text x="17" y="32" class="heading">Which cutoff did four plantings choose?</text>
+  <text x="17" y="55" class="caption">Each column counts 70 panels for one training seed.</text>
+  <text x="17" y="93" class="head">Fit and cutoff</text>
+  <text x="153" y="93" class="head" text-anchor="middle">1,403,129</text>
+  <text x="252" y="93" class="head" text-anchor="middle">1,514,021</text>
+  <text x="351" y="93" class="head" text-anchor="middle">1,687,553</text>
+  <text x="16" y="123" class="row">Starter · .50</text>
+  <rect class="cell" x="109" y="106" width="88" height="25" rx="4" fill="rgb(238,209,169)"/>
+  <text x="153" y="124" text-anchor="middle" class="number">18</text>
+  <rect class="cell" x="208" y="106" width="88" height="25" rx="4" fill="rgb(242,227,203)"/>
+  <text x="252" y="124" text-anchor="middle" class="number">9</text>
+  <rect class="cell" x="307" y="106" width="88" height="25" rx="4" fill="rgb(231,175,104)"/>
+  <text x="351" y="124" text-anchor="middle" class="number">35</text>
+  <text x="16" y="153" class="row">640 · .55</text>
+  <rect class="cell" x="109" y="136" width="88" height="25" rx="4" fill="rgb(235,241,230)"/>
+  <text x="153" y="154" text-anchor="middle" class="number">2</text>
+  <rect class="cell" x="208" y="136" width="88" height="25" rx="4" fill="rgb(238,243,233)"/>
+  <text x="252" y="154" text-anchor="middle" class="number">1</text>
+  <rect class="cell" x="307" y="136" width="88" height="25" rx="4" fill="rgb(242,245,236)"/>
+  <text x="351" y="154" text-anchor="middle" class="number">–</text>
+  <text x="16" y="183" class="row">640 · .60</text>
+  <rect class="cell" x="109" y="166" width="88" height="25" rx="4" fill="rgb(216,230,217)"/>
+  <text x="153" y="184" text-anchor="middle" class="number">7</text>
+  <rect class="cell" x="208" y="166" width="88" height="25" rx="4" fill="rgb(231,239,228)"/>
+  <text x="252" y="184" text-anchor="middle" class="number">3</text>
+  <rect class="cell" x="307" y="166" width="88" height="25" rx="4" fill="rgb(242,245,236)"/>
+  <text x="351" y="184" text-anchor="middle" class="number">–</text>
+  <text x="16" y="213" class="row">640 · .65</text>
+  <rect class="cell" x="109" y="196" width="88" height="25" rx="4" fill="rgb(187,213,194)"/>
+  <text x="153" y="214" text-anchor="middle" class="number">15</text>
+  <rect class="cell" x="208" y="196" width="88" height="25" rx="4" fill="rgb(224,234,222)"/>
+  <text x="252" y="214" text-anchor="middle" class="number">5</text>
+  <rect class="cell" x="307" y="196" width="88" height="25" rx="4" fill="rgb(238,243,233)"/>
+  <text x="351" y="214" text-anchor="middle" class="number">1</text>
+  <text x="16" y="243" class="row">640 · .70</text>
+  <rect class="cell" x="109" y="226" width="88" height="25" rx="4" fill="rgb(154,194,169)"/>
+  <text x="153" y="244" text-anchor="middle" class="number">24</text>
+  <rect class="cell" x="208" y="226" width="88" height="25" rx="4" fill="rgb(198,220,203)"/>
+  <text x="252" y="244" text-anchor="middle" class="number">12</text>
+  <rect class="cell" x="307" y="226" width="88" height="25" rx="4" fill="rgb(146,190,164)"/>
+  <text x="351" y="244" text-anchor="middle" class="number">26</text>
+  <text x="16" y="273" class="row">640 · .75</text>
+  <rect class="cell" x="109" y="256" width="88" height="25" rx="4" fill="rgb(227,237,225)"/>
+  <text x="153" y="274" text-anchor="middle" class="number">4</text>
+  <rect class="cell" x="208" y="256" width="88" height="25" rx="4" fill="rgb(135,184,156)"/>
+  <text x="252" y="274" text-anchor="middle" class="number">29</text>
+  <rect class="cell" x="307" y="256" width="88" height="25" rx="4" fill="rgb(213,228,214)"/>
+  <text x="351" y="274" text-anchor="middle" class="number">8</text>
+  <text x="16" y="303" class="row">640 · .80</text>
+  <rect class="cell" x="109" y="286" width="88" height="25" rx="4" fill="rgb(242,245,236)"/>
+  <text x="153" y="304" text-anchor="middle" class="number">–</text>
+  <rect class="cell" x="208" y="286" width="88" height="25" rx="4" fill="rgb(201,222,206)"/>
+  <text x="252" y="304" text-anchor="middle" class="number">11</text>
+  <rect class="cell" x="307" y="286" width="88" height="25" rx="4" fill="rgb(242,245,236)"/>
+  <text x="351" y="304" text-anchor="middle" class="number">–</text>
+  <text x="17" y="337" class="caption">Starter = 40 epochs. A dash means zero panels.</text>
+  <text x="17" y="356" class="caption">The same eight planting seeds appear across these panels.</text>
+</svg>

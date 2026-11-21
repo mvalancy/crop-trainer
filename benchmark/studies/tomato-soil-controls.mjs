@@ -7,6 +7,7 @@ import {trainNetworkCPU} from '../../trainer/models/neural.js';
 import {weightArtifact, trainerId} from '../../trainer/models/network.js';
 import {runFieldTest} from '../../trainer/field-test/score-scan.js';
 import {tomatoTerrainTraining, tomatoTestRecipe} from './tomato-terrain-controls.mjs';
+import {indexReturns,extraPinSurfaces} from './tomato-return-cells.mjs';
 
 export const settings = {...tomatoTerrainTraining, featureMode:'local-ground'};
 const layouts = ['reference', 'os1-64'];
@@ -95,7 +96,7 @@ export async function fitPair(seed,sampleLimit,{stageControl=false}={}) {
   return fits;
 }
 
-function pool(scans,read) {
+export function poolScores(scans,read) {
   return MATCH_RADII_METERS.map((r,i)=>{
     let tp=0,fp=0,fn=0;
     for (const scan of scans) {
@@ -107,7 +108,7 @@ function pool(scans,read) {
   });
 }
 
-export function scoreFields(fits,fieldSeeds) {
+export function scoreFields(fits,fieldSeeds,{weeds}={}) {
   const fields=[], summary=[];
   const timingsMs={generationMs:0,validationMs:0};
   for (const fit of fits) assert.ok(fit.manifest.every(t=>!fieldSeeds.includes(t.seed)));
@@ -115,12 +116,26 @@ export function scoreFields(fits,fieldSeeds) {
     let boxes;
     for (const layout of layouts) {
       const t=performance.now();
-      const scan=field(tomatoTestRecipe(seed,layout,plantForm,true));
+      const recipe=tomatoTestRecipe(seed,layout,plantForm,true);
+      if (weeds!==undefined) recipe.weeds=weeds;
+      const scan=field(recipe);
       timingsMs.generationMs+=performance.now()-t;
       assert.equal(scan.sampledRays,60000);
       if (boxes) assert.deepEqual(scan.labels.boxes,boxes); else boxes=scan.labels.boxes;
       const tileId=scan.labels.tile_id, labels={filename:tileId+'.labels.json',text:JSON.stringify(scan.labels)};
       const record={seed,plantForm,layout,tileId,targets:boxes.length,models:[]};
+      if (weeds!==undefined) {
+        const xy=new Float32Array(2*scan.sampledRays);
+        assert.equal(scan.xyz.length,3*scan.sampledRays);
+        for (let i=0;i<scan.sampledRays;i++) {
+          xy[2*i]=scan.xyz[3*i];
+          xy[2*i+1]=scan.xyz[3*i+1];
+        }
+        record.capture={weeds,boxHash:createHash('sha256').update(JSON.stringify(boxes)).digest('hex'),
+          rayXYHash:createHash('sha256').update(new Uint8Array(xy.buffer)).digest('hex'),
+          soilReturns:scan.counts[0],cropReturns:scan.counts[1],weedReturns:scan.counts[2],coveredCropReturns:scan.lost};
+      }
+      let returnCells;
       for (const fit of fits) {
         const v=performance.now();
         const result=runFieldTest({model:fit.model,xyz:scan.xyz,labels,tileId});
@@ -135,7 +150,14 @@ export function scoreFields(fits,fieldSeeds) {
           record.proposalMatches15=reachable;
           record.height=result.baselineEvaluation.scores;
         }
-        record.models.push({seed:fit.seed,sampling:fit.sampling,sampleLimit:fit.sampleLimit,
+        let extraSurfaces15;
+        if (weeds!==undefined) {
+          returnCells ??= indexReturns(scan);
+          extraSurfaces15=extraPinSurfaces(result.pins,result.evaluation.pinByReference15,returnCells);
+          assert.equal(Object.values(extraSurfaces15).reduce((sum,n)=>sum+n,0),
+            result.evaluation.scores.find(s=>s.cm===15).fp);
+        }
+        record.models.push({...(extraSurfaces15 ? {extraSurfaces15} : {}),seed:fit.seed,sampling:fit.sampling,sampleLimit:fit.sampleLimit,
           ...(fit.epochs === undefined ? {} : {epochs:fit.epochs}),
           accepted:result.acceptedCount,scores:result.evaluation.scores});
       }
@@ -145,9 +167,9 @@ export function scoreFields(fits,fieldSeeds) {
   for (const layout of layouts) for (const plantForm of forms) {
     const scans=fields.filter(f=>f.layout===layout && f.plantForm===plantForm);
     summary.push({layout,plantForm,targets:scans.reduce((s,f)=>s+f.targets,0),
-      proposalMatches15:scans.reduce((s,f)=>s+f.proposalMatches15,0),height:pool(scans,s=>s.height),
+      proposalMatches15:scans.reduce((s,f)=>s+f.proposalMatches15,0),height:poolScores(scans,s=>s.height),
       models:fits.map(({seed,sampling,sampleLimit,epochs},i)=>({seed,sampling,sampleLimit,
-        ...(epochs === undefined ? {} : {epochs}),scores:pool(scans,s=>s.models[i].scores)}))});
+        ...(epochs === undefined ? {} : {epochs}),scores:poolScores(scans,s=>s.models[i].scores)}))});
   }
   return {fields,summary,timingsMs};
 }

@@ -2,13 +2,11 @@
 // Confirmation refits the selected schedules. The crossed replay reopens two scored cohorts.
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {createHash} from 'node:crypto';
 import {cpus} from 'node:os';
-import {buildDataset,features,targetCenters} from '../../trainer/models/data.js';
+import {features,targetCenters} from '../../trainer/models/data.js';
 import {field} from '../../trainer/generator/field.js';
-import {trainNetworkCPU} from '../../trainer/models/neural.js';
-import {weightArtifact,trainerId,scoreSavedWeights} from '../../trainer/models/network.js';
-import {settings as soilSettings,scoreFields} from './tomato-soil-controls.mjs';
+import {scoreSavedWeights} from '../../trainer/models/network.js';
+import {settings,hash,fitSchedules,score,compare} from './tomato-cutoff-controls.mjs';
 import {labelsFor,rankSummary} from './tomato-epoch-ranking.mjs';
 import {tomatoTestRecipe} from './tomato-terrain-controls.mjs';
 
@@ -16,48 +14,17 @@ const design={
   development:{trainSeed:914731,fieldSeeds:[39112043,39243071,39374039,39505087]},
   confirmation:{trainSeed:1273187,fieldSeeds:[42103033,42247069,42391057,42535081,42679033,42823097]}
 };
-const settings={...soilSettings,sampleLimit:600,positiveSampling:'ordinary'};
 const lengths=[40,160,640];
 const thresholds=Array.from({length:19},(_,i)=>5*(i+1));
 const control={epochs:40,percent:50};
 const allArms=lengths.flatMap(epochs=>thresholds.map(percent=>({epochs,percent})));
 const armKey=arm=>arm.epochs+'@'+arm.percent;
-const hash=value=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const rule='Global cutoff. At 15 cm require branching precision within one percentage point of 40@50 on both layouts. Independently for 40 and longer fits, maximize the smaller seedling F1 gain across layouts. Break ties by distance from .50, shorter fit, then higher cutoff. If no eligible longer arm, show the smallest branching precision shortfall on the worse layout as a diagnostic.';
 const allSeeds=Object.values(design).flatMap(c=>c.fieldSeeds);
 assert.equal(new Set(allSeeds).size,allSeeds.length);
 
 function unique(arms) {return [...new Map(arms.map(a=>[armKey(a),a])).values()];}
 
-// Field Test replays the frozen model at each proposed cutoff and scores all three match distances.
-function score(arms,fits,seeds) {
-  const view=arms.map(arm=>{
-    const fit=fits.find(f=>f.epochs===arm.epochs && (arm.seed===undefined || f.seed===arm.seed));
-    assert.ok(fit,'Each operating point needs its frozen weights.');
-    return {...fit,model:{...fit.model,threshold:arm.percent/100}};
-  });
-  const {summary,fields,timingsMs}=scoreFields(view,seeds);
-  const grid=arms.map((arm,i)=>({...arm,groups:summary.map(s=>({
-    layout:s.layout,plantForm:s.plantForm,scores:s.models[i].scores
-  }))}));
-  const baseline=summary.map(s=>({layout:s.layout,plantForm:s.plantForm,targets:s.targets,
-    reachable:s.proposalMatches15,height:s.height}));
-  return {grid,baseline,timingsMs,fields:fields.map(f=>({...f,models:f.models.map((m,i)=>({...m,percent:arms[i].percent}))}))};
-}
-
-function compare(row,baseline) {
-  const layouts=['reference','os1-64'].map(layout=>{
-    function metric(source,form,measure) {
-      return source.groups.find(s=>s.layout===layout && s.plantForm===form).scores.find(s=>s.cm===15)[measure];
-    }
-    const p=metric(row,'branching','precision'),p0=metric(baseline,'branching','precision');
-    const precisionChange=p===null || p0===null ? null : p-p0;
-    return {layout,seedlingF1Change:metric(row,'seedling','f1')-metric(baseline,'seedling','f1'),
-      branchingPrecisionChange:precisionChange,precisionSafe:precisionChange!==null && precisionChange>=-.01};
-  });
-  return {layouts,withinLimit:layouts.every(l=>l.precisionSafe),smallerGain:Math.min(...layouts.map(l=>l.seedlingF1Change)),
-    worstPrecisionChange:Math.min(...layouts.map(l=>l.branchingPrecisionChange ?? -Infinity))};
-}
 function choose(grid) {
   assert.deepEqual(grid.map(armKey),allArms.map(armKey));
   const baseline=grid.find(a=>armKey(a)===armKey(control));
@@ -85,27 +52,6 @@ function verifyFrozen(prior) {
   assert.equal(prior.rule,rule);
   assert.equal(prior.freezeHash,freeze(prior));
   assert.deepEqual(prior.selection,choose(prior.grid));
-}
-
-async function fitSchedules(trainSeed,epochsToFit,excludedSeeds) {
-  const start=performance.now(), config={...settings,seed:trainSeed};
-  const set=await buildDataset({...config,auditPositiveSampling:true});
-  assert.equal(set.Y.length,settings.sampleLimit);
-  assert.ok(set.manifest.every(t=>!excludedSeeds.has(t.seed)));
-  const preparationMs=performance.now()-start;
-  const datasetHash=createHash('sha256').update(new Uint8Array(set.X.buffer))
-    .update(new Uint8Array(set.Y.buffer)).update(JSON.stringify(set.scaling)).digest('hex');
-  const fits=[];
-  for (const epochs of new Set(epochsToFit)) {
-    const begin=performance.now();
-    const trained=await trainNetworkCPU(set.X,set.Y,{...config,epochs,dims:set.dims});
-    assert.equal(trained.epochsCompleted,epochs);
-    const model=weightArtifact({settings:config,scaling:set.scaling,stats:set.stats,weights:trained.weights,
-      trainer:trainerId(config),epochs});
-    fits.push({epochs,seed:trainSeed,manifest:set.manifest,model,weightHash:hash(model),fitMs:performance.now()-begin});
-  }
-  return {fits,datasetHash,manifest:set.manifest,preparationMs,
-    weightHashes:fits.map(({epochs,weightHash})=>({epochs,weightHash})),trainingMs:fits.map(({epochs,fitMs})=>({epochs,fitMs}))};
 }
 
 // Revisit the ring seedlings where the two long fits diverged. XYZ goes to the
