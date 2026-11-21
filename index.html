@@ -14,7 +14,7 @@
 <link rel="stylesheet" href="trainer/plants/portrait.css?v=scan-settings2">
 <link rel="stylesheet" href="app/advanced-scan.css">
 <link rel="stylesheet" href="app/help.css?v=context-help2">
-<link rel="stylesheet" href="app/scan-workspace.css">
+<link rel="stylesheet" href="app/scan-workspace.css?v=4">
 <script type="module" src="app/help.js?v=context-help2"></script>
 </head>
 <body class="farm"><a class="skip" href="#main" data-help="Jump past site navigation to the field, lessons and farm journal.">Skip to content</a>
@@ -59,6 +59,7 @@
 <fieldset class="quickScanner"><legend>LiDAR</legend>
 <label>Scanner layout<select id="scan" data-help="Choose where rays land. The grid spreads them across the plot. The Ouster presets use a ring pattern inspired by the sensor’s channel and column counts."></select></label>
 <label>Ray budget<select id="budget" data-help="The requested number of laser samples across this 10 m square. A layout can run out of sample positions. The scan summary shows how many were used." aria-describedby="resolutionInfo"></select></label>
+<p class="hint" id="resolutionInfo" data-help-label="Sampling resolution" data-help="For a reference grid, spacing is the approximate width of a sample cell across this 10 m plot. Other layouts report the maximum number of ray positions."></p>
 </fieldset>
 <div class="growActions"><button type="submit" class="primary" data-help="Generate a new scan using the current crop, seed, scanner and advanced settings.">Grow and scan <span aria-hidden="true">→</span></button></div>
 <a class="advancedJump" data-help="Jump below the scan summary to compare plant forms or change damage, noise and obstacles." href="#advanced-scan">Advanced scan settings ↓</a>
@@ -75,7 +76,7 @@
 <p class="hint" id="tissueLegend" hidden>Orange marks stem and wood returns, green marks leaf blades, violet marks crown clusters, buds or fruit, and gray marks other returns.</p>
 <p class="hint" id="modelLegend" hidden>Turquoise lines trace the modeled stems through the canopy, including sections hidden from the scanner.</p>
 <details class="cameraHelp">
-<summary data-help="Read the mouse, touch and keyboard gestures for the field viewer." data-help-label="Camera controls">Camera controls</summary>
+<summary data-help="Read the mouse, touch and keyboard gestures for the field viewer." data-help-label="Camera gestures">Mouse, touch and keyboard</summary>
 <div class="cameraInputs" id="cameraHelp">
 <p><strong>Mouse</strong> Drag left or right to turn the field. Drag up or down to tilt. Shift-drag or right-drag to pan. In fullscreen, use the wheel to zoom.</p>
 <p><strong>Touch</strong> Swipe sideways to turn and vertically to scroll. Tap + or − to zoom. In fullscreen, pinch to zoom or move two fingers to pan.</p>
@@ -137,10 +138,9 @@
 </div></details>
 <div class="scanEnvironment">
 <details class="scannerSetup" id="sensorSettings">
-<summary data-help="Inspect this layout’s sampling limit and change which surfaces or noise appear in the recorded points." data-help-label="Sensor details, noise and ground">Sensor details, noise and ground <span id="scanPreset"></span></summary>
+<summary data-help="Read how this layout samples the field and change which surfaces or noise appear in the recorded points." data-help-label="Sensor details, noise and ground">Sensor details, noise and ground <span id="scanPreset"></span></summary>
 <div class="sensorFacts">
 <p class="hint" id="sensorInfo"></p>
-<p class="hint" id="resolutionInfo" data-help-label="Sampling resolution" data-help="For a reference grid, spacing is the approximate width of a sample cell across this 10 m plot. Other layouts report the maximum number of ray positions."></p>
 </div>
 <div class="detailFields">
 <label>Scan noise<select form="grow" id="noise" data-help="Clean keeps the layout’s normal sampling pattern. Rough adds effects such as scattered points and gaps. Seeded variation repeats the same noise settings for the same field seed."><option value="seeded">Seeded variation</option><option value="clean">Clean returns</option><option value="rough">Jitter, gaps and stray returns</option></select></label>
@@ -266,6 +266,6 @@
 </main>
 <footer class="siteFoot"><span>Created by Matthew Valancy</span>
 <div><a href="AGENTS.md" data-help="Find instructions for running reproducible experiments from the browser or command line.">Agent quickstart</a><a href="#missions" data-help="Jump to the stamps earned in this browser and the experiments that unlock them.">Farm journal</a><a href="LICENSE" data-help="Read the MIT terms for reusing and modifying the app.">MIT license</a></div><small class="contextHint"><span class="hoverHint">Hover or focus a button or score for help.</span><span class="touchHint">Tap a score or hold a button for help. A quick tap runs the action.</span></small></footer>
-<script type="module" src="app/farm.js?v=scan-workspace3"></script>
+<script type="module" src="app/farm.js?v=scan-workspace4"></script>
 </body>
 </html>

@@ -88,12 +88,14 @@ function showResolution() {
   const budgetLabel = budget ? budget.toLocaleString()+' rays requested' : 'seeded ray budget';
   $('scanPreset').textContent = $('scan').selectedOptions[0].textContent+' · '+budgetLabel;
   $('sensorInfo').textContent = sensorDetails(sensor.key);
-  let detail = 'Layout limit: '+capacity.toLocaleString()+' rays per scan.';
+  let detail = 'The seed sets the ray budget. This layout has up to '+capacity.toLocaleString()+' sample positions.';
   if (budget && sensor.key === 'reference') {
     const pitch = 1000 / Math.ceil(Math.sqrt(sampled));
     detail = 'Grid cells are about '+Number(pitch.toFixed(2))+' cm wide across the 10 m plot, with one ray per sampled cell.';
   } else if (budget > capacity) {
-    detail += ' This budget fills the layout. Choose Reference for a denser grid.';
+    detail = 'This layout samples '+capacity.toLocaleString()+' of the '+budget.toLocaleString()+' requested rays. Reference can use the full budget.';
+  } else if (budget) {
+    detail = 'This scan uses '+sampled.toLocaleString()+' of the layout’s '+capacity.toLocaleString()+' sample positions.';
   }
   $('resolutionInfo').textContent = detail;
 }

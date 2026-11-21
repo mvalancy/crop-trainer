@@ -35,6 +35,7 @@
 #grow fieldset legend { grid-column: 1 / -1; }
 #grow .growActions { display: flex; }
 #grow .advancedJump { margin-block: -.35rem; }
+#grow #resolutionInfo { grid-column: 1 / -1; margin: .2rem 0 0; }
 #generationStatus { margin: 0; font-size: .88rem; }
 #field .viewOptions {
   grid-area: tools;
@@ -108,7 +109,7 @@
     border-radius: .85rem 0 0 0;
   }
   #field .lab > #scan-settings { border-left: 1px solid var(--line); border-radius: 0 .85rem 0 0; }
-  .lab .viewer:not(.viewExpanded) { flex: 1; min-height: clamp(19rem, 43vh, 31rem); }
+  .lab .viewer:not(.viewExpanded) { flex: 1; min-height: clamp(19rem, 42vh, 25rem); }
   .lab .viewer:not(.viewExpanded) #map { position: absolute; inset: 0; height: 100%; }
   #grow { grid-template-columns: 1fr; }
   #field .scanSummary { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); }

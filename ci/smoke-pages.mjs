@@ -280,6 +280,7 @@ try {
   await page.locator('#seed').fill('4294967295');
   await page.locator('#scan').selectOption('os1-128');
   await page.locator('#budget').selectOption('1000000');
+  assert.match(await page.locator('#grow #resolutionInfo').innerText(), /262,144 of the 1,000,000 requested rays/);
   const clipped=await page.locator('#grow select, #grow input[type=number]').evaluateAll(controls=>{
     const textMeasure=document.createElement('canvas').getContext('2d');
     return controls.filter(control=>{
