@@ -1,0 +1,232 @@
+import {initFieldFilm} from './field-film.js';
+// Keep each instrument's DOM, files, canvas and running worker alive while readers switch activities.
+const root = new URL('../', import.meta.url);
+const tasks = {
+  learn:{title:'Field lessons', tool:'field', path:'', steps:{film:['Field film','fieldFilm'],lessons:['Practice','guide'],journal:['Journal','missions']}},
+  scan:{title:'Field generator', tool:'field', path:'', steps:{generate:['Generate','field'],recipe:['Plant & scanner','advanced-scan'],study:['Compare scans','scan-study']}},
+  train:{title:'Training shed', tool:'trainer', path:'trainer/', steps:{fit:['Fit & monitor','controls'],model:['Model','detector'],settings:['Settings','settingsTitle'],results:['Results','resultsTitle']}},
+  compare:{title:'Detector benchmark', tool:'benchmark', path:'benchmark/', steps:{experiment:['Experiment','benchForm'],presets:['Presets','benchExamples'],'compare-results':['Results','benchResults']}},
+  test:{title:'Field test', tool:'trainer', path:'trainer/', steps:{test:['Test a plot','field-test']}},
+  docs:{title:'Illustrated field guide', tool:'docs', path:'guide/', steps:{docs:['Chapters','']}}
+};
+const paths = {
+  learn:'M3 4q5-2 9 1 4-3 9-1v14q-5-2-9 1-4-3-9-1z M12 5v14',
+  scan:'M8 3H3v5m13-5h5v5M3 16v5h5m8 0h5v-5 M7 12h10m-5-5v10',
+  train:'M4 7l8 5-8 5m8-5 8-5m-8 5 8 5 M4 5v4m0 6v4m8-9v4m8-9v4m0 6v4',
+  compare:'M3 20h18M5 17v-6h3v6zm6 0V4h3v13zm6 0V8h3v9z',
+  test:'M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0z M9 10l2 2 4-5',
+  docs:'M5 3h10l4 4v14H5z M14 3v5h5M8 12h8m-8 4h6'
+};
+const panes = new Map(), remembered = new Map();
+const paneHost = document.querySelector('#panes');
+let active;
+const firstStep = view => Object.keys(tasks[view].steps)[0];
+
+function address(view, step = firstStep(view)) {
+  const previous = panes.get(tasks[view].tool)?.url;
+  const url = new URL(tasks[view].path,root);
+  if (previous && tasks[view].tool !== 'docs') url.search = previous.search;
+  url.hash = tasks[view].steps[step][1];
+  return {view,step,url};
+}
+
+function shellURL(route) {
+  const url = new URL('studio/',root);
+  url.searchParams.set('view',route.view);
+  if (route.step !== firstStep(route.view)) url.searchParams.set('step',route.step);
+  const destination = route.url.href.slice(root.href.length);
+  if (destination !== tasks[route.view].path + (tasks[route.view].steps[route.step][1] ? '#' + tasks[route.view].steps[route.step][1] : '')) {
+    url.searchParams.set('open',destination);
+  }
+  return url;
+}
+
+function toolFor(url) {
+  if (!url.href.startsWith(root.href)) return;
+  const path = url.pathname.slice(root.pathname.length);
+  if (path === '' || path === 'index.html') return 'field';
+  if (/^trainer\/(index\.html)?$/.test(path)) return 'trainer';
+  if (/^benchmark\/(index\.html)?$/.test(path)) return 'benchmark';
+  if (/^guide\/(?:[\w/-]+\.html)?$/.test(path)) return 'docs';
+}
+
+function readAddress() {
+  const params = new URLSearchParams(location.search);
+  const view = Object.hasOwn(tasks,params.get('view')) ? params.get('view') : 'learn';
+  const step = Object.hasOwn(tasks[view].steps,params.get('step')) ? params.get('step') : firstStep(view);
+  const route = address(view,step);
+  // A copied or restored address is independent of the current instrument's recipe.
+  route.url.search = '';
+  if (params.has('open')) {
+    try {
+      const url = new URL(params.get('open'),root);
+      if (toolFor(url) === tasks[view].tool) route.url = url;
+    } catch { /* Fall back to the task's entry point for malformed bookmarks. */ }
+  }
+  return route;
+}
+
+function classify(url, doc) {
+  const tool = toolFor(url);
+  if (!tool) return;
+  const id = url.hash.slice(1);
+  const target = doc?.getElementById(id);
+  const within = selector => target?.closest(selector);
+  let view,step;
+  if (tool === 'field') {
+    view = ['guide','learnWeight','placePin','sampleRow','missions'].includes(id) || within('#guide,#missions') || (!id && !url.search) ? 'learn' : 'scan';
+    if (view === 'learn') step = id === 'missions' || within('#missions') ? 'journal' : 'lessons';
+    else step = id === 'scan-study' || within('#scan-study,.samplingGuide') ? 'study' :
+      id === 'advanced-scan' || within('#advanced-scan') ? 'recipe' : 'generate';
+  } else if (tool === 'trainer') {
+    view = id === 'field-test' || within('#field-test') || (!id && url.searchParams.has('fieldExample')) ? 'test' : 'train';
+    if (view === 'train') step = within('#detector') || id === 'detector' ? 'model' :
+      within('.advancedPanel') || id === 'settingsTitle' ? 'settings' :
+      within('#runReview') || id === 'resultsTitle' ? 'results' : 'fit';
+  } else if (tool === 'benchmark') {
+    view = 'compare';
+    step = within('#benchExamples') || id === 'benchExamples' ? 'presets' : within('#benchResults') || id === 'benchResults' ? 'compare-results' : 'experiment';
+  } else view = 'docs';
+  return {view,step:step || firstStep(view),url};
+}
+
+function showFrame(pane) {
+  const doc = pane.frame.contentDocument;
+  if (!doc || !active || tasks[active.view].tool !== pane.tool || !pane.ready) return;
+  const {view,step,url} = active;
+  doc.documentElement.dataset.activity = view;
+  doc.documentElement.dataset.step = step;
+  pane.frame.title = tasks[view].title;
+  const win = pane.frame.contentWindow;
+  if (win.location.href !== url.href) {
+    const oldURL = win.location.href;
+    win.history.replaceState(null,'',url);
+    win.dispatchEvent(new win.HashChangeEvent('hashchange',{oldURL,newURL:url.href}));
+  }
+  if (view === 'learn' && ['sampleRow','placePin','learnWeight'].includes(url.hash.slice(1))) {
+    doc.getElementById({sampleRow:'rowTab',placePin:'pinTab',learnWeight:'fitTab'}[url.hash.slice(1)]).click();
+  }
+  const disclosures = {recipe:['anatomySettings','sensorSettings','obstacleSettings'], study:['scan-study'], model:['modelOptions'],settings:['fitOptions','datasetOptions','scanOptions','detectorOptions'],presets:['benchExamples']};
+  for (const id of disclosures[step] || []) doc.getElementById(id).open = true;
+  const target = doc.getElementById(url.hash.slice(1));
+  if (target && url.hash.slice(1) !== tasks[view].steps[step][1]) {
+    for (let el=target;el;el=el.parentElement) if (el.tagName==='DETAILS') el.open=true;
+    target.scrollIntoView({behavior:'instant',block:'start'});
+  } else win.scrollTo({top:0,behavior:'instant'});
+}
+
+function mount(tool) {
+  const frame = document.createElement('iframe');
+  frame.className = 'studioFrame'; frame.allowFullscreen = true;
+  const pane = {tool,frame,ready:false,url:null};
+  panes.set(tool,pane);
+  frame.addEventListener('load',() => {
+    const doc=frame.contentDocument;
+    if (!doc || !toolFor(new URL(doc.URL))) return;
+    const css=doc.createElement('link');
+    css.rel='stylesheet'; css.href=new URL('app/studio-frame.css',root);
+    doc.head.append(css);
+    if (tool==='trainer') {
+      const empty=doc.createElement('section');
+      empty.className='panel resultEmpty';
+      empty.innerHTML='<img src="../art/scan-learn-find.svg" alt="A field scan becomes measurements, then plant predictions."><h2>Score a fresh planting</h2><p>Fit a detector to see its matches, extra pins and missed plants here.</p><a href="#controls">Set up a training run</a>';
+      const review=doc.querySelector('#runReview');
+      review.after(empty);
+      const update=() => {
+        if (empty.hidden!==!review.hidden) empty.hidden=!review.hidden;
+        const running=!doc.getElementById('cancel').disabled;
+        const indicator=document.querySelector('[data-view=train] .runIndicator');
+        indicator.hidden=!running; indicator.textContent=running?'Running':'';
+      };
+      new MutationObserver(update).observe(doc.querySelector('#main'),{subtree:true,attributes:true,attributeFilter:['hidden','disabled']});
+      update();
+    }
+    doc.addEventListener('click',event => {
+      const link=event.target.closest?.('a[href]');
+      if (!link || event.defaultPrevented || event.button || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || link.hasAttribute('download') || link.target==='_blank') return;
+      const url=new URL(link.href);
+      const next=classify(url, url.pathname===doc.location.pathname ? doc : null);
+      if (next) {event.preventDefault();navigate(next);}
+      else if (['https:','http:'].includes(url.protocol)) {link.target='_blank';link.rel='noopener';}
+    });
+    doc.addEventListener('invalid',event=>{
+      if (doc.documentElement.dataset.activity==='test' || !event.target.id) return;
+      const url=new URL(doc.URL);url.hash=event.target.id;
+      const route=classify(url,doc);
+      if (route && route.step!==active.step) navigate(route);
+    },true);
+    if (tool==='field') doc.getElementById('grow').addEventListener('submit',()=>{
+      if (active.view==='scan' && active.step==='recipe') navigate(address('scan','generate'));
+    });
+    pane.ready=true;
+    // Resolve deep anchors against the actual document after a cross-tool replay.
+    if (active && tasks[active.view].tool===tool && active.url.hash && doc.getElementById(active.url.hash.slice(1))) {
+      const resolved=classify(active.url,doc);
+      if (resolved.step!==active.step || resolved.view!==active.view) {navigate(resolved,'replace');return;}
+    }
+    showFrame(pane);
+  });
+  paneHost.append(frame);
+  return pane;
+}
+
+function navigate(route,historyMode='push') {
+  const {view,step,url}=route;
+  const config=tasks[view];
+  const isFilm = view==='learn' && step==='film';
+  const pane=isFilm ? null : panes.get(config.tool) || mount(config.tool);
+  document.getElementById('film').hidden=!isFilm;
+  if (!isFilm) pauseFilm();
+  active=route;
+  remembered.set(view,route);
+  if (historyMode!=='restore' && shellURL(route).href!==location.href) {
+    history[historyMode==='replace'?'replaceState':'pushState'](null,'',shellURL(route));
+  }
+  for (const item of panes.values()) item.frame.hidden=item!==pane;
+  for (const link of document.querySelectorAll('#activities a')) {
+    if (link.dataset.view===view) link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');
+  }
+  document.title=config.title+' · Crop Trainer';
+  document.getElementById('activityTitle').textContent=config.title;
+  const steps=document.getElementById('steps');
+  steps.replaceChildren();
+  for (const [key,[label]] of Object.entries(config.steps)) {
+    if (Object.keys(config.steps).length===1) break;
+    const link=document.createElement('a');link.textContent=label;link.dataset.step=key;
+    const target=new URL(url);target.hash=config.steps[key][1];
+    link.href=shellURL({view,step:key,url:target});
+    if (step===key) link.setAttribute('aria-current','location');
+    steps.append(link);
+  }
+  if (isFilm) return;
+  const reload=!pane.url || pane.url.pathname!==url.pathname || pane.url.search!==url.search;
+  pane.url=new URL(url);
+  if (reload) {pane.ready=false;pane.frame.contentWindow.location.replace(url.href);}
+  else showFrame(pane);
+}
+for (const link of document.querySelectorAll('#activities a')) {
+  const view=link.dataset.view;
+  link.querySelector('span').innerHTML='<svg viewBox="0 0 24 24"><path d="'+paths[view]+'"/></svg>';
+  if (view==='train') {
+    const status=document.createElement('small');status.className='runIndicator';status.hidden=true;link.append(status);
+  }
+}
+document.addEventListener('click',event=>{
+  const link=event.target.closest('a[data-view],a[data-step]');
+  if (!link || event.button || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+  event.preventDefault();
+  if (link.dataset.step) navigate(address(active.view,link.dataset.step));
+  else {
+    const view=link.dataset.view;
+    const route=remembered.get(view) || address(view);
+    // Learn and Scan share a planting. Train and Field test share the current fit.
+    if (view!=='docs' && panes.get(tasks[view].tool)?.url) route.url.search=panes.get(tasks[view].tool).url.search;
+    navigate(route);
+  }
+  document.getElementById('desk').focus({preventScroll:true});
+});
+window.addEventListener('popstate',()=>navigate(readAddress(),'restore'));
+const pauseFilm=initFieldFilm(id=>{
+  const route=address('learn','lessons');route.url.hash=id;navigate(route);
+});
+navigate(readAddress(),'restore');

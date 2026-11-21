@@ -1,5 +1,5 @@
 // The local server and Pages build expose the same static app and reading material.
-const entryFiles = new Set(['index.html', 'README.md', 'AGENTS.md', 'LICENSE', '.nojekyll', 'art/crop-mark-32.png', 'art/crop-touch.png']);
+const entryFiles = new Set(['studio/index.html', 'index.html', 'README.md', 'AGENTS.md', 'LICENSE', '.nojekyll', 'art/crop-mark-32.png', 'art/crop-touch.png']);
 // Only these generated tutorial files are included in public builds.
 for (const name of ['c0545a3786c57a89.ply', 'weights.json', 'centers.csv', 'labels.json', 'settings.json', 'tomato-40.json', 'tomato-640.json', 'tomato-weed-random.json', 'tomato-weed-hard.json', 'README.md']) {
   entryFiles.add('trainer/field-test/example/' + name);

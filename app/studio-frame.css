@@ -1,0 +1,40 @@
+/* Each live instrument owns its forms and workers. The parent owns the navigation and viewport. */
+html[data-activity] {scroll-behavior:auto;}
+[data-activity] :is(.siteBar,.siteFoot,body>.skip,.hero,.pageIntro) {display:none;}
+[data-activity] main {width:min(calc(100% - clamp(1.4rem,5vw,5rem)),90rem);margin:0 auto;padding-block:clamp(.85rem,2vw,1.8rem);}
+[data-activity] main > section {margin-top:0;}
+[data-activity] :is(.sectionHead,.journalHead) {margin-top:0;}
+[data-activity] :is(.panel,.plot,.setupPanel,.monitorPanel,.advancedPanel,.modelCard,.benchContext) {box-shadow:none;}
+[data-activity=learn] #field,[data-activity=scan] :is(#guide,#missions),
+[data-activity=learn]:not([data-step=journal]) #missions,[data-step=journal] #guide {display:none;}
+[data-step=lessons] #guide .sectionHead {position:relative;isolation:isolate;overflow:hidden;display:block;padding:clamp(1.2rem,3.6vw,3.4rem);border-radius:.75rem;background:#18382b;color:#fff9df;}
+[data-step=lessons] #guide .sectionHead::before {content:"";position:absolute;z-index:-1;inset:0 0 0 42%;background:linear-gradient(90deg,#18382b,transparent 58%),url(../art/lettuce-study.webp) 52% 48%/cover;}
+[data-step=lessons] #guide .sectionHead h2 {font:500 clamp(2.15rem,5vw,4.5rem)/1.02 var(--serif);letter-spacing:-.04em;max-width:11ch;}
+[data-step=lessons] #guide .sectionHead p {max-width:min(58%,36ch);color:#e3eddb;margin-top:.7rem;}
+[data-step=lessons] .fieldGuide {margin-top:1rem;}
+[data-activity=scan] #field>.sectionHead {display:none;}
+[data-activity=scan]:not([data-step=generate]) #field>:is(.lab,.scanSummary),
+[data-activity=scan]:not([data-step=recipe]) #advanced-scan,
+[data-activity=scan]:not([data-step=study]) #field>:is(#scan-study,.samplingGuide){display:none;}
+[data-activity=train] #field-test,[data-activity=test] #main>:not(#field-test) {display:none;}
+[data-activity=train]:not([data-step=fit]) #controls>:is(.setupPanel,.monitorPanel),
+[data-activity=train]:not([data-step=model]) #detector,
+[data-activity=train]:not([data-step=settings]) #controls>.advancedPanel,
+[data-activity=train]:not([data-step=results]) #runReview {display:none;}
+[data-step=model] #controls,[data-step=settings] #controls {display:block;}
+[data-step=fit] #controls {grid-template-areas:none;grid-template-columns: minmax(17rem,.8fr) minmax(0,1.2fr);}
+[data-step=fit] #controls>:is(.setupPanel,.monitorPanel) {grid-area:auto;}
+[data-step=results] #controls {display:none;}
+[data-step=results] .resultEmpty {margin:1rem auto;max-width:44rem;}
+[data-step=results] .resultEmpty img {width:100%;max-height:14rem;}
+[data-activity=compare]:not([data-step=presets]) #benchExamples,[data-step=presets] .benchSetup>:not(.benchContext),
+[data-step=presets] .benchContext>:not(#benchExamples),[data-step=presets] :is(#benchWatch,#benchResults),
+[data-step=compare-results] .benchSetup {display:none;}
+[data-step=presets] :is(.benchSetup,.benchContext) {display:block;background:var(--surface);color:var(--ink);}
+[data-step=presets] #experiments a {color:var(--forest);}
+@media(max-width:760px){
+ [data-step=fit] #controls {grid-template-columns:minmax(0,1fr);}
+ [data-step=lessons] #guide .sectionHead {padding:1.2rem;}
+ [data-step=lessons] #guide .sectionHead p {font-size:.92rem;}
+}
+[data-activity]:not([data-step=results]) .resultEmpty {display:none;}

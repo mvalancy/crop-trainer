@@ -141,6 +141,42 @@ try {
     console.log('The rendered tree followed left and right drags and retained its vertical tilt direction.');
   }
 
+  // The studio owns navigation and preserves each active instrument across task switches.
+  await page.goto(new URL('studio/',base).href);
+  const activities=page.getByRole('navigation',{name:'Studio activities'});
+  const sections=page.getByRole('navigation',{name:'Activity sections'});
+  await page.getByRole('button',{name:'Play story'}).click();
+  await page.getByRole('button',{name:'Pause story'}).click();
+  await page.getByRole('button',{name:'Prediction',exact:true}).click();
+  await page.getByRole('link',{name:'Try one model update'}).click();
+  const instrument=()=>page.frameLocator('iframe:not([hidden])');
+  await instrument().locator('#oneUpdate').click();
+  await instrument().locator('#practiceScore').filter({hasText:'0.62'}).waitFor();
+  await activities.getByRole('link',{name:'Scan',exact:true}).click();
+  await instrument().locator('#seed').fill('49');
+  await sections.getByRole('link',{name:'Plant & scanner'}).click();
+  await instrument().locator('#noise').selectOption('clean');
+  await sections.getByRole('link',{name:'Generate'}).click();
+  assert.equal(await instrument().locator('#seed').inputValue(),'49');
+  await activities.getByRole('link',{name:'Train',exact:true}).click();
+  await sections.getByRole('link',{name:'Model',exact:true}).click();
+  await instrument().locator('#architecture').selectOption('linear');
+  await activities.getByRole('link',{name:'Field test'}).click();
+  await instrument().locator('#fieldTestForm').waitFor({state:'visible'});
+  await page.goBack();
+  assert.equal(await instrument().locator('#architecture').inputValue(),'linear');
+  await sections.getByRole('link',{name:'Results',exact:true}).click();
+  await instrument().getByText('Score a fresh planting',{exact:true}).waitFor();
+  await activities.getByRole('link',{name:'Learn',exact:true}).click();
+  assert.equal(await instrument().locator('#practiceScore').textContent(),'0.62');
+  for (const width of [320,1366]) {
+    await page.setViewportSize({width,height:800});
+    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+    assert.ok(await activities.getByRole('link',{name:'Docs'}).isVisible());
+  }
+  await page.setViewportSize({width:390,height:844});
+  console.log('The film entered a live lesson, and the studio preserved a scan, model choice and lesson across tasks and browser Back.');
+
   // Follow a real lesson at the Pages subpath and keep the reader's palette across workspaces.
   await page.emulateMedia({colorScheme:'dark'});
   await open('?budget=12000');

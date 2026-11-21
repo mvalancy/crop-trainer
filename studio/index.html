@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Learning studio · Crop Trainer</title>
+<link rel="icon" href="../art/crop-mark.svg"><script src="../app/theme.js"></script>
+<link rel="stylesheet" href="../app/farm.css"><link rel="stylesheet" href="../app/theme.css"><link rel="stylesheet" href="../app/studio.css">
+<script type="module" src="../app/studio.js"></script>
+</head>
+<body class="studio">
+<a class="skip" href="#desk">Skip to activity</a>
+<header class="studioBar barInner"><a href="?view=learn" class="brand"><img src="../art/crop-mark.svg" alt="" width="32" height="32">Crop Trainer</a><span class="studioName">Learning studio</span><a class="repoLink" href="https://github.com/mvalancy/crop-trainer/tree/dev">GitHub</a></header>
+<nav id="activities" aria-label="Studio activities">
+<a href="?view=learn" data-view="learn"><span aria-hidden="true">⌁</span>Learn</a>
+<a href="?view=scan" data-view="scan"><span aria-hidden="true">⌖</span>Scan</a>
+<a href="?view=train" data-view="train"><span aria-hidden="true">⛓</span>Train</a>
+<a href="?view=compare" data-view="compare"><span aria-hidden="true">≍</span>Compare</a>
+<a href="?view=test" data-view="test"><span aria-hidden="true">◎</span>Field test</a>
+<a href="?view=docs" data-view="docs"><span aria-hidden="true">▤</span>Docs</a>
+</nav>
+<main id="desk" tabindex="-1"><header class="deskHead"><h1 id="activityTitle">Field lessons</h1><nav id="steps" aria-label="Activity sections"></nav></header><div id="panes"><section id="film" aria-label="Follow one lettuce" data-shot="0">
+<div class="filmScreen"><svg class="filmArt" viewBox="0 0 600 400" preserveAspectRatio="xMidYMid slice" role="img" aria-labelledby="sceneDescription"><title id="sceneDescription">Light meets the leaves of a butterhead lettuce in a field at dusk.</title>
+<defs><linearGradient id="filmShade"><stop stop-color="#081713" stop-opacity=".94"/><stop offset=".45" stop-color="#081713" stop-opacity=".66"/><stop offset=".77" stop-color="#081713" stop-opacity="0"/></linearGradient>
+<radialGradient id="scanGlow"><stop stop-color="#315c4d"/><stop offset="1" stop-color="#0d2626"/></radialGradient>
+<pattern id="filmGrid" width="22" height="22" patternUnits="userSpaceOnUse"><path d="M22 0H0V22" fill="none" stroke="#91b7a8" stroke-opacity=".18"/></pattern></defs>
+<g class="shot shotField"><image href="../art/lettuce-at-dusk.webp" width="600" height="400"/>
+<g stroke="#ceefb6" stroke-width="1.1" class="leafRays"><path d="M366 0v158M405 0v136M454 0v117M505 0v120"/><g fill="#e9ffb8"><circle cx="366" cy="158" r="3"/><circle cx="405" cy="136" r="3"/><circle cx="454" cy="117" r="3"/><circle cx="505" cy="120" r="3"/></g></g></g>
+<g class="shot shotCloud"><rect width="600" height="400" fill="url(#scanGlow)"/><rect width="600" height="400" fill="url(#filmGrid)"/><g id="filmReturns"></g>
+<g transform="translate(430 196)" fill="none" stroke="#f3ce76" stroke-width="1.6"><circle class="pinHalo" r="29"/><path d="M-9 0H9M0 -9V9"/></g></g>
+<g class="shot shotHeight"><rect width="600" height="400" fill="#143630"/><rect width="600" height="400" fill="url(#filmGrid)"/>
+<svg x="284" y="90" width="302" height="202" viewBox="0 0 400 188"><image href="../art/height-clues.svg" width="400" height="188"/></svg>
+<path class="heightLine" d="M311 166H560" stroke="#f1cf79" stroke-width="2" stroke-dasharray="5 4"/></g>
+<rect width="600" height="400" fill="url(#filmShade)" class="filmShade"/></svg>
+<div class="filmCaption" aria-live="polite"><p class="filmSeries">Follow one lettuce</p><h2 id="shotTitle">Where does the light land?</h2><p id="shotText">A laser samples the first surface it meets. Trace a ray down to the edge of a leaf.</p><a id="tryShot" class="primary" href="?view=learn&amp;step=lessons">Try scanning a row</a></div></div>
+<div class="filmControls"><button type="button" id="playFilm">Play story</button><div class="shotList" role="group" aria-label="Choose a scene"><button data-shot-index="0" aria-pressed="true">Leaf</button><button data-shot-index="1" aria-pressed="false">Returns</button><button data-shot-index="2" aria-pressed="false">Prediction</button></div></div>
+</section></div>
+<noscript><a href="../#guide">Open the field lessons</a></noscript></main>
+</body></html>
