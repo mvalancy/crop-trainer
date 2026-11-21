@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {buildDataset,validateModel,matchedCount,compareMatchedBoxes,coverageAtDistance,nearbyPeaks} from '../trainer/data.js';
+import {buildDataset,rescanValidation,validateModel,matchedCount,compareMatchedBoxes,coverageAtDistance,nearbyPeaks} from '../trainer/data.js';
 import {trainNetworkCPU,predictNetwork} from '../trainer/neural.js';
 import {trainCPU} from '../trainer/model.js';
 
@@ -65,6 +65,19 @@ test('changing only the validation scanner preserves training samples and held-o
   const settings = {crop:'tomato', seed:211, trainFields:2, valFields:1, sensorMode:'mixed'};
   const original = await buildDataset(settings);
   const ring = await buildDataset({...settings, validationSensorMode:'os1-64'});
+  const {field} = await import('../trainer/field.js');
+  const rescannedSeeds = [];
+  const alternate = await rescanValidation(original, 'os1-64', {generate:recipe=>{
+    rescannedSeeds.push(recipe.seed);
+    return field(recipe);
+  }});
+  assert.deepEqual(rescannedSeeds, original.validation.map(tile=>tile.seed));
+  assert.deepEqual(alternate.validation,ring.validation);
+  assert.deepEqual(alternate.manifest,ring.manifest);
+  assert.deepEqual(alternate.stats,ring.stats);
+  assert.equal(alternate.X,original.X);
+  assert.equal(alternate.Y,original.Y);
+  assert.equal(alternate.scaling,original.scaling);
   assert.equal(original.stats.validationSensorMode, 'mixed');
   assert.equal(ring.stats.validationSensorMode, 'os1-64');
   assert.deepEqual(ring.X, original.X);

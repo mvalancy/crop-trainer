@@ -2,7 +2,7 @@ import {benchmarkView} from './watch.js';
 import {scanSession} from '../trainer/scan-session.js?v=plants3';
 import {setupPlantControls, plantSettings} from '../trainer/plant-version.js?v=plants3';
 import {CLASSIC_TRAINING_PAIR, TRAINING_RAY_PAIRS, DENSITY_HISTORY_KEY, HEIGHT_HISTORY_KEY, densitySnapshot, pairDensityScores} from './density.js?v=raypairs1';
-import {buildDataset, validateModel, compareMatchedBoxes, coverageAtDistance, PEAK_HEIGHTS} from '../trainer/data.js?v=plants3';
+import {buildDataset, rescanValidation, validateModel, compareMatchedBoxes, coverageAtDistance, PEAK_HEIGHTS} from '../trainer/data.js?v=layouts1';
 import {trainNetworkCPU, trainNetworkGPU, predictNetwork} from '../trainer/neural.js';
 import {trainCPU, MAX_EPOCHS} from '../trainer/model.js';
 import {cropProfile} from '../trainer/crops.js?v=systems1';
@@ -10,9 +10,10 @@ import {sensorOptions, validationSensorOptions, rayBudgetOptions, trainingRayOpt
 
 const $ = id => document.getElementById(id);
 const formatTime = ms => ms < 100 ? ms.toFixed(1)+' ms' : (ms/1000).toFixed(2)+' s';
+const layoutNames = new Map([['reference','Reference grid'],['os1-64','OS1-64 rings']]);
 const watch=benchmarkView($('benchWatch'));
 $('watchCancel').onclick=()=>controller?.abort();
-let controller, report, gpuAvailable = false;
+let controller, report, gpuState = 'checking', showingSetup = true;
 sensorOptions($('sensor'), true);
 validationSensorOptions($('validationSensor'));
 const requested = new URLSearchParams(location.search);
@@ -55,6 +56,13 @@ const readPlantControls = setupPlantControls($('crop'), $('plantArchitecture'), 
   requested, replayKeys.some(key => requested.has(key)) ? 1 : 3);
 trainingRayOptions($('trainingRayBudget'), requested.get('trainingRayBudget'));
 rayBudgetOptions($('validationRayBudget'), requested.get('validationRayBudget'));
+const layoutBudget = $('layoutBudget');
+const sharedBudget = requested.get('validationRayBudget');
+if ([...layoutBudget.options].some(option => option.value === sharedBudget)) layoutBudget.value = sharedBudget;
+else if (requested.get('comparison') === 'layouts' && requested.has('validationRayBudget')) {
+  layoutBudget.prepend(new Option('Choose a shared budget up to 60,000', ''));
+  layoutBudget.value = '';
+}
 const requestedSeed = requested.get('seed');
 if (/^\d+$/.test(requestedSeed) && Number(requestedSeed) <= Number($('seed').max)) {
   $('seed').value = String(Number(requestedSeed));
@@ -64,19 +72,36 @@ $('fitEpochs').max = MAX_EPOCHS;
 if (/^\d+$/.test(requestedEpochs) && Number(requestedEpochs) >= 1 && Number(requestedEpochs) <= MAX_EPOCHS) {
   $('fitEpochs').value = Number(requestedEpochs);
 }
-try { gpuAvailable = Boolean(await navigator.gpu?.requestAdapter()); } catch {}
-if (!gpuAvailable) {
-  const gpuOption = $('comparison').querySelector('[value="backend"]');
-  gpuOption.disabled = true;
-  gpuOption.textContent = 'CPU vs WebGPU · unavailable in this browser';
-  if ($('comparison').value === 'backend') $('comparison').value = 'models';
+const gpuOption = $('comparison').querySelector('[value="backend"]');
+const gpuQuestion = gpuOption.textContent;
+gpuOption.disabled = true;
+gpuOption.textContent = 'CPU vs WebGPU · checking adapter';
+function showReadyState() {
+  showingSetup = true;
+  const needsGpu = $('comparison').value === 'backend';
+  $('run').disabled = needsGpu && gpuState !== 'available';
+  if (gpuState === 'checking') $('status').textContent = needsGpu
+    ? 'Checking WebGPU for this comparison. You can run a CPU question now.'
+    : 'Ready to run on CPU. Checking WebGPU for the speed comparison.';
+  else if (gpuState === 'unavailable') $('status').textContent = needsGpu
+    ? 'This browser did not provide a WebGPU adapter. Choose a CPU question to run a benchmark.'
+    : 'Ready to run on CPU. This browser did not provide a WebGPU adapter.';
+  else $('status').textContent = 'Ready to run. CPU and WebGPU are available.';
 }
-const readyMessage = gpuAvailable ? 'Ready to run. CPU and WebGPU are available.' : 'Ready to run on CPU. This browser did not provide a WebGPU adapter.';
-$('status').textContent = readyMessage;
-if (!gpuAvailable && requested.get('comparison') === 'backend') {
-  $('status').textContent = 'This link requests CPU vs WebGPU. Your browser did not provide a GPU adapter. Run benchmark will compare logistic and neural models on CPU.';
+async function discoverGpu() {
+  let adapter;
+  try { adapter = await navigator.gpu?.requestAdapter(); } catch {}
+  gpuState = adapter ? 'available' : 'unavailable';
+  gpuOption.disabled = !adapter;
+  gpuOption.textContent = adapter ? gpuQuestion : 'CPU vs WebGPU · unavailable in this browser';
+  // A slow discovery must not interrupt a run or replace its result.
+  if (showingSetup) showReadyState();
 }
 function explainComparison() {
+  const compareLayouts = $('comparison').value === 'layouts';
+  $('validationLayoutControl').hidden = $('validationBudgetControl').hidden = compareLayouts;
+  $('validationSensor').disabled = $('validationRayBudget').disabled = compareLayouts;
+  $('layoutBudgetControl').hidden = layoutBudget.disabled = !compareLayouts;
   const compareHeights = $('comparison').value === 'heights';
   $('heightControl').hidden = compareHeights;
   $('minimumHeight').disabled = compareHeights;
@@ -99,6 +124,7 @@ function explainComparison() {
     density: budgets ? 'Grow each training field twice, using '+budgets[0].toLocaleString()+' and '+budgets[1].toLocaleString()+' rays. Test both detectors on the same fresh fields.'
       : 'Choose two training ray budgets in the scan settings to begin.',
     epochs: 'An epoch is one pass over the training examples. Fit the same CPU neural model from identical starting weights for 10, 40 and 100 epochs. Compare training loss with F1 on unseen fields.',
+    layouts: 'Fit one CPU neural network per seed. Scan each fresh planting in a grid and again with simulated OS1-64 rings. Both layouts sample the same number of rays. See how the pattern changes the pins.',
     cutoffs: 'Train one neural network per seed. Set the minimum score for placing a pin to 0.35, 0.50 or 0.65. Check how many extra plants and stray pins each cutoff picks up.',
     models: 'A logistic model weights each scan feature directly. A neural network learns combinations of features. Both train on your CPU. Compare their pins on the same fresh scans.',
     backend: 'Train the same neural network on CPU and WebGPU. Compare fitting times alongside scores. Both runs generate fields and score plant centers on the CPU.'
@@ -108,10 +134,11 @@ function explainComparison() {
 trainingPair.addEventListener('change', explainComparison);
 $('comparison').addEventListener('change', () => {
   explainComparison();
-  $('status').textContent = readyMessage;
+  showReadyState();
 });
 explainComparison();
-$('run').disabled = false;
+showReadyState();
+discoverGpu();
 $('cancel').onclick = () => controller?.abort();
 $('export').onclick = () => {
   if (!report) return;
@@ -123,6 +150,7 @@ $('export').onclick = () => {
 function contenderLabel(row, comparison) {
   if (comparison === 'heights') return (100 * row.minimumHeight).toFixed(1)+' cm peaks';
   if (comparison === 'density') return row.trainingRayBudget === ALTERNATING_BUDGET ? 'Alternating 12k / 60k' : row.trainingRayBudget.toLocaleString()+' training rays';
+  if (comparison === 'layouts') return layoutNames.get(row.validationSensorMode);
   if (comparison === 'epochs') return row.epochs+' epochs';
   if (comparison === 'cutoffs') return 'Cutoff '+row.threshold;
   if (comparison === 'models') return row.model === 'linear' ? 'Logistic' : 'Neural';
@@ -178,6 +206,7 @@ function showOutcome(rows, comparison, crop) {
   const scans = firstRuns.reduce((n, row) => n + row.tiles.length, 0);
   const seeds = firstRuns.map(row => row.seed).join(' and ');
   guide.textContent = 'Mean F1 balances missed plants and extra pins across three matching distances. Counts use a 15 cm match on '+scans+' synthetic '+cropProfile(crop).name.toLowerCase()+' scans from seeds '+seeds+', including both soil views of each planting.';
+  if (comparison === 'layouts') guide.textContent += ' Counts are per layout. Scores describe these simulated patterns. A field-mounted scanner has its own viewpoint and occlusion.';
   const list = document.createElement('ul');
   list.id = 'outcomeList';
   for (const entry of summaries) {
@@ -186,7 +215,14 @@ function showOutcome(rows, comparison, crop) {
     const count = document.createElement('span');
     count.textContent = entry.matched.toLocaleString()+' of '+entry.labels.toLocaleString()+' centers found · '+entry.extra.toLocaleString()+' extra pins';
     item.append(title,count);
-
+    if (comparison === 'layouts') {
+      const tiles = groups.get(entry.label).flatMap(row=>row.tiles);
+      const rays = tiles[0].sampledRays.toLocaleString();
+      const meanReturns = Math.round(tiles.reduce((total,tile)=>total+tile.returnCount,0)/tiles.length);
+      const sampling = document.createElement('span');
+      sampling.textContent = rays+' rays sampled per scan · '+meanReturns.toLocaleString()+' returns per scan on average';
+      item.append(sampling);
+    }
     list.append(item);
   }
   $('summary').replaceChildren(intro);
@@ -205,29 +241,30 @@ function appendRow(row, comparison, settings) {
   const widest=row.scores.at(-1);
   tr.insertCell().textContent = row.seed;
   const modelCell = tr.insertCell();
-  const modelLabel = ['density','heights'].includes(comparison) ? contenderLabel(row, comparison) : row.model+' / '+row.backend;
+  const modelLabel = ['density','heights','layouts'].includes(comparison) ? contenderLabel(row, comparison) : row.model+' / '+row.backend;
   modelCell.textContent = modelLabel;
   const duration = tr.insertCell();
   const cutoff = tr.insertCell();
   duration.textContent = row.epochs;
   cutoff.textContent = row.threshold;
-  if (['density','epochs','cutoffs','heights'].includes(comparison)) {
+  if (['density','epochs','cutoffs','heights','layouts'].includes(comparison)) {
     const query = new URLSearchParams({
       crop:settings.crop, ...plantSettings(settings), sensor:settings.sensorMode, seed:row.seed, epochs:row.epochs, threshold:row.threshold, engine:'cpu'
     });
     query.set('minimumHeight', row.minimumHeight);
     if (row.trainingRayBudget) query.set('trainingRayBudget', row.trainingRayBudget);
     if (settings.validationRayBudget) query.set('validationRayBudget', settings.validationRayBudget);
-    if (settings.validationSensorMode) query.set('validationSensor', settings.validationSensorMode);
+    const layout = row.validationSensorMode ?? settings.validationSensorMode;
+    if (layout) query.set('validationSensor', layout);
     const link = document.createElement('a');
     link.href = '../trainer/?'+query;
-    const cell = {heights:modelCell, density:modelCell, epochs:duration, cutoffs:cutoff}[comparison];
+    const cell = {heights:modelCell, density:modelCell, layouts:modelCell, epochs:duration, cutoffs:cutoff}[comparison];
     link.textContent = cell.textContent;
     link.setAttribute('aria-label', 'Replay '+modelLabel+' on seed '+row.seed+' with '+row.epochs+' epochs and cutoff '+row.threshold);
     cell.replaceChildren(link);
   }
   for(const text of [formatTime(row.generationMs),
-    formatTime(row.trainingMs),formatTime(row.scoringMs),row.trainingLoss.toFixed(4),row.meanF1.toFixed(4),
+    row.reusedFit ? 'Reused' : formatTime(row.trainingMs),formatTime(row.scoringMs),row.trainingLoss.toFixed(4),row.meanF1.toFixed(4),
     (100*widest.precision).toFixed(1)+'% / '+(100*widest.recall).toFixed(1)+'%']){
     const td=document.createElement('td');td.textContent=text;tr.append(td);
   }
@@ -442,7 +479,10 @@ function displayFields() {
   const {comparison, datasets, rows, settings} = report;
   const contender = row => contenderLabel(row, comparison);
   const columns = rows.filter(row => row.seed === datasets[0].seed).map(contender);
-  const headings = ['Dataset seed', 'Field seed', 'Layout', ...columns];
+  const layouts = comparison === 'layouts';
+  const headings = ['Dataset seed', 'Field seed', ...(layouts ? [] : ['Layout']), ...columns];
+  $('fieldGuide').textContent = 'Each row combines the scans with and without soil from one held-out planting. '+
+    (layouts ? 'Select a score to inspect that layout’s soil-present scan in 3D.' : 'Select a field seed to inspect its soil-present scan in 3D.');
   $('fieldHeading').replaceChildren(...headings.map(label => {
     const th = document.createElement('th');
     th.scope = 'col';
@@ -466,21 +506,28 @@ function displayFields() {
       const tr = $('fieldRows').insertRow();
       const field = contenders.get(columns[0]).get(seed);
       tr.insertCell().textContent = dataset.seed;
-      const link = document.createElement('a');
-      const scan = dataset.recipeManifest.find(tile => tile.split === 'validation' && tile.seed === seed && tile.recipe.ground);
-      const query = new URLSearchParams({crop:settings.crop, ...plantSettings(settings), seed, sensor:field.sensor, ground:true, tile:scan.tile_id});
-      if (settings.validationRayBudget) query.set('budget', settings.validationRayBudget);
-      link.href = '../?'+query+'#field';
-      link.textContent = seed;
-      tr.insertCell().append(link);
-      tr.insertCell().textContent = field.sensor;
+      function viewerLink(result, text) {
+        const query = new URLSearchParams({crop:settings.crop, ...plantSettings(settings), seed, sensor:result.sensor, ground:true, tile:result.tileIds[0]});
+        if (settings.validationRayBudget) query.set('budget', settings.validationRayBudget);
+        const link = document.createElement('a');
+        link.href = '../?'+query+'#field';
+        link.textContent = text;
+        if (layouts) link.setAttribute('aria-label', text+' · inspect '+layoutNames.get(result.sensor)+' on field '+seed);
+        return link;
+      }
+      const fieldCell = tr.insertCell();
+      if (layouts) fieldCell.textContent = seed;
+      else {
+        fieldCell.append(viewerLink(field,seed));
+        tr.insertCell().textContent = field.sensor;
+      }
       for (const column of columns) {
         const result = contenders.get(column).get(seed);
-        if (countMetric) tr.insertCell().textContent = formatCount(result.countError[metric]);
-        else {
-          const f1 = metric === 'mean' ? result.meanF1 : result.scores.find(score => score.cm === Number(metric)).f1;
-          tr.insertCell().textContent = f1.toFixed(4);
-        }
+        const value = countMetric ? formatCount(result.countError[metric]) :
+          (metric === 'mean' ? result.meanF1 : result.scores.find(score => score.cm === Number(metric)).f1).toFixed(4);
+        const cell = tr.insertCell();
+        if (layouts) cell.append(viewerLink(result,value));
+        else cell.textContent = value;
       }
     }
     if (countMetric) {
@@ -488,7 +535,7 @@ function displayFields() {
       total.className = 'seedAverage';
       const label = document.createElement('th');
       label.scope = 'row';
-      label.colSpan = 3;
+      label.colSpan = layouts ? 2 : 3;
       label.textContent = 'Seed '+dataset.seed+' · all '+dataset.stats.valTiles+' scans';
       total.append(label);
       for (const column of columns) {
@@ -584,14 +631,16 @@ function updateBoxLinks() {
 $('pairBox').addEventListener('change', updateBoxLinks);
 
 $('benchForm').onsubmit = async event => {
-  event.preventDefault(); if(controller)return;
+  event.preventDefault(); if(controller || $('run').disabled)return;
+  showingSetup = false;
   controller = new AbortController();
   const {signal} = controller;
   const seed=Number($('seed').value), crop=$('crop').value, sensorMode=$('sensor').value;
-  const validationSensorMode = $('validationSensor').value === 'follow' ? undefined : $('validationSensor').value;
   const comparison=$('comparison').value;
+  const compareLayouts = comparison === 'layouts';
+  const validationSensorMode = compareLayouts || $('validationSensor').value === 'follow' ? undefined : $('validationSensor').value;
   const trainingRayBudget = comparison === 'density' ? undefined : trainingRayValue($('trainingRayBudget'));
-  const validationRayBudget = Number($('validationRayBudget').value);
+  const validationRayBudget = Number((compareLayouts ? layoutBudget : $('validationRayBudget')).value);
   const geometry = readPlantControls();
   const settings={seed,crop,...geometry,sensorMode,validationSensorMode,trainingRayBudget,validationRayBudget,trainFields:6,valFields:3};
   if (comparison !== 'heights') settings.minimumHeight = Number($('minimumHeight').value) || cropProfile(crop).peakHeight;
@@ -609,11 +658,13 @@ $('benchForm').onsubmit = async event => {
     backend: [neuralCPU, {model:'neural', backend:'WebGPU', train:trainNetworkGPU}],
     models: [{model:'linear', backend:'CPU', train:trainCPU}, neuralCPU],
     cutoffs: [neuralCPU],
+    layouts: [...layoutNames.keys()].map(validationSensorMode=>({...neuralCPU,validationSensorMode})),
     heights: PEAK_HEIGHTS.map(minimumHeight => ({...neuralCPU, minimumHeight})),
     density: densityFits.map(trainingRayBudget => ({...neuralCPU, trainingRayBudget})),
     epochs: [10, 40, 100].map(epochs => ({...neuralCPU, epochs}))
   };
   const contenders = comparisons[comparison];
+  if (compareLayouts) settings.validationSensorModes = [...layoutNames.keys()];
   const thresholds = comparison === 'cutoffs' ? [.35, .5, .65] : [.5];
   const rows=[],datasets=[];
   const livePreview=$('livePreview').checked;
@@ -635,22 +686,29 @@ $('benchForm').onsubmit = async event => {
   $('scoreDetails').hidden = true;
   $('scoreRows').replaceChildren();
   for(const input of $('benchForm').elements)input.disabled=input.id!=='cancel';
+  const benchStart = performance.now();
   try {
     for(const offset of [0,1]){
       const runSeed=seed+offset;
-      let set, generationMs, datasetIndex, pairedIds;
+      let set, generationMs, datasetIndex, pairedIds, fit;
       const order=offset?[...contenders].reverse():contenders;
       for(const contender of order){
         signal.throwIfAborted();
         const {model, backend, train, epochs = settings.epochs, minimumHeight = settings.minimumHeight, trainingRayBudget = settings.trainingRayBudget} = contender;
-        if (!set || comparison === 'density' || comparison === 'heights') {
-          $('status').textContent='Growing fields for seed '+runSeed+'…';
+        const validationLayout = contender.validationSensorMode ?? validationSensorMode;
+        const reuseFit = compareLayouts && Boolean(fit);
+        if (!set || comparison === 'density' || comparison === 'heights' || compareLayouts) {
+          $('status').textContent = reuseFit ? 'Rescanning the held-out fields on '+layoutNames.get(validationLayout)+'…' : 'Growing fields for seed '+runSeed+'…';
           view?.growing(runSeed);
           const start=performance.now();
-          set=await buildDataset({...settings,seed:runSeed,trainingRayBudget,minimumHeight,signal,
-            ...(view?{generate:recipe=>scans.generate(recipe),onScan:view.scan}:{})});
+          const scanOptions = {signal, ...(view?{generate:recipe=>scans.generate(recipe),onScan:view.scan}:{})};
+          set = reuseFit ? await rescanValidation(set,validationLayout,scanOptions) :
+            await buildDataset({...settings,seed:runSeed,trainingRayBudget,minimumHeight,validationSensorMode:validationLayout,...scanOptions});
           generationMs=performance.now()-start;
-          const pairedScans = comparison === 'heights' ? set.manifest : set.validation;
+          if (compareLayouts && set.validation.some(tile=>tile.sampledRays!==validationRayBudget || tile.recipe.points!==validationRayBudget)) {
+            throw new Error('The layouts did not sample the same requested ray budget.');
+          }
+          const pairedScans = compareLayouts ? set.manifest.filter(tile=>tile.split==='train') : comparison === 'heights' ? set.manifest : set.validation;
           const ids = pairedScans.map(tile => tile.tile_id);
           if (pairedIds && (ids.length !== pairedIds.length || ids.some((id,i) => id !== pairedIds[i]))) {
             throw new Error('The fits have different scans in their paired comparison.');
@@ -659,13 +717,15 @@ $('benchForm').onsubmit = async event => {
           datasetIndex=datasets.length;
           datasets.push({seed:runSeed,stats:set.stats,recipeManifest:set.manifest});
         }
-        $('status').textContent='Training '+model+' on '+backend+' · '+epochs+' epochs · seed '+runSeed;
-        const label=comparison==='cutoffs'?'Shared neural fit':contenderLabel({...settings,...contender,epochs},comparison);
-        view?.fitting(label,epochs);
-        const before=performance.now();
-        const fit=await train(set.X,set.Y,{dims:set.dims,epochs,lr:.25,signal,onEpoch:view?p=>view.epoch(p,epochs):undefined});
-        const trained=performance.now();
-        const trainingMs = trained - before;
+        let trainingMs = 0;
+        if (!reuseFit) {
+          $('status').textContent='Training '+model+' on '+backend+' · '+epochs+' epochs · seed '+runSeed;
+          const label=comparison==='cutoffs' || compareLayouts ? 'Shared neural fit' : contenderLabel({...settings,...contender,epochs},comparison);
+          view?.fitting(label,epochs);
+          const before=performance.now();
+          fit=await train(set.X,set.Y,{dims:set.dims,epochs,lr:.25,signal,onEpoch:view?p=>view.epoch(p,epochs):undefined});
+          trainingMs = performance.now()-before;
+        }
         const cuts = offset ? [...thresholds].reverse() : thresholds;
         for (const threshold of cuts) {
           signal.throwIfAborted();
@@ -676,6 +736,7 @@ $('benchForm').onsubmit = async event => {
             threshold, predictScores:model === 'neural' ? predictNetwork : undefined, signal,onProgress:view?.tile
           });
           const row = {
+            ...(compareLayouts?{validationSensorMode:validationLayout,sharedFitSeed:runSeed,reusedFit:reuseFit}:{}),
             model, backend:fit.backend, datasetIndex, minimumHeight, trainingRayBudget, epochs, trainingLoss:fit.loss.at(-1), threshold, seed:runSeed, generationMs, trainingMs,
             scoringMs:performance.now()-scoringStart, adapter:fit.adapter,
             meanF1:result.meanF1, scores:result.scores, countError:result.countError, byGround:result.byGround, byField:result.byField, tiles:result.tiles
@@ -701,7 +762,7 @@ $('benchForm').onsubmit = async event => {
     if (comparison === 'cutoffs') replay.searchParams.set('cutoffDistance', $('cutoffDistance').value);
     $('replay').href = replay.href;
     $('replay').hidden = false;
-    report={schema:1,livePreview,domain:'synthetic',comparison,thresholds,settings,replayUrl:replay.href,datasets,rows};
+    report={schema:1,elapsedMs:performance.now()-benchStart,livePreview,domain:'synthetic',comparison,thresholds,settings,replayUrl:replay.href,datasets,rows};
     if (comparison === 'heights') displayHeightStudy();
     if (comparison === 'density') displayDensityStudy();
     if (comparison === 'heights' || comparison === 'density') displayValidationComparison();
@@ -748,7 +809,7 @@ $('benchForm').onsubmit = async event => {
       } catch {}
     }
     view?.end('Benchmark complete');
-    $('status').textContent='Benchmark complete · '+rows.length+' scored results.'+stamp;
+    $('status').textContent='Benchmark complete · '+rows.length+' scored results in '+formatTime(report.elapsedMs)+'.'+stamp;
   }catch(error){
     view?.end(signal.aborted?'Benchmark canceled':'Benchmark interrupted');
     $('status').textContent=signal.aborted?'Canceled. Completed rows remain in Results.':'Benchmark failed. '+error.message;

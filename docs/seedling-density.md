@@ -54,6 +54,49 @@ To repeat the comparison, run the optional mode below. It trains four seedling-o
 node benchmark/seedling-density.mjs --match-training-density > seedling-training-density.json
 ```
 
+## Do those seedling models transfer to a different layout?
+
+We froze the four reference-trained seedling detectors from the training-density comparison. On **eight new plantings with 877 seedlings**, each detector scored the same plant boxes using the reference grid and an OS1-64-inspired ring layout. At 60,000 sampled rays, the ring layout recorded more crop points (3,262 versus 2,375), yet left more plants with zero returns. The 6.5 cm peak detector reached 96 plants on rings and 195 on the grid.
+
+| Layout | Actual rays per plot | Plants with zero returns | Plants in reach at 15 cm | F1, 30k-trained | F1, 1M-trained | F1, height only |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Reference grid | 30,000 | 184 | 51 | 0.018–0.071 | 0.100 | 0.106 |
+| OS1-inspired rings | 30,000 | 283 | 43 | 0.002–0.049 | 0.093 | 0.093 |
+| Reference grid | 60,000 | 44 | 195 | 0.198–0.274 | 0.303–0.307 | 0.314 |
+| OS1-inspired rings | 60,000 | 119 | 96 | 0.031–0.136 | 0.192–0.193 | 0.197 |
+| Reference grid | 65,536 | 55 | 226 | 0.241–0.315 | 0.340–0.341 | 0.353 |
+| OS1-inspired rings | 65,536 | 110 | 107 | 0.038–0.152 | 0.214–0.215 | 0.217 |
+| Reference grid | 1,000,000 | 0 | 799 | 0.485–0.833 | 0.898–0.904 | 0.846 |
+
+For a single-plant replay, open box 6 of field `1370561` and switch between its two 60,000-ray scans. [Inspect the matched scans](https://mvalancy.github.io/crop-trainer/?crop=tomato&plantArchitecture=2&plantForm=seedling&plantCondition=healthy&sensor=reference&budget=60000&seed=1370561&noise=clean&weeds=off&sticks=off&boards=off&studyMode=layouts&studyBox=6#scan-study) · [Compare the recorded returns in this patch](../art/seedling-layouts.svg)
+
+The table pools counts at 15 cm across the eight fields. Each range covers the two independent training seeds. At 60,000 rays the first dense-trained model’s F1 at **7.5, 10 and 15 cm** was **0.280, 0.299 and 0.307** on the grid and **0.171, 0.187 and 0.193** on rings. The ring scan had only 99 candidate peaks across all eight fields. The model placed 95 pins, of which 94 matched a plant at 15 cm. It missed 783 seedlings. Per-field F1 at 15 cm ranged from 0.194 to 0.451 on the grid and 0.057 to 0.340 on the rings, with lower ring F1 on every paired field for both dense-trained fits.
+
+The synthetic ring lattice has 1,024 columns and 64 rings. Asking it for one million rays yields 65,536, so we generated a grid with **exactly 65,536** samples for that pair. The one-million-ray grid shows what dense reference coverage can do on those same plants. The simulator redraws each grid density, so an individual plant reached at 60,000 rays can fall between rays at 65,536. This is a comparison of two overhead sampling patterns. Performance on a mounted spinning scanner requires a physical test. [Scan layouts and limitations](scanners.md)
+
+```sh
+node benchmark/seedling-density.mjs --layout-transfer > seedling-layout.json
+```
+
+For an interactive run, use the browser benchmark to train on dense reference scans and compare layouts at 60,000 validation rays. It generates separate validation plantings with seeded noise and both soil settings. The Node command above replays the fixed clean fields in the table. [Run the layout comparison](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=layouts&crop=tomato&plantArchitecture=2&plantForm=seedling&plantCondition=healthy&sensor=reference&trainingRayBudget=1000000&validationRayBudget=60000&seed=82173)
+
+The report includes the four fitted model fingerprints, per-field tile IDs, actual ray counts, stage counts, baseline scores and scores at all three distances. The held-out seeds are `1370561`, `1481707`, `1592011`, `1703069`, `1814201`, `1925237`, `2036279` and `2147411`. The benchmark asserts exact equality of plant boxes across every scan of each field, and verifies the sampled-ray and return counts. Each scan keeps soil and uses the original clean evaluation conditions above.
+
+## Does training on the ring layout recover the misses?
+
+We trained on either the reference grid or OS1-inspired rings at **60,000 sampled rays per scan**, then tested both models on each layout. Each training seed kept the same six plantings, both soil settings, seeded clutter and noise, network settings and 40 epochs. We fixed four new test seeds (`2268523`, `2379659`, `2490781`, `2601907`) before fitting. They contained 422 healthy seedlings, scored with the same clean conditions on both layouts.
+
+| Held-out layout | Plants with a candidate at 15 cm | Grid-trained F1 at 15 cm | Ring-trained F1 at 15 cm | Height-only F1 at 15 cm |
+| --- | ---: | ---: | ---: | ---: |
+| Reference grid | 95 | 0.303 / 0.310 | 0.303 / 0.302 | 0.313 |
+| OS1-inspired rings | 38 | 0.165 / 0.161 | 0.165 / 0.165 | 0.165 |
+
+Each pair lists results for training seeds `82173` and `379331`, in that order. On rings, switching the training layout recovered zero additional seedlings for the first fit and one for the second. Both ring-trained fits and the height baseline found all 38 reachable plants, placed zero extra pins and missed 384. Of those misses, **334 plants had a crop return**. Per-plot ring-trained F1 ranged from 0.052 to 0.359. On these plots, finding more seedlings requires generating candidate positions near more plants.
+
+```sh
+node benchmark/seedling-density.mjs --match-training-layout > seedling-trained-layouts.json
+```
+
 ## Reproduce the original scan-density sweep
 
 Run this from the repository root with Node.js 22 or later.

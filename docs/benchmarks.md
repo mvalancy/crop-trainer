@@ -14,6 +14,10 @@ The crop-specific spacing filter was tested on seeds 61 and 62, with six trainin
 
 On the v3 branched-bud artichoke test (seed 817221, mixed plant condition), Chromium's CPU and software WebGPU backends used the same 632 training examples and identical tile IDs. After 40 epochs both scored **0.364 / 0.487 / 0.610** at 7.5 / 10 / 15 cm. CPU generation, fitting and validation took 4.39, 0.32 and 0.08 seconds. SwiftShader took 2.57, 23.80 and 0.02 seconds. Field generation runs separately from the optimizer. These single runs on shared compute measure this software configuration. [Run the v3 fit](https://mvalancy.github.io/crop-trainer/trainer/?plan=quick&seed=817221&crop=artichoke&plantForm=branched-buds&plantCondition=mixed&plantArchitecture=3&epochs=40&engine=cpu)
 
+## Does a different scanner miss the same plants?
+
+Choose the grid and OS1-64 layout comparison. The browser trains one detector per seed, then scans each held-out planting twice at the same ray count. Both scans use that seed’s fitted weights. Inspect the extra pins and misses at 15 cm. To see how a plant can fall between two rings, open the illustrated example from the generator. [Run the seedling benchmark](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=layouts&crop=tomato&plantArchitecture=2&plantForm=seedling&plantCondition=healthy&sensor=reference&trainingRayBudget=1000000&validationRayBudget=60000&seed=82173) · [See the rays around one seedling](scanners.md#why-can-the-same-ray-budget-miss-a-seedling)
+
 ## Which plants did only one model find?
 
 Run **Logistic vs neural · CPU**, then expand **Which plants did each model find?** Choose a scan and a matching distance. The table counts every labeled plant once. Select a box found by just one model to open its center in the 3D viewer and earn the **Model scout** stamp. A cyan ring tracks the highlighted plant as you orbit or zoom. **Copy scan link** preserves the box selection. In the Training Shed, you can also open a highlighted missed plant in 3D.

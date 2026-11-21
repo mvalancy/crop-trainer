@@ -69,6 +69,27 @@ export function features(tile, minimumHeight=.065){
  }
  return{X:Float32Array.from(vec),pos};
 }
+function prepareScan(scan, minimumHeight, validation) {
+ const {p:recipe, labels, sampledRays, coverage} = scan;
+ const tile = {...features(scan, minimumHeight), truth:targetCenters(labels.boxes), coverage,
+  seed:recipe.seed, ground:recipe.ground, recipe, sampledRays, tile_id:labels.tile_id, returnCount:labels.num_points, points:[]};
+ if (validation) {
+  tile.plantReturns = scan.plantReturns;
+  const n = scan.xyz.length / 3, stride = Math.max(1, Math.ceil(n / 1500));
+  for (let i=0; i<n; i+=stride) tile.points.push([scan.xyz[3*i],scan.xyz[3*i+1]]);
+ }
+ return tile;
+}
+function normalizeFeatures(values, means, std) {
+ for (let i=0; i<values.length; i++) {
+  const column = i % DIMS;
+  values[i] = (values[i] - means[column]) / std[column];
+ }
+}
+function manifestTile(tile, split) {
+ const {seed, tile_id, returnCount, sampledRays, recipe} = tile;
+ return {split, seed, tile_id, returnCount, sampledRays, recipe};
+}
 export async function buildDataset({seed=27,crop='lettuce',plantArchitecture=1,plantForm='mixed',plantCondition='healthy',trainFields=6,valFields=3,sensorMode='reference',validationSensorMode=sensorMode,trainingRayBudget=0,validationRayBudget=0,minimumHeight=.065,generate,onScan,onProgress=()=>{},signal}={}){
  const geometry = plantSettings({crop,plantArchitecture,plantForm,plantCondition});
  if(!PEAK_HEIGHTS.includes(minimumHeight))throw new Error('Choose a supported minimum peak height.');
@@ -93,11 +114,8 @@ export async function buildDataset({seed=27,crop='lettuce',plantArchitecture=1,p
    if (rayBudget) recipe.points = rayBudget;
    const step={split:trainingField?'Training':'Validation',done:2*k+v+1,total,firstValidation:k===trainFields && v===0};
    const t=generate ? await generate(recipe,step) : field(recipe);
-   const f=features(t,minimumHeight), truth=targetCenters(t.labels.boxes), points=[];
+   const item=prepareScan(t,minimumHeight,!trainingField);
    if(onScan) onScan(t,step);
-   if(!trainingField){const n=t.xyz.length/3,inc=Math.max(1,Math.ceil(n/1500));for(let i=0;i<n;i+=inc)points.push([t.xyz[3*i],t.xyz[3*i+1]]);}
-   const item={...f,truth,coverage:t.coverage,seed:id,ground:v===0,recipe:t.p,sampledRays:t.sampledRays,tile_id:t.labels.tile_id,returnCount:t.labels.num_points,points};
-   if (!trainingField) item.plantReturns = t.plantReturns;
    (trainingField?training:validation).push(item);
    onProgress({done:2*k+v+1,total,stage:'data'});await pause();
   }
@@ -146,11 +164,33 @@ export async function buildDataset({seed=27,crop='lettuce',plantArchitecture=1,p
  for(let j=0;j<DIMS;j++)means[j]/=Y.length;
  for(let i=0;i<X.length;i++)std[i%DIMS]+=(X[i]-means[i%DIMS])**2;
  for(let j=0;j<DIMS;j++)std[j]=Math.max(.00001,Math.sqrt(std[j]/Y.length));
- const normalize=a=>{for(let i=0;i<a.length;i++){const j=i%DIMS;a[i]=(a[i]-means[j])/std[j];}};
- normalize(X);for(const t of validation)normalize(t.X);
+ normalizeFeatures(X,means,std);for(const t of validation)normalizeFeatures(t.X,means,std);
  return{X,Y,dims:DIMS,validation,scaling:{means:Array.from(means),std:Array.from(std)},
   stats:{crop,...geometry,trainFields,valFields,trainTiles:training.length,valTiles:validation.length,minimumHeight,samples:Y.length,sampleLimit:SAMPLE_LIMIT,trainingExamplesByField:[...bySeed.values()],sensorMode,validationSensorMode,trainingRayBudget,validationRayBudget,fieldSeeds:{training:trainSeeds,validation:valSeeds},generator:'crop-trainer-v1'},
-  manifest:[...training,...validation].map((t,i)=>({split:i<training.length?'train':'validation',seed:t.seed,tile_id:t.tile_id,returnCount:t.returnCount,sampledRays:t.sampledRays,recipe:t.recipe}))};
+  manifest:[...training.map(t=>manifestTile(t,'train')),...validation.map(t=>manifestTile(t,'validation'))]};
+}
+// Change only the held-out layout. Preserve the fitted feature scale and
+// verify plant centers before scoring either view as a matched planting.
+export async function rescanValidation(set, validationSensorMode, {generate, onScan, signal}={}) {
+ const sampling = getSensor(validationSensorMode), validation = [];
+ for (const [index, original] of set.validation.entries()) {
+  check(signal);
+  const recipe = {...original.recipe, sampling};
+  const step = {split:'Validation', done:index+1, total:set.validation.length};
+  const scan = generate ? await generate(recipe,step) : field(recipe);
+  const tile = prepareScan(scan,set.stats.minimumHeight,true);
+  if (tile.truth.length !== original.truth.length || tile.truth.some(([x,y],i) =>
+      x !== original.truth[i][0] || y !== original.truth[i][1])) {
+   throw new Error('A second scan changed a labeled plant center.');
+  }
+  normalizeFeatures(tile.X,set.scaling.means,set.scaling.std);
+  validation.push(tile);
+  onScan?.(scan,step);
+  await pause();
+ }
+ check(signal);
+ return {...set, validation, stats:{...set.stats,validationSensorMode},
+  manifest:[...set.manifest.filter(t=>t.split==='train'),...validation.map(t=>manifestTile(t,'validation'))]};
 }
 const matchingSlack = 1e-12;
 export function matchCenters(pins, truth, radius) {
