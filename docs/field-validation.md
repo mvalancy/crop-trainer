@@ -20,6 +20,14 @@ Mean F1 averages the pooled scores at 7.5, 10 and 15 cm. Count MAE is mean absol
 
 Run `node benchmark/studies/ground-reference.mjs` from the repository root to reproduce all rows for lettuce, globe artichoke and young tomato. It prints counts at each tolerance, field seeds, the number of scans with exact pin and score recovery, and times for generation, training and validation. Validation time includes regenerating the held-out XYZ scans. [Ground-reference experiment](../benchmark/studies/ground-reference.mjs)
 
+## How close are the scan and the survey?
+
+![A diagram shows a survey circle moving past fixed detector pins. A chart compares both vineyard detectors at the recorded coordinates and after a 25 cm shift east.](../art/survey-alignment.svg)
+
+A scanner locates the returns. A surveyor locates the plants. For a 15 cm match to mean what you intend, the two measurements must agree on where 15 cm is in the field. One way to check is to survey visible control markers independently, find those same markers in the scan and measure their horizontal separation before scoring plants.
+
+In one Spanish vineyard laser scan, a geometric rule matched 32 of 138 surveyed trunk records within 15 cm, versus 11 for the trained model. Both placed 1,006 pins. Moving just the survey 25 cm east changed the results to eight and 17. All four directions were tested in advance. This example shows how sensitive the comparison is to alignment. Choosing a correction requires separate control measurements. [Spanish vineyard results, data sources and replay commands](field-datasets.md#can-the-same-rule-find-trunks-at-a-second-vineyard)
+
 ## Collect a test that can fail
 
 1. **Reserve whole fields and dates.** Use some sites or sessions to develop the detector and separate ones for the final test. Keep repeat passes, adjacent tiles from the same plot and scans of the same plants together. For transfer to a new farm, hold out an entire farm. Record how many independent fields and collection dates each result covers.

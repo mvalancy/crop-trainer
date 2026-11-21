@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 302" role="img" aria-labelledby="title desc">
+  <title id="title">How a survey shift changes a match</title>
+  <desc id="desc">Two detector pins stay still while a survey circle slides east. In a real vineyard laser scan, the trained detector matched eleven surveyed trunks and the column rule matched thirty-two within fifteen centimeters. Moving the references twenty-five centimeters east changed those counts to seventeen and eight.</desc>
+  <style>
+    text{font-family:system-ui,sans-serif;fill:#193a32} .heading{font-size:17px;font-weight:700} .label{font-size:14px}.number{font-size:14px;font-weight:700}
+    .survey{animation:move-survey 6s ease-in-out infinite}
+    @keyframes move-survey{0%,20%,100%{transform:translateX(0)}50%,72%{transform:translateX(60px)}}
+    @media(prefers-reduced-motion:reduce){.survey{animation:none}}
+  </style>
+  <defs>
+    <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" fill="none" stroke="#d7dfd2" stroke-width="1"/></pattern>
+  </defs>
+  <rect width="500" height="302" rx="16" fill="#f9f9ef"/>
+  <text x="18" y="28" class="heading">A match depends on two positions</text>
+  <rect x="18" y="43" width="224" height="116" rx="9" fill="#eff3e6"/>
+  <rect x="18" y="43" width="224" height="116" rx="9" fill="url(#grid)"/>
+  <g fill="#b75228" stroke="#602f19" stroke-width="1.5">
+    <path d="m77 90 6 8-6 8-6-8z"/><path d="m151 94 6 8-6 8-6-8z"/>
+  </g>
+  <circle cx="142" cy="96" r="36" fill="none" stroke="#7b8096" stroke-dasharray="3 5"/>
+  <g class="survey"><circle cx="82" cy="96" r="36" fill="#a7a1d5" fill-opacity=".18" stroke="#5b5289" stroke-width="2"/>
+    <path d="M75 96h14m-7-7v14" fill="none" stroke="#403862" stroke-width="2.5"/>
+  </g>
+  <path d="M82 145h60m-6-4 6 4-6 4" stroke="#4d6657" fill="none" stroke-width="1.7"/>
+  <g class="label">
+    <path d="m263 63 5 7-5 7-5-7z" fill="#b75228"/><text x="277" y="75">Detector pin stays fixed</text>
+    <circle cx="263" cy="97" r="7" fill="none" stroke="#5b5289" stroke-width="2"/><text x="277" y="102">15 cm around survey XY</text>
+    <text x="259" y="133">Try a 25 cm shift east.</text>
+    <text x="259" y="153">A different pin can match.</text>
+  </g>
+  <text x="18" y="187" class="heading">Recorded trunks matched on the Spanish laser scan</text>
+  <g class="label"><text x="18" y="221">Recorded XY</text><text x="18" y="259">25 cm east</text></g>
+  <g stroke-linecap="round" stroke-width="6">
+    <path d="M145 208h55M145 248h85" stroke="#237161"/>
+    <path d="M145 222h160M145 262h40" stroke="#736298"/>
+  </g>
+  <g class="number"><text x="211" y="212">11</text><text x="315" y="227">32</text><text x="240" y="253">17</text><text x="195" y="267">8</text></g>
+  <g class="label"><circle cx="26" cy="287" r="5" fill="#237161"/><text x="38" y="292">Trained model</text><circle cx="187" cy="287" r="5" fill="#736298"/><text x="199" y="292">Vertical-column rule</text></g>
+</svg>

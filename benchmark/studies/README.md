@@ -12,6 +12,8 @@ node benchmark/studies/orchard-visibility.mjs
 
 | Question | Code | How to read the result |
 | --- | --- | --- |
+| How often do real weeds appear next to a tomato? | [Read crop and weed boxes from the authors’ local COCO files](tomato-field-boxes.mjs) | [Outdoor tomato photos across two seasons](../../docs/field-datasets.md#how-often-do-weeds-share-a-photo-with-a-young-tomato) |
+| Does vertical structure locate vines at a second site? | [B7 drone captures](vineyard-b7.mjs) · [Shared frozen column rules](vineyard-columns.mjs) | [Spanish survey, sensor comparison and alignment check](../../docs/field-datasets.md#can-the-same-rule-find-trunks-at-a-second-vineyard) |
 | What happens when lettuce leaves lose some of their returns? | [Paired scattered and clustered gaps](lettuce-return-gaps.mjs) | [Outdoor depth observations and synthetic test](../../docs/field-datasets.md#how-much-of-a-lettuce-plant-has-measured-depth) |
 | Does training improve on simple height peaks? | [Paired detectors](paired-evidence.mjs) | [Detector comparisons](../../docs/evidence.md) |
 | Which plants disappear as scan spacing or crop size changes? | [Seedling density](seedling-density.mjs) · [Canopy size](canopy-size.mjs) · [Plant forms](plant-forms.mjs) | [Sampling gaps](../../docs/seedling-density.md) |

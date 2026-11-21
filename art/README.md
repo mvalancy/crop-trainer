@@ -12,6 +12,7 @@ The little farm on the front page lives here. Open an SVG to see it move or open
 | [From laser dots to lettuce pins](scan-learn-find.svg) | [Training shed guide](../trainer/README.md) |
 | [Two detectors, one planting](paired-field.svg) | [Benchmark guide](../benchmark/README.md) |
 | [From a surveyed plot to a local detector](field-deployment.svg) | [Field deployment guide](../docs/edge-deployment.md) |
+| [How a survey shift changes a match](survey-alignment.svg) | [Checking field coordinates](../docs/field-validation.md#how-close-are-the-scan-and-the-survey) |
 | [A longer fit on two tomato growth stages](tomato-epochs.svg) | [Training-duration experiment](../docs/tomato-training-duration.md) |
 | [Learn from difficult background examples](tomato-hard-negatives.svg) | [Tomato and weed study](../docs/tomato-hard-negatives.md) |
 | [Fit, calibrate and test](tomato-calibration.svg) · [Which fields chose which cutoff?](tomato-calibration-panels.svg) | [Three tomato detectors on separate calibration and test plantings](../docs/tomato-calibration.md) |

@@ -2,7 +2,7 @@
 // Run after extracting the archive. Inputs remain on the user's computer.
 import {open,readFile,mkdir,rmdir,unlink} from 'node:fs/promises';
 import {join} from 'node:path';
-import {readPlotColumns} from './vineyard-las.mjs';
+import {fitVineGround,readPlotColumns} from './vineyard-las.mjs';
 
 const [root,output,strip='center']=process.argv.slice(2);
 if (!root || !output || process.argv.length > 5 || !['center','north','south'].includes(strip)) {
@@ -35,34 +35,9 @@ const {sourcePoints,inPlot} = await readPlotColumns(join(root,scanPath),originXY
   if (z > high[bin]) { high[bin]=z; xAt[bin]=x; yAt[bin]=y; }
 });
 
-// Estimate the plane independently of the labels and predictions. Equal weight
-// per occupied square metre limits the influence of dense scanner positions.
-const samples=[];
-for(let y=0;y<10;y++) for(let x=0;x<10;x++) {
-  const zs=[];
-  for(let dy=0;dy<20;dy++) for(let dx=0;dx<20;dx++) {
-    const z=low[(y*20+dy)*cells+x*20+dx]; if(Number.isFinite(z)) zs.push(z);
-  }
-  if(zs.length<100) continue;
-  zs.sort((a,b)=>a-b);
-  samples.push([1,x+.5,y+.5,zs[Math.floor(.1*(zs.length-1))]]);
-}
-if(samples.length<3) throw Error('Too few occupied ground cells.');
-// Solve the three normal equations z = a + bx + cy.
-const matrix=Array.from({length:3},(_,i)=>Array.from({length:4},(_,j)=>
-  samples.reduce((sum,s)=>sum+s[i]*s[j],0)));
-for(let i=0;i<3;i++) {
-  let pivot=i;
-  for(let j=i+1;j<3;j++) if(Math.abs(matrix[j][i])>Math.abs(matrix[pivot][i])) pivot=j;
-  [matrix[i],matrix[pivot]]=[matrix[pivot],matrix[i]];
-  const divisor=matrix[i][i];
-  if(Math.abs(divisor)<1e-10) throw Error('Ground plane is underdetermined.');
-  matrix[i]=matrix[i].map(v=>v/divisor);
-  for(let j=0;j<3;j++) if(j!==i) {
-    const factor=matrix[j][i]; matrix[j]=matrix[j].map((v,k)=>v-factor*matrix[i][k]);
-  }
-}
-const [z0,b,c]=matrix.map(row=>row[3]);
+const fitted=fitVineGround(low);
+if (!fitted) throw Error('Ground plane is underdetermined.');
+const {z0,b,c,groundSamples}=fitted;
 const count=high.reduce((sum,z)=>sum+Number.isFinite(z),0);
 const body=Buffer.alloc(count*24);
 let pos=0;
@@ -72,7 +47,7 @@ for(let i=0;i<high.length;i++) if(Number.isFinite(high[i])) {
 const plyHeader='ply\nformat binary_little_endian 1.0\nelement vertex '+count+'\nproperty double x\nproperty double y\nproperty double z\nend_header\n';
 const frame={unit:'m',origin:[...originXY,z0],gradePercent:[100*b,100*c]};
 const info={source:'https://doi.org/10.5281/zenodo.18259014',license:'CC BY 4.0',scanPath,crs:'EPSG:3763',
-  sourcePoints,pointsInPlot:inPlot,occupiedCells:count,references:references.length,groundSamples:samples.length,frame};
+  sourcePoints,pointsInPlot:inPlot,occupiedCells:count,references:references.length,groundSamples,frame};
 // Reserving the directory prevents concurrent runs from replacing each other's plots.
 await mkdir(output);
 const files = [

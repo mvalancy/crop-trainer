@@ -5,6 +5,7 @@ Crop Trainer predicts one horizontal position per plant. To score a real plot, y
 | Growing system and source | What you can measure | Access and reuse |
 | --- | --- | --- |
 | **Vineyard · TLS-Grapevine2024** | Registered terrestrial laser scans of two rows in Portugal over nine growth stages. The archive contains 52 distinct trunk positions. Use these for base detection. The 38 vines with detailed agronomic observations are a separate subset. | CC BY 4.0. Credit Gomes and colleagues, cite the version, and describe preprocessing. [Archive](https://zenodo.org/records/18259014) · [License metadata](https://api.datacite.org/dois/10.5281/zenodo.18259014) |
+| **Vineyard · EscaYard and VineLiDAR** | Independent RTK trunk positions at a second site in Spain, a multispectral photo reconstruction and a DJI drone laser scan. [Compare the same detector across both captures](#can-the-same-rule-find-trunks-at-a-second-vineyard). | Both versioned deposits specify CC BY 4.0. [EscaYard](https://doi.org/10.5281/zenodo.10362568) · [VineLiDAR](https://doi.org/10.5281/zenodo.8113105) |
 | **Apple orchard · HOPS** | Tree instances, trunks and fruit across orchard point clouds. For a visibility test, estimate one base from the labeled near-ground points on each visible trunk. These positions come from the same scan and share its blind spots. Keep terrestrial laser scans and reconstructed scans in separate results. Crop large files before opening them in the app. | The authors provide downloads. Redistribution terms for the full collection still need confirmation. [Project and splits](https://www.ipb.uni-bonn.de/data/hops/index.html) · [Paper](https://arxiv.org/abs/2503.13188) |
 | **Apple fruit · Fuji-SfM** | Image-based 3D reconstructions of 11 trees with 1,455 annotated apples. Use for fruit localization or canopy geometry. It supplies no equivalent set of trunk-base targets. HOPS also uses Fuji-SfM in its tests. | **Conflicting license statements.** The catalog lists CC BY 4.0 and the deposited license specifies CC BY-NC-SA 4.0. Seek clarification before redistributing or using commercially. [Deposit](https://zenodo.org/records/3712808) · [Catalog](https://api.datacite.org/dois/10.5281/zenodo.3712808) · [Deposited license](https://zenodo.org/records/3712808/files/LICENSE.txt?download=1) |
 | **Open-field lettuce · AgRibotLeafyVeg** | 112 overhead RealSense RGB-D frames and 128 focal plant masks over four dates in Bari. Each mask selects one harvested plant. [Measure how much of the canopy has depth](#how-much-of-a-lettuce-plant-has-measured-depth). | CC0 1.0. [Authors’ data and label definitions](https://github.com/ispstiima/AgRibotLeafyVeg/tree/6a1b5e79ffef06bd7d9444280d2e4243d62d1500) · [License](https://github.com/ispstiima/AgRibotLeafyVeg/blob/6a1b5e79ffef06bd7d9444280d2e4243d62d1500/LICENSE) |
@@ -266,4 +267,28 @@ for strip in vine-strip vine-north vine-south
 do
   node benchmark/studies/vineyard-vertical-support.mjs "$scan" "$strip" vine-weights.json
 done
+```
+
+
+### Can the same rule find trunks at a second vineyard?
+
+At block B7 in Tomiño, Spain, Vélez and colleagues measured trunk positions using a Trimble R2 GNSS receiver. They photographed the plot from a drone and surveyed it with a DJI Zenmuse L1 laser on July 14, 2022. We reserved both captures before placing any pins. We ran the same three detectors on every 10 m square containing a survey record, keeping the Portuguese model, ground-plane estimator, column rule and pin spacing fixed. Each capture supplied its own soil estimate, derived from the lowest returns in occupied cells. [EscaYard field methods](https://doi.org/10.1016/j.dib.2024.110497) · [VineLiDAR flight and instrument](https://doi.org/10.1016/j.dib.2023.109686)
+
+| Drone capture | Returns in 26 squares | Pins per method | Model matches at 7.5 / 10 / 15 cm | Footprint matches | Vertical-column matches |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Red-band photo reconstruction, 30 m flight | 1,079,430 | 550 | 2 / 4 / 11 | 2 / 2 / 8 | 6 / 7 / 21 |
+| DJI L1 LiDAR, 30 m flight | 8,008,361 | 1,006 | 3 / 6 / 11 | 1 / 6 / 10 | 6 / 13 / 32 |
+
+The denominator is **138 trunk-position records**. One pair is only 2 cm apart. The release does not establish a complete census for all 26 squares, so unmatched pins could include other living vines. We report one-to-one matches to recorded positions and leave false-alarm rates open. The geometric methods receive the model’s pin count within each square. The LiDAR row has more available pins, so the difference between capture rows cannot be attributed to sensor quality alone.
+
+At 15 cm, the column rule matched more survey records than the model in **14 of 26 LiDAR squares**, fewer in five and the same in seven. For the photo reconstruction the corresponding counts were 12, four and ten. After scoring, we checked whether each recorded location had any possible column within 15 cm. All **138 of 138** had one in the LiDAR, and **120 of 138** in the photo reconstruction. Each qualifying 5 cm ground cell had a return 15–55 cm above the estimated ground. Many available columns never became matching pins. A column can contain leaves, grass or trellis material. The survey marks the plant’s location and gives no material label for those returns.
+
+**Alignment changed the answer.** The survey’s projection file specifies ETRS89 / UTM 29N (EPSG:25829). Both cloud headers specify WGS 84 / UTM 29N (EPSG:32629). The standard ETRS89-to-WGS84 operation changes the nominal projected coordinates here by less than 1 mm and lists 1 m accuracy. We used the published XY values and fitted no shifts. We also moved the survey 25 cm in four prespecified directions as a sensitivity check. Moving it east changed the LiDAR model/column matches at 15 cm from **11/32 to 17/8**, and the photo comparison from **11/21 to 18/6**. Survey targets measured independently in both capture frames would be needed to establish centimeter-level registration. [Coordinate operation, EPSG 1149](https://epsg.io/1149)
+
+**Replay locally.** Extract `trunk_locations_VineyardB7.zip` and download the red B7 LAS from EscaYard. Get the July 14, 30 m B7 LAZ from VineLiDAR. LASzip decompresses the laser file into LAS. Train `vine-weights.json` using the CPU command under “Replay the vineyard test” above. The study selects grid squares using the survey, fits a plane in each from scan heights alone, and matches predictions across plot boundaries. The final CPU passes took about 10 seconds for the photo cloud and 56 seconds for the laser cloud on this machine, excluding download and LAZ decompression. Both deposits are by Vélez and colleagues and use CC BY 4.0. [EscaYard files](https://zenodo.org/records/10362568) · [VineLiDAR files](https://zenodo.org/records/8113105) · [LASzip](https://laszip.org/) · [Local comparison code](../benchmark/studies/vineyard-b7.mjs)
+
+```sh
+laszip -i 20220714_FLEXIGROBOTS_L1_PRO_30M_4MS_B7.laz -o b7-laser.las
+node benchmark/studies/vineyard-b7.mjs 20220714_FLEXIGROBOTS_B7_30M0G_MS_PRO_Red_densified_point_cloud.las trunk_locations_VineyardB7.shp vine-weights.json
+node benchmark/studies/vineyard-b7.mjs b7-laser.las trunk_locations_VineyardB7.shp vine-weights.json
 ```

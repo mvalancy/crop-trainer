@@ -37,3 +37,36 @@ export async function readPlotColumns(path, originXY, onPoint) {
     await handle.close();
   }
 }
+
+export function fitVineGround(low) {
+  const cells=200;
+  // Estimate the plane independently of the labels and predictions. Equal weight
+  // per occupied square metre limits the influence of dense scanner positions.
+  const samples=[];
+  for(let y=0;y<10;y++) for(let x=0;x<10;x++) {
+    const zs=[];
+    for(let dy=0;dy<20;dy++) for(let dx=0;dx<20;dx++) {
+      const z=low[(y*20+dy)*cells+x*20+dx]; if(Number.isFinite(z)) zs.push(z);
+    }
+    if(zs.length<100) continue;
+    zs.sort((a,b)=>a-b);
+    samples.push([1,x+.5,y+.5,zs[Math.floor(.1*(zs.length-1))]]);
+  }
+  if(samples.length<3) return null;
+  // Solve the three normal equations z = a + bx + cy.
+  const matrix=Array.from({length:3},(_,i)=>Array.from({length:4},(_,j)=>
+    samples.reduce((sum,s)=>sum+s[i]*s[j],0)));
+  for(let i=0;i<3;i++) {
+    let pivot=i;
+    for(let j=i+1;j<3;j++) if(Math.abs(matrix[j][i])>Math.abs(matrix[pivot][i])) pivot=j;
+    [matrix[i],matrix[pivot]]=[matrix[pivot],matrix[i]];
+    const divisor=matrix[i][i];
+    if(Math.abs(divisor)<1e-10) return null;
+    matrix[i]=matrix[i].map(v=>v/divisor);
+    for(let j=0;j<3;j++) if(j!==i) {
+      const factor=matrix[j][i]; matrix[j]=matrix[j].map((v,k)=>v-factor*matrix[i][k]);
+    }
+  }
+  const [z0,b,c]=matrix.map(row=>row[3]);
+  return {z0,b,c,groundSamples:samples.length};
+}
