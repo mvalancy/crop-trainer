@@ -33,12 +33,15 @@
   .benchRunNumbers #epochControl { max-width: 7rem; }
 }
 
+#scoreDetails .helpField:has(#scoreDistance) {
+  max-inline-size: 15rem;
+  margin: .8rem 0 .2rem;
+}
 #scoreDetails .scoreDistanceChoice {
   display: inline-grid;
   gap: .25rem;
-  margin: .8rem 0 .2rem;
 }
-#scoreDistance { min-height: 44px; width: auto; }
+#scoreDistance { min-height: 44px; width: 100%; }
 
 #scoreDetails { container: distance-results / inline-size; }
 
