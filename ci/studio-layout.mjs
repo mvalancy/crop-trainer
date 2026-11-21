@@ -1,10 +1,28 @@
 import assert from 'node:assert/strict';
 
+export async function openSection(page, frame, label) {
+  const launcher = page.locator('#openSettings');
+  if (await launcher.getAttribute('aria-expanded') !== 'true') await launcher.click();
+  const drawer = frame.locator('.instrumentInspector[open]:visible');
+  await drawer.waitFor();
+  if (await drawer.getByRole('heading', {name:label,exact:true}).count()) return;
+  const back = drawer.getByRole('button', {name:'All settings sections'});
+  if (await back.isVisible()) await back.click();
+  await drawer.getByRole('button', {name:label,exact:true}).click();
+}
+export async function closeOverlay(page, frame) {
+  const modal = frame.locator('dialog:modal');
+  if (await modal.count()) {
+    await modal.getByRole('button', {name:'Close settings'}).click();
+    await page.waitForFunction(() => !history.state?.studioDrawer);
+  }
+}
+
 // Record every rendered frame during the actual worker run. A before/after pair
 // misses a canvas that jumps during fitting and returns to its initial size.
 async function recordGeometry(instrument) {
   await instrument.locator('.instrument:visible').evaluate(workbench => {
-    const elements = ['.instrumentStage', '.instrumentInspector', '.instrumentAction', '.instrumentTransport']
+    const elements = ['.instrumentStage', '.instrumentAction', '.instrumentTransport']
       .map(selector => workbench.querySelector(selector));
     elements.push(...workbench.querySelectorAll('.instrumentReadout, #fieldCaption, #stage, #progress'));
     const live = workbench.querySelector('.liveScene canvas, #testMap');
@@ -57,16 +75,21 @@ export async function checkStudioLayout(page, base) {
     await page.goto(new URL('studio/?view=scan',base).href);
     const instrument = page.frameLocator('iframe:not([hidden])');
     await instrument.locator('#fieldCaption').filter({hasText:'plants'}).waitFor();
+    await openSection(page,instrument,'Planting');
     await instrument.locator('#seed').fill('307');
+    await closeOverlay(page,instrument);
     await recordGeometry(instrument);
     await instrument.getByRole('button',{name:'Scan field',exact:true}).click();
     await instrument.locator('#scanLink[href*="seed=307"]').waitFor({state:'attached'});
     await checkGeometry(instrument,'Scan',width);
-    await instrument.getByRole('button',{name:'Findings',exact:true}).click();
+    await openSection(page,instrument,'Findings');
+    await closeOverlay(page,instrument);
     await instrument.locator('#trainLayout').click();
     await instrument.locator('#firstRun.scanReference img').waitFor();
+    await openSection(page,instrument,'Setup');
     await instrument.locator('#runPreset').selectOption('quick');
     await instrument.locator('#engine').selectOption('cpu');
+    await closeOverlay(page,instrument);
     await recordGeometry(instrument);
     await instrument.getByRole('button',{name:'Start training',exact:true}).click();
     await instrument.locator('#stage').filter({hasText:'Run complete'}).waitFor();
@@ -80,6 +103,8 @@ export async function checkStudioLayout(page, base) {
     await recordGeometry(instrument);
     await instrument.locator('#run').click();
     await instrument.locator('#cancel:enabled').waitFor();
+    await openSection(page,instrument,'Scoreboard');
+    await closeOverlay(page,instrument);
     await instrument.locator('#cancel').click();
     await instrument.locator('#run:enabled').waitFor();
     await checkGeometry(instrument,'Compare',width);
@@ -91,9 +116,58 @@ export async function checkStudioLayout(page, base) {
     await instrument.locator('#testMap:visible').waitFor();
     await instrument.getByRole('button',{name:'Inspect detections'}).click();
     await instrument.locator('#testExport').waitFor();
-    await instrument.getByRole('button',{name:'Your plot',exact:true}).click();
+    assert.equal(await instrument.locator('[data-instrument=test]').getAttribute('data-input'),'example');
+    await openSection(page,instrument,'Your plot');
     await instrument.locator('#testPly').waitFor();
     await checkGeometry(instrument,'Field test',width);
     console.log('Verified scan-to-fit handoff and stable geometry at '+width+'px.');
   }
+}
+
+export async function checkDrawer(page, base) {
+  for (const [width,height] of [[320,640],[740,360],[1366,768]]) {
+    await page.setViewportSize({width,height});
+    await page.goto(new URL('studio/?view=scan',base).href);
+    const frame = page.frameLocator('iframe:not([hidden])');
+    const stage = frame.locator('.instrumentStage:visible');
+    await frame.locator('#fieldCaption').filter({hasText:'plants'}).waitFor();
+    const before = await stage.boundingBox();
+    await openSection(page,frame,'Planting');
+    const drawer = frame.locator('dialog[open]:visible');
+    const bounds = await drawer.boundingBox();
+    if (width < 1000) {
+      assert.equal(await frame.locator('dialog:modal').count(),1);
+      assert.deepEqual(await stage.boundingBox(),before);
+      assert.ok(bounds.width <= width-32);
+      assert.equal(await page.locator('.studioBar').evaluate(el=>el.inert),true);
+      await page.keyboard.press('Escape');
+      await drawer.waitFor({state:'hidden'});
+      await page.waitForFunction(()=>document.activeElement.id==='openSettings' && !history.state?.studioDrawer);
+      await page.locator('#openSettings').click();
+      await page.goBack();
+      await drawer.waitFor({state:'hidden'});
+      await page.goForward();
+      await drawer.waitFor();
+      await closeOverlay(page,frame);
+      await page.locator('#openSettings').click();
+      const field = await stage.boundingBox();
+      await page.mouse.click(field.x + field.width - 10, field.y + 25);
+      await drawer.waitFor({state:'hidden'});
+      await page.waitForFunction(()=>document.activeElement.id==='openSettings' && !history.state?.studioDrawer);
+    } else {
+      assert.equal(await frame.locator('dialog:modal').count(),0);
+      assert.ok(bounds.x + bounds.width <= before.x+1);
+      await page.locator('#openSettings').click();
+      assert.ok((await stage.boundingBox()).width > before.width + 200);
+    }
+    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+  }
+  await page.setViewportSize({width:390,height:844});
+  await page.goto(new URL('studio/?view=scan&step=recipe',base).href);
+  const frame = page.frameLocator('iframe:not([hidden])');
+  await frame.locator('dialog:modal #noise').selectOption('clean');
+  await frame.locator('#applyScanSettings').click();
+  await frame.locator('dialog:modal').waitFor({state:'hidden'});
+  await frame.locator('#scanLink[href*="noise=clean"]').waitFor({state:'attached'});
+  assert.equal(new URL(page.url()).searchParams.has('step'),false);
 }

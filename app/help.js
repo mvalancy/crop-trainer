@@ -257,14 +257,21 @@ function place() {
   const anchor = actualBox(active);
   const box = anchorBounds(active, anchor);
   const viewport = window.visualViewport;
-  const left = viewport?.offsetLeft || 0, top = viewport?.offsetTop || 0;
+  const left = viewport?.offsetLeft || 0;
+  let top = viewport?.offsetTop || 0;
   const width = viewport?.width || document.documentElement.clientWidth;
   let height = viewport?.height || document.documentElement.clientHeight;
   // A field tooltip may extend across the scene, but leave the fixed run action reachable.
   const workbench = anchor.closest('.instrumentPanel')?.closest('.instrument');
   if (workbench) {
-    const bar = workbench.querySelector('.instrumentTransport').getBoundingClientRect();
-    if (box && box.left < bar.right && box.right > bar.left) height = Math.min(height, bar.top - top);
+    const header = workbench.querySelector('.inspectorHeader').getBoundingClientRect();
+    const bottom = top + height;
+    top = Math.max(top, header.bottom);
+    height = bottom - top;
+    if (!anchor.closest('dialog:modal')) {
+      const bar = workbench.querySelector('.instrumentTransport').getBoundingClientRect();
+      if (box && box.left < bar.right && box.right > bar.left) height = Math.min(height, bar.top - top);
+    }
   }
   if (!box?.width || !anchor.isConnected || box.bottom <= top || box.top >= top + height || box.right <= left || box.left >= left + width) {
     close();
@@ -390,7 +397,14 @@ document.addEventListener('keydown', event => {
     return;
   }
   if (event.key === 'Escape' && active) {
-    event.preventDefault(); event.stopPropagation(); close(); return;
+    // Hover help can appear under a stationary pointer as a drawer changes panels.
+    // Only an explicitly opened hint should consume the drawer's Escape command.
+    if (pinned || !active.closest('dialog:modal')) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    close();
+    return;
   }
   // Give a dense table one sequential tab stop; arrows inspect the adjacent values.
   const cell = event.target;

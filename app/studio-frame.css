@@ -51,9 +51,11 @@ html:is([data-step=generate],[data-step=fit],[data-step=experiment],[data-step=t
 }
 [data-step=generate] #field > .lab,[data-step=fit] #controls > .monitorPanel {display:none;}
 :is([data-step=generate],[data-step=fit],[data-step=experiment],[data-step=test]) .instrument {
-  --dock-width:clamp(15rem,29%,23rem);
   display:grid;width:100%;height:100%;min-height:0;overflow:hidden;
-  grid-template:"scene inspector" minmax(0,1fr) "transport inspector" 4.6rem / minmax(0,1fr) var(--dock-width);
+  grid-template:"scene" minmax(0,1fr) "transport" 4.6rem / minmax(0,1fr);
+}
+:is([data-step=generate],[data-step=fit],[data-step=experiment],[data-step=test]) .instrument:not([data-compact]):has(>.instrumentInspector[open]) {
+  grid-template:"inspector scene" minmax(0,1fr) "inspector transport" 4.6rem / clamp(17rem,29%,24rem) minmax(0,1fr);
 }
 .instrumentStage {
   grid-area:scene;position:relative;min-width:0;min-height:0;isolation:isolate;
@@ -109,16 +111,45 @@ html:is([data-step=generate],[data-step=fit],[data-step=experiment],[data-step=t
 .instrumentAction button {width:100%;height:100%;min-height:44px;margin:0;padding:.45rem;line-height:1.15;}
 .instrumentAction :is(#cancel:disabled,.helpDisabledProxy),
 .instrumentAction:has(#cancel:not(:disabled)) #run {display:none;}
-.instrumentInspector {
-  grid-area:inspector;display:grid;grid-template-rows:3rem minmax(0,1fr);
-  min-width:0;min-height:0;border-left:1px solid var(--line);background:var(--surface);
+.instrumentInspector:not([open]) {display:none;}
+dialog.instrumentInspector[open] {
+  grid-area:inspector;position:static;display:grid;grid-template-rows:auto minmax(0,1fr);
+  margin:0;padding:0;box-sizing:border-box;width:100%;height:100%;max-width:none;max-height:none;
+  min-width:0;min-height:0;overflow:hidden;border:0;border-right:1px solid var(--line);
+  background:var(--surface);color:var(--ink);
 }
-.instrumentTopics {display:flex;align-items:stretch;gap:.1rem;padding-inline:.6rem;border-bottom:1px solid var(--line);}
+dialog.instrumentInspector:modal {
+  position:fixed;inset:0 auto 0 0;width:min(25rem,calc(100% - 2.5rem));
+  border-radius:0 .85rem .85rem 0;box-shadow:.45rem 0 1.8rem #0a221f40;
+}
+.instrumentInspector::backdrop {background:#0a211e66;}
+@media(prefers-reduced-motion:no-preference){
+  dialog.instrumentInspector:modal {animation:openInspector .18s ease-out;}
+  @keyframes openInspector {from {transform:translateX(-100%);} to {transform:translateX(0);}}
+}
+.inspectorHeader {
+  display:flex;align-items:center;gap:.45rem;min-height:3.9rem;padding:.35rem .65rem;
+  border-bottom:1px solid var(--line);background:var(--surface);
+}
+.inspectorHeader h2 {flex:1;margin:0;padding-inline:.3rem;font:650 1.13rem/1.25 var(--sans);color:var(--ink);}
+.inspectorHeader button {
+  display:grid;place-items:center;min-width:44px;min-height:44px;padding:0;border:0;
+  border-radius:.55rem;background:var(--wash);color:var(--forest);font:500 1.65rem/1 var(--sans);
+}
+.instrumentTopics {display:flex;flex-direction:column;align-items:stretch;overflow:auto;padding:.4rem .75rem;}
 .instrumentTopics .topicButton {
-  min-width:0;margin:0;padding:.35rem .6rem;border:0;border-radius:0;
-  background:transparent;color:var(--muted);font-size:.89rem;
+  display:grid;grid-template-columns:minmax(0,1fr) auto;align-content:center;gap:.15rem .8rem;min-height:4rem;
+  margin:0;padding:.6rem .45rem;border:0;border-bottom:1px solid var(--line);border-radius:0;
+  text-align:left;background:transparent;color:var(--ink);font:600 1rem/1.3 var(--sans);
 }
-.instrumentTopics .topicButton[aria-pressed=true] {color:var(--forest);box-shadow:inset 0 -3px var(--forest);}
+.topicButton small {grid-column:1;color:var(--muted);font:400 .87rem/1.4 var(--sans);}
+.instrumentTopics .topicButton::after {
+  grid-area:1/2/3/3;align-self:center;
+  content:"";width:.5rem;height:.5rem;margin-right:.35rem;
+  border:solid var(--muted);border-width:1.5px 1.5px 0 0;transform:rotate(45deg);
+}
+.instrumentTopics .topicButton:hover {background:var(--wash);}
+.instrumentInspector [hidden] {display:none !important;}
 .instrumentPanel {margin:0;padding:.85rem;overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable;min-height:0;min-width:0;}
 .instrumentPanel[hidden] {display:none;}
 .instrumentPanel :is(#scan-settings,.viewOptions,.scanSummary,.setupPanel) {
@@ -127,6 +158,11 @@ html:is([data-step=generate],[data-step=fit],[data-step=experiment],[data-step=t
 .instrumentPanel :is(#scan-settings>h3,.setupPanel>h2,#scan-view-controls>summary,.growActions,.mobileShortcut) {display:none;}
 .instrumentPanel :is(.setupChoices,.viewTools,.scanSummary .scanDownloads) {grid-template-columns:minmax(0,1fr);}
 .instrumentPanel :is(.scanTotals,.scanCoverage,.scanFiles) {margin:0 0 1.2rem;}
+.instrumentPanel .scanSummary .scanFiles {grid-template-columns:minmax(0,1fr);padding:.7rem;}
+.instrumentPanel .scanFiles > * {grid-area:auto;}
+.instrumentPanel .advancedPanel :is(.selectPair,.stopFields,.detailFields,.triple) {grid-template-columns:minmax(0,1fr);}
+.instrumentPanel .advancedPanel .helpCaption {overflow-wrap:anywhere;}
+
 .instrumentPanel #scan-view-controls .viewTools {display:grid;padding:0;}
 .instrumentPanel #gpu {margin:0 0 .65rem;}
 .instrumentPanel p {overflow-wrap:anywhere;}
@@ -134,20 +170,19 @@ html:is([data-step=generate],[data-step=fit],[data-step=experiment],[data-step=t
 .instrumentPanel .scanSummary .readouts {grid-template-columns:repeat(2,minmax(0,1fr));}
 .instrumentPanel :is(.reviewLink,.advancedJump) {display:inline-block;margin-block:.5rem;}
 .instrumentPanel [hidden],.instrumentReadout [hidden] {display:none;}
-@media(max-width:680px) {
-  :is([data-step=generate],[data-step=fit],[data-step=experiment],[data-step=test]) .instrument {
-    grid-template:"scene" minmax(0,1.55fr) "inspector" minmax(0,1fr) "transport" 3.8rem / minmax(0,1fr);
-  }
-  .instrumentInspector {grid-template-rows:2.8rem minmax(0,1fr);border-left:0;border-top:1px solid var(--line);}
-  .instrumentPanel {padding:.7rem .85rem;}
-  .instrumentPanel .setupChoices {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));}
-  .instrumentTransport {padding:.35rem .75rem;}
+[data-step=generate] .instrumentPanel #advanced-scan,
+[data-step=fit] .instrumentPanel #detector,
+[data-step=experiment] .instrumentPanel #benchExamples {display:block;}
+.instrumentPanel :is(#advanced-scan,#detector,.advancedPanel) {
+  margin:0;padding:0;border:0;background:transparent;color:var(--ink);
 }
-@media(max-height:390px) and (min-width:480px) {
-  :is([data-step=generate],[data-step=fit],[data-step=experiment],[data-step=test]) .instrument {
-    grid-template:"scene inspector" minmax(0,1fr) "transport inspector" 3.2rem / minmax(0,1fr) 42%;
-  }
-}
+.instrumentPanel #advanced-scan :is(.scanEnvironment,.clutter,.specimenComparison),
+.instrumentPanel :is(.settingsGrid,.setupChoices,.benchFields) {grid-template-columns:minmax(0,1fr);}
+.instrumentPanel #advanced-scan .specimenComparison > * {grid-area:auto;}
+.instrumentPanel :is(select,input:not([type=checkbox]),fieldset) {min-width:0;max-width:100%;}
+.instrumentPanel :is(summary,select) {min-height:44px;}
+[data-compact] .instrumentTransport {padding-inline:max(.75rem,env(safe-area-inset-left)) max(.75rem,env(safe-area-inset-right));}
+[data-compact] .instrumentAction {height:3rem;}
 [data-step=fit] #controls > .instrument {border:0;border-radius:0;padding:0;}
 .instrumentReadout #trainLayout {display:inline-block;font-size:.85rem;font-weight:650;}
 .instrument:has(#scanScene:not([hidden])) #trainLayout {visibility:hidden;}
@@ -179,8 +214,8 @@ html:is([data-step=generate],[data-step=fit],[data-step=experiment],[data-step=t
 .instrumentStage #testMap {position:static;width:min(100cqw,100cqh);height:min(100cqw,100cqh);}
 .instrumentStage .viewer #map {touch-action:none;}
 
-[data-instrument=test][data-panel=test-inspector-example] #testDetect,
-[data-instrument=test]:not([data-panel=test-inspector-example]) #testRunExample,
+[data-instrument=test][data-input=example] #testDetect,
+[data-instrument=test]:not([data-input=example]) #testRunExample,
 .instrumentAction:has(#testCancel:not([hidden])) #testRunExample {display:none;}
 [data-theme=dark] .instrumentStage .firstRun:not(.scanReference) {background:#234234;}
 

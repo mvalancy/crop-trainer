@@ -100,3 +100,18 @@ html:has(.studio) {scroll-behavior:auto;}
 .deskHead {min-height:4rem;}
 @media(max-width:760px) {.deskHead {min-height:3.1rem;}}
 .deskHead,#panes {min-width:0;}
+
+#openSettings {
+  display:inline-flex;align-items:center;gap:.45rem;min-height:44px;padding:.4rem .72rem;
+  border:1px solid var(--line);border-radius:.55rem;background:var(--surface);color:var(--ink);
+}
+#openSettings[aria-expanded=true] {background:var(--wash);color:var(--forest);}
+#openSettings[hidden],#drawerShade[hidden] {display:none;}
+#drawerShade {position:fixed;inset:0;z-index:5;background:#0a211e66;}
+.studio:has(#drawerShade:not([hidden])) #panes {z-index:6;}
+@media(max-width:760px){
+  .deskHead {flex-wrap:nowrap;}
+  #steps {min-width:0;}
+  #steps a,#activityMenu,.filmControls button {min-height:44px;}
+  #openSettings {flex:none;}
+}

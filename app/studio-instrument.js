@@ -1,6 +1,8 @@
+import {createInspector} from './studio-inspector.js';
+
 // Assemble the workbench from the instrument's original nodes. The generator, trainer,
 // form validation, downloads and worker callbacks keep their existing references.
-export function installInstrument(doc, tool, reference) {
+export function installInstrument(doc, tool, reference, shell) {
   const scan = tool === 'field';
   const compare = tool === 'benchmark';
   const name = {field:'Scan', trainer:'Training', benchmark:'Comparison', test:'Field test'}[tool];
@@ -12,46 +14,26 @@ export function installInstrument(doc, tool, reference) {
   };
   const workbench = make('section', 'instrument');
   const stage = make('div', 'instrumentStage');
-  const inspector = make('section', 'instrumentInspector');
-  const topics = make('div', 'instrumentTopics');
   const transport = make('div', 'instrumentTransport');
   const readout = make('div', 'instrumentReadout');
   const action = make('div', 'instrumentAction');
-  const panels = new Map();
 
   workbench.dataset.instrument = tool;
   workbench.setAttribute('aria-label', name + ' workbench');
-  inspector.setAttribute('aria-label', name + ' inspector');
-  topics.setAttribute('role', 'group');
-  topics.setAttribute('aria-label', 'Inspector sections');
-  inspector.append(topics);
+  // Reading findings leaves the last chosen input and its action available.
+  let onSelect;
+  if (tool === 'test') {
+    workbench.dataset.input = 'example';
+    onSelect = panel => {
+      if (panel.id === 'test-inspector-example') workbench.dataset.input = 'example';
+      if (panel.id === 'test-inspector-your-plot') workbench.dataset.input = 'local';
+    };
+  }
+  const inspector = createInspector(workbench, name, shell, onSelect);
+  const {addPanel} = inspector;
   transport.append(readout, action);
-  workbench.append(stage, inspector, transport);
+  workbench.append(stage, inspector.drawer, transport);
   find({field:'#field', trainer:'#controls', benchmark:'#main', test:'#field-test'}[tool]).prepend(workbench);
-
-  function show(selected) {
-    workbench.dataset.panel = selected.id;
-    for (const [panel, button] of panels) {
-      panel.hidden = panel !== selected;
-      button.setAttribute('aria-pressed', String(panel === selected));
-    }
-  }
-  function addPanel(name, ...content) {
-    const panel = make('section', 'instrumentPanel');
-    const button = make('button', 'topicButton');
-    panel.id = tool + '-inspector-' + name.toLowerCase().replaceAll(' ', '-');
-    panel.setAttribute('aria-label', name);
-    panel.tabIndex = 0;
-    button.type = 'button';
-    button.textContent = name;
-    button.setAttribute('aria-controls', panel.id);
-    button.addEventListener('click', () => show(panel));
-    panels.set(panel, button);
-    topics.append(button);
-    panel.append(...content);
-    inspector.append(panel);
-    return panel;
-  }
 
   function moveRunActions(form) {
     for (const button of [find('#run'), find('#cancel')]) {
@@ -84,13 +66,13 @@ export function installInstrument(doc, tool, reference) {
     readout.append(find('#testStatus'));
     const example = find('#testTomatoExample');
     find('#testExample').setAttribute('form', form.id);
-    addPanel('Example', example);
-    const inputs = addPanel('Your plot', form);
-    const findings = addPanel('Findings', results, find('.fieldEvidence'), find('.testGuides'));
+    addPanel('Example', 'Try a measured tomato planting.', example);
+    const inputs = addPanel('Your plot', 'Choose a scan and set its detection threshold.', form);
+    const findings = addPanel('Findings', 'Inspect plant detections and export the pins.', results, find('.fieldEvidence'), find('.testGuides'));
     const jump = make('button', 'instrumentResult');
     jump.type = 'button';
     jump.textContent = 'Inspect detections';
-    jump.addEventListener('click', () => { show(findings); findings.focus(); });
+    jump.addEventListener('click', () => { inspector.open(findings); findings.focus(); });
     readout.append(jump);
     const sync = () => {
       map.hidden = results.hidden;
@@ -100,12 +82,11 @@ export function installInstrument(doc, tool, reference) {
     new MutationObserver(sync).observe(results, {attributes:true, attributeFilter:['hidden']});
     sync();
     find('#testAdjustCutoff').addEventListener('click', () => {
-      show(inputs);
+      inspector.open(inputs);
       find('#testCutoff').focus();
     });
-    form.addEventListener('invalid', () => show(inputs), true);
     find('#testCompareWeedMap').addEventListener('click', () => {
-      show(findings);
+      inspector.open(findings);
       find('#testSummary').focus();
     });
   } else if (compare) {
@@ -122,8 +103,11 @@ export function installInstrument(doc, tool, reference) {
     scores.href = '#benchResults';
     scores.textContent = 'View results';
     readout.append(scores);
-    addPanel('Setup', find('#benchForm'));
-    addPanel('Scoreboard', watch);
+    addPanel('Setup', 'Choose the detectors and fields to compare.', find('#benchForm'));
+    const presets = find('#benchExamples');
+    presets.open = true;
+    addPanel('Presets', 'Start from a ready-made experiment.', presets);
+    addPanel('Scoreboard', 'See each detector’s scores as the seeds finish.', watch);
   } else if (scan) {
     const settings = find('#scan-settings');
     const view = find('#scan-view-controls');
@@ -136,10 +120,11 @@ export function installInstrument(doc, tool, reference) {
     gestures[0].lastChild.textContent = ' Drag to turn or tilt the field. Shift-drag to pan. Use the wheel to zoom.';
     gestures[1].lastChild.textContent = ' Drag to turn and tilt. Pinch to zoom or move two fingers together to pan.';
     readout.append(find('#fieldCaption'), find('#generationStatus'), find('#trainLayout'));
-    addPanel('Planting', settings);
+    addPanel('Planting', 'Choose a crop, field seed and scan layout.', settings);
     view.open = true;
-    addPanel('Camera', view);
-    addPanel('Findings', find('.scanSummary'));
+    addPanel('3D view', 'Adjust the viewpoint and visible layers.', view);
+    addPanel('Plant & scanner', 'Change plant shapes, scan noise and obstacles.', find('#advanced-scan'));
+    addPanel('Findings', 'Explore scan coverage and download the field.', find('.scanSummary'));
   } else {
     const firstRun = find('#firstRun');
     const image = firstRun.querySelector('img');
@@ -168,8 +153,10 @@ export function installInstrument(doc, tool, reference) {
     run.textContent = 'Start training';
     moveRunActions();
     readout.append(stageStatus.querySelector('#stage'), stageStatus.querySelector('#progress'));
-    addPanel('Setup', setup);
-    addPanel('Run notes', find('#status'), find('#estimateText'), find('#reviewLink'), monitor.querySelector('.method'));
+    addPanel('Setup', 'Choose a field and a training budget.', setup);
+    addPanel('Model', 'Explore how a detector turns measurements into a prediction.', find('#detector'));
+    addPanel('Training plan', 'Set the schedule, datasets and detection rules.', find('.advancedPanel'));
+    addPanel('Run notes', 'Read the fit estimate and progress messages.', find('#status'), find('#estimateText'), find('#reviewLink'), monitor.querySelector('.method'));
     // Keep the result handoff within reach when a fit completes, even with Setup selected.
     const result = make('a', 'instrumentResult');
     result.href = '#resultsTitle';
@@ -181,9 +168,5 @@ export function installInstrument(doc, tool, reference) {
     readout.append(result);
   }
 
-  show(panels.keys().next().value);
-  return target => {
-    const panel = target?.closest('.instrumentPanel');
-    if (panels.has(panel)) show(panel);
-  };
+  return inspector;
 }

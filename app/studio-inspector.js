@@ -1,0 +1,121 @@
+// The same fields stay in their owning document and form at every window size.
+export function createInspector(workbench, name, shell, onSelect) {
+  const doc = workbench.ownerDocument;
+  const drawer = doc.createElement('dialog');
+  drawer.className = 'instrumentInspector';
+  drawer.setAttribute('aria-label', name + ' settings');
+  drawer.innerHTML = `<header class="inspectorHeader">
+    <button type="button" class="inspectorBack" aria-label="All settings sections">‹</button>
+    <h2 tabindex="-1"></h2>
+    <button type="button" class="inspectorClose" aria-label="Close settings">×</button>
+  </header><nav class="instrumentTopics" aria-label="Settings sections"></nav>`;
+  const heading = drawer.querySelector('h2');
+  const topics = drawer.querySelector('nav');
+  const back = drawer.querySelector('.inspectorBack');
+  const close = drawer.querySelector('.inspectorClose');
+  const panels = new Map();
+  let selected;
+  let active = false;
+  let docked = true;
+
+  function display(panel, focus = false) {
+    selected = panel;
+    for (const item of panels.keys()) item.hidden = item !== panel;
+    topics.hidden = Boolean(panel);
+    back.hidden = !panel;
+    heading.textContent = panel?.getAttribute('aria-label') || name + ' settings';
+    if (panel) onSelect?.(panel);
+    if (focus) heading.focus({preventScroll:true});
+  }
+  function addPanel(label, description, ...content) {
+    const panel = doc.createElement('section');
+    panel.id = workbench.dataset.instrument + '-inspector-' + label.toLowerCase().replaceAll(' ', '-');
+    panel.className = 'instrumentPanel';
+    panel.setAttribute('aria-label', label);
+    panel.tabIndex = 0;
+    panel.hidden = true;
+    const button = doc.createElement('button');
+    button.className = 'topicButton';
+    button.type = 'button';
+    const title = doc.createElement('span');
+    title.textContent = label;
+    const detail = doc.createElement('small');
+    detail.textContent = description;
+    button.append(title, detail);
+    button.setAttribute('aria-label', label);
+    detail.id = panel.id + '-hint';
+    button.setAttribute('aria-describedby', detail.id);
+    button.setAttribute('aria-controls', panel.id);
+    button.addEventListener('click', () => display(panel, true));
+    panels.set(panel, button);
+    topics.append(button);
+    panel.append(...content);
+    drawer.append(panel);
+    return panel;
+  }
+  function sync() {
+    const modal = drawer.matches(':modal');
+    workbench.toggleAttribute('data-compact', shell.compact.matches);
+    if (!active || modal !== shell.compact.matches) {
+      if (drawer.open) drawer.close();
+    }
+    if (active && !shell.compact.matches && docked && !drawer.open) {
+      drawer.open = true;
+    }
+    if (active) shell.changed(api);
+  }
+  function open(panel = selected, remember = true) {
+    if (!active) return;
+    display(panel);
+    if (shell.compact.matches) {
+      if (!drawer.open) {
+        drawer.showModal();
+        if (remember) shell.remember();
+      }
+    } else {
+      docked = true;
+      drawer.open = true;
+    }
+    shell.changed(api);
+    heading.focus({preventScroll:true});
+  }
+  function dismiss() {
+    if (!drawer.open) return;
+    const wasModal = drawer.matches(':modal');
+    if (!wasModal) docked = false;
+    drawer.close();
+    shell.dismissed(api, wasModal);
+  }
+  function reveal(target, remember = false) {
+    const panel = target?.closest('.instrumentPanel');
+    if (!panels.has(panel)) return;
+    for (let el = target; el && el !== panel; el = el.parentElement) {
+      if (el.tagName === 'DETAILS') el.open = true;
+    }
+    open(panel, remember);
+  }
+  back.addEventListener('click', () => {
+    const previous = panels.get(selected);
+    display(null);
+    previous?.focus();
+  });
+  close.addEventListener('click', dismiss);
+  drawer.addEventListener('cancel', event => {event.preventDefault(); dismiss();});
+  drawer.addEventListener('click', event => {
+    if (event.target !== drawer || !drawer.matches(':modal')) return;
+    const r = drawer.getBoundingClientRect();
+    if (event.clientX > r.right || event.clientX < r.left || event.clientY < r.top || event.clientY > r.bottom) dismiss();
+  });
+  workbench.addEventListener('invalid', event => reveal(event.target, true), true);
+  // Use the frame's lifetime for listeners; a reloaded instrument must release its old DOM.
+  const resize = () => sync();
+  shell.compact.addEventListener('change', resize);
+  doc.defaultView.addEventListener('pagehide', () => shell.compact.removeEventListener('change', resize), {once:true});
+  const api = {drawer, addPanel, reveal, open, dismiss,
+    activate(value) { active = value; sync(); },
+    get expanded() { return drawer.open; },
+    get modal() { return drawer.matches(':modal'); }
+  };
+  display(null);
+  return api;
+}

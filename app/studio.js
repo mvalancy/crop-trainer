@@ -91,12 +91,50 @@ function classify(url, doc) {
   return {view,step:step || firstStep(view),url};
 }
 
+// These shareable routes now reveal settings alongside their live instrument.
+const panelSteps = {recipe:'generate', model:'fit', settings:'fit', presets:'experiment'};
+const benchViews = {scan:'generate', train:'fit', compare:'experiment', test:'test'};
+const compact = matchMedia('(max-width:1000px), (max-height:500px) and (max-width:1150px)');
+const settingsButton = document.getElementById('openSettings');
+const shade = document.getElementById('drawerShade');
+let currentInspector;
+function reflectInspector() {
+  const modal = Boolean(currentInspector?.modal);
+  settingsButton.setAttribute('aria-expanded', String(Boolean(currentInspector?.expanded)));
+  shade.hidden = !modal;
+  for (const el of document.querySelectorAll('.studioBar,#activities,.deskHead,.studio>.skip')) el.inert = modal;
+}
+const inspectorShell = {
+  compact,
+  changed(source) { if (source === currentInspector) reflectInspector(); },
+  remember() {
+    if (!history.state?.studioDrawer) history.pushState({studioDrawer:true}, '', location.href);
+  },
+  dismissed(source, wasModal) {
+    if (source !== currentInspector) return;
+    reflectInspector();
+    settingsButton.focus({preventScroll:true});
+    if (wasModal && history.state?.studioDrawer) history.back();
+    else if (Object.hasOwn(panelSteps,active.step)) navigate(address(active.view),'replace');
+  }
+};
+settingsButton.addEventListener('click', () => {
+  if (currentInspector?.expanded) currentInspector.dismiss();
+  else currentInspector?.open();
+});
+shade.addEventListener('click', () => currentInspector?.dismiss());
+
 function showFrame(pane) {
   const doc = pane.frame.contentDocument;
   if (!doc || !active || tasks[active.view].tool !== pane.tool || !pane.ready) return;
   const {view,step,url} = active;
   doc.documentElement.dataset.activity = view;
-  doc.documentElement.dataset.step = step;
+  const workStep = panelSteps[step] || step;
+  doc.documentElement.dataset.step = workStep;
+  currentInspector = workStep === benchViews[view] ? pane.inspectors?.[view] : null;
+  currentInspector?.activate(true);
+  settingsButton.disabled = !currentInspector;
+  reflectInspector();
   pane.frame.title = tasks[view].title;
   const win = pane.frame.contentWindow;
   if (win.location.href !== url.href) {
@@ -110,7 +148,8 @@ function showFrame(pane) {
   const disclosures = {recipe:['anatomySettings','sensorSettings','obstacleSettings'], study:['scan-study'], model:['modelOptions'],settings:['fitOptions','datasetOptions','scanOptions','detectorOptions'],presets:['benchExamples']};
   for (const id of disclosures[step] || []) doc.getElementById(id).open = true;
   const target = doc.getElementById(url.hash.slice(1));
-  pane.reveal?.(target);
+  if (panelSteps[step] || url.hash.slice(1) !== tasks[view].steps[step][1]) currentInspector?.reveal(target);
+  else if (history.state?.studioDrawer && compact.matches) currentInspector?.open(undefined,false);
   if (target && url.hash.slice(1) !== tasks[view].steps[step][1]) {
     for (let el=target;el;el=el.parentElement) if (el.tagName==='DETAILS') el.open=true;
     target.scrollIntoView({behavior:'instant',block:'start'});
@@ -129,11 +168,12 @@ function mount(tool) {
     css.rel='stylesheet'; css.href=new URL('app/studio-frame.css',root);
     css.addEventListener('load', () => {frame.dataset.styled='true';});
     doc.head.append(css);
-    if (tool!=='docs') pane.reveal=installInstrument(doc,tool,referenceScan);
+    if (tool!=='docs') {
+      const view = {field:'scan', trainer:'train', benchmark:'compare'}[tool];
+      pane.inspectors = {[view]:installInstrument(doc,tool,referenceScan,inspectorShell)};
+    }
     if (tool==='trainer') {
-      const revealFit=pane.reveal;
-      const revealTest=installInstrument(doc,'test');
-      pane.reveal=target=>{revealFit(target);revealTest(target);};
+      pane.inspectors.test=installInstrument(doc,'test',null,inspectorShell);
       doc.getElementById('runPreset').addEventListener('change', event => {
         if (event.target.value==='custom') {
           navigate(address('train','settings'));
@@ -185,9 +225,10 @@ function mount(tool) {
       const url=new URL(doc.URL);url.hash=event.target.id;
       const route=classify(url,doc);
       if (route && route.step!==active.step) navigate(route);
+      currentInspector?.reveal(event.target,true);
     },true);
-    if (tool==='field') doc.getElementById('grow').addEventListener('submit',()=>{
-      if (active.view==='scan' && active.step==='recipe') navigate(address('scan','generate'));
+    if (tool==='field') doc.getElementById('grow').addEventListener('submit',event=>{
+      if (event.submitter?.id==='applyScanSettings' && currentInspector?.expanded) currentInspector.dismiss();
     });
     pane.ready=true;
     // Resolve deep anchors against the actual document after a cross-tool replay.
@@ -202,8 +243,14 @@ function mount(tool) {
 }
 
 function navigate(route,historyMode='push') {
+  currentInspector?.activate(false);
+  currentInspector = null;
+  reflectInspector();
   const {view,step,url}=route;
   const config=tasks[view];
+  const workStep = panelSteps[step] || step;
+  settingsButton.hidden = workStep !== benchViews[view];
+  settingsButton.disabled = true;
   const isFilm = view==='learn' && step==='film';
   const pane=isFilm ? null : panes.get(config.tool) || mount(config.tool);
   document.getElementById('film').hidden=!isFilm;
@@ -225,10 +272,11 @@ function navigate(route,historyMode='push') {
   steps.replaceChildren();
   for (const [key,[label]] of Object.entries(config.steps)) {
     if (Object.keys(config.steps).length===1) break;
+    if (panelSteps[key]) continue;
     const link=document.createElement('a');link.textContent=label;link.dataset.step=key;
     const target=new URL(url);target.hash=config.steps[key][1];
     link.href=shellURL({view,step:key,url:target});
-    if (step===key) link.setAttribute('aria-current','location');
+    if (workStep===key) link.setAttribute('aria-current','location');
     steps.append(link);
   }
   if (isFilm) return;
@@ -279,7 +327,16 @@ document.addEventListener('click',event=>{
   }
   document.getElementById('desk').focus({preventScroll:true});
 });
-window.addEventListener('popstate',()=>navigate(readAddress(),'restore'));
+window.addEventListener('popstate',()=>{
+  if (active && shellURL(active).search === location.search && !history.state?.studioDrawer && !panelSteps[active.step]) {
+    // Back from an overlay should return to the settings affordance.
+    currentInspector?.activate(false);
+    currentInspector?.activate(true);
+    settingsButton.focus({preventScroll:true});
+    return;
+  }
+  navigate(readAddress(),'restore');
+});
 const pauseFilm=initFieldFilm(id=>{
   const route=address('learn','lessons');route.url.hash=id;navigate(route);
 });

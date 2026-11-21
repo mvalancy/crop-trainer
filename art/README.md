@@ -20,6 +20,7 @@ The little farm on the front page lives here. Open an SVG to see it move or open
 | [From a surveyed plot to a local detector](field-deployment.svg) | [Field deployment guide](../docs/edge-deployment.md) |
 | [How a survey shift changes a match](survey-alignment.svg) | [Checking field coordinates](../docs/field-validation.md#how-close-are-the-scan-and-the-survey) |
 | [A longer fit on two tomato growth stages](tomato-epochs.svg) | [Training-duration experiment](../docs/tomato-training-duration.md) |
+| [A settings sheet and a docked panel](studio-workspaces.svg) | [Learning studio design](../docs/studio-design.md) |
 | [Learn from difficult background examples](tomato-hard-negatives.svg) | [Tomato and weed study](../docs/tomato-hard-negatives.md) |
 | [One return from Box 77](tomato-one-return.svg) | [Why did the detector place this pin?](../docs/tomato-hard-negatives.md#why-did-box-77-get-a-pin) |
 | [One peak, two training scales](tomato-feature-scaling.svg) | [Read one measured height as a model input](../docs/tomato-feature-scaling.md) |

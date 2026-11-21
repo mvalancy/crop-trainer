@@ -1,5 +1,5 @@
 // Serve only the built artifact at the same project path used by GitHub Pages.
-import {checkStudioLayout} from './studio-layout.mjs';
+import {checkStudioLayout,checkDrawer,openSection,closeOverlay} from './studio-layout.mjs';
 import assert from 'node:assert/strict';
 import {readFile,stat} from 'node:fs/promises';
 import {createServer} from 'node:http';
@@ -159,14 +159,17 @@ try {
   await instrument().locator('#oneUpdate').click();
   await instrument().locator('#practiceScore').filter({hasText:'0.62'}).waitFor();
   await switchActivity('Scan');
+  await openSection(page,instrument(),'Planting');
   await instrument().locator('#seed').fill('49');
-  await sections.getByRole('link',{name:'Plant & scanner'}).click();
+  await openSection(page,instrument(),'Plant & scanner');
+  await instrument().locator('#sensorSettings > summary').click();
   await instrument().locator('#noise').selectOption('clean');
-  await sections.getByRole('link',{name:'Generate'}).click();
+  await closeOverlay(page,instrument());
   assert.equal(await instrument().locator('#seed').inputValue(),'49');
   await switchActivity('Train');
-  await sections.getByRole('link',{name:'Model',exact:true}).click();
+  await openSection(page,instrument(),'Model');
   await instrument().locator('#architecture').selectOption('linear');
+  await closeOverlay(page,instrument());
   await switchActivity('Field test');
   await instrument().getByRole('button',{name:'Run example',exact:true}).waitFor();
   await page.goBack();
@@ -183,9 +186,10 @@ try {
     if (await menu.isVisible()) await page.keyboard.press('Escape');
   }
   await page.setViewportSize({width:390,height:844});
+  await checkDrawer(page,base);
   await checkStudioLayout(page,base);
   await page.setViewportSize({width:390,height:844});
-  console.log('Scan and Train kept the canvas, inspector and primary action stationary throughout live runs.');
+  console.log('The canvas and run controls stayed stationary during live runs and mobile settings changes.');
   console.log('The film entered a live lesson, and the studio preserved a scan, model choice and lesson across tasks and browser Back.');
 
   // Follow a real lesson at the Pages subpath and keep the reader's palette across workspaces.

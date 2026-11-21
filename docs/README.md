@@ -46,6 +46,7 @@ See what a laser measures, try a two-clue model by hand, and check whether a pin
 | Give small plants a larger share of the training set | [Which tomato peaks enter training?](tomato-soil-sampling.md) |
 | Test whether learning several growth stages helps | [Seedlings, transplants and branching tomatoes](tomato-stage-training.md) |
 | Run locally or replay a browser experiment | [Local setup](local-setup.md) |
+| Find the right settings while exploring a scan or a fit | [Keeping the field in view](studio-design.md) |
 | Check how a change reaches the public app | [Tests and Pages deployment](deployment.md) |
 
 ## Pick a question
