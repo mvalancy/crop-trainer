@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="../app/farm.css?v=context-help2">
 
 <link rel="stylesheet" href="../app/help.css?v=context-help2">
-<link rel="stylesheet" href="layout.css?v=sampling1">
+<link rel="stylesheet" href="layout.css?v=epochs2">
 <script type="module" src="../app/help.js?v=context-help2"></script>
 </head>
 <body class="benchmark"><a class="skip" href="#main" data-help="Jump past the navigation to the benchmark controls.">Skip to content</a>
@@ -26,6 +26,11 @@
 <label class="comparisonChoice">Question<select id="comparison" data-help="Pick one question. The benchmark repeats it on two sets of plantings so you can see whether the result holds on fresh fields."><option value="models" selected>Which model scores best?</option><option value="backend">CPU or WebGPU for speed?</option><option value="heights">Do shorter peaks help?</option><option value="epochs">Do more epochs help?</option><option value="density">Do denser scans help?</option><option value="forms">Does a mix of forms help?</option><option value="layouts">Does scan layout matter?</option><option value="sampling">Does balancing examples help?</option><option value="features">Does local ground help?</option><option value="averaging">Does ignoring gaps help?</option><option value="cutoffs">Do lower cutoffs help?</option></select></label>
 <label>Crop<select id="crop" data-help="Choose what grows on both sides of the comparison. Each crop has its own plant shapes and typical spacing."><option value="lettuce">Lettuce</option><option value="artichoke">Globe artichoke</option><option value="tomato">Young tomato</option><optgroup label="Experimental growing systems"><option value="apple">Apple orchard</option><option value="grapevine">Trellised vineyard</option><option value="bench-lettuce">Greenhouse bench lettuce</option><option value="high-wire-tomato">Greenhouse high-wire tomato</option></optgroup></select></label>
 </div></fieldset>
+<div id="epochChoices" hidden>
+<label>Training lengths<select id="epochSchedule" data-help="Compare two epoch counts you choose, or repeat the original three-length benchmark."><option value="pair">Choose two lengths</option><option value="classic">10, 40 and 100 epochs</option></select></label>
+<label id="shortEpochControl">Short fit<input type="number" id="shortEpochs" inputmode="numeric" min="1" max="4999" step="1" value="40" required data-help="How many full passes the shorter CPU fit makes through its training examples."></label>
+<label id="longEpochControl">Long fit<input type="number" id="longEpochs" inputmode="numeric" min="2" max="5000" step="1" value="400" required data-help="How many passes the longer CPU fit makes from the same starting weights. Choose more than the short fit, up to 5,000 epochs."></label>
+</div>
 <p id="comparisonHelp" class="hint"></p>
 <div class="action">
 <label class="check"><input type="checkbox" id="livePreview" data-help="Watch the scans and pins appear while the test runs. Switch this off when measuring speed to leave out the drawing work." checked> Live view</label>
@@ -157,9 +162,13 @@
 <table class="samplingMixTable" aria-label="Eligible and retained peaks by plant form and ground. Bars show the share of available peaks used by each fit."><thead><tr><th scope="col" data-help="The nearest labeled plant supplies its form. Ground describes whether the scan includes soil or floor returns.">Plant group</th><th scope="col" data-help="Number of eligible positive candidate peaks before limiting the training budget.">Available</th><th scope="col" data-help="Number kept after shuffling all eligible plant peaks together.">Shuffled</th><th scope="col" data-help="Number kept after sharing the same total slots across plant forms and ground settings.">Balanced</th></tr></thead><tbody id="samplingRows"></tbody></table></details>
 <details id="scoreDetails" hidden="">
 <summary data-help="Inspect matches, extra pins and missed plants separately at 7.5, 10 and 15 cm.">Scores at each matching distance</summary>
+<p id="scoreScope" class="hint"></p>
+<div class="scoreFilters">
+<label>Ground returns<select id="scoreGround" data-help="Restrict scoring to scans that include ground returns, their matching scans with ground removed, or all scans together. Filtering reuses the scored predictions."><option value="all">Both views</option><option value="present">With ground</option><option value="removed">Ground removed</option></select></label>
 <label class="scoreDistanceChoice">Matching distance<select id="scoreDistance" data-help="Show how many final pins landed within this distance of a different labeled plant. The same pins are scored at all three distances.">
 <option value="7.5">7.5 cm</option><option value="10">10 cm</option><option value="15" selected>15 cm</option><option value="all">All three distances</option>
 </select></label>
+</div>
 <div class="tableScroll">
 <table class="distanceScores" aria-label="Detection scores at the selected matching distances">
 <thead>
@@ -182,6 +191,6 @@
 </main>
 <footer class="siteFoot"><span>Created by Matthew Valancy</span>
 <div><a href="../AGENTS.md" data-help="Read how to reproduce browser experiments and run the project from the command line.">Agent quickstart</a><a href="../#missions" data-help="Open the farm challenges and check your progress.">Farm journal</a><a href="../LICENSE" data-help="Read the permission and attribution terms for the Crop Trainer source code.">MIT license</a></div><small class="contextHint"><span class="hoverHint">Hover or focus a button or score for help.</span><span class="touchHint">Tap a score or hold a button for help. A quick tap runs the action.</span></small></footer>
-<script type="module" src="main.js?v=sampling1"></script>
+<script type="module" src="main.js?v=epochs2"></script>
 </body>
 </html>

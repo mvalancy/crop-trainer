@@ -191,3 +191,13 @@
     content: attr(data-label) / ""; display: block; font-size: .73rem; color: var(--muted);
   }
 }
+
+#epochChoices, .scoreFilters { display: flex; flex-wrap: wrap; align-items: flex-end; gap: .6rem 1rem; }
+#epochChoices[hidden] { display: none; }
+#epochChoices input { width: 7rem; min-height: 44px; font-size: 1rem; font-variant-numeric: tabular-nums; }
+#epochChoices select, #scoreGround { min-height: 44px; }
+#epochChoices .helpField { max-width: 100%; }
+#scoreDetails .scoreFilters .helpField { margin: 0; }
+.scoreFilters { margin-bottom: .75rem; }
+#modelBoxes .pairControls .helpField:has(#pairScan) { flex: 0 1 28rem; }
+#pairScan { width: 100%; }

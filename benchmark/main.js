@@ -1,3 +1,4 @@
+import {formsFor} from '../trainer/plants/forms.js';
 import {samplingLabels, setupSamplingControls, checkSamplingPair, displaySamplingMix} from './sampling.js';
 import {benchmarkView} from './watch.js?v=context-help2';
 import {scanSession} from '../trainer/generator/scan-session.js?v=plants3';
@@ -21,6 +22,7 @@ sensorOptions($('sensor'), true);
 validationSensorOptions($('validationSensor'));
 const requested = new URLSearchParams(location.search);
 const samplingControls = setupSamplingControls(requested);
+const proposedLengths = requested.has('shortEpochs') || requested.has('longEpochs');
 $('benchOptions').open = ['plantArchitecture','plantForm','validationPlantForm','plantCondition','seed','sensor','validationSensor','trainingRayBudget','validationRayBudget','epochs','minimumHeight','peakAveraging','featureMode','sampleLimit','positiveSampling','trainingPair','includeMixed'].some(key=>requested.has(key));
 // Earlier shared comparisons omit a geometry version. Keep their plantings
 // reproducible. A fresh Benchmark uses the current plant architecture.
@@ -57,7 +59,7 @@ for (const id of ['comparison', 'crop', 'sensor', 'validationSensor', 'minimumHe
   if ([...$(id).options].some(option => option.value === value)) $(id).value = value;
 }
 const readPlantControls = setupPlantControls($('crop'), $('plantArchitecture'), $('plantForm'), $('plantCondition'),
-  requested, replayKeys.some(key => requested.has(key)) && !['forms','features','sampling'].includes(requested.get('comparison')) ? 1 : 3);
+  requested, replayKeys.some(key => requested.has(key)) && !proposedLengths && !['forms','features','sampling'].includes(requested.get('comparison')) ? 1 : 3);
 const readValidationForm = setupValidationPlantForm($('validationPlantForm'), $('crop'), $('plantArchitecture'), $('plantForm'), requested);
 trainingRayOptions($('trainingRayBudget'), requested.get('trainingRayBudget'));
 rayBudgetOptions($('validationRayBudget'), requested.get('validationRayBudget'));
@@ -112,6 +114,17 @@ async function discoverGpu() {
   // A slow discovery must not interrupt a run or replace its result.
   if (showingSetup) showReadyState();
 }
+const epochSchedule = $('epochSchedule'), shortEpochs = $('shortEpochs'), longEpochs = $('longEpochs');
+if (proposedLengths) {
+  shortEpochs.value = requested.get('shortEpochs') ?? '';
+  longEpochs.value = requested.get('longEpochs') ?? '';
+} else if (requested.get('comparison') === 'epochs') {
+  // Public reports before editable schedules used the fixed three-fit trial.
+  epochSchedule.value = 'classic';
+}
+function epochCounts() {
+  return epochSchedule.value === 'classic' ? [10,40,100] : [shortEpochs.valueAsNumber,longEpochs.valueAsNumber];
+}
 function explainComparison() {
   samplingControls.show($('comparison').value === 'sampling');
   const compareForms = $('comparison').value === 'forms';
@@ -145,6 +158,11 @@ function explainComparison() {
   $('trainingBudgetControl').hidden = compareDensity;
   $('trainingRayBudget').disabled = compareDensity;
   const compareDurations = $('comparison').value === 'epochs';
+  const editable = compareDurations && epochSchedule.value === 'pair';
+  $('epochChoices').hidden = epochSchedule.disabled = !compareDurations;
+  $('shortEpochControl').hidden = shortEpochs.disabled = !editable;
+  $('longEpochControl').hidden = longEpochs.disabled = !editable;
+  longEpochs.setCustomValidity(editable && longEpochs.valueAsNumber <= shortEpochs.valueAsNumber ? 'Choose more epochs than the short fit.' : '');
   $('epochControl').hidden = compareDurations;
   $('fitEpochs').disabled = compareDurations;
   const limit = $('sampleLimit');
@@ -158,7 +176,7 @@ function explainComparison() {
     heights: 'Both detectors look for high points in the same scans. One starts at 6.5 cm and one at 3.5 cm. Check whether including shorter peaks recovers plants or adds stray pins.',
     density: budgets ? 'Grow each training field twice, using '+budgets[0].toLocaleString()+' and '+budgets[1].toLocaleString()+' rays. Test both detectors on the same fresh fields.'
       : 'Choose two training ray budgets in the scan settings to begin.',
-    epochs: 'An epoch is one pass over the training examples. Fit the same CPU neural model from identical starting weights for 10, 40 and 100 epochs. Compare training loss with F1 on unseen fields.',
+    epochs: 'An epoch is one pass over the training examples. Each CPU fit starts from the same weights, sees the same examples and uses the same 0.50 cutoff. Check whether extra practice finds more plants on fresh fields.',
     layouts: 'Fit one CPU neural network per seed. Scan each fresh planting in a grid and again with simulated OS1-64 rings. Both layouts sample the same number of rays. See how the pattern changes the pins.',
     cutoffs: 'Train one neural network per seed. Set the minimum score for placing a pin to 0.35, 0.50 or 0.65. Check how many extra plants and stray pins each cutoff picks up.',
     models: 'A logistic model weights each scan feature directly. A neural network learns combinations of features. Both train on your CPU. Compare their pins on the same fresh scans.',
@@ -166,6 +184,8 @@ function explainComparison() {
   };
   $('comparisonHelp').textContent = descriptions[$('comparison').value];
 }
+epochSchedule.addEventListener('change', explainComparison);
+for (const input of [shortEpochs,longEpochs]) input.addEventListener('input', explainComparison);
 trainingPair.addEventListener('change', explainComparison);
 $('sampleLimit').addEventListener('input', explainComparison);
 for (const id of ['crop','plantArchitecture','plantForm','validationPlantForm']) $(id).addEventListener('change', explainComparison);
@@ -259,6 +279,7 @@ function showOutcome(rows, comparison, crop) {
     guide.textContent += ' Both fits were tested on '+name.toLowerCase()+'.';
   }
   if (comparison === 'sampling') guide.textContent += ' Open “Which examples reached the fit?” to see which groups gained or lost training examples.';
+  if (comparison === 'epochs') guide.textContent += ' Open the distance scores to compare the same fits with ground included or removed.';
   if (comparison === 'features') guide.textContent += ' Both fits scored the same peak locations. Their height inputs and fitted weights can change which pins survive.';
   if (comparison === 'layouts') guide.textContent += ' Counts are per layout. Scores describe these simulated patterns. A field-mounted scanner has its own viewpoint and occlusion.';
   const list = document.createElement('ul');
@@ -273,6 +294,12 @@ function showOutcome(rows, comparison, crop) {
     count.dataset.helpLabel = entry.label + ' matches and extra pins';
     count.textContent = entry.matched.toLocaleString()+' of '+entry.labels.toLocaleString()+' centers found · '+entry.extra.toLocaleString()+' extra pins';
     item.append(title,count);
+    if (comparison === 'epochs') {
+      const time = document.createElement('span');
+      time.textContent = formatTime(entry.trainingMs)+' average fitting time';
+      time.dataset.help = 'Average CPU fitting time for this length across both seeds. Generation and scoring are timed separately in the results table.';
+      item.append(time);
+    }
     if (comparison === 'forms' || comparison === 'sampling') {
       const samples = document.createElement('span');
       samples.dataset.help = 'Retained positive and negative candidate peaks for fitting, shown separately for each seed.';
@@ -307,13 +334,16 @@ function showOutcome(rows, comparison, crop) {
 
 // Keep finished fits available while a comparison runs or after it is canceled.
 const completedScores = [];
+const scoreGround = $('scoreGround');
+if (['present','removed'].includes(requested.get('scoreGround'))) scoreGround.value = requested.get('scoreGround');
 const scoreDistance = $('scoreDistance');
 const scoreHeaders = [...$('scoreRows').closest('table').tHead.rows[0].cells];
 const sharedDistance = requested.get('scoreDistance');
 if ([...scoreDistance.options].some(option => option.value === sharedDistance)) scoreDistance.value = sharedDistance;
 
 function appendDistanceScores(row, modelLabel) {
-  for (const score of row.scores) {
+  const scores = scoreGround.value === 'all' ? row.scores : row.byGround.find(group => group.ground === (scoreGround.value === 'present')).scores;
+  for (const score of scores) {
     if (scoreDistance.value !== 'all' && Number(scoreDistance.value) !== score.cm) continue;
     const detail = $('scoreRows').insertRow();
     const values = [row.seed, modelLabel, row.epochs, row.threshold, score.cm+' cm',
@@ -325,16 +355,20 @@ function appendDistanceScores(row, modelLabel) {
     });
   }
 }
-scoreDistance.addEventListener('change', () => {
+function changeScoreView() {
   $('scoreRows').replaceChildren();
   for (const {row, modelLabel} of completedScores) appendDistanceScores(row, modelLabel);
   if (report) {
     const replay = new URL(report.replayUrl);
     replay.searchParams.set('scoreDistance', scoreDistance.value);
+    if (scoreGround.value === 'all') replay.searchParams.delete('scoreGround');
+    else replay.searchParams.set('scoreGround',scoreGround.value);
     report.replayUrl = replay.href;
     $('replay').href = replay.href;
   }
-});
+}
+scoreDistance.addEventListener('change', changeScoreView);
+scoreGround.addEventListener('change', changeScoreView);
 
 function appendRow(row, comparison, settings) {
   const tr=document.createElement('tr');
@@ -377,8 +411,9 @@ function appendRow(row, comparison, settings) {
   }
   $('results').append(tr);
   $('scoreDetails').hidden = false;
-  completedScores.push({row, modelLabel});
-  appendDistanceScores(row, modelLabel);
+  const scoreLabel = comparison === 'epochs' ? contenderLabel(row,comparison) : modelLabel;
+  completedScores.push({row, modelLabel:scoreLabel});
+  appendDistanceScores(row, scoreLabel);
 }
 function displayValidationBudgets(container) {
   container.replaceChildren();
@@ -704,6 +739,10 @@ $('fieldMetric').addEventListener('change', () => {
 // Give each fit a stable column even when execution order reverses on seed two.
 function boxFits(seed) {
   const rows = report.rows.filter(row => row.seed === seed);
+  if (report.comparison === 'epochs') {
+    const lengths = report.settings.epochCounts;
+    return [lengths[0],lengths.at(-1)].map(epochs => rows.find(row => row.epochs === epochs));
+  }
   if (report.comparison === 'sampling') return [...samplingLabels.keys()].map(mode => rows.find(row => row.positiveSampling === mode));
   if (report.comparison === 'features') return [...featureLabels.keys()].map(mode => rows.find(row => row.featureMode === mode));
   if (report.comparison === 'forms') return report.settings.trainingForms.map(form => rows.find(row => row.plantForm === form));
@@ -796,7 +835,10 @@ $('benchForm').onsubmit = async event => {
   if (comparison === 'features') settings.featureModes = [...featureLabels.keys()];
   else if (featureSelect.value === 'local-ground') settings.featureMode = 'local-ground';
   if (comparison !== 'averaging' && averagingControl.value === 'occupied') settings.peakAveraging = 'occupied';
-  if (comparison !== 'epochs') settings.epochs = $('fitEpochs').valueAsNumber;
+  if (comparison === 'epochs') {
+    settings.epochCounts = epochCounts();
+    settings.fit = {hiddenLayers:[4], activation:'tanh', optimizer:'sgd', batchSize:0, initSeed:12345, lr:.25};
+  } else settings.epochs = $('fitEpochs').valueAsNumber;
   const neuralCPU = {model:'neural', backend:'CPU', train:trainNetworkCPU};
   const includeMixed = comparison === 'density' && trainingPair.value === CLASSIC_TRAINING_PAIR && $('includeMixed').checked;
   const trainingBudgets = TRAINING_RAY_PAIRS.get(trainingPair.value) ?? [];
@@ -818,9 +860,13 @@ $('benchForm').onsubmit = async event => {
     layouts: [...layoutNames.keys()].map(validationSensorMode=>({...neuralCPU,validationSensorMode})),
     heights: PEAK_HEIGHTS.map(minimumHeight => ({...neuralCPU, minimumHeight})),
     density: densityFits.map(trainingRayBudget => ({...neuralCPU, trainingRayBudget})),
-    epochs: [10, 40, 100].map(epochs => ({...neuralCPU, epochs}))
+    epochs: settings.epochCounts?.map(epochs => ({...neuralCPU, epochs}))
   };
   const contenders = comparisons[comparison];
+  const heldOutForm = settings.validationPlantForm ?? geometry.plantForm;
+  const stage = formsFor(crop).find(form => form.id === heldOutForm)?.label
+      ?? (geometry.plantArchitecture >= 2 ? 'Seeded mix' : 'Original canopy');
+  $('scoreScope').textContent = 'Held-out plants · '+cropProfile(crop).name+' · '+stage;
   if (compareLayouts) settings.validationSensorModes = [...layoutNames.keys()];
   const thresholds = comparison === 'cutoffs' ? [.35, .5, .65] : [.5];
   const rows=[],datasets=[];
@@ -878,7 +924,7 @@ $('benchForm').onsubmit = async event => {
           if (compareSampling && pairedIds) checkSamplingPair(datasets[datasetIndex].stats, set.stats);
           pairedIds=ids;
           datasetIndex=datasets.length;
-          datasets.push({seed:runSeed,stats:set.stats,recipeManifest:set.manifest});
+          datasets.push({seed:runSeed,stats:set.stats,recipeManifest:set.manifest,...(comparison === 'epochs' ? {scaling:set.scaling} : {})});
         }
         let trainingMs = 0;
         if (!reuseFit) {
@@ -886,7 +932,7 @@ $('benchForm').onsubmit = async event => {
           const label=comparison==='cutoffs' || compareLayouts ? 'Shared neural fit' : contenderLabel({...settings,...contender,epochs},comparison);
           view?.fitting(label,epochs);
           const before=performance.now();
-          fit=await train(set.X,set.Y,{dims:set.dims,epochs,lr:.25,signal,onEpoch:view?p=>view.epoch(p,epochs):undefined});
+          fit=await train(set.X,set.Y,{dims:set.dims,epochs,lr:.25,...settings.fit,signal,onEpoch:view?p=>view.epoch(p,epochs):undefined});
           trainingMs = performance.now()-before;
         }
         const cuts = offset ? [...thresholds].reverse() : thresholds;
@@ -900,6 +946,7 @@ $('benchForm').onsubmit = async event => {
           });
           const row = {
             ...(compareForms ? {plantForm:contender.plantForm,validationPlantForm:settings.validationPlantForm,trainingLabel:contender.trainingLabel,trainingSamples:set.stats.samples} : {}),
+            ...(comparison === 'epochs' ? {trainingSamples:set.stats.samples, samplePasses:set.stats.samples * epochs} : {}),
             ...(positiveSampling ? {positiveSampling} : {}),
             ...(settings.sampleLimit !== undefined ? {sampleLimit:settings.sampleLimit,trainingSamples:set.stats.samples} : {}),
             ...(featureMode ? {featureMode} : {}),
@@ -919,6 +966,10 @@ $('benchForm').onsubmit = async event => {
     const replay = new URL(location.pathname, location.origin);
     replay.search = new URLSearchParams({comparison, crop, ...geometry, sensor:sensorMode, seed});
     if (settings.validationPlantForm) replay.searchParams.set('validationPlantForm',settings.validationPlantForm);
+    if (settings.epochCounts?.length === 2) {
+      replay.searchParams.set('shortEpochs', settings.epochCounts[0]);
+      replay.searchParams.set('longEpochs', settings.epochCounts[1]);
+    }
     if(!livePreview)replay.searchParams.set('live','off');
     if ($('fieldMetric').value !== 'mean') replay.searchParams.set('fieldMetric', $('fieldMetric').value);
     if (comparison !== 'heights' && $('minimumHeight').value !== 'default') replay.searchParams.set('minimumHeight', settings.minimumHeight);
@@ -931,6 +982,7 @@ $('benchForm').onsubmit = async event => {
     if (trainingRayBudget) replay.searchParams.set('trainingRayBudget', trainingRayBudget);
     if (validationRayBudget) replay.searchParams.set('validationRayBudget', validationRayBudget);
     if (validationSensorMode) replay.searchParams.set('validationSensor', validationSensorMode);
+    if (scoreGround.value !== 'all') replay.searchParams.set('scoreGround',scoreGround.value);
     if (scoreDistance.value !== '15' || sharedDistance === '15') replay.searchParams.set('scoreDistance', scoreDistance.value);
     if (settings.epochs !== undefined && settings.epochs !== 40) replay.searchParams.set('epochs', settings.epochs);
     if (comparison === 'cutoffs') replay.searchParams.set('cutoffDistance', $('cutoffDistance').value);
@@ -944,16 +996,17 @@ $('benchForm').onsubmit = async event => {
     if (comparison === 'heights') displayHeightStudy();
     if (comparison === 'density') displayDensityStudy();
     if (comparison === 'heights' || comparison === 'density') displayValidationComparison();
-    if (comparison === 'models' || comparison === 'heights' || comparison === 'features' || compareSampling || compareForms) {
+    if (comparison === 'models' || comparison === 'heights' || comparison === 'features' || comparison === 'epochs' || compareSampling || compareForms) {
       const heights = comparison === 'heights';
       $('pairTitle').textContent = heights ? 'Which plants changed match when the peak height dropped?' :
+        comparison === 'epochs' ? 'Which plants changed between the shortest and longest fits?' :
         compareSampling ? 'Which plants did each training sample find?' :
         comparison === 'features' ? 'Which plants changed match with local ground?' :
         compareForms ? 'Which plants did each training mix find?' : 'Which plants did each model find?';
       $('heightTurnover').hidden = !heights;
       const referenceRows = [...new Set(rows.map(row => row.seed))].map(seed => boxFits(seed)[0]);
       const options = referenceRows.flatMap(row => row.tiles.map(tile =>
-        new Option('Run '+row.seed+' · field '+tile.seed+' · soil '+(tile.ground?'present':'removed'), JSON.stringify([row.seed,tile.tile_id]))));
+        new Option((tile.ground?'With ground':'Ground removed')+' · field '+tile.seed+' · run '+row.seed, JSON.stringify([row.seed,tile.tile_id]))));
       $('pairScan').replaceChildren(...options);
       const selected = options.find(option => {
         const [runSeed, tileId] = JSON.parse(option.value);
@@ -975,7 +1028,7 @@ $('benchForm').onsubmit = async event => {
       $('modelBoxes').open = Boolean(selected);
       if (selected && location.hash === '#modelBoxes') $('modelBoxes').scrollIntoView();
     }
-    if (sharedDistance === scoreDistance.value) $('scoreDetails').open = true;
+    if (sharedDistance === scoreDistance.value || scoreGround.value !== 'all') $('scoreDetails').open = true;
     displayFields();
     $('fieldDetails').open = $('fieldMetric').value !== 'mean';
     $('fieldDetails').hidden = false;
