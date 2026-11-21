@@ -1,6 +1,6 @@
-# Inside the live training view
-
 ![Thirteen scan inputs feed four hidden units and a single plant score.](../../art/lesson-network.svg)
+
+# Inside the live training view
 
 Open **Design the model** in the Training Shed and add a hidden layer. The diagram updates before training begins. After a run, **Explore learned weights** shows the incoming weights and bias for any unit. [Open the Training Shed](https://mvalancy.github.io/crop-trainer/trainer/)
 

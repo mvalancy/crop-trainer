@@ -1,3 +1,5 @@
+![A computer applies saved weights to scan returns. A score can turn a candidate peak into a pin.](../art/saved-detector.svg)
+
 # Test saved weights on your own scan
 
 With Node.js 22 or newer you can run the detector on a local point cloud from the repository directory. All inputs stay on the computer. Use **Download model weights** in the Training shed, or fit and export a model with the command below. Supply an ASCII or binary little-endian PLY scan with scalar vertex properties named `x`, `y` and `z`. A generator PLY and its matching labels export make a quick first test.
@@ -15,6 +17,8 @@ For board setup, a practice run, and the steps from scanner to pins, see [Take a
 
 ## Try another cutoff with the same weights
 
+![In this schematic the 0.30 score drops below cutoff. The nearby 0.64 candidate loses to the 0.77 candidate.](../art/lesson-pins.svg)
+
 Use `--score-cutoff` with a value from 0 through 1 to change which scored candidates reach the spacing step. Run the comparison on the same weights, scan, centers and coordinate settings. A lower cutoff can recover plants and add extra pins.
 
 ```sh
@@ -25,6 +29,8 @@ node cli/score-scan.mjs weights.json plot.ply trial-020.json --labels centers.cs
 A single trial JSON contains both answers. Read `savedCutoff.evaluation.scores` for the stored cutoff and `evaluation.scores` for the trial. Compare matches, extra pins and misses at the same distance. With a scan alone, compare `savedCutoff.pins` and `pins` for their locations and scores. With an empty survey, every predicted pin counts as extra. Each trial reports its effective cutoff in `detector.threshold` and the original in `detector.savedThreshold`. The input hashes identify the files used by both runs. Omit `--score-cutoff` to use the value stored in the weights.
 
 ## Align a surveyed plot
+
+![Two detector pins stay still while a survey circle slides east. In a real vineyard laser scan, the trained detector matched eleven surveyed trunks and the column rule matched thirty-two within fifteen centimeters. Moving the references twenty-five centimeters east changed those counts to seventeen and eight.](../art/survey-alignment.svg)
 
 Use one Z-up, 10 × 10 metre plot. Express its lower-left XY corner and the ground elevation at that corner in the original scan coordinates. The default is metres with origin `0,0,0`. This example uses centimetres, a lower-left corner at (5000, 2000) and ground at Z = 18.
 
@@ -43,6 +49,8 @@ The detector subtracts that ground plane from each Z coordinate before finding h
 Returned `x` and `y` use the scan’s coordinate system. The `localX` and `localY` fields are metres from the supplied origin. Each PLY may contain up to 1 million points and occupy up to 32 MiB.
 
 ## Compare with surveyed centers
+
+![Four reference plants and three predictions. Two pins fall within different plant circles.](../art/lesson-matches.svg)
 
 For a physical plot, record **every plant center in the survey area** independently of the predictions. Give one XY location per line in the scan’s original units. These two surveyed centers fall inside the example plot.
 

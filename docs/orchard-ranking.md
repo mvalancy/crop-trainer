@@ -6,6 +6,8 @@ On an overhead scan, several spots under a crown can look like the base. The ord
 
 ## Try it on one tree
 
+![A leafy crown hides the wood below. Look for low returns near the ground when estimating the trunk position.](../art/base-and-crown.svg)
+
 Open the field and choose **Compare ranking rules**. Both maps show exactly the same scan. The white circle marks 15 cm around the planted base. Follow the gold line to the nearest predicted pin. Cyan squares show every 5 cm cell where the scan recorded a return between 15 cm inclusive and 48 cm exclusive in plot Z. The green background is a sample of up to 9,000 returns. Below the maps, the magnified nine-cell grid shows exactly which low cells contributed to the best nearby candidate. The detector used the full scan.
 
 - **A tree that moved inside the circle.** Tree 9 on held-out field `19105417` had 13 qualifying cells near its base. Under the usual rule none survived spacing. One low cell lifted the priority of a candidate from 5.570 to 6.570, ahead of a nearby candidate at 6.139. Its final pin moved from 50.4 cm to 4.6 cm from the base. [Open the ring scan](https://mvalancy.github.io/crop-trainer/?crop=apple&plantArchitecture=4&plantForm=central-leader&plantCondition=healthy&appleCanopy=leafy&seed=19105417&sensor=os1-64&budget=60000&ground=true&noise=clean&weeds=off&sticks=off&boards=off&tile=9bf8d00c2d9b6d4b&studyMode=ranking&studyMetric=orchard&studyCloud=on&studyZoom=tree&studyBox=9#scan-study)
@@ -13,9 +15,13 @@ Open the field and choose **Compare ranking rules**. Both maps show exactly the 
 
 ## What changed inside the locator?
 
+![Example of the low-return ranking trial. The side view marks five laser returns between 15 centimetres inclusive and 48 centimetres exclusive above the plot’s zero-height plane. The local soil surface can vary. The top view places those five returns in three distinct 5 centimetre cells near a candidate. The trial adds two points to that candidate’s ranking score, the maximum bonus. It considers the same qualifying candidates and keeps their usual 1.05 metre spacing. A weed can contribute low returns too.](../art/plants/apple-low-returns.svg)
+
 Both rules qualify a candidate using the same distribution of higher returns. For each qualifying candidate, the trial checks a 15 × 15 cm square centered on it. It adds one priority point per distinct low occupied cell in that square, up to two points. Repeated returns in one cell count once. The original score still sets eligibility and centers the final pin. Both rules place pins from XYZ alone. The simulator supplies reference bases afterward for scoring. [Illustrated apple guide](../trainer/plants/apple.md#can-a-low-return-give-the-trunk-a-head-start) · [Earlier spacing experiment](orchard-bases.md#does-shorter-pin-spacing-recover-the-missed-bases)
 
 ## What held up on fresh plantings?
+
+![Grow practice fields, fit weights, then measure on separate plantings. Keep both scans of each planting in one split.](../art/field-split.svg)
 
 Four development seeds and six confirmation seeds were set before scoring. The confirmation plantings contained **67 distinct trees**. Each was observed in 16 combinations of tree form, damage, foliage and scan layout, giving 1,072 tree appearances on 96 scans. Each rule received identical XYZ from 60,000 rays per scan with soil included, no added scan noise and no added obstacles. The simple height baseline placed pins on spaced height peaks. F1 balances matches, extra pins and missed trees.
 
@@ -28,6 +34,8 @@ Four development seeds and six confirmation seeds were set before scoring. The c
 The 32 recovered appearances belonged to 24 distinct trees. All six held-out plantings gained matches at 15 cm. The gain included 21 appearances on simulated OS1-64 rings and 11 on reference grids, with 26 leafy and six dormant appearances. All 32 gains were among the 380 appearances whose best nearby trial candidate earned a low-return bonus. In 81 appearances, no nearby candidate qualified for either rule. Changing candidate order cannot create the missing candidate.
 
 ## What if the scan has fewer rays?
+
+![An overhead sketch shows grid and ring sampling patterns. A small plant can fall between samples.](../art/scanner-patterns.svg)
 
 On four more held-out plantings, both rules found exactly the same **131 of 736 tree appearances** within 15 cm at 12,000 rays. At 60,000 rays the low-return rule found **510 of 736**, up from 482. These were the same 46 trees at both budgets. Each planting appeared in 16 combinations of tree form, damage, foliage and scan layout. The 12,000-ray scan sampled the plot again at its own budget.
 
@@ -44,6 +52,8 @@ Run `node benchmark/studies/orchard-ranking.mjs density` to repeat this comparis
 
 ## Can ground clutter fool this check?
 
+![Two overhead sketches show the same eight trees. In the first, four sample boards are centred on selected tree bases. In the second, the same shapes land at independently sampled positions. One still lands close to a tree by chance. The detector sees laser returns without labels for tree or board.](../art/plants/apple-board-placement.svg)
+
 We held out another four plantings with 42 distinct healthy, leafy central-leader trees. Each was scanned on the reference grid and simulated OS1-64 rings. We grew each planting clear, with weeds, and with boards, leaving the ray XY samples, geometry and base positions paired. There were 84 tree appearances per condition.
 
 | Scan contents | Low returns from crop / clutter | Usual rule matches / extra pins | Low-return matches / extra pins | After masking low clutter, matches / extra pins |
@@ -56,6 +66,8 @@ The counts are at 15 cm. For the final column only, we used the simulator’s re
 
 ## Repeat the comparisons
 
+![A seed packet marked 27 branches into two plots. Four seedlings appear at the same positions in both rows.](../art/seed-replay.svg)
+
 Run these commands from the repository root with Node 22 or newer. The first prints field IDs, scores at all three distances, per-tree traces and timings. The second prints the paired clutter controls with their masked results. Neither command downloads a dataset.
 
 ```sh
@@ -66,5 +78,7 @@ node benchmark/studies/orchard-ranking-clutter.mjs > orchard-clutter.json
 In one Node 24 CPU run, the 96 confirmation scans took 2.11 s to generate. The height baseline took 0.29 s, the usual rule 0.59 s and low-return ranking 0.68 s. Matching took 0.03 s. The 24 clutter scans took 1.03 s to generate, with 0.28 s for the usual rule and 0.24 s for the trial. These are wall times for small 10 m plots. [Ranking study](../benchmark/studies/orchard-ranking.mjs) · [Clutter study](../benchmark/studies/orchard-ranking-clutter.mjs)
 
 ## What did physical apple scans show?
+
+![Measure planting centers independently, record returns, then compare predicted pins in the same frame.](../art/survey-pair.svg)
 
 The lower-height, fan-off east and west views of 11 Fuji trees let us check whether a pin stays in the same place as the scanner moves. With an east-derived common frame, median pin displacement was 10.08 cm for the usual rule and 11.89 cm for the low-return rule. Seven of 11 single-tree pairs stayed within 15 cm with either rule. Repeating the calculation with a west-derived ground level changed that count to seven for the usual rule and nine for the trial. This sensitivity matters when scanner passes disagree about the height of the soil. An independent survey of the soil-line bases is still needed to measure accuracy under occlusion. [Physical scans, source terms and replay protocol](field-datasets.md#what-changes-when-the-scanner-moves-to-the-other-side-of-the-row)

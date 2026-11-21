@@ -1,10 +1,12 @@
-![One grapevine has woody arms and leafy shoots. A row of overhead rays samples its upper surfaces and the exposed ground.](../../art/plant-architecture.svg)
+![A dotted survey path crosses rows of plants on the left page. A magnified rosette on the facing page has a center pin and a ruler.](../../art/field-notebook.svg)
 
 # Grow a plant from parts
 
 Start with one planting position. Grow a stem from that point, attach shoots to the stem, and put leaves or fruit on those shoots. The field scanner samples the plant alongside its neighbors, soil and farm hardware. The result is a synthetic point cloud with a known planting identity. [Photographic references for all seven crops](../../docs/crop-architecture.md)
 
 ## Explore one crop
+
+![One trunk divides into two woody arms. Shoots grow upward from them and bear leaves. On the right, vertical laser paths end in dots on the upper surfaces or the ground. Parts of the trunk have no returns.](../../art/plant-architecture.svg)
 
 Choose a picture to see how that plant grows and open a field you can scan.
 
@@ -19,6 +21,8 @@ Choose a picture to see how that plant grows and open a field you can scan.
 | [<img src="../../art/plants/high-wire-tomato.svg" width="210" alt="Tomato plants with tall supported stems and fruit hanging beneath the leaves."><br>High-wire tomato](high-wire-tomato.md) | Fruit trusses hang<br>below the leaf canopy.<br>[High-wire tomato code](high-wire-tomato.js) |
 
 ## Place an organ
+
+![Follow a leaf to its stem. Attached organs belong to one plant with one reference center.](../../art/organ-to-target.svg)
 
 Each crop function receives its base `x, y, z`, a plant-size parameter called `radius`, the seeded `random()` function and three drawing functions. Coordinates and lengths are in **metres**. For greenhouse crops the registry raises the base to the bench or trough. The following fragment builds one leaf at a node 12 cm above a plant’s base.
 
@@ -36,6 +40,8 @@ These routines update the plant bounds and send candidate intersections to the f
 
 ## Add a form to an existing crop
 
+![Two side views have spreading divided leaves. The later form adds a terminal bud high on a thick stalk and two smaller buds on branches.](../../art/plants/artichoke.svg)
+
 Begin with a horticultural distinction a scan could reveal. For example, romaine and looseleaf lettuce differ in leaf habit. Both can share the same rosette function and planting target. An apple’s pruning system changes how its woody branches connect, so a width multiplier alone cannot describe it.
 
 1. Add a stable ID and a short label to that crop’s list in the shared form catalog. The entry supplies the valid choices to the rest of the app. [Form catalog](forms.js)
@@ -44,9 +50,13 @@ Begin with a horticultural distinction a scan could reveal. For example, romaine
 
 ## Inspect one plant before scanning
 
+![Sample positions intersect two leaves and the soil. Dots show where a surface was measured.](../../art/lesson-returns.svg)
+
 Below the scan summary, open **Advanced scan settings → Plant form and condition**. Pick a form and turn its intact and damaged views together. Both come from the first plant on that seed, at its generated size. **Damage close-up** frames the area where the silhouette changed. Orbit the plant to see a break that another branch hides from the front. This view shows the modeled stems and leaves. The field scanner records the surfaces its rays reach. [Explore a damaged open-vase apple](https://mvalancy.github.io/crop-trainer/?crop=apple&plantArchitecture=3&plantForm=open-vase&plantCondition=damaged&seed=27#anatomySettings)
 
 ## Add a crop or growing system
+
+![Measure planting centers independently, record returns, then compare predicted pins in the same frame.](../../art/survey-pair.svg)
 
 1. Choose the stage, growing system and detection target. A young field tomato and a fruiting high-wire tomato need different geometry even though they belong to the same species. Link to a source photo and record the assumptions beside the implementation.
 2. Add a crop function here, a form list in the catalog, and register the function under its crop key. Use the supplied random stream when choosing organ lengths and angles. For a paired change such as apple leaf cover, keep drawing the same structural parameters so switching the treatment preserves the planting. [Crop registry](index.js)

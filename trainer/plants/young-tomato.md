@@ -6,6 +6,8 @@ A young tomato is already a small branching structure. Look at the seedling phot
 
 ## Three vegetative forms
 
+![A filmstrip shows a seed, a shoot, a leaf and two stages of a seedling. The plant in the terracotta pot plays the five drawings in order.](../../art/sprout-strip.svg)
+
 | Form | What to look for |
 | --- | --- |
 | **Seedling** | A small main shoot, two long seed leaves and a few early true leaves. Sparse sampling can miss the whole plant between rays. |
@@ -15,6 +17,8 @@ A young tomato is already a small branching structure. Look at the seedling phot
 The axil is where a leaf joins the stem. In a real tomato this is where a side shoot, often called a sucker, can develop. The depicted forms are snapshots of vegetative plants. They carry no fruit and specify no calendar age. The separate high-wire tomato selection represents greenhouse training and pruning. [New Hampshire Extension, pruning tomato plants](https://extension.unh.edu/resource/pruning-tomato-plants-fact-sheet) · [Young tomato generator](young-tomato.js) · [High-wire tomato](high-wire-tomato.md)
 
 ## Try a missed-plant test
+
+![Sample positions intersect two leaves and the soil. Dots show where a surface was measured.](../../art/lesson-returns.svg)
 
 Choose **Young tomato** with structured plants, a fixed dataset seed and a fixed form. Compare a dense and a sparse scan of the same planting. Check the number of returns on each labeled plant. When a plant has returns, inspect whether they form a candidate peak, and whether that candidate survives scoring. This distinguishes a small plant that the scanner missed from one the model scored too low.
 

@@ -20,6 +20,8 @@ Training uses your GPU through WebGPU when available. Your CPU can do the whole 
 
 ## What will you grow next?
 
+![One trunk divides into two woody arms. Shoots grow upward from them and bear leaves. On the right, vertical laser paths end in dots on the upper surfaces or the ground. Parts of the trunk have no returns.](art/plant-architecture.svg)
+
 Can you still spot the trunk after an apple tree loses a limb? Try the orchard, or pick a crop from seven illustrated growing guides. [Explore a broken apple orchard](https://mvalancy.github.io/crop-trainer/?crop=apple&plantArchitecture=2&plantForm=open-vase&plantCondition=damaged&sensor=reference&budget=100000&seed=39061#field) · [Meet the plants](trainer/plants/README.md)
 
 Have a scan of your own? [Try your detector on a local PLY](https://mvalancy.github.io/crop-trainer/trainer/#field-test) and see how it compares with picking the tallest peaks.

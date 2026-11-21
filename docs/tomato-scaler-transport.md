@@ -8,6 +8,8 @@ A *scaler* expresses each of the 13 peak measurements in units of its spread acr
 
 ## What changed on the field?
 
+![Four reference plants and three predictions. Two pins fall within different plant circles.](../art/lesson-matches.svg)
+
 Six additional planting seeds produced the same plants for each detector. Each planting contributed grid and 64-ring captures, with and without weeds, for both seedling and branching tomatoes. All 48 soil-present scans used 60,000 rays. We kept the cutoff at 0.65 and checked all 25,787 candidate peaks for each training seed.
 
 These results show **matches / extra pins** at 15 cm for the six weedy seedling ring scans together. Misses are the 622 surveyed seedlings minus the matches.
@@ -24,6 +26,8 @@ Across the full 48 scans, changing the scale before the **first** training updat
 
 ## Can a unit change preserve a prediction?
 
+![The same smoothed peak height is marked on two centimetre rulers from a saved weedy tomato scan. The ordinary model learned a mean of 13.97 cm and a standard deviation of 10.16 cm. This peak is 0.44 standard deviations below that mean. The half-difficult model learned a mean of 16.91 cm and a standard deviation of 9.71 cm. The peak is 0.76 standard deviations below its mean.](../art/tomato-feature-scaling.svg)
+
 Yes. Adjust both the first-layer weight and its bias to express exactly the same response in the new units. For each hidden unit, let `w` denote its incoming weights, `b` its bias, `μ` the training means and `σ` the stored spreads. Apply the following to every feature, leaving later layers alone.
 
 ```text
@@ -34,6 +38,8 @@ new_bias = old_bias + sum_k old_weight[k] × (new_mean[k] − old_mean[k]) / old
 The saved scaler applies a linear shift and rescaling to raw features. Height and occupancy rules run earlier, and standardization applies no clipping. We used the stored positive spreads, including the trainer’s floor for near-constant features. We checked both directions on the actual training draws (600 rows per draw, with overlap) and on every held-out candidate before and after training. The maximum candidate-score difference was **0.000000269**, and all final pin locations agreed. The small residual comes from Float32 rounding.
 
 ## What if two fits begin with the same predictions?
+
+![One times 1.5, plus zero times 0.4, plus a bias of minus 0.5 equals one. Its sigmoid is about 0.73.](../art/lesson-weights.svg)
 
 We converted the **initial** first-layer weights so a model using the difficult-background scale began with the same raw-input scores as the original model using the ordinary scale. Then we trained it for 640 epochs on exactly the same 600 difficult-background practice rows. The same seed, learning rate and full-batch SGD applied to all three fits. Comparing scores before fitting on 26,384 peaks from **six further planting seeds** gave a maximum difference of 0.000000060. Those plantings were reserved before the new models were fitted.
 
@@ -52,6 +58,8 @@ For **3524159**, changing *only the starting predictor* within the difficult sca
 Branching tomatoes responded differently too. On weedy ring scans, matching the start changed branching precision from 82.2% to 78.4%, 68.3% to 66.4%, and 69.0% to 72.3% for the three difficult-scale fits in table order. Scaling and initial predictions can both matter, with direction and size varying across practice draws. These results describe small synthetic tomato models. A field-performance claim needs independent physical surveys.
 
 ## Reproduce
+
+![A seed packet marked 27 branches into two plots. Four seedlings appear at the same positions in both rows.](../art/seed-replay.svg)
 
 From the repository root, run the following with Node. The first command produces the frozen source models for the follow-up. The last command checks their hashes, rebuilds the practice rows, and writes per-field scores at 7.5, 10 and 15 cm for the four replay paths and the height baseline.
 

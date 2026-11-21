@@ -6,6 +6,8 @@ A lettuce head can have one obvious center when viewed from above. A grapevine c
 
 ## Seven crops and growing systems
 
+![Follow a leaf to its stem. Attached organs belong to one plant with one reference center.](../art/organ-to-target.svg)
+
 These links open photographs at their original sources. The observations describe the pictured growth stage or training system. The generator uses approximate geometry and seeded variation. Its lengths, angles and frequencies are simulation settings.
 
 | Crop Trainer selection | Look at the photograph | What to represent and test |
@@ -19,6 +21,8 @@ These links open photographs at their original sources. The observations describ
 | **High-wire tomato** | Figure 2 shows a stem clipped to twine. Figures 1a and 5a show plants along an aisle with pots below and support hardware above. The guide explains how growers lower and lean stems as growth continues. [Alabama Extension photos](https://www.aces.edu/blog/topics/crop-production/greenhouse-tomato-production/) | The single-leader form grows one leaning leader with a pruned lower stem, compound leaves and hanging fruit trusses. The canopy peak can be displaced along the row from the labeled base. [Burusa greenhouse photograph](https://github.com/akshaykburusa/tomato_greenhouse_dataset/blob/main/images/1000-60-120_color.jpg) |
 
 ## Choose a plant form
+
+![Two side views have spreading divided leaves. The later form adds a terminal bud high on a thick stalk and two smaller buds on branches.](../art/plants/artichoke.svg)
 
 A form can describe a market type, a growth stage or a grower’s pruning decision. Holding the form fixed lets you test one of those differences. A seeded mix picks forms within the planting to stress a detector. It supplies no estimate of how often neighboring plants on a farm have different cultivars, ages or management.
 
@@ -35,15 +39,21 @@ Photographs establish which organs connect and which shapes are plausible. The g
 
 ## Replay geometry by version
 
+![One trunk divides into two woody arms. Shoots grow upward from them and bear leaves. On the right, vertical laser paths end in dots on the upper surfaces or the ground. Parts of the trunk have no returns.](../art/plant-architecture.svg)
+
 Fresh browser scans, training runs and benchmarks use **Connected plants · v3**. Version 3 joins each retained lettuce blade to its own stem with a short stalk. Vegetative artichokes grow from a stem rooted in the soil, and each bud bract meets the core at its own collar height. Greenhouse lettuce meets the 0.73 m bench, including its ends. High-wire tomato meets the 0.19 m trough. Vines, apple trees and young field tomatoes share their v2 organ shapes. Use the version recorded in a saved recipe or run to reproduce its geometry, tile IDs and scores. [Generator versions](../trainer/generator/plant-version.js) · [Replay and attachment tests](../test/plant-attachments.test.js)
 
 The vineyard fixture represents one catch wire and posts. The greenhouse fixture represents the overhead cable, posts and trough. A real grower also uses a fruiting wire or twine to hold plants in position. Those finer supports are simplified out of the fixture layer and can be absent from a side view. [Vineyard growing guide](../trainer/plants/grapevine.md) · [Greenhouse tomato growing guide](../trainer/plants/high-wire-tomato.md)
 
 ## Which position gets scored?
 
+![Measure planting centers independently, record returns, then compare predicted pins in the same frame.](../art/survey-pair.svg)
+
 For apple, grapevine, greenhouse bench lettuce and high-wire tomato, the reference pin is the planting base recorded by the generator. Field lettuce, artichoke and young tomato use the horizontal midpoint of the full plant’s bounding box. A one-sided loss of leaves can shift that midpoint even though the underlying planting stayed in place. Use the same target definition when comparing detectors. [Reference positions in the scorer](../trainer/models/data.js)
 
 ## What the scanner can see
+
+![Sample positions intersect two leaves and the soil. Dots show where a surface was measured.](../art/lesson-returns.svg)
 
 The standard field scan samples horizontal positions and keeps the upper surface at each position. An overhead ray landing on a lettuce leaf cannot also describe the bare soil underneath. A vine trunk or tomato base can be present in the scene with no direct return. Turning the 3D viewer shows the same measured points from another angle. A new acquisition from the aisle would encounter different surfaces and different occlusions. A denser overhead pattern still observes the plot from above. [Scan implementation](../trainer/generator/field.js) · [Scanner layouts](scanners.md)
 
@@ -52,6 +62,8 @@ The structure overlay draws the generator’s centerlines, including wood hidden
 For a paired test, keep planting identities, crop stage, fixtures and noise seed fixed. Record achieved returns, the number of plants with zero returns, and how many targets have a candidate peak before classification. Then compare final count error and location scores. For a physical side-scan study, record the actual viewpoint and label the same bases independently. The earlier vineyard pilot illustrates the distinction. The detector counted 21 plants on a registered strip with 18 surveyed trunks, yet just one pin fell within 15 cm of a trunk. The same test can check a new generator or detector. [Vineyard replay and data terms](field-datasets.md#replay-the-vineyard-test) · [Field validation guide](field-validation.md)
 
 ## How procedural rules relate to research
+
+![A dotted survey path crosses rows of plants on the left page. A magnified rosette on the facing page has a center pin and a ruler.](../art/field-notebook.svg)
 
 L-systems use repeated rules to describe growth and branching. One useful idea for a small generator is that two leaves on a shoot share a parent axis. Generating each leaf independently loses that relationship. In the implementation, the crop registry selects an organ-building function. Shared surface routines turn tapered stems, arched or lobed leaves, and ellipsoids into geometry. [Prusinkiewicz and Lindenmayer, *The Algorithmic Beauty of Plants*, chapter 1](https://algorithmicbotany.org/papers/abop/abop-ch1.pdf) · [Guide to adding a crop](../trainer/plants/README.md) · [Shared surfaces](../trainer/plants/surfaces.js)
 

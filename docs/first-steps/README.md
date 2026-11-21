@@ -1,4 +1,4 @@
-![Side-view sketch of sample rays meeting two leaves and the ground. Dots mark the surfaces that were sampled.](../../art/lesson-returns.svg)
+![A lettuce has many leaves. A scanner samples visible surfaces and a detector tries to place one pin for the whole plant.](../../art/plant-or-peak.svg)
 
 # How does a browser learn to spot lettuce?
 
@@ -19,6 +19,8 @@ Imagine walking a row with a clipboard. Someone hands you a map covered in dots 
 You can do the whole tour in a browser. Each chapter has a small experiment, and the pictures also make sense as stills.
 
 ## What can a scanner see?
+
+![Sample positions intersect two leaves and the soil. Dots show where a surface was measured.](../../art/lesson-returns.svg)
 
 A LiDAR instrument sends out light and times its return. With the direction of the beam and that distance, it can place a dot in space. A **point cloud** is a collection of those dots. Each has three coordinates. On our level plot, X and Y tell you where to walk and Z tells you how high the surface was. A return can come from a leaf, the soil, or a board across the row.
 

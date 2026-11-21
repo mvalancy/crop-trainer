@@ -6,9 +6,13 @@ Start with **one saved scan of one measured plot**. Train a lettuce detector on 
 
 ## 1. Pack the detector
 
+![A computer applies saved weights to scan returns. A score can turn a candidate peak into a pin.](../art/saved-detector.svg)
+
 In the Training shed, choose your crop, run **Generate, train & score**, then select **Download model weights**. Save the download as `weights.json`. It carries the network, the scale of each input, the cutoff and the minimum pin spacing. **Download run settings** saves the recipe for repeating the fit. [Open the Training shed](https://mvalancy.github.io/crop-trainer/trainer/)
 
 ## 2. Prepare the field computer
+
+![The same field travels from the source files into a built site. Opening it in a browser checks that a scan can run.](../art/check-the-build.svg)
 
 | Board | A good starting point |
 | --- | --- |
@@ -31,11 +35,15 @@ On the board, Node should report `linux / arm64`. Look for `"passed": true` in t
 
 ## 3. Capture one plot you can check
 
+![Measure planting centers independently, record returns, then compare predicted pins in the same frame.](../art/survey-pair.svg)
+
 1. **Mark the plot.** Start with one crop and a stationary scanner. Mark a lower-left corner and two horizontal axes, then measure the soil elevation there. Record the units, scanner pose and date. For accuracy testing, independently survey every in-scope plant’s center in that same frame. Start `centers.csv` with the header `x,y`, then add one XY pair per plant in the original scan units.
 2. **Make a Z-up cloud.** Record a scan using the sensor’s capture software. Export Cartesian XYZ points. If the scanner is tilted, apply the measured rotation and translation so Z points up. If you merge views, register them into one measured frame first. Keep the original capture. [CloudCompare’s transform tool](https://www.cloudcompare.org/doc/wiki/index.php/Apply_Transformation)
 3. **Crop and export.** Use a clipping box to extract a single plot up to **10 × 10 m**. Keep its soil and canopy. Save the points as ASCII or binary little-endian PLY with `x`, `y`, `z`, up to **1 million points and 32 MiB**. Check a known distance and soil elevation in the saved coordinates. Record any thinning or coordinate shift and use the same frame for the survey. [CloudCompare’s clipping box](https://www.cloudcompare.org/doc/wiki/index.php/Cross_Section) · [File and coordinate examples](scan-cli.md)
 
 ## 4. Place pins on the board
+
+![In this schematic the 0.30 score drops below cutoff. The nearby 0.64 candidate loses to the 0.77 candidate.](../art/lesson-pins.svg)
 
 Copy `weights.json`, `plot.ply` and, if surveyed, `centers.csv` to a private directory on the board. With SSH enabled, for example, run the following **on the workstation**. Replace `grower@fieldpi.local` with your board’s login and address.
 
@@ -57,6 +65,8 @@ Use a fresh report filename for each run. With no survey, omit `--labels` to get
 **A portability check you can replay.** We ran the same surveyed vineyard strip through Linux Node.js 24.22.1 on native x64 and on ARM64 under QEMU. Both wrote a byte-identical JSON report for 16,685 returns, including pin coordinates, scores and survey matches. This checks the ARM64 scoring path. Physical Pi and Jetson memory use, sustained throughput and sensor capture still need measurement on the kit. [Vineyard files, settings and command](field-datasets.md#replay-the-vineyard-test)
 
 ## 5. Decide what the field trial showed
+
+![Four reference plants and three predictions. Two pins fall within different plant circles.](../art/lesson-matches.svg)
 
 - **Did the model travel correctly?** Score the *same files* on your workstation and the board. Compare `files` (input hashes), `frame`, pin locations and per-distance match counts. If they disagree, check the revision, weights, units and origin before interpreting model quality.
 - **Is the board fast enough for your job?** Time several representative plots on the board. The `real` time above includes Node startup, file reading, both detectors, optional matching and writing the report. Time acquisition and registration separately. Record the board, OS, Node version and point count beside the timings. A laptop training time cannot tell you how fast the board processes a field scan.

@@ -1,6 +1,6 @@
-# The illustration patch
-
 ![Five cel frames of a seed sprouting, with an animated preview growing in a little pot.](sprout-strip.svg)
+
+# The illustration patch
 
 The little farm on the front page lives here. Open an SVG to see it move or open its source to see how it works. The diagrams use simple shapes and CSS animation. Each has a still frame for readers who prefer reduced motion.
 
@@ -29,6 +29,8 @@ The little farm on the front page lives here. Open an SVG to see it move or open
 | [A notebook for exploring a field](field-notebook.svg) | [Field guide](../docs/README.md) |
 | [Two rows from the same seed](seed-replay.svg) | [Test plot](../test/README.md) |
 | [The sprout animation strip](sprout-strip.svg) | This illustration patch |
+
+![One times 1.5, plus zero times 0.4, plus a bias of minus 0.5 equals one. Its sigmoid is about 0.73.](lesson-weights.svg)
 
 The [illustrated beginner course](../docs/first-steps/README.md) adds ten diagrams, including a [weighted sum you can work out by hand](lesson-weights.svg), the [measured training loss](lesson-loss.svg) and a [pin-matching puzzle](lesson-matches.svg).
 

@@ -1,8 +1,12 @@
+![Grow practice fields, fit weights, then measure on separate plantings. Keep both scans of each planting in one split.](../art/field-split.svg)
+
 # Does training help find crop centers?
 
 On these held-out synthetic fields, a trained detector placed better pins for lettuce and globe artichoke than a rule that kept the tallest peaks. Young tomato exposed a failure. When we trained on a grid and tested on rings, the default neural model discarded too many true plants. A separate experiment tested whether changing the cutoff could recover them.
 
 ## Comparing four detectors on the same fields
+
+![A schematic comparison on identical plant centers, shown as green rings. The first detector misses one center. The second finds all six but places an extra red pin between the rows.](../art/paired-field.svg)
 
 Every detector received the same peaks from the same XYZ scan. The **peak rule** kept peaks in height order, skipping any too close to an existing pin. **Height only** learned a logistic score from one feature, the smoothed height. **Logistic** used all 13 local features. **Neural** used the same 13 features and a hidden layer of four tanh units. All four used the same minimum pin spacing for a given crop.
 
@@ -23,6 +27,8 @@ On tomato rings the neural model improved mean absolute count error from 26.6 to
 
 ## A fresh test of the tomato cutoff
 
+![Six training plantings teach the weights. Four other plantings let us choose a score cutoff for the saved model. Six reserved plantings measure final matches, extra pins and misses. The small maps illustrate the steps.](../art/tomato-calibration.svg)
+
 At 15 cm, 94.6% of tomato centers on the first ring cohort had a match among the raw proposals. The default neural model reached only 75.1% after scoring and spacing. We tested a specific possibility on new fields. Could a lower score cutoff retain more of those proposals and still beat the peak rule?
 
 We trained three new models on reference grids. For each fit, we chose a cutoff on four separate labeled ring plantings, maximizing mean F1 across the three distances. All three selected **0.30** from the nine cutoffs 0.10 through 0.90. We froze each choice, then scored the other eight ring plantings from that fit. The table pools those 24 test plantings.
@@ -37,9 +43,13 @@ Calibration recovered recall at the cost of precision. This used labeled example
 
 ## What did longer training change for tomatoes?
 
+![On six held-out simulated fields at 15 cm, 40, 160 and 640 passes found 0.3%, 9.4% and 39.6% of the seedlings. On separate scans of branching plants at the same settings, 84.5%, 79.0% and 70.3% of the predicted pins were correct. All fits used identical examples and a cutoff of 0.50.](../art/tomato-epochs.svg)
+
 On six new synthetic plantings, the same four-unit network trained for 40, 160 or 640 passes over 600 examples. At 15 cm on ring scans it found **2, 62 and 260 of 657 seedlings** respectively. On branching plants, the corresponding runs placed 115, 167 and 263 extra pins. Grid seedlings remained harder even after 640 passes (58 of 657). A useful duration depends on the crop stage, scanner and acceptable cost of a wrong pin. [Study, settings and field replay](tomato-training-duration.md)
 
 ## Did practicing on difficult backgrounds help?
+
+![A starter model scores peaks known to be background. Of the 300 background examples in each final fit, ordinary sampling reserves no places for high scores, quarter-hard reserves 75 and half-hard reserves 150. Each model also sees the same 300 plant examples.](../art/tomato-hard-negatives.svg)
 
 On six fresh weedy ring plantings, one fit removed 64 extra pins and missed 79 additional seedlings. Its practice model had selected many tomato leaf tips as background because they lay too far from a planted center. A second seed changed the tradeoff. Before choosing a training recipe, compare both the plants it finds and those it loses. The saved pair in Field Test lets you open either kind of change in 3D. [Background selection and plant-by-plant replay](tomato-hard-negatives.md)
 
@@ -47,9 +57,13 @@ Changing the examples also changes the scale of the measurements going into the 
 
 ## What held up in a physical vineyard?
 
+![A leaning vine can put its highest visible leaves to one side of its surveyed trunk. This is an illustrative mechanism.](../art/lesson-vine.svg)
+
 On a Spanish vineyard block, the geometric column rule matched 32 of 138 surveyed trunk records within 15 cm. A model trained on simulated vines matched 11, at the same pin budget. On a second block the column rule matched two of 121 and the trained model matched 11. Only 64 survey records had a nearby laser return in the height band the rule searched. Both surveys covered selected rows, so an unmatched pin could fall on an unsurveyed vine. [Independent vineyard checks and alignment limits](field-datasets.md#does-the-b7-result-hold-in-the-neighboring-vineyard)
 
 ## Does a grid-trained artichoke detector transfer to rings?
+
+![An overhead sketch shows grid and ring sampling patterns. A small plant can fall between samples.](../art/scanner-patterns.svg)
 
 In a smaller browser test at **12,000 sampled rays per scan**, the CPU and WebGPU fits agreed on every tile’s match counts. Changing the held-out scan from a reference grid to simulated OS1-64 rings reduced pooled mean F1 from **.455 to .422**. At 15 cm the rings produced 43 fewer matches and nine fewer extra pins. The difference varied by fit. For seed `14512693`, mean F1 went from .490 to .424. For `14512694` it went from .417 to .420.
 
@@ -69,6 +83,8 @@ Each seed trained on six synthetic reference-grid plantings and held out three. 
 With live preview on, generation took 0.62–2.44 s per dataset. Fitting took 39–77 ms on CPU and 5.22–8.19 s through Chromium’s SwiftShader software WebGPU adapter. Scoring took 15–51 ms per fit. These are single-run wall times on small datasets. Physical GPU throughput and performance on real artichoke scans remain unmeasured.
 
 ## Reproduce the tests
+
+![A seed packet marked 27 branches into two plots. Four seedlings appear at the same positions in both rows.](../art/seed-replay.svg)
 
 To repeat the four-detector comparison and tomato cutoff test, run this command from the repository root with Node.js 22 or later.
 

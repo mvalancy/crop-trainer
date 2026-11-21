@@ -1,4 +1,4 @@
-![Two views of the same orchard show boards centered on trees and boards scattered independently. A scattered board can still land near a tree.](../art/plants/apple-board-placement.svg)
+![A leafy crown hides the wood below. Look for low returns near the ground when estimating the trunk position.](../art/base-and-crown.svg)
 
 # Does the orchard detector find the tree or the board?
 
@@ -6,9 +6,13 @@ On six held-out synthetic apple plantings, the low-return rule matched **78 of 1
 
 ## See it on one tree
 
+![Two overhead sketches show the same eight trees. In the first, four sample boards are centred on selected tree bases. In the second, the same shapes land at independently sampled positions. One still lands close to a tree by chance. The detector sees laser returns without labels for tree or board.](../art/plants/apple-board-placement.svg)
+
 On the first planted tree (Tree 0 in the viewer) of field `22153127`, the closest low-return pin landed **42.2 cm** from the base in the clear grid scan. Boards centered on the trees produced 22 low board returns within 15 cm of this base. The pin moved to **8.5 cm**. Independently placed boards produced zero low board returns near this base, and the nearest pin was again **42.2 cm** away. The usual support rule placed the same pin in all three scans. Open **Inspect a plant** and compare Tree 0. Its board-return count uses all recorded heights and points. The orange squares in each map show a sample. [Compare these board placements in the generator](https://mvalancy.github.io/crop-trainer/?crop=apple&plantArchitecture=4&plantForm=central-leader&plantCondition=healthy&appleCanopy=leafy&seed=22153127&sensor=reference&budget=60000&ground=true&noise=clean&weeds=off&sticks=off&boards=off&tile=f774a2e45499c6ab&studyMode=boards&studyMetric=orchard&studyCloud=on&studyBox=0&studyZoom=tree#scan-study)
 
 ## What changed on the held-out fields?
+
+![A schematic comparison on identical plant centers, shown as green rings. The first detector misses one center. The second finds all six but places an extra red pin between the rows.](../art/paired-field.svg)
 
 The six plantings contained 60 distinct trees. We scanned each on a reference grid and simulated OS1-64 rings. Every cell below gives **matched pins / extra pins / missed trees**, pooled over the same 12 scans per placement. Each method used only XYZ to predict. The height rule kept spaced peaks taller than 6.5 cm. The orchard rules shared candidate selection, 1.05 m spacing and final pin refinement. The low-return rule also used nearby occupied cells from 15 cm to just under 48 cm above the plot’s zero-height plane to rank candidates. [How the ranking works](orchard-ranking.md)
 
@@ -27,6 +31,8 @@ Boards centered on the trees gained two matches on field `22153127`, one on `223
 
 ## What happened on four more plantings?
 
+![Grow practice fields, fit weights, then measure on separate plantings. Keep both scans of each planting in one split.](../art/field-split.svg)
+
 We repeated the placement test on four fresh seeds and changed the same 39 trees from healthy to damaged, keeping their bases fixed. At 15 cm the low-return rule recorded the following counts over 78 appearances per row.
 
 | Crown condition | Clear | Centered on trees | Independent |
@@ -37,6 +43,8 @@ We repeated the placement test on four fresh seeds and changed the same 39 trees
 On field `23484467`, independent boards moved the closest pin to the second healthy tree (Tree 1) from 7.9 to 46.4 cm on the grid and from 1.0 to 45.3 cm on rings. Masking low board returns recovered the match in each layout. Those are two views of one tree. The paired results show how this overhead generator can reward a location clue. Accuracy in a physical orchard still needs surveyed tree bases and measured scan geometry. In a separate handheld avocado study, the same low band contained both woody and leafy returns. One tree had no focal-tree returns there on the second date. [Field observations and replay](field-datasets.md#how-often-does-a-low-return-actually-hit-wood)
 
 ## Does the board advantage persist at one million rays?
+
+![An overhead sketch shows grid and ring sampling patterns. A small plant can fall between samples.](../art/scanner-patterns.svg)
 
 **On six new fields it disappeared.** At 60,000 rays, tree-centered boards gave the low-return rule three more matches than independent boards at 15 cm. At one million rays they cost one match. Clear plots and independently scattered boards both yielded 66 matches among the same 67 trees at the higher budget. Five of the six fields had identical matched-tree counts for both board placements at that budget.
 
@@ -58,6 +66,8 @@ Cells give **matched pins / extra pins / missed trees**. With centered boards, m
 The detector settings and six field seeds were fixed before scoring. Both budgets used identical healthy, leafy trees and board geometry. The overhead reference grid sampled fresh XY positions at each budget and kept those positions fixed across the three placements. The OS1-64 layout tops out at 65,536 rays, so this comparison covers the reference grid only. On the same Node CPU host, generating the 18 scans took 0.70 s at 60,000 rays and 9.40 s at one million. Height, usual support and low-return inference respectively took 0.11, 0.30 and 0.19 s at the lower budget and 0.55, 0.40 and 0.46 s at the higher budget. These are synthetic single-host wall times. Run `node benchmark/studies/orchard-board-placement.mjs density > orchard-density.json` to reproduce the paired fields, pins and counts.
 
 ## Repeat the study
+
+![Use the same recipe and seed to grow the same planting and repeat the scan.](../art/seed-to-field.svg)
 
 From the repository root, run the following command with Node.js 22 or later. The JSON includes seeds, tile IDs, per-field and per-distance counts, retained pins, board-return attribution and phase timings. For a single cohort, append `development`, `confirmation` or `damage` before redirecting the output. [Study source](../benchmark/studies/orchard-board-placement.mjs)
 

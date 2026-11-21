@@ -1,6 +1,6 @@
-# The test plot
-
 ![A seed packet marked 27 yields two matching rows of seedlings when the same field is grown twice.](../art/seed-replay.svg)
+
+# The test plot
 
 A seed is a field’s replay code. If a change moves the plants when you only switch off the trellis wires, a detector comparison stops being fair. The growing-system tests replay that pair and compare the plant coordinates.
 
@@ -21,5 +21,7 @@ node --test
 | Pairing benchmark results | [Density comparisons](density.test.js) |
 
 [Crop Trainer home](../README.md) · [Local setup](../docs/local-setup.md)
+
+![A computer applies saved weights to scan returns. A score can turn a candidate peak into a pin.](../art/saved-detector.svg)
 
 To check a slow browser start, open **Field test** with network throttling. Select a PLY and saved weights immediately. **Find plants** should become available as soon as the scan has been read, even while the trainer is checking its GPU. With labeled apple data, switch between the three overlays and check the counts against the saved CLI report. [Field test](https://mvalancy.github.io/crop-trainer/trainer/#field-test) · [Score a scan locally](../docs/scan-cli.md)

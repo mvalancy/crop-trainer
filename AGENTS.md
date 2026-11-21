@@ -1,8 +1,26 @@
+![A dotted survey path crosses rows of plants on the left page. A magnified rosette on the facing page has a center pin and a ruler.](art/field-notebook.svg)
+
 # Crop Trainer agent guide
 
 Help a team answer one LiDAR detection question at a time. Crop Trainer generates seeded leafy crops, orchard trees, trellised vines and greenhouse rows with scan returns and one target per plant. To evaluate synthetic weights on an openly available physical scan, replay the [surveyed vineyard strip](docs/field-datasets.md#replay-the-vineyard-test). The starter trains and benchmarks on synthetic data. Users can evaluate a saved detector against their own local survey in Field test. Start with the [first harvest](README.md). Keep the front page focused on that first run. Put experimental results and technical walkthroughs in the [field guide](docs/README.md).
 
+## Make every page a science picture book
+
+![A seed sprouts one leaf at a time. The still frames let a reader follow every step.](art/sprout-strip.svg)
+
+Every repository Markdown page opens with an explanatory animated SVG, including agent instructions and skills. Skill frontmatter stays first. Give every substantial section a nearby animation that answers its question. A young reader should be able to point to what moved and explain what it means. Preserve measured values, units, sources and the distinction between a sketch, a simulation and a field observation. Use descriptive alt text, relative paths and a complete still frame for reduced motion.
+
+Start a documentation change with the `illustrate-field-guide` skill. Use `run-crop-experiment` to replay or compare detectors. The implementations live in `.agents/skills/` and Claude Code discovers them under `.claude/skills/`.
+
+## Find the current sensing workflow
+
+![A plant, a sketch of laser returns and a color pixel grid show how two sensors observe the same subject.](art/two-views.svg)
+
+Today the generator and detectors use LiDAR XYZ returns. Camera vision is planned. Keep plant anatomy, reference positions, field splits and scoring in shared guides. Put input formats, capture conventions, features and model recipes under the relevant sensing method in the guide index and site navigation. Verify current capabilities against the generator, model code and runnable examples before describing them.
+
 ## Run your first test
+
+![Use the same recipe and seed to grow the same planting and repeat the scan.](art/seed-to-field.svg)
 
 From a fresh clone, use Node.js 22 or later. The app has zero package dependencies.
 
@@ -22,19 +40,27 @@ The initial browser schedule, **Field practice**, sets 16 training and eight val
 
 ### Reproduce a crop form or an injury
 
+![Follow a leaf to its stem. Attached organs belong to one plant with one reference center.](art/organ-to-target.svg)
+
 Use `plantArchitecture: 3` for connected plants. For apple trees, v4 varies the thickness of scaffold branches while preserving the branch centerlines. Version 3 joins lettuce blades to their stems, grounds vegetative artichokes, seats artichoke bracts and meets greenhouse support heights. Keep the recorded architecture when replaying an export. Version 2 reproduces the first organ models and version 1 reproduces original canopies. Choose a named `plantForm` from the [catalog](trainer/plants/forms.js) or use `mixed`. Set `plantCondition` to `healthy`, `mixed` or `damaged`. All three settings travel with the recipe, training settings and benchmark replay. Keep the seed and scanner fixed when comparing conditions. Field export boxes report each resolved form and condition. Apple leaf-on and dormant form an additional paired inspection in the field generator. For the visual rule, photo references and limitations, open the [seven illustrated generator guides](trainer/plants/README.md).
 
 ### Check the actual training set
 
+![Two selections from the same mixed tomato training scans, seed 443731. Each fit uses 300 peaks within 9.5 cm of a labeled plant center and the same 300 background peaks. With soil returns present the ordinary draw selected 35 seedling, 58 transplant and 67 branching peaks. With soil removed it selected 26, 54 and 60. The balanced draw selected 50 from each group.](art/tomato-training-draw.svg)
+
 A completed Training Shed run includes **What went into this fit?** Expand the planting list to inspect the retained class counts or open a training field. For a programmatic audit, sum `usedPositive + usedNegative` across `stats.trainingExamplesByField` and compare with `stats.samples`. Both soil variants count toward the same field. The two global class totals should match. Multiply the retained total by the completed epochs to reproduce `samplePasses`. Older exports have aggregate counts only. During fitting, the animation uses the first validation field as a fixed visual reference. [Training coverage experiment](docs/training.md#does-the-fit-use-later-fields)
 
 ### Reproduce a live pin display
+
+![In this schematic the 0.30 score drops below cutoff. The nearby 0.64 candidate loses to the 0.77 candidate.](art/lesson-pins.svg)
 
 Open the Training shed with the run’s settings. During fitting, the gold rings use the first soil-present validation scan. To check a ring layout at a particular epoch, use the epoch shown **beside the predicted count**. Replay that many epochs from the same initialization, score the first validation tile at the same threshold and compare its selected XY centers. The loss readout can advance between pin updates. Browser previews sample up to 9,000 returns for drawing. Fitting and scoring use the full feature arrays.
 
 For timing comparisons, run both contenders through the same Benchmark entry point with **Live view** off. The exported report records this setting and its replay URL includes `live=off`. The Training shed also samples model weights and draws a preview during the fit, so its elapsed time includes that work.
 
 ## Test a detector outside the generator
+
+![A computer applies saved weights to scan returns. A score can turn a candidate peak into a pin.](art/saved-detector.svg)
 
 Use a model exported by the Training shed and a local plot scan. If the user supplies an independently surveyed center CSV, run `node cli/score-scan.mjs weights.json plot.ply new-result.json --labels centers.csv`. With no survey, omit `--labels` and describe the resulting pins as predictions. Use the same frame, scan and one-to-one matching for the trained detector and its height-only baseline. The output includes SHA-256 hashes and both source and local coordinates. See the [file and frame contract](docs/scan-cli.md) and [field validation protocol](docs/field-validation.md).
 
@@ -43,6 +69,8 @@ To check a fresh field computer offline after setup, run `node cli/run.mjs prefl
 To reproduce the four-detector comparison on separate synthetic plantings, run `node benchmark/studies/paired-evidence.mjs`. It also calibrates tomato on separate fields and evaluates the frozen cutoff on fresh plantings. [Study design and results](docs/evidence.md)
 
 ## Run a paired experiment
+
+![A schematic comparison on identical plant centers, shown as green rings. The first detector misses one center. The second finds all six but places an extra red pin between the rows.](art/paired-field.svg)
 
 Write settings into a local JSON file. This example uses the default settings. The optional validationSensorMode override is described below.
 
@@ -59,6 +87,8 @@ Valid settings include 2–256 training fields, 1–128 validation fields, 1–1
 
 For a browser benchmark, open `/benchmark/`, select the crop, scanner and first seed, and run the comparison. Model, backend, epoch and cutoff comparisons share one dataset per seed. Training density builds a separate dataset for each training budget and pairs the held-out tiles. Expand **Scores at each matching distance** to see which pins matched, which were extra, and which plants were missed. Use **Link to these settings** after a run to open the same setup on another browser. The JSON includes this URL, timings and tile IDs. A localhost link uses the local server address. GPU rows include available adapter metadata. A software adapter exercises WebGPU kernels on the CPU. Record the device separately when reporting a physical GPU timing.
 
+![In this schematic the 0.30 score drops below cutoff. The nearby 0.64 candidate loses to the 0.77 candidate.](art/lesson-pins.svg)
+
 To isolate the score cutoff, select **What changes with the cutoff?** The benchmark fits one CPU neural network per seed. Use `/benchmark/?comparison=cutoffs&trialCutoff=0.70` to score its weights at 0.50 and 0.70 on the same fields. Omitting the trial cutoff in a replay link restores the original three values (0.35, 0.50 and 0.65). Group the JSON rows by seed and threshold. Each seed shares the generation and training costs across its rows. For a follow-up, pass the desired threshold in CLI settings and check the precision and recall change on fresh fields.
 
 For the cutoff, model and backend comparisons, **Epochs per fit** sets the training budget for every contender. Links without an epoch setting use 40. For example, open `/benchmark/?comparison=cutoffs&crop=artichoke&seed=621&epochs=100`. Under **What changes from the 0.50 cutoff?**, change the match distance to see the differences in matched plants and extra pins. Click a cutoff in Results to replay that CPU fit in the Training Shed. The replay preserves the cutoff, epoch count, crop, seed and scan layouts.
@@ -68,6 +98,8 @@ To compare plant coverage, use `cutoffDistance=7.5`, `10` or `15` on the cutoff 
 To compare cutoffs at two training durations, run the same seed pair at 10 and 100 epochs. Check that both reports have the same tile IDs and field seeds. Within each report, all three cutoff rows for one seed share their fit and training time. Compare the change from 0.50 to 0.65 separately at each duration. Use a fresh seed pair to see whether the result repeats.
 
 ### Compare peak heights on identical raw scans
+
+![Measure a peak above a ground reference. A height floor decides which candidates reach the detector.](art/measure-a-peak.svg)
 
 Open `/benchmark/?comparison=heights&crop=tomato&seed=2021&sensor=mixed&validationSensor=os1-64&validationRayBudget=12000`. Run both heights, download the JSON and repeat with first seed 2051 for another pair. The Peak scout question uses the first seed’s soil-present extra-pin counts at 15 cm.
 
@@ -81,6 +113,8 @@ To repeat the test at two validation densities, open **Try an experiment → Tes
 
 ### Pair scanner layouts on identical plantings
 
+![An overhead sketch shows grid and ring sampling patterns. A small plant can fall between samples.](art/scanner-patterns.svg)
+
 Set `sensorMode` to the training layout and `validationSensorMode` to the layout to score. Omitting the second key uses the training selection for validation, including for older settings files. Both accept `mixed` or any key in `trainer/generator/sensors.js`. For a scanner comparison:
 
 1. Use seed 211, a mixed training layout and the reference validation grid. Copy the settings and change just `validationSensorMode` to `os1-64`.
@@ -91,17 +125,23 @@ The browser benchmark exports both layout selections when validation is overridd
 
 ### Share or verify a generated scan
 
+![A seed packet marked 27 branches into two plots. Four seedlings appear at the same positions in both rows.](art/seed-replay.svg)
+
 From the 3D viewer, copy the scan link after generating. For a validation tile, follow its viewer link from the field audit or benchmark. A generator URL takes the field seed under `seed`, scanner key under `sensor`, and ray count under `budget` (0 selects the seed's budget). Use `ground=true` or `false`, `noise=seeded|clean|rough`, and `weeds`, `sticks`, `boards` each set to `seeded|on|off`. Use `boardPlacement=independent` to scatter boards across the plot when included. Omitting it replays the original placement at plants. The optional `tile` value is the expected 16-digit hexadecimal tile ID. For a shareable field, use the GitHub Pages base URL. The page rebuilds the scan locally.
 
 To verify reproducibility, open the link in a fresh browser, compare the tile ID and download the PLY and labels. Compare files from the same generator revision byte for byte. To reproduce a model score, use the benchmark URL or training settings as well as the field link. The training run's dataset seed selects multiple field seeds.
 
 ### Change held-out ray density
 
+![An overhead sketch shows grid and ring sampling patterns. A small plant can fall between samples.](art/scanner-patterns.svg)
+
 Use `validationRayBudget` in CLI settings or browser trainer and benchmark URLs. Omit it or set it to 0 for the original seeded budget. Fixed values are 12000, 30000, 60000, 100000, 262144, 500000 and 1000000. A fresh Field generator opens at 262144 rays. Use Reference to sample all one million rays on a 10 m plot. Hardware-inspired layouts stop at their own channel × column capacity. Training recipes use seeded budgets by default. To change training density independently, set `trainingRayBudget` to the same numeric values or to the string `"alternating"`. Alternating starts at 12000 for even dataset seeds and 60000 for odd seeds and switches budget with each training planting. Both soil variants share the planting’s numeric `recipe.points`. Both settings travel in trainer and benchmark links and JSON exports. In the Training shed, expand **Scanner and ray budgets**. To test density matching, fix the training and validation layouts to `os1-64`, keep validation at 12000 rays, and compare 12000 with 60000 training rays on seeds 1221 and 1222. Verify identical held-out tile IDs and report training sample counts in each arm. To repeat the density experiment, choose mixed training, `validationSensorMode: "os1-64"`, seed 721 and compare validation budgets 12000 and 60000. Repeat at seed 722.
 
 Check training tile IDs, CPU weights and scaling before comparing the runs. Match held-out tiles by field seed and ground flag. The manifest's `recipe.points` is the request, `sampledRays` is the number sampled before scan noise, and `returnCount` is the final XYZ count. Stray returns can increase the final count. Capped layouts can produce identical scans and tile IDs for two requests above capacity. The OS1-32 preset caps a 100000-ray request at 16384 samples. Use the per-tolerance scores and stage audit to tell a missing peak from a rejected candidate.
 
 ### Replay the paired training-density benchmark
+
+![Actual target positions from plot 216917. At left the height detector matched 15 plants at 30,000 rays. At right it matched 103 at one million. Circles indicate a match within 15 centimetres and crosses indicate a miss. A line sweeps across both maps.](art/seedling-density.svg)
 
 Open `/benchmark/?comparison=density&crop=artichoke&seed=1321&sensor=os1-64&validationRayBudget=60000`. Each seed gets two CPU neural fits. The first seed trains at 12000 and 60000 rays and the second reverses that order. Use the repeat link below the sample counts to change validation density while keeping the fits reproducible.
 
@@ -111,11 +151,15 @@ In the JSON, read each budget from `row.trainingRayBudget` and join the row to `
 
 ### Audit missing crop returns
 
+![Sample positions intersect two leaves and the soil. Dots show where a surface was measured.](art/lesson-returns.svg)
+
 In each validation tile, `coverage.zero`, `coverage.oneToFour` and `coverage.fiveOrMore` count plants by their surviving crop returns. The values sum to the number of labeled plants. For per-plant detail, open the exact tile in the generator and download Labels. Entry `crop_returns_per_box[i]` counts returns from `boxes[i]`. Earlier label files omit this array. Regenerate their recipe to compute coverage.
 
 For a paired run, start with tomato seed 921, mixed training and OS1-64 validation. Compare budgets 12000 and 60000 and repeat at seed 922. Group by field seed, using soil-present tiles to count each planting once. Soil removal drops only soil and leaves these counts intact. At 15 cm, `max(0, fn - coverage.zero)` is a lower bound on misses that had crop returns. This bound also works on older reports that only have aggregate coverage. Coverage comes exclusively from generator bookkeeping and is excluded from all 13 detector inputs.
 
 ### Find the exact missed plants
+
+![Four reference plants and three predictions. Two pins fall within different plant circles.](art/lesson-matches.svg)
 
 In the Training Shed, run the detector, choose **Missed plants** in the field map, and select a matching distance. **Highlight a missed plant** lists the zero-based box index, center coordinates in metres and crop return count. Filter **Crop returns per plant** to show the missed count and total labeled plants in a coverage group. To replay this view, append `missBand=zero`, `oneToFour`, `fiveOrMore` or `all` to the trainer query. Select a box, follow the 3D link, and choose **Focus plant** or press **F** with the canvas focused to orbit the highlighted center. **R** resets the camera.
 
@@ -127,6 +171,8 @@ To compare cutoffs, check the weights and tile IDs, then take the set difference
 
 ### Compare the same field with and without soil
 
+![Both views share plant locations. Removing soil returns changes the clues in a peak’s neighborhood.](art/soil-twins.svg)
+
 Each completed Training Shed or CLI report includes `byGround`. Each benchmark row includes it too. Select the group by its boolean `ground` flag and the score by its `cm` value. The scorer pools matched plants, extra pins and misses across that group's tiles before computing precision, recall and F1. Earlier reports contain the underlying counts in `tiles[].byTolerance`.
 
 For an example, train artichoke on seed 308 with the defaults. Subtract ground-present recall from ground-removed recall at 15 cm and multiply by 100 for percentage points. Check the false positives at the same distance. To investigate a specific field, pair tiles by seed and switch soil settings in the field audit. Each pair shares one planting, its labels, scan layout and fitted weights. Report the number of distinct validation fields. Synthetic soil removal uses generator class labels.
@@ -137,17 +183,23 @@ In reports, compare `byGround[].countError.meanAbsolute` for the two ground flag
 
 ### Check whether a model gain holds across plantings
 
+![Grow practice fields, fit weights, then measure on separate plantings. Keep both scans of each planting in one split.](art/field-split.svg)
+
 Open the CPU model benchmark, choose a crop and seed, then expand **Compare contenders on each planting**. For automation, each benchmark row includes `byField`. Match rows by dataset seed and model name, then match their field groups by field seed. Contender execution order reverses on the second dataset seed. Check that the two sets of tile IDs are identical before comparing models.
 
 For each planting, the scorer adds TP, FP and FN from both soil variants at each distance, computes F1, then averages the three F1 values for `meanF1`. The overall score pools counts across all validation scans first. Count field-level wins, losses and ties using the exported precision, and report the pooled score separately. The CLI and Training Shed also export `byField`; older reports can be reconstructed from `tiles`.
 
 ### Measure plant-count error
 
+![In this sketch, five pins land on plants. One extra pin balances one missed lettuce in the total.](art/count-and-locate.svg)
+
 For a paired counting experiment, open `/benchmark/?comparison=models&crop=artichoke&seed=1551&sensor=mixed&validationSensor=os1-64&validationRayBudget=12000&fieldMetric=meanAbsolute`. Under **Compare contenders on each planting**, choose absolute or signed error. The table shows the average for each planting’s two scans and the average for each dataset seed. The settings link remembers the displayed metric.
 
 Read `countError.meanAbsolute` and `countError.meanSigned` in each benchmark row, CLI or Training shed result. The same object appears in each `byField` and `byGround` group. Units are plants per scan. For older reports, reconstruct each scan's signed difference as `fp - fn` from any entry in `tiles[].byTolerance`. Average the absolute differences for mean absolute error. Taking the absolute value after averaging lets overcounts and undercounts cancel. Compare scorers on identical tile IDs and include per-distance F1 to assess localization.
 
 ### Trace a model disagreement to a plant
+
+![Four reference plants and three predictions. Two pins fall within different plant circles.](art/lesson-matches.svg)
 
 Run `/benchmark/?comparison=models&crop=lettuce&seed=1121&sensor=mixed&validationSensor=os1-64&validationRayBudget=12000`. Open **Which plants did each model find?** The scan picker includes both soil variants for each dataset seed. Choose a distance and one of the boxes exclusive to either model. Follow the 3D link to inspect the highlighted center.
 
@@ -156,6 +208,8 @@ For a local agent, import `compareMatchedBoxes` from `trainer/models/data.js`. P
 A generator URL can include `box=0` or another zero-based box index. Include the matching `tile` value when building links from a report. This prevents a stale tile link highlighting an unrelated plant. Box highlighting affects only the camera overlay and shared URL.
 
 ### Compare scans and detectors on one planting
+
+![A schematic comparison on identical plant centers, shown as green rings. The first detector misses one center. The second finds all six but places an extra red pin between the rows.](art/paired-field.svg)
 
 In the field generator, expand **Compare scans and detectors**. Choose **Ray budget** to vary density on the displayed layout, or **Scan layout** to scan the same planting with 60,000 reference-grid rays and 60,000 simulated OS1-64 rays. Select a marked plant to open it in either 3D scan. The downloaded JSON records each full recipe, tile ID, actual sampled rays, per-plant returns, matched proposals and scored pins. The map can show up to 9,000 example points per scan. All acquired points enter scoring. The apple option includes a geometric base locator. Replay the multi-field studies with `node benchmark/studies/seedling-density.mjs` and `node benchmark/studies/orchard-bases.mjs`. [Seedling results](docs/seedling-density.md) · [Orchard results](docs/orchard-bases.md)
 
@@ -169,9 +223,13 @@ For apple **Board placement**, the same low-return rule sees two separately gene
 
 ### Replay a model trained with a different peak rule
 
+![Two measured three-by-three windows from simulated ring scan 1370561. Counting only sampled cells lifts a seedling peak from 5.06 to 8.99 cm and a bare-soil peak from 4.60 to 6.70 cm. Both cross the 6.5 cm candidate threshold. Dashes show cells with no return.](art/seedling-peak-window.svg)
+
 Open `/benchmark/?comparison=averaging` to refit on the same scans using both rules. Each fit gets its own candidate examples, normalization and weights. In Training Shed, the advanced peak-averaging control applies to training, validation and downloaded weights. Preserve `peakAveraging: "occupied"` in custom settings when replaying the sampled-cell rule. The standard weight schema is `crop-peak-13-v1`. Sampled-cell weights use `crop-peak-13-occupied-v1`. The Field Test import reads the schema before extracting peaks. [Seedling classifier results and soil controls](docs/seedling-peaks.md#can-training-reject-the-extra-soil-peaks)
 
 ### Compare the height measurements
+
+![Measure a peak above a ground reference. A height floor decides which candidates reach the detector.](art/measure-a-peak.svg)
 
 Open `/benchmark/?comparison=features` to fit the starter network twice on identical scans and candidate locations. Each run learns its own input scaling and weights. Choose **Local ground** in the Training Shed or set `"featureMode": "local-ground"` in a training settings file. The two new inputs use low returns around the peak to estimate its height above its surroundings and the spread of those surrounding heights. Dense foliage can hide the soil.
 
@@ -179,11 +237,15 @@ Training URLs accept `trainFields` and `valFields` to replay exact split sizes. 
 
 ### Change which positive examples enter training
 
+![Two selections from the same mixed tomato training scans, seed 443731. Each fit uses 300 peaks within 9.5 cm of a labeled plant center and the same 300 background peaks. With soil returns present the ordinary draw selected 35 seedling, 58 transplant and 67 branching peaks. With soil removed it selected 26, 54 and 60. The balanced draw selected 50 from each group.](art/tomato-training-draw.svg)
+
 Use Training Shed URLs or settings JSON with `positiveSampling=form-soil` and `sampleLimit=600` to allocate a capped draw across growth forms and ground settings. In JSON, supply the limit as an even number from 24 to 48,000. Repeat with `positiveSampling=ordinary` for a simple shuffled control. Fix the seed, fields, cap, feature mode and optimizer. Both draws keep equal numbers of positive and background examples. The available class counts can limit the actual total. Inspect `stats.positiveExamplesByFormSoil` and `stats.samples` before interpreting the scores.
 
 Use `/benchmark/?comparison=sampling&sampleLimit=600` for two matched CPU runs. Replay individual rows in Training Shed. The fixed-field study also includes a growth-form-only control and a separate sample-budget experiment. [Tomato study, code and browser presets](docs/tomato-soil-sampling.md)
 
 ### Compare difficult background examples
+
+![A starter model scores peaks known to be background. Of the 300 background examples in each final fit, ordinary sampling reserves no places for high scores, quarter-hard reserves 75 and half-hard reserves 150. Each model also sees the same 300 plant examples.](art/tomato-hard-negatives.svg)
 
 For the separate near/far experiment, use `tomato-distance-mining.mjs` with its own fit file. Compare `comparisons` against ordinary training and `versusUnrestricted` against the 50% hard control. The surface audit replays the training fields. [Commands, decision rule and held-out results](docs/tomato-hard-negatives.md#does-it-help-to-keep-the-same-mix-of-near-and-far-peaks)
 
@@ -195,17 +257,23 @@ To examine why a training peak looked convincing, run `node benchmark/studies/to
 
 ### Hold the training examples or feature scale fixed
 
+![The same smoothed peak height is marked on two centimetre rulers from a saved weedy tomato scan. The ordinary model learned a mean of 13.97 cm and a standard deviation of 10.16 cm. This peak is 0.44 standard deviations below that mean. The half-difficult model learned a mean of 16.91 cm and a standard deviation of 9.71 cm. The peak is 0.76 standard deviations below its mean.](art/tomato-feature-scaling.svg)
+
 Open Benchmark with `?comparison=scaling`. Each seed fits four networks at the same 0.65 cutoff. Filter the result JSON by `seed` and `negativeSampling` to keep the practice rows fixed while changing `scaleSource`. Both factors accept `ordinary` or `distance-matched`. Each card downloads its own weights and scaling. In Field Test, expand **How are scan measurements scaled?** after scoring any plot with those weights. Use `scaleEngine=webgpu` to request that backend for the four final fits. Both engines use the same CPU practice model to choose the difficult examples.
 
 To repeat the reserved tomato experiment, start with `node benchmark/studies/tomato-scaler-cross.mjs plan`. The fixed plan separates the three training seeds from the six clean and weedy test plantings. Compare misses alongside precision and retain the model’s saved scale when replaying weights. [Four-way study and commands](docs/tomato-feature-scaling.md)
 
 ### Choose a cutoff on separate plantings
 
+![Six training plantings teach the weights. Four other plantings let us choose a score cutoff for the saved model. Six reserved plantings measure final matches, extra pins and misses. The small maps illustrate the steps.](art/tomato-calibration.svg)
+
 An override in Field Test or `cli/score-scan.mjs --score-cutoff` scores the saved cutoff and the trial from the same candidate scores. Compare `savedCutoff.evaluation.scores` against `evaluation.scores` at the chosen distance. In the unlabelled case both evaluations are null and both pin lists remain available.
 
 To reproduce per-fit selection, run `node benchmark/studies/tomato-fit-calibration.mjs calibrate > calibration.json` and then `node benchmark/studies/tomato-fit-calibration.mjs confirm calibration.json > confirmation.json`. The first phase fits three independent model pairs and freezes their thresholds before the second phase reads any test scans. To check how much the selection depends on four calibration plantings, run `node benchmark/studies/tomato-calibration-panels.mjs calibration.json`. [Criteria, seeds and results](docs/tomato-calibration.md)
 
 ### Compare training duration
+
+![On six held-out simulated fields at 15 cm, 40, 160 and 640 passes found 0.3%, 9.4% and 39.6% of the seedlings. On separate scans of branching plants at the same settings, 84.5%, 79.0% and 70.3% of the predicted pins were correct. All fits used identical examples and a cutoff of 0.50.](art/tomato-epochs.svg)
 
 For a frozen-weight browser check, open `/trainer/?fieldExample=tomato-640#field-test` and click **Run example**. At 15 cm expect 53 matches and 23 extra pins on the synthetic ring scan `56b872a50fcac3ab`. The 40-epoch choice matches one plant and places four extra pins. The report records both exact matches (`evaluation.pinByReferenceAtCm`) and where plants dropped out (`stagesAtCm`) at each distance.
 
@@ -217,11 +285,15 @@ To test whether extra epochs helped on independent tomato plantings, follow the 
 
 ### Train on one growth stage and score on another
 
+![Three plants show cotyledons and early true leaves, a main shoot with compound leaves, and a side shoot growing from a leaf axil. A ring highlights the axil where the side shoot starts.](art/plants/young-tomato.svg)
+
 Set `plantForm` to the training form and `validationPlantForm` to the held-out form. Omitting the latter uses the training form on both splits. The browser benchmark’s **Does mixing plant forms during training help?** comparison trains one detector on a named form and one on a seeded mix. Both score the same held-out tile IDs. For the fixed clean tomato study, run `node benchmark/studies/tomato-stage-training.mjs`. [Measurements and replay](docs/tomato-stage-training.md)
 
 To distinguish a change in training from a change in detection, run `node benchmark/studies/tomato-peak-floor.mjs`. It scores each set of fitted tomato weights at both candidate height floors. Group results by crop stage, scan layout and soil setting so a seedling gain on a soil-removed scan stays visible alongside its soil-present twin. [Paired height-floor results](docs/tomato-stage-training.md)
 
 ## Where to change the app
+
+![A dotted survey path crosses rows of plants on the left page. A magnified rosette on the facing page has a center pin and a ruler.](art/field-notebook.svg)
 
 | File | Role |
 | --- | --- |
@@ -242,8 +314,12 @@ A training candidate within 9.5 cm of a label is positive. A candidate beyond 15
 
 ## Example request for Gemini or another agent
 
+![A schematic comparison on identical plant centers, shown as green rings. The first detector misses one center. The second finds all six but places an extra red pin between the rows.](art/paired-field.svg)
+
 “Read AGENTS.md. Run the neural model at both supported peak heights on seeds 27 and 28 with the other defaults fixed. Show mean F1, precision and recall at 15 cm, and the field with the most lost matches. Explain which setting you would test next.”
 
 ## Sharing changes
+
+![The same field travels from the source files into a built site. Opening it in a browser checks that a scan can run.](art/check-the-build.svg)
 
 Use synthetic fixtures for examples and tests. Keep raw scans, third-party labels, private weights, credentials and generated run reports out of commits. Check the affected browser flow, run the Node tests, and preserve the MIT notice with redistributed source. The README title illustration is in art/title.svg.

@@ -1,8 +1,12 @@
+![Measure planting centers independently, record returns, then compare predicted pins in the same frame.](../art/survey-pair.svg)
+
 # Will this detector work on my field?
 
 Pick one job before collecting scans. **Counting** asks how many established plants occupy a plot. **Localization** asks where each plant is, within a distance that matters for your task. A missed plant and an extra pin can cancel in the count. Matching pins to individual plants reveals that error.
 
 ## Check the scan first
+
+![Measure a peak above a ground reference. A height floor decides which candidates reach the detector.](../art/measure-a-peak.svg)
 
 The detector expects one crop and an upright scan of a plot up to 10 × 10 m. The importer accepts metres, centimetres or millimetres and converts the plot to metres internally. It looks for height peaks on a 5 cm grid. For a physical scan, record the scanner, pose, units, plot bounds and ground elevation. Use surveyed ground or measured soil returns to establish the vertical reference. Using the lowest leaf as ground can erase a short plant. For a uniformly sloping bed, measure ground elevation at the plot origin and along both scan axes. Divide the elevation change by the horizontal distance and multiply by 100 to get grade percent. A 20 cm rise over 4 m gives a grade of +5%. Enter those measurements in the field test and keep them with the report. Uneven beds need a local terrain survey or smaller leveled plots. The importer relies on the plane you supply.
 
@@ -32,12 +36,16 @@ To try this yourself, open a saved tomato planting and choose **Run example**. U
 
 ## Collect a test that can fail
 
+![Grow practice fields, fit weights, then measure on separate plantings. Keep both scans of each planting in one split.](../art/field-split.svg)
+
 1. **Reserve whole fields and dates.** Use some sites or sessions to develop the detector and separate ones for the final test. Keep repeat passes, adjacent tiles from the same plot and scans of the same plants together. For transfer to a new farm, hold out an entire farm. Record how many independent fields and collection dates each result covers.
 2. **Make the answer key before viewing predictions.** Mark one XY target for each plant. The field lettuce, globe artichoke and young tomato generators use the midpoint of the plant’s horizontal bounding box. The apple orchard, trellised vineyard, bench lettuce and high-wire tomato generators use the planting position (`base_xy_m`). A lopsided canopy can put those targets in different places. For a trunk or stem survey, measure the base directly and record that definition. Decide how to handle border plants, touching canopies, weeds and hidden bases. Use a second view or survey plants on foot when the scan obscures them. Mark unverifiable areas and their extent separately. Have a second person review a subset and measure disagreement at the intended tolerance.
 3. **Include hard and empty plots.** Sample variation in growth stage, slopes, clutter and return density that your operation actually encounters. Include crop-free plots with bare soil and weeds. Record false detections per square metre there. Inspect whether a missed plant produced any candidate peak within the required distance. A classifier can only retain or discard the peaks it receives.
 4. **Freeze the recipe.** Save the source revision, model weights, crop, coordinate transform, peak floor, score cutoff and minimum pin spacing. Compare with a simple height-peak rule on the same scans, using the same spacing and matching rules. Pick all thresholds on development fields and open the final labels once.
 
 ## Decide whether to proceed
+
+![Measure planting centers independently, record returns, then compare predicted pins in the same frame.](../art/survey-pair.svg)
 
 For **counts**, report absolute error per plot and signed error to show undercounting or overcounting. For **locations**, match one pin to at most one label in XY and report missed plants, extra pins, precision and recall at your working distance. Record sample area and show per-field results so a large or easy field cannot hide a failure. When estimating uncertainty, resample independent fields or acquisition groups together.
 

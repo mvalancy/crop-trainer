@@ -6,6 +6,8 @@ A **leader** is a growing main stem. In a greenhouse, a grower can guide one or 
 
 ## Grow the three forms
 
+![Follow a leaf to its stem. Attached organs belong to one plant with one reference center.](../../art/organ-to-target.svg)
+
 | Form in the recipe | Structure to look for |
 | --- | --- |
 | `young-leader` | A short, lightly leaning stem has compound leaves close to its base. This stage precedes fruit set. |
@@ -18,9 +20,13 @@ A **leader** is a growing main stem. In a greenhouse, a grower can guide one or 
 
 ## Read the photographs
 
+![Follow a leaf to its stem. Attached organs belong to one plant with one reference center.](../../art/organ-to-target.svg)
+
 Alberta’s propagation photographs show small leafy plants before transplanting and the later row growing up twine. Ontario’s production guide shows two stems leaving the same rootstock, and Alabama Extension shows how a mature single stem is held and pruned. A real greenhouse camera frame shows a hanging truss next to distinct leaflets. The generator uses those relationships. The precise height, internode spacing and fruit sizes are synthetic. [Alberta, figures 6 and 8](https://www.alberta.ca/tomato-plant-propagation-in-commercial-greenhouse-tomato-production) · [Ontario, figures 3 and 4](https://www.publications.gov.on.ca/store/20170501121/Free_Download_Files/302001.pdf#page=12) · [Alabama Extension, figures 2 and 3](https://www.aces.edu/wp-content/uploads/2023/02/ANR-2955_GreenhouseTomatoProduction_022223L-G.pdf#page=4) · [Burusa greenhouse photograph](https://github.com/akshaykburusa/tomato_greenhouse_dataset/blob/main/images/1000-60-120_color.jpg)
 
 ## Try a missing growing tip
+
+![One trunk divides into two woody arms. Shoots grow upward from them and bear leaves. On the right, vertical laser paths end in dots on the upper surfaces or the ground. Parts of the trunk have no returns.](../../art/plant-architecture.svg)
 
 The damaged condition breaks one leader between two nodes, leaving lower stem and foliage attached. On a twin-leader plant the second stem keeps growing to its usual height. Switch between healthy and damaged fields at the same seed and compare the structure overlay with the overhead returns. [Healthy single leader](https://mvalancy.github.io/crop-trainer/?crop=high-wire-tomato&plantArchitecture=3&plantForm=single-leader&plantCondition=healthy&sensor=reference&seed=27#field) · [Broken single leader](https://mvalancy.github.io/crop-trainer/?crop=high-wire-tomato&plantArchitecture=3&plantForm=single-leader&plantCondition=damaged&sensor=reference&seed=27#field)
 

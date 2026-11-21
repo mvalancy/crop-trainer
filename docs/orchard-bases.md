@@ -1,10 +1,12 @@
-# Can a scan locate the base of an apple tree?
+![A leafy crown hides the wood below. Look for low returns near the ground when estimating the trunk position.](../art/base-and-crown.svg)
 
-![An overhead scan projected into profile shows abundant crown returns from two tree shapes at the same planting position. The low central search region contains zero woody returns for the central leader and two for the open vase.](../art/orchard-bases.svg)
+# Can a scan locate the base of an apple tree?
 
 Stand at the foot of a tree and its base is easy to define. The highest branch can be well off to one side. A detector that pins that branch can get the tree count right and miss the surveyed location. Crop Trainer’s apple target is the horizontal position where the tree was planted. A pin must fall close enough to that position to count as a match. [Apple generator and reference photographs](../trainer/plants/apple.md)
 
 ## How much of the low trunk did the scanner see?
+
+![An overhead scan projected into profile shows abundant crown returns from two tree shapes at the same planting position. The low central search region contains zero woody returns for the central leader and two for the open vase.](../art/orchard-bases.svg)
 
 The figure shows the third tree from synthetic plot `876019`, rendered with two healthy, leafy tree shapes and 60,000 overhead reference rays. Each panel projects crop returns within 90 cm horizontally of the same base onto a side view. The height reference is the bottom of that tree’s modeled bounding box. The shaded strip marks the height and horizontal extent of the search below. The calculation also limits distance along the depth axis that disappears in this projection.
 
@@ -21,6 +23,8 @@ Run `node benchmark/studies/orchard-visibility.mjs` from the repository root for
 
 ## How the detectors place a pin
 
+![Example of the low-return ranking trial. The side view marks five laser returns between 15 centimetres inclusive and 48 centimetres exclusive above the plot’s zero-height plane. The local soil surface can vary. The top view places those five returns in three distinct 5 centimetre cells near a candidate. The trial adds two points to that candidate’s ranking score, the maximum bonus. It considers the same qualifying candidates and keeps their usual 1.05 metre spacing. A weed can contribute low returns too.](../art/plants/apple-low-returns.svg)
+
 The height-only detector ranks high spots on a smoothed height map. The starter network scores those candidate peaks using 13 features. Both approaches filter nearby pins. An apple tree can have several high spots, each over a different branch. To see how far a crown peak can be from the planted base, follow one dormant tree from its side view to its top view. [Read the illustrated apple example](../trainer/plants/apple.md#what-does-a-dot-above-the-tree-tell-you) · [How the network works](training.md)
 
 The geometric challenger reads metric XYZ in a ground-referenced 10 m square. It marks occupied 5 cm cells in five height bands starting at 0.48, 0.78, 1.12, 1.55 and 2.04 m. A candidate gets support from several heights nearby and from canopy on multiple sides. Candidates with an index of at least 4 compete for a pin, at a nominal minimum spacing of 1.05 m before final position refinement. The score is a geometric index. Regions with too little support receive no pin. This method needs no stem classifications, tree count, planting grid or surveyed bases at prediction time. Its lowest band starts above most of the region in the visibility audit. [Locator implementation](../trainer/models/orchard.js)
@@ -28,6 +32,8 @@ The geometric challenger reads metric XYZ in a ground-referenced 10 m square. It
 A missing pin can have different causes. The scan may supply too little evidence for any nearby cell to reach the cutoff. Or a cell can qualify and a higher-scoring neighbor can take its place during spacing. Each surviving pin then moves toward the strongest cells immediately around it. The scorer uses those final locations for one-to-one matching against the independently known bases.
 
 ## What changed on held-out synthetic trees?
+
+![A schematic comparison on identical plant centers, shown as green rings. The first detector misses one center. The second finds all six but places an extra red pin between the rows.](../art/paired-field.svg)
 
 On six new plots the geometric locator matched **1,113 of 2,112 tree appearances** within 15 cm, with 483 extra pins. That gives 69.7% precision and 52.7% recall. A four-unit network trained on both leafy and dormant examples matched 227. Even the geometric locator missed nearly half the appearances. [Reproducible benchmark](../benchmark/studies/orchard-bases.mjs)
 
@@ -55,6 +61,8 @@ node benchmark/studies/orchard-bases.mjs > orchard-bases.json
 ```
 
 ## What happens when a tree loses one scaffold?
+
+![The central leader keeps a tall trunk. The open vase has low forks. Leaf clusters fade to reveal the modeled wood. Dashed red shows the scaffold removed in a break.](../art/plants/apple.svg)
 
 Breaking one major limb left many predictions close to a tree but outside the 15 cm matching distance. On eight fresh synthetic plots the orchard locator matched **599 of 736 tree appearances** when limbs were intact and **500** after damage. Of the 132 previously matched appearances that lost their match, **112 still had a pin within 40 cm** of the same base. The other 20 had no pin that close. Another 33 previously missed appearances gained a 15 cm match. The 40 cm check describes where predictions went. The scoring distances stayed fixed.
 
@@ -89,6 +97,8 @@ Run `node benchmark/studies/orchard-damage.mjs > orchard-damage.json` from the p
 
 ## Where did a v4 base pin go?
 
+![Measure planting centers independently, record returns, then compare predicted pins in the same frame.](../art/survey-pair.svg)
+
 On six fresh synthetic plantings, the orchard locator found **409 of 512 tree appearances** within 15 cm using the v3 scaffold widths and **402** using v4’s variable widths. That net loss of seven hides 36 lost matches and 29 new ones. Of the 36 losses, **31 still had a grid cell within 15 cm with enough height-band support**. The spacing rule retained cells elsewhere first. Four bases had no qualifying cell nearby, and one still had a nearby cell after spacing but lost its match during final centering. These counts identify the stage where nearby candidates disappeared. Establishing whether a different spacing distance would improve accuracy requires a separate comparison. The simulator kept the trunk bases, branch centerlines and sampled XY coordinates identical within every pair.
 
 For example, tree 2 on field `14151223` had 20 qualifying cells near its base in v3. One survived spacing and the final pin landed 7.7 cm from the base. In v4 three cells still qualified but none survived spacing. The nearest final pin was 79.2 cm away. Both scans used 60,000 grid rays on healthy, leafy central leaders. Open each version and inspect the same labeled base. [Open v3](https://mvalancy.github.io/crop-trainer/?crop=apple&plantArchitecture=3&plantForm=central-leader&plantCondition=healthy&appleCanopy=leafy&seed=14151223&sensor=reference&budget=60000&ground=true&noise=clean&weeds=off&sticks=off&boards=off&box=2&tile=ac90cc2ee71a50fe#field) · [Open v4](https://mvalancy.github.io/crop-trainer/?crop=apple&plantArchitecture=4&plantForm=central-leader&plantCondition=healthy&appleCanopy=leafy&seed=14151223&sensor=reference&budget=60000&ground=true&noise=clean&weeds=off&sticks=off&boards=off&box=2&tile=c1222bdf0546d761#field)
@@ -109,6 +119,8 @@ Four development plantings gave 305/352 v3 and 291/352 v4 matches. All detector 
 Run `node benchmark/studies/orchard-support.mjs confirmation > orchard-support.json` from the project root. Omit `confirmation` to include the development split. The JSON records all three tolerances, per-field counts, tile IDs, distances and the stage reached for each tree. One Node 24 CPU confirmation took 3.73 s, including 1.97 s for generating scans, 1.18 s for the locator, 0.25 s for the height rule, 0.052 s for stage diagnostics and 0.008 s for matching. Both detectors use fixed rules, so there was no fitting phase. A second run reproduced all counts and distances. Enabling the stage trace preserved the original locator’s pins and scores on all 320 original and hybrid scan inputs. [Replay code and fixed seeds](../benchmark/studies/orchard-support.mjs)
 
 ## Does shorter pin spacing recover the missed bases?
+
+![At the same synthetic tree base, 20 nearby cells qualify in v3 and one survives spacing. Three qualify in v4 and none survives. A stronger v4 cell is selected 82.2 centimetres away. Its final pin is 79.2 centimetres from the base. Adding the three rejected nearby cells as extra guesses would gain one match and two extra pins.](../art/plants/apple-pin-spacing.svg)
 
 **At 15 cm, shortening the locator’s spacing from 1.05 m to 0.75 m recovered zero missed trees and added 134 extra pins** on the six confirmation plantings. Of 320 misses at the usual spacing, 225 had qualifying cells near the base, 82 lacked one and 13 lost the match during final centering. The shorter spacing recovered none of these and also lost one former match. Its F1 fell on all six plantings. Of the 134 additional extra pins, 125 appeared in leafy scans. The four development plantings gave the same pattern, with zero recoveries and 75 additional extra pins.
 
@@ -135,6 +147,8 @@ The seed lists, three spacing values and stage check were fixed before scoring. 
 Run `node benchmark/studies/orchard-spacing.mjs confirmation > orchard-spacing.json` from the project root. Omit `confirmation` for both splits. The JSON includes per-seed scores, per-tree gains and losses, damage and foliage breakdowns and timings. On an AMD EPYC 7763 CPU under Node 24, the 96-scan confirmation took 8.76 s, including 4.02 s for generation, 3.61 s for the three locator settings, 0.54 s for height peaks and their spacing, 0.079 s for scoring and 0.21 s for diagnostics. Neither method needed a training step. A second run reproduced all pins and match assignments. [Study code and seeds](../benchmark/studies/orchard-spacing.mjs)
 
 ## What a field test would have to establish
+
+![Measure planting centers independently, record returns, then compare predicted pins in the same frame.](../art/survey-pair.svg)
 
 In 22 physical scans of 11 Fuji trees, the default spacing gave each individually cropped tree one pin on both passes. When the sprayer fan moved the leaves, one tree’s pin shifted 27.28 cm. Grouping neighboring tree crops changed the pin counts again. The dataset records repeat passes and lacks surveyed trunk-base positions. [Physical repeatability experiment and local replay](field-datasets.md#do-pins-stay-in-the-same-place-when-the-foliage-moves)
 

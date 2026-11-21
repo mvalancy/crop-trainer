@@ -6,9 +6,13 @@ Stand beside a leafless apple tree and you can usually trace a limb back to the 
 
 ## Read the silhouette
 
+![A leafy crown hides the wood below. Look for low returns near the ground when estimating the trunk position.](../../art/base-and-crown.svg)
+
 In a **central-leader** tree, a tapering main axis continues to the top. Lower scaffold branches typically reach farther than upper ones. The young tree shown on page 35 of the UC training handbook is a reference for this scaffold arrangement. In an **open-vase** tree the main axis ends low and several limbs rise around a relatively open center. See the photographed training examples on pages 42 and 44. Open-center apples are a useful contrast in heritage and home orchards. Commercial orchards also include spindle and planar systems that differ from both examples. [UC orchard training photographs](https://ucanr.edu/sites/default/files/2016-10/249531.pdf#page=35) · [UC IPM apple training](https://ipm.ucanr.edu/home-and-landscape/apple-training/) · [Montana State heritage apple pruning](https://agresearch.montana.edu/warc/guides/apples/heritage_orchard_management_guide/caring-for-heritage-trees/pruning.html)
 
 ## Follow a bud out from the trunk
+
+![Follow a leaf to its stem. Attached organs belong to one plant with one reference center.](../../art/organ-to-target.svg)
 
 1. The field chooses a planting position, size and organ seed. Selecting a single form grows one management system across the plot. A seeded mix assigns a form to each tree for a controlled challenge.
 2. The central leader sprouts **7–9 scaffolds**, staggered around the trunk at different heights. Each scaffold bends once and tapers. The vase forks into **3–4 primary limbs** low on the trunk. Those limbs fork again near the outside of the crown.
@@ -61,11 +65,15 @@ The generator places nine boards when boards are enabled on a planted plot. In t
 
 ## Break a branch or take away its leaves
 
+![The central leader keeps a tall trunk. The open vase has low forks. Leaf clusters fade to reveal the modeled wood. Dashed red shows the scaffold removed in a break.](../../art/plants/apple.svg)
+
 Choose **All plants damaged** to shorten one scaffold into a woody stub. Its distal shoots and their clusters disappear. The other scaffolds use the same random draws as in the intact tree. On a vase, losing one of three main limbs can open a large gap. On a central leader the same type of break can be much less conspicuous. **About one in four damaged** selects a reproducible subset by planting ID. [Inspect a broken vase orchard](https://mvalancy.github.io/crop-trainer/?crop=apple&plantArchitecture=3&plantForm=open-vase&plantCondition=damaged&seed=39061&sensor=reference&budget=100000&noise=clean#field)
 
 For a second experiment, keep the same seed, form, condition, ground and ray budget. Switch **Apple foliage** from **Leaf on** to **Dormant · leaf off** and generate again. The wood and tree bases stay paired. Compare the number of woody returns, then orbit the scan to inspect which surfaces remain hidden. A vertical trunk can produce very few returns from above even in winter. [Inspect a dormant vase orchard](https://mvalancy.github.io/crop-trainer/?crop=apple&plantArchitecture=3&plantForm=open-vase&plantCondition=damaged&appleCanopy=dormant&seed=39061&sensor=reference&budget=100000&noise=clean#field)
 
 ## What would make it representative of a particular orchard?
+
+![Measure planting centers independently, record returns, then compare predicted pins in the same frame.](../../art/survey-pair.svg)
 
 These rules reproduce a branching relationship you can check visually. Foliage clusters approximate the occupied crown. Individual leaves, apples, bark, regrowth after injury, complex bends and row-side acquisition would need additional geometry or sensing work. A single broken scaffold is a controlled damage case. It cannot establish how often a storm produces that injury. For a particular block, record age, rootstock, cultivar, spacing and training system. Measure trunk diameter, first fork height, scaffold angles and crown widths on a calibration row. Independently survey tree bases on another row and compare predicted pin locations against that survey. AppleQSM is an example of working quantitatively with laser scans of actual apple tree branches. [AppleQSM](https://pmc.ncbi.nlm.nih.gov/articles/PMC11077705/) · [Field validation guide](../../docs/field-validation.md)
 
@@ -92,6 +100,8 @@ Run `node benchmark/studies/orchard-branch-caliber.mjs` from the repository root
 
 ## What changes with variable scaffold thickness?
 
+![A leafy crown hides the wood below. Look for low returns near the ground when estimating the trunk position.](../../art/base-and-crown.svg)
+
 The optional **v4** apple geometry keeps the same limbs but gives them different diameters. In each tree, one scaffold keeps its v3 thickness. Another retains 35–80% of its own v3 thickness, and the remaining scaffolds retain intermediate fractions. A seeded shuffle assigns those sizes to limbs. Upper tiers of central leaders still taper. Attached shoots scale with the supporting limb, and a broken scaffold ends at the diameter of the surviving stub. Try the paired scan on field `11043331`. With the same 60,000 rays over 12 dormant open-vase trees, the trunk locator matched 11 bases in v3 and nine in v4. Select **Compare scans** to see the two maps. [Compare scaffold widths on the same trees](https://mvalancy.github.io/crop-trainer/?crop=apple&plantArchitecture=3&plantForm=open-vase&plantCondition=healthy&appleCanopy=dormant&seed=11043331&sensor=reference&budget=60000&ground=true&noise=clean&weeds=off&sticks=off&boards=off&studyMode=scaffolds&studyMetric=orchard#scan-study)
 
 Eight fresh field seeds contained 91 planting positions. We grew both tree forms at every position and measured all 732 central-leader scaffolds and 323 open-vase scaffolds in each version. We measured intact, dormant wood 6.35 cm along each branch from the trunk centerline. Each percentage below divides one tree’s thinnest branch diameter by its thickest. Lower percentages mean the same tree carries a wider spread of branch sizes.
@@ -104,6 +114,8 @@ Eight fresh field seeds contained 91 planting positions. We grew both tree forms
 Measuring from the outside of the bark gave v4 medians of 42.7% and 59.3%. Every matched tree kept the same woody centerlines. The highest surface of a dormant tree moved by at most 2.5 mm. The two published Purdue trees illustrate how much branch thickness can vary. A representative distribution for either form requires measurements of more trees of known age and training system.
 
 ### Can the locator still find the trunk?
+
+![A leafy crown hides the wood below. Look for low returns near the ground when estimating the trunk position.](../../art/base-and-crown.svg)
 
 We scanned both forms with foliage on and off, with scaffolds intact and damaged. A reference grid and simulated OS1-64 rings each sampled 60,000 rays over a clean 10 × 10 m plot with soil. Each v3/v4 pair used identical ray XY coordinates and planted bases. Across 128 scans per version, thinner modeled wood returned fewer points. Woody hits fell from **140,638** in v3 to **109,075** in v4. Repeated scans of the same trees contributed to these totals.
 

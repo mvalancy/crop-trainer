@@ -1,10 +1,12 @@
-# Can one detector find tomatoes at three growth stages?
+![Follow a leaf to its stem. Attached organs belong to one plant with one reference center.](../art/organ-to-target.svg)
 
-![Three young tomatoes grow from a pair of seed leaves into a leafy transplant and then a plant with a branching side shoot.](../art/plants/young-tomato.svg)
+# Can one detector find tomatoes at three growth stages?
 
 In four fresh synthetic plantings, training on a mix of tomato stages cut false detections among branching plants and missed nearly every seedling. On the reference grid, one mixed-stage fit located **415 of 439 branching plants with 19 extra pins**. The seedling-only fit located 98 with 185 extra pins. On the same plantings rendered as seedlings, those models located **0 and 82**, respectively. A single score pooled across stages would hide that tradeoff. [Try the branching-plant comparison](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=forms&crop=tomato&plantArchitecture=2&plantForm=seedling&validationPlantForm=branching&seed=82173&sensor=reference&trainingRayBudget=60000&validationRayBudget=60000)
 
 ## Which stage benefits?
+
+![Three plants show cotyledons and early true leaves, a main shoot with compound leaves, and a side shoot growing from a leaf axil. A ring highlights the axil where the side shoot starts.](../art/plants/young-tomato.svg)
 
 Each row pools four confirmation plantings containing 439 labeled plants in total. F1 counts a pin as correct when it matches a plant within 15 cm. Each pair of scores shows the two training seeds, `82173` then `379331`. The height rule ranks the same peaks and uses the same spacing as the trained nets.
 
@@ -21,6 +23,8 @@ The initial six plantings (629 plants per stage) showed the same direction for b
 
 ## What went into training?
 
+![Grow practice fields, fit weights, then measure on separate plantings. Keep both scans of each planting in one split.](../art/field-split.svg)
+
 Each model saw the same six planting seeds and both soil variants at 60,000 reference-grid rays per scan. Each used 13 XYZ features, a standard 6.5 cm peak gate, four tanh hidden units, full-batch SGD at learning rate 0.25, 40 epochs from initialization seed 12345, a 0.5 score cutoff and 22 cm pin spacing. Each training pair used matching recipes for clutter and scan noise. Labels supplied training targets. Each model fitted its feature scale on its own retained training rows.
 
 The normal sampler balances plant and background examples. In the two seedling-only runs it retained 346 and 264 examples. On the mixed plantings it retained 1,974 and 1,878. Repeating each comparison with **exactly 128 positive and 128 negative examples** gave the same direction on all six confirmation conditions for both training seeds.
@@ -28,6 +32,8 @@ The normal sampler balances plant and background examples. In the two seedling-o
 The mixed fields contained roughly one-third seedlings, but a small seedling seldom produced an eligible training peak. For seed `82173`, seedlings accounted for **197 of 598 plants and 58 of 987 eligible positive peaks**. For seed `379331` the counts were **200 of 631 plants and 51 of 1,042 peaks**. Plant counts use one soil-present scan per planting. Training peak counts include both soil variants and can include multiple peaks near one plant.
 
 ## Can equal representation among positive examples rescue seedlings?
+
+![Two selections from the same mixed tomato training scans, seed 443731. Each fit uses 300 peaks within 9.5 cm of a labeled plant center and the same 300 background peaks. With soil returns present the ordinary draw selected 35 seedling, 58 transplant and 67 branching peaks. With soil removed it selected 26, 54 and 60. The balanced draw selected 50 from each group.](../art/tomato-training-draw.svg)
 
 We kept the same mixed training scans and fixed four more test fields before fitting again. The ordinary draw of 128 positive peaks contained only eight seedlings with the first training seed and three with the second. We changed that draw to **43 seedling, 43 transplant and 42 branching peaks**. Both fits kept the same 128 background peaks. We chose distinct candidate rows without replacement and fitted the normalization again. The unmodified draws reproduced the weight hashes of the earlier 256-example controls.
 
@@ -44,6 +50,8 @@ The ordinary fits found zero seedlings on either layout. Height alone found 83 o
 
 ## Does lowering the peak floor keep seedlings and branching plants?
 
+![Measure a peak above a ground reference. A height floor decides which candidates reach the detector.](../art/measure-a-peak.svg)
+
 A peak has to clear a height floor before the network can score it. Lowering that floor from 6.5 to 3.5 cm during both training and detection found a few more seedlings. It also cost branching-plant precision. At a 15 cm matching distance, branching precision fell from **92.9% to 81.8% on grids** and from **93.0% to 79.1% on rings**. Seedling recall at the lower floor reached **3.7%** on each layout. Soil made a large difference. On scans with soil present, the lower-floor model found only four of 615 seedlings on grids and three on rings. It found 41 and 43 respectively in their soil-removed twins.
 
 | Test plants | Peak floor | Network F1 at 7.5 / 10 / 15 cm | Height-only F1 at 7.5 / 10 / 15 cm | Network matched / extra at 15 cm |
@@ -58,6 +66,8 @@ A peak has to clear a height floor before the network can score it. Lowering tha
 | Branching, rings | 3.5 cm | .664 / .792 / .863 | .480 / .575 / .629 | 1,169 / 309 |
 
 **Where did the extra seedling matches come from?** The lower floor put a candidate within 15 cm of 595 seedling appearances on grids and 541 on rings, up from 153 and 133. Holding the original weights and their feature scaling fixed, we scored those extra candidates. The original fits rejected every new peak at the 0.50 cutoff. All 48 scans retained exactly the same accepted candidates and final pins. In the reverse check, the lower-floor fits scored the original, smaller candidate lists. These fits already matched 30 seedlings on grids and 31 on rings. Allowing them to see the shorter peaks brought the totals to 45 and 46. The difference came from both the examples used for fitting and the points admitted at detection time.
+
+![A seed packet marked 27 branches into two plots. Four seedlings appear at the same positions in both rows.](../art/seed-replay.svg)
 
 **Repeat it in the browser.** The height comparison runs both floors on the same synthetic scans. Choose **Run benchmark**, then open **Scores at each matching distance**. The four links restore the exact settings. [Seedlings on grids](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=heights&crop=tomato&plantArchitecture=2&plantForm=mixed&plantCondition=healthy&seed=19871317&sensor=reference&validationPlantForm=seedling&validationSensor=reference&trainingRayBudget=60000&validationRayBudget=60000&epochs=40&live=off) · [Seedlings on rings](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=heights&crop=tomato&plantArchitecture=2&plantForm=mixed&plantCondition=healthy&seed=19871317&sensor=reference&validationPlantForm=seedling&validationSensor=os1-64&trainingRayBudget=60000&validationRayBudget=60000&epochs=40&live=off) · [Branching on grids](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=heights&crop=tomato&plantArchitecture=2&plantForm=mixed&plantCondition=healthy&seed=19871317&sensor=reference&validationPlantForm=branching&validationSensor=reference&trainingRayBudget=60000&validationRayBudget=60000&epochs=40&live=off) · [Branching on rings](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=heights&crop=tomato&plantArchitecture=2&plantForm=mixed&plantCondition=healthy&seed=19871317&sensor=reference&validationPlantForm=branching&validationSensor=os1-64&trainingRayBudget=60000&validationRayBudget=60000&epochs=40&live=off)
 
@@ -76,6 +86,8 @@ With live preview off in Chromium, the 16 CPU Benchmark fits took 0.84–2.73 s 
 
 ## Can a second detector fill the gaps between standard pins?
 
+![In this schematic the 0.30 score drops below cutoff. The nearby 0.64 candidate loses to the 0.77 candidate.](../art/lesson-pins.svg)
+
 This test kept every pin from the standard mixed-stage fit. A second model, trained with the 3.5 cm floor, could add pins only at peaks from 3.5 cm up to 6.5 cm. We took its candidates in descending score order at the same 0.50 cutoff. Each addition had to be at least 22 cm from every pin already placed. We fixed the rule and six fresh test plantings before scoring.
 
 **It gained seedling matches only on scans with the soil removed.** Across both fitted model pairs, the fallback added 26 matches on grids and 22 on rings at 15 cm. On their soil-present twins, seven additional grid pins and 12 additional ring pins yielded zero new matches. One fitted pair accounted for 42 of the 48 gains. For branching plants, precision slipped from 88.8% to 88.0% on grids and from 86.8% to 85.2% on rings. Every previously matched plant on these scans still had a match at 15 cm.
@@ -92,6 +104,8 @@ Each F1 triplet uses 7.5, 10 and 15 cm in that order. Each row pools two fits on
 To repeat the test, run `node benchmark/studies/tomato-low-fallback.mjs > fallback.json`. It rebuilds the previous four fits, generates 48 held-out scans once each and scores every contender on the same returns. A CPU run took 4.67 s to prepare the fit datasets, 0.46 s to fit, 3.58 s to generate the held-out scans and 1.10 s for inference and scoring. The output includes the six reserved field seeds, each tile’s counts at all three distances and the gains and losses relative to the standard pins. [Fallback study](../benchmark/studies/tomato-low-fallback.mjs)
 
 ## Reproduce the measurements
+
+![A seed packet marked 27 branches into two plots. Four seedlings appear at the same positions in both rows.](../art/seed-replay.svg)
 
 ```sh
 node benchmark/studies/tomato-stage-training.mjs > tomato-stage-training.json

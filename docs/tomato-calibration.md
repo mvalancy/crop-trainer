@@ -10,6 +10,8 @@ Why choose a cutoff separately for each fitted model? In an earlier experiment, 
 
 ## How did we keep the test fair?
 
+![Grow practice fields, fit weights, then measure on separate plantings. Keep both scans of each planting in one split.](../art/field-split.svg)
+
 1. **Train.** From six mixed-stage tomato plantings we drew 300 plant examples and 300 background examples. The 40-epoch starter and 640-epoch model used the same rows, scaling and initial weights. An epoch is one pass over those 600 examples. We repeated this pair with three different training seeds.
 2. **Calibrate.** We took four other plantings, scanned seedlings and branching plants on both layouts, and tried 19 cutoffs from 0.05 to 0.95 on each 640-epoch model. Calibration here means choosing a decision cutoff. Each model kept one cutoff for both plant stages and both scan layouts. We repeated the choice using four different calibration plantings to see how sensitive it was to the choice of fields.
 3. **Test.** We saved the models and their decisions before scoring six more plantings. Each contender faced the same soil-present grid and ring scans. The controls included the 40-epoch starter at 0.50, the longer fit at shared cutoffs of 0.50 and 0.70, and a rule that picks high peaks. [Guide to tuning decision thresholds on separate data](https://scikit-learn.org/stable/modules/classification_threshold.html#post-tuning-the-decision-threshold)
@@ -19,6 +21,8 @@ On the four calibration plantings, a longer fit had to improve seedling **F1** o
 Among cutoffs that passed, we chose the one with the largest seedling F1 improvement on the weaker layout. Ties favored the cutoff closest to 0.50 and then the higher cutoff. If none passed, the rule kept that fit’s starter. These choices were fixed before scoring the test fields. On the reserved fields, the detector had to find more seedlings and improve seedling F1 on both layouts while keeping branching precision within the same limit.
 
 ## What happened on the six reserved plantings?
+
+![Four reference plants and three predictions. Two pins fall within different plant circles.](../art/lesson-matches.svg)
 
 Each layout saw the same **618 plants per stage**. The table compares each 40-epoch starter at 0.50 with the choice made on its four calibration plantings. Seedling counts show **matched plants / extra pins** within 15 cm. For example, the first grid detector found 88 of 618 seedlings and missed 530.
 
@@ -34,6 +38,8 @@ Each layout saw the same **618 plants per stage**. The table compares each 40-ep
 The increased precision on branching plants came with more misses on all four rows where the chosen detector changed. For seed 1403129, the long fit found more seedlings on **every** test planting, gaining 4–17 on individual grids and 1–16 on individual ring scans. Seed 1514021 gained 1–5 on four grids and tied on two. It gained 1–9 on all six ring scans. These are paired changes on the same plantings.
 
 ### How does that compare with a shared cutoff?
+
+![Two 640-epoch fits scored the same 405 peaks near labeled seedlings on six simulated ring scans. At a score cutoff of 0.70, 122 peaks passed in the first fit and 6 in the second. Each bar counts peaks in one tenth of the score range on the same vertical scale.](../art/tomato-score-cutoff.svg)
 
 At 640 epochs and 0.50, all three models lost too much precision on branching ring scans. A shared **0.70** met both the precision and seedling recovery requirements for the same two training seeds as individual calibration. For seed 1403129, its individually chosen 0.65 found 88 grid and 138 ring seedlings, compared with 50 and 107 at 0.70. For seed 1514021, the individually chosen 0.75 found **fewer** than 0.70 on both layouts (9 and 37 versus 14 and 51).
 
@@ -61,6 +67,8 @@ We also reran the selection rule on all 70 ways of drawing four fields from thos
 
 ## What happens when weeds fill the gaps?
 
+![A starter model scores peaks known to be background. Of the 300 background examples in each final fit, ordinary sampling reserves no places for high scores, quarter-hard reserves 75 and half-hard reserves 150. Each model also sees the same 300 plant examples.](../art/tomato-hard-negatives.svg)
+
 We kept the same models and cutoffs and planted six fresh fields, with **655 tomatoes per stage and layout**. We scanned each field twice, once as planted and once with 64 synthetic weeds. Each pair used identical tomato positions and horizontal beam coordinates. Even on the fresh clean fields, only one of the three individually calibrated models met the full recovery and precision goal. With weeds, none did. The shared 0.70 cutoff met the same goal for one of the three fits on clean fields and two of three with weeds.
 
 The first fit shows why matching counts need context. At 0.65 it found **98 ring-scanned seedlings with two extra pins** on clean fields. With weeds it found **113 with 217 extra pins**. A pin on a weed can land within 15 cm of a real seedling. A nearby match alone cannot establish which plant produced the peak. Branching precision for that fit also fell below its starter by 2.42 points on grids and 1.28 points on rings with weeds.
@@ -73,9 +81,13 @@ The follow-up experiment trained the detector on the weeds it was most likely to
 
 ## Try one cutoff in Field Test
 
+![A computer applies saved weights to scan returns. A score can turn a candidate peak into a pin.](../art/saved-detector.svg)
+
 Open the saved 640-epoch detector, click **Run example**, then **Try 0.70 on this planting**. At 15 cm, **What changed with this cutoff?** shows 53 → 26 matches, 23 → 5 extra pins and 57 → 84 missed seedlings. Choose **Changed matches** under **Map view** to see the 27 seedlings that lost a match. To try your own value, open **Try a different model cutoff**, set **Score cutoff** and choose **Find plants**. This practice plot comes from the earlier study. It is separate from the six test plantings used here. [Try the saved tomato detector](https://mvalancy.github.io/crop-trainer/trainer/?fieldExample=tomato-640#field-test)
 
 ## Reproduce the comparison
+
+![Use the same recipe and seed to grow the same planting and repeat the scan.](../art/seed-to-field.svg)
 
 The three CPU training pairs used six healthy mixed-stage plantings each, a 60,000-ray reference grid, local-ground features and a 3.5 cm minimum peak height. Each four-unit tanh network started at initialization seed 12345 and used full-batch gradient descent at a learning rate of 0.25. Test fields included soil and used 60,000 rays on each layout.
 

@@ -1,3 +1,5 @@
+![A scan samples surfaces. A model combines clues around a peak and gives the candidate a score.](../art/learn-from-a-plot.svg)
+
 # How a crop detector learns
 
 For a first introduction, [follow one lettuce from its scan to its final pin](first-steps/README.md).
@@ -10,11 +12,15 @@ A LiDAR return is a 3D point. A cluster of tall returns might be lettuce, a weed
 
 ## Watch a run
 
+![A scan samples surfaces. A model combines clues around a peak and gives the candidate a score.](../art/learn-from-a-plot.svg)
+
 Press **Generate, train & score**. As each new field arrives, the display shows a sample of its laser returns. When training starts, the camera stays on one held-out field. Gold rings show where the current model would place plant centers. Select **Close-up** to follow a few plants as the model learns. The loss trace underneath measures errors on its training examples.
 
 Each pin update gives the epoch that produced it. The CPU or WebGPU trainer can finish several more epochs before the next picture. At validation the view switches overhead. Rings show the final predictions and pink crosses show reference plants missed at 15 cm. The final mean F1 combines all validation scans at three distances.
 
 ## Follow one plant through training
+
+![558 peaks could cover all 199 plants. The score cutoff leaves 161 peaks covering 141 plants. The final 146 pins still cover 141.](../art/lesson-stages.svg)
 
 1. **Scan it.** The generator records a cloud of XYZ points and saves the planted centers separately. It divides the scan into 5 cm squares and looks for local height peaks.
 2. **Teach from examples.** Each peak gets 13 measurements from the nearby points. During practice, peaks close to a planted center are positive examples and distant peaks are negatives. Getting an example wrong nudges the model’s weights.
@@ -25,6 +31,8 @@ The starter learns all weights in a four-unit tanh hidden layer and a sigmoid ou
 
 ### Test on a different plant form
 
+![Follow a leaf to its stem. Attached organs belong to one plant with one reference center.](../art/organ-to-target.svg)
+
 Open **Fields and dataset seed** and choose a structured plant architecture. **Training plant form** selects the plants that supply examples and feature scaling. **Validation plant form** defaults to **Same as training**. For young tomato, train on **Leafy transplant** and test on **First true leaves** to ask whether a detector trained on larger plants locates smaller ones. Check recall at 15 cm and the number of labeled plants with zero crop returns. A growth stage with few recorded points can be hard to locate even with a fitted model.
 
 At seed 197391, the four-unit starter trained for 40 epochs on six v3 transplant plantings. With 60,000 reference rays per scan, it located **561 of 658** plant centers within 15 cm on the three held-out transplant plantings, counting the scans with and without soil. Changing just the held-out form to seedlings gave **58 of 658** with the same fitted weights. [Replay the seedling test](https://mvalancy.github.io/crop-trainer/trainer/?plan=quick&crop=tomato&plantArchitecture=3&plantForm=transplant&validationPlantForm=seedling&sensor=reference&seed=197391&trainingRayBudget=60000&validationRayBudget=60000&epochs=40&engine=cpu)
@@ -33,13 +41,19 @@ Keep the dataset seed, sensor, ray budget and epoch count fixed when comparing t
 
 ### When a scan has gaps
 
+![Two measured three-by-three windows from simulated ring scan 1370561. Counting only sampled cells lifts a seedling peak from 5.06 to 8.99 cm and a bare-soil peak from 4.60 to 6.70 cm. Both cross the 6.5 cm candidate threshold. Dashes show cells with no return.](../art/seedling-peak-window.svg)
+
 Under **Peak detection and scoring → Average height across**, the default counts empty cells as zero when smoothing local heights. The experimental **Sampled cells only** rule averages only neighboring cells with returns and proposes pins only at sampled cells. Measured ground still contributes. This can reveal a seedling that only caught one ray or raise a clump of soil above the peak threshold. The rule changes the examples before either model learns, so train and score with the same setting. **Compare both peak rules** fits the benchmark’s starter network separately with each rule on identical scans at a 0.5 detection cutoff. To check export and scoring on your computer, `node cli/run.mjs preflight --peak-averaging occupied` fits a fresh model and replays six generated scans. [Try the height rule on a seedling and bare soil](https://mvalancy.github.io/crop-trainer/trainer/?crop=tomato&minimumHeight=0.065#averagingStudy) · [Synthetic seedling experiments](seedling-peaks.md#can-training-reject-the-extra-soil-peaks)
 
 ### How tall is a peak above its surroundings?
 
+![Two measured patches from synthetic field 1370561. The smoothed peaks differ by less than a millimetre. Relative to the low surface in the surrounding ring, the tallest central return rises 7.7 centimetres near plant 8 and 2.4 centimetres at the soil bump. The ring spreads are 1.1 and 1.0 centimetres. Each square in the center or ring is a 5 cm cell with a measured return.](../art/tomato-local-ground.svg)
+
 A tomato seedling and a bump of soil can both make a 5 cm peak. Under **Peak detection and scoring → Height features**, choose **Local ground** and open the illustration. In the pictured scan the seedling rises 7.7 cm above the low returns around it, and the bump rises 2.4 cm. Leaves can hide the soil, so the model also sees how much the surrounding heights vary. **Compare both feature sets on matched scans** lets you see how often that distinction actually helps. [Open the illustrated setting](https://mvalancy.github.io/crop-trainer/trainer/?crop=tomato&minimumHeight=0.035&featureMode=local-ground#localGroundGuide) · [See the held-out tomato results](tomato-local-ground.md)
 
 ## Design a detector
+
+![Thirteen inputs feed four hidden units. Each hidden unit contributes to the single output.](../art/lesson-network.svg)
 
 In **Your detector**, choose **Replay signal** to see how a prediction moves from left to right. Every candidate peak supplies 13 measurements. Each hidden unit combines values from the previous layer. The final unit turns its result into a score between 0 and 1. Wide layers show a few representative dots, with their full counts underneath. With reduced motion enabled, use **Next layer** to highlight a stage and read what it does. [Explore the diagram in the Training shed](https://mvalancy.github.io/crop-trainer/trainer/#detector)
 
@@ -59,6 +73,8 @@ For small batches with momentum, try a learning rate of 0.025 first. At 0.25 we 
 Try changing the starter to two hidden layers of 8 and 4. Keep the field seed, crop and scan settings fixed. Compare the new model’s misses on the same validation planting.
 
 ### Does the fit use later fields?
+
+![Grow practice fields, fit weights, then measure on separate plantings. Keep both scans of each planting in one split.](../art/field-split.svg)
 
 Open **What went into this fit?** in the Training Shed results. Each bar counts the examples one planting contributed after class balancing. Expand the table to inspect its counts or open its scan. The preview holds the camera on the first validation field so that you can compare the pins between epochs.
 
@@ -96,9 +112,13 @@ Each line prints the adapter, measured change and expected change. Run the CPU e
 
 ### Which peaks get a place in training?
 
+![Two selections from the same mixed tomato training scans, seed 443731. Each fit uses 300 peaks within 9.5 cm of a labeled plant center and the same 300 background peaks. With soil returns present the ordinary draw selected 35 seedling, 58 transplant and 67 branching peaks. With soil removed it selected 26, 54 and 60. The balanced draw selected 50 from each group.](../art/tomato-training-draw.svg)
+
 Under **Fields and dataset seed**, **Example limit** sets how many candidate peaks can enter one training set. A limit of 600 gives the model up to 300 peaks near known plants and 300 background peaks. It sees those examples again on every pass. **How to choose plant examples** can give scarce growth forms more places and include examples with and without ground returns. The fit summary shows how many peaks each group offered and how many were used. If every eligible positive already fits, the draw uses them all either way. [Try a 600-example tomato fit](https://mvalancy.github.io/crop-trainer/trainer/?plan=quick&crop=tomato&plantArchitecture=2&plantForm=mixed&seed=443731&positiveSampling=form-soil&sampleLimit=600&minimumHeight=0.035&featureMode=local-ground&sensor=reference&trainingRayBudget=60000) · [See the two draws and their held-out scores](tomato-soil-sampling.md)
 
 ### Do more practice fields improve a score?
+
+![Grow practice fields, fit weights, then measure on separate plantings. Keep both scans of each planting in one split.](../art/field-split.svg)
 
 We compared 2, 6 and 24 practice fields on three fresh dataset seeds using the v1 canopy generator. Each column kept the same six validation plantings (12 scans), verified by tile ID. The smaller training sets shared their raw scans with the start of the larger sets. Every fit built its own balanced pool and scaling from its training fields.
 
@@ -114,11 +134,15 @@ To repeat a column, use v1 lettuce, mixed scanners, seeded ray budgets, a 3.5 cm
 
 ## Why did training finish so quickly?
 
+![The forty recorded training losses for the seed-27 lettuce fit. The first is 0.651 and the last is 0.321.](../art/lesson-loss.svg)
+
 A training run can take milliseconds or hours. What matters is the number of examples, the work the model does per example, and how often it revisits them. Crop Trainer first converts millions of laser coordinates across a run into height peaks. It measures 13 features per candidate and fits a four-unit network with **61 trainable numbers**. Those features are computed once. Additional epochs revisit the same examples.
 
 **Field practice**, the first run in the browser, grows 16 training plantings and eight held-out plantings. Each gets scans with and without soil. The device spends about **30 seconds fitting** after the fields are ready. **Quick check** trades that time budget for six training fields, three held-out fields and 40 epochs. The CLI also starts with this fixed schedule.
 
 ### What does another 30 seconds teach?
+
+![On six held-out simulated fields at 15 cm, 40, 160 and 640 passes found 0.3%, 9.4% and 39.6% of the seedlings. On separate scans of branching plants at the same settings, 84.5%, 79.0% and 70.3% of the predicted pins were correct. All fits used identical examples and a cutoff of 0.50.](../art/tomato-epochs.svg)
 
 We grew seed-27 lettuce with each generator and trained the four-unit network twice. Within each pair, the exports had the same 48 scan IDs, initial weights, mixed scanner layouts and full-batch learning rate of 0.25. One fit ran for 40 epochs and the other for a 30-second budget. All measurements came from CPU fitting in Chromium on a Linux desktop. To time your own phone, choose **Time a trial**.
 
@@ -143,6 +167,8 @@ A lower loss can accompany very different outcomes in the field. With 600 fixed 
 
 ## Plan a longer run
 
+![Use the same recipe and seed to grow the same planting and repeat the scan.](../art/seed-to-field.svg)
+
 The loss chart in a completed run lets you inspect saved epochs. Move the slider to see the loss and the number of example visits at a particular pass. A visit means the model saw an example again.
 
 Choose **Time a trial** to generate the requested fields, fit for 16 epochs on the selected backend and score the validation set. The estimate uses the measured per-epoch time after the first four epochs and adds setup and scoring. Changing the model, data settings or backend calls for a fresh estimate. Machine load and browser scheduling can change the eventual time.
@@ -150,6 +176,8 @@ Choose **Time a trial** to generate the requested fields, fit for 16 epochs on t
 Under **Training schedule and optimizer**, choose a fixed epoch count or **Training time** (30 seconds to 24 hours). The time budget covers fitting. Your live estimate updates from completed epochs. The current epoch finishes before scoring starts. During training, **Finish & score now** keeps the learned weights and runs validation. **Cancel** discards the active fit. Keep the tab open and the device awake. Reloading the page ends the run. CPU fitting runs in a worker so you can still use the controls.
 
 ## Take your model with you
+
+![A computer applies saved weights to scan returns. A score can turn a candidate peak into a pin.](../art/saved-detector.svg)
 
 After validation, expand **Explore learned weights** and choose any layer and unit. The signed bars show the incoming weights and the bias for that unit.
 
@@ -172,6 +200,8 @@ Each pin is an `[x, y]` position in plot metres. The detector keeps candidates a
 
 ## Test a plot of your own
 
+![Measure planting centers independently, record returns, then compare predicted pins in the same frame.](../art/survey-pair.svg)
+
 For a first look, open a saved tomato detector and click **Run example**. Field Test generates a labeled planting in your browser. Move **Match distance** from 15 to 7.5 cm and watch which pins still reach a plant. [Try the tomato example](https://mvalancy.github.io/crop-trainer/trainer/?fieldExample=tomato-640#field-test)
 
 On that 110-seedling example, choose **Try 0.70 on this planting**. Raising the cutoff cuts extra pins from 23 to five at 15 cm and adds 27 misses. Try another match distance to see which pins were accurately located. To choose a cutoff for future use, measure it on separate calibration plantings and keep fresh test fields for the final check. [Calibrate a tomato detector](tomato-calibration.md)
@@ -179,6 +209,8 @@ On that 110-seedling example, choose **Try 0.70 on this planting**. Raising the 
 To try the upload controls with lettuce, download the examples beside the file pickers. The weights describe a fitted lettuce detector. The PLY contains a separate synthetic planting, and the reference centers tell you where its plants grew. Choose the downloaded files, leave the units in metres and the coordinates at zero, then press **Find plants**. The CSV and labels JSON give the same reference centers. [Try the example files in Field test](https://mvalancy.github.io/crop-trainer/trainer/#field-test)
 
 To try another crop, use your most recent completed fit or load your own saved weights. Download a scan and its matching labels from the generator. Field test uses the detector’s saved normalization, peak floor, score cutoff and crop spacing. For apple, you can compare the saved model, spaced height peaks and the experimental orchard base locator on the same scan. To measure field accuracy, use independently surveyed plots. [Orchard experiment and field checks](orchard-bases.md)
+
+![Two detector pins stay still while a survey circle slides east. In a real vineyard laser scan, the trained detector matched eleven surveyed trunks and the column rule matched thirty-two within fifteen centimeters. Moving the references twenty-five centimeters east changed those counts to seventeen and eight.](../art/survey-alignment.svg)
 
 For a surveyed plot, choose metres, centimetres or millimetres and enter its fixed lower-left X and Y and the ground Z in those units. The detector measures height above that level. For a uniformly sloped bed, expand **Surveyed sloping ground** and enter measured signed grades along X and Y. A value of 5 represents a 5 cm rise per metre. Ground Z is the elevation at the entered origin. This keeps the survey’s horizontal XY coordinates intact. Crop larger scans and correct irregular terrain or scanner tilt before import. Each input must fit one 10 × 10 m footprint with Z increasing upward, at most 1 million returns and 32 MiB per PLY. The peak finder omits the outermost 5 cm grid cells. Supply all surveyed plant centers in a two-column CSV with header `x,y`, in the same source coordinates as the scan. A header-only file means you surveyed the plot and found it empty. Leave the labels field blank to inspect unscored predictions.
 

@@ -1,6 +1,6 @@
-# Running paired benchmarks
-
 ![Illustrated example. On the same six plants, detector A misses one and detector B places an extra pin.](../art/paired-field.svg)
+
+# Running paired benchmarks
 
 Open **Benchmark** to compare CPU and WebGPU on the same neural model, or compare logistic and neural models on CPU. Both comparisons use two seeds and reverse contender order for the second seed. Other modes compare score cutoffs on one fit, training duration, training ray density or minimum peak height. The results include generation, training and scoring time, F1, and precision and recall. Download JSON for per-tolerance counts and per-field stages. Expand the distance table to see exact matches, extra pins and missed plants. Each WebGPU row in the JSON includes the adapter information exposed by the browser. To repeat the benchmark on another device, use the same app revision, crop, scanner and first seed. [Open Benchmark](https://mvalancy.github.io/crop-trainer/benchmark/)
 
@@ -10,9 +10,13 @@ For a timing comparison, turn **Live view** off before starting. This skips prev
 
 ### Can a detector learn from a false alarm?
 
+![A starter model scores peaks known to be background. Of the 300 background examples in each final fit, ordinary sampling reserves no places for high scores, quarter-hard reserves 75 and half-hard reserves 150. Each model also sees the same 300 plant examples.](../art/tomato-hard-negatives.svg)
+
 Choose **Do difficult backgrounds help?** to grow weedy training plots in your browser. A practice model ranks the background peaks by how much they resemble a crop. Two new models learn from the same crop examples. One takes a random background sample, and the other spends half those places on peaks the practice model ranked highest. After the run, inspect which tomatoes changed on the map and download either model for Field Test. Open **Time to choose difficult examples** to see how long your device spent fitting the practice model, scoring the background and selecting rows. [Train a pair](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=negatives&crop=tomato&plantArchitecture=2&plantForm=mixed&plantCondition=healthy&validationPlantForm=seedling&sensor=reference&validationSensor=os1-64&trainingRayBudget=60000&validationRayBudget=60000&minimumHeight=0.035&featureMode=local-ground&sampleLimit=600&epochs=640&seed=2103181&scoreGround=present) · [Try the saved models and see what was under their peaks](tomato-hard-negatives.md)
 
 ## Reading benchmark results
+
+![Four reference plants and three predictions. Two pins fall within different plant circles.](../art/lesson-matches.svg)
 
 On two fresh mixed-scan artichoke seeds, the neural model beat logistic on seed 81 (0.757 vs 0.734 mean F1), and logistic edged ahead on seed 82 (0.708 vs 0.701). On tomato, CPU and Chromium’s SwiftShader software WebGPU adapter matched at all three tolerances on both seeds. These runs check numerical agreement. Physical GPU speed requires a run on that device. [Repeat the artichoke model comparison](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=models&crop=artichoke&sensor=mixed&seed=81) · [Repeat the tomato backend comparison](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=backend&crop=tomato&sensor=mixed&seed=81)
 
@@ -22,21 +26,31 @@ On the v3 branched-bud artichoke test (seed 817221, mixed plant condition), Chro
 
 ## Can scaling change the result on its own?
 
+![The same smoothed peak height is marked on two centimetre rulers from a saved weedy tomato scan. The ordinary model learned a mean of 13.97 cm and a standard deviation of 10.16 cm. This peak is 0.44 standard deviations below that mean. The half-difficult model learned a mean of 16.91 cm and a standard deviation of 9.71 cm. The peak is 0.76 standard deviations below its mean.](../art/tomato-feature-scaling.svg)
+
 Choose **Does feature scaling matter?** Each row of cards uses a fixed set of training examples. The left and right cards use different training averages and spreads to express the same 13 measurements. Read across a row to see whether that change finds more centers on the three held-out soil-present scans. Change the seed and check again. **Save weights** downloads the full detector, including its scale. The final fits can run on CPU or WebGPU. Both choices use the CPU for the practice model that selects backgrounds. [Illustrated tomato experiment and preset](tomato-feature-scaling.md)
 
 ## Does a detector recognize other stages of growth?
+
+![Three plants show cotyledons and early true leaves, a main shoot with compound leaves, and a side shoot growing from a leaf axil. A ring highlights the axil where the side shoot starts.](../art/plants/young-tomato.svg)
 
 Choose **Does mixing plant forms during training help?** Pick one training form, then choose what grows in the validation fields. The named-form and mixed-form detectors get the same held-out scans. Read the number of centers found, extra pins and training examples for each fit. The 3D inspection opens the actual held-out plant shape. [Try seedlings versus mixed training on branching tomatoes](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=forms&crop=tomato&plantArchitecture=2&plantForm=seedling&validationPlantForm=branching&seed=82173&sensor=reference&trainingRayBudget=60000&validationRayBudget=60000) · [Compare the three growth stages](tomato-stage-training.md)
 
 ## Does a different scanner miss the same plants?
 
+![An overhead sketch shows grid and ring sampling patterns. A small plant can fall between samples.](../art/scanner-patterns.svg)
+
 Choose the grid and OS1-64 layout comparison. The browser trains one detector per seed, then scans each held-out planting twice at the same ray count. Both scans use that seed’s fitted weights. Inspect the extra pins and misses at 15 cm. To see how a plant can fall between two rings, open the illustrated example from the generator. [Run the seedling benchmark](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=layouts&crop=tomato&plantArchitecture=2&plantForm=seedling&plantCondition=healthy&sensor=reference&trainingRayBudget=1000000&validationRayBudget=60000&seed=82173) · [See the rays around one seedling](scanners.md#why-can-the-same-ray-budget-miss-a-seedling)
 
 ## Can the model learn which extra peaks are plants?
 
+![Measure a peak above a ground reference. A height floor decides which candidates reach the detector.](../art/measure-a-peak.svg)
+
 Choose **Does ignoring gaps help a trained detector?** Both networks see scans of the same plants. Their peak rules propose different sets of locations, so each network trains on its own examples and scales its own inputs. Read the number of extra pins alongside the number of plants found. Click a contender name in Results to open that fit’s settings in the Training Shed. [Compare the two fits on simulated ring scans](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=averaging&crop=tomato&plantArchitecture=2&plantForm=seedling&plantCondition=healthy&sensor=os1-64&trainingRayBudget=60000&validationRayBudget=60000&seed=82173) · [Check the soil-only experiment](seedling-peaks.md)
 
 ## Which plants did only one model find?
+
+![Four reference plants and three predictions. Two pins fall within different plant circles.](../art/lesson-matches.svg)
 
 Run **Logistic vs neural · CPU**, then expand **Which plants did each model find?** Choose a scan and a matching distance. The table counts every labeled plant once. Select a box found by just one model to open its center in the 3D viewer and earn the **Model scout** stamp. A cyan ring tracks the highlighted plant as you orbit or zoom. **Copy scan link** preserves the box selection. In the Training Shed, you can also open a highlighted missed plant in 3D.
 
@@ -53,6 +67,8 @@ Across both soil settings for lettuce seed 1121, Node CPU logistic F1 was 0.5772
 
 ## Does the same model win on every planting?
 
+![A schematic comparison on identical plant centers, shown as green rings. The first detector misses one center. The second finds all six but places an extra red pin between the rows.](../art/paired-field.svg)
+
 Run **Logistic vs neural · CPU**, then open **Compare contenders on each planting**. Each row pools the two scans of one field. Choose a match distance to inspect localization accuracy, or select a field seed to open its soil-present scan in 3D. The overall score pools counts across all fields, so a small lead can come from one planting.
 
 Across dataset seeds 421, 422, 451 and 452, the neural model beat logistic on 9 of 12 lettuce plantings, 6 of 12 artichoke plantings (one tie), and 7 of 12 tomato plantings by field mean F1. All contenders used the same synthetic inputs, crop defaults and 40 epochs.
@@ -65,6 +81,8 @@ On artichoke seed 421 the neural model led overall, while logistic led on two of
 | Neural | 97 ms | 28 ms | 0.6528 | 0.8808 | 0.9741 | 0.8359 |
 
 ## How long should I train?
+
+![On six held-out simulated fields at 15 cm, 40, 160 and 640 passes found 0.3%, 9.4% and 39.6% of the seedlings. On separate scans of branching plants at the same settings, 84.5%, 79.0% and 70.3% of the predicted pins were correct. All fits used identical examples and a cutoff of 0.50.](../art/tomato-epochs.svg)
 
 An epoch is one pass over the training examples. In the training-duration comparison, enter a short and a long fit, or choose the original 10, 40 and 100 epochs. For each seed the CPU fits use identical starting weights, training examples and held-out scans. Open a result to repeat that fit in the Training Shed.
 
@@ -82,11 +100,15 @@ On artichoke seed 552, the longer fit found three more plants within 15 cm while
 
 ## How many candidate pins should pass?
 
+![In this schematic the 0.30 score drops below cutoff. The nearby 0.64 candidate loses to the 0.77 candidate.](../art/lesson-pins.svg)
+
 The cutoff is the minimum model score a candidate needs before the spacing filter. The training shed starts at 0.50. Choose **What changes with the cutoff?** and enter a trial value to compare it with 0.50. The same weights score the same held-out fields at both cutoffs. You can also select the original 0.35, 0.50 and 0.65 comparison. Generation and training times repeat across those rows because each happens once per seed. Compare each cutoff’s precision and recall at the distance your task requires.
 
 On mixed scans at seeds 103, 104, 137 and 138, moving from 0.50 to 0.65 increased artichoke mean F1 on all four seeds. Tomato lost mean F1 on all four. On tomato seed 137, lowering the cutoff from 0.50 to 0.35 recovered more plants. At 15 cm, recall rose from 75.1% to 83.2%, while precision fell from 89.6% to 82.4%. Lettuce changed direction across seeds. These synthetic comparisons use six training fields, three held-out fields and 40 epochs per seed. [Repeat the tomato comparison](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=cutoffs&crop=tomato&sensor=mixed&seed=137) · [Repeat the artichoke comparison](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=cutoffs&crop=artichoke&sensor=mixed&seed=103)
 
 ### Does the same cutoff work after a longer fit?
+
+![Six training plantings teach the weights. Four other plantings let us choose a score cutoff for the saved model. Six reserved plantings measure final matches, extra pins and misses. The small maps illustrate the steps.](../art/tomato-calibration.svg)
 
 To see why a cutoff chosen on one planting can disappoint on another, try the [four-field tomato experiment](tomato-calibration.md).
 

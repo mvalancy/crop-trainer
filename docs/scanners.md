@@ -1,3 +1,5 @@
+![An overhead sketch shows grid and ring sampling patterns. A small plant can fall between samples.](../art/scanner-patterns.svg)
+
 # Fields, scanners and ray budgets
 
 Choose a crop in **Scan settings**. Drag right to pull the near edge of the field to the right. A sideways swipe turns the scan the same way. Drag up or down with a mouse to tilt. Swipe vertically to move down the page, or use the + and − buttons to zoom in on a plant. In full screen you can also zoom with the wheel or pinch. Coral rings mark plants with crop returns. Gold crosses mark plants with none. [Open the field generator](https://mvalancy.github.io/crop-trainer/)
@@ -32,6 +34,8 @@ Across all 110 plants on this field, the rings returned **519 crop points from 1
 
 ## How fine can I scan a leaf?
 
+![Sample positions intersect two leaves and the soil. Dots show where a surface was measured.](../art/lesson-returns.svg)
+
 For the densest scan, choose **Reference** under **Scanner layout**, set **Ray budget** to **1,000,000**, and select **Grow and scan**. Zoom in on one plant using **Focus plant**. For a first visit the generator opens at 262,144 rays. Shared scans keep their original budget. [Open the one-million-ray lettuce scan](https://mvalancy.github.io/crop-trainer/?crop=lettuce&seed=43571&sensor=reference&budget=1000000&noise=clean#field)
 
 | Reference budget | Approximate grid pitch on a 10 m square | Clean XYZ payload with soil |
@@ -62,11 +66,15 @@ Dense scans generate in a background worker on supported browsers. During drag o
 
 ## Share one scan with another grower
 
+![A seed packet marked 27 branches into two plots. Four seedlings appear at the same positions in both rows.](../art/seed-replay.svg)
+
 Choose **Grow and scan**, then **Copy scan link** under the viewer. The link captures the displayed crop, field seed, scanner, ray budget, soil, noise and each obstacle setting. A teammate can open it and download the regenerated XYZ and labels without an account. Edits to the controls take effect on the next scan. On localhost, the link points to your own server. Use the public farm for a link anyone can open.
 
 A shared link includes the expected tile ID. The viewer flags a mismatch if the generator produces a different ID. Keep the PLY and labels alongside the source revision for a long-lived dataset. [Open a sparse tomato scan from the benchmark](https://mvalancy.github.io/crop-trainer/?crop=tomato&sensor=os1-32&seed=854812180&budget=12000&ground=true&tile=e3a36b5c8e54f55d#field)
 
 ## Test a detector on a different scan layout
+
+![An overhead sketch shows grid and ring sampling patterns. A small plant can fall between samples.](../art/scanner-patterns.svg)
 
 In the training shed, **Training LiDAR layout** determines the examples used to fit the detector. **Validation LiDAR layout** controls how the held-out plants are scanned. The default follows the training layout. To isolate a scanner change, keep the seed, crop, training layout, epochs and cutoffs fixed. The generator keeps the plant centers, clutter, ground variants and requested ray budgets paired. Layout capacity and simulated noise can change the number of returns. In the field audit, **Open this scan in the 3D viewer** opens the selected tile, including its ground setting. Check its tile ID against the exported report.
 
@@ -85,11 +93,15 @@ For tomato at seed 212, the ring scan had a candidate peak within 15 cm of 578 o
 
 ## Where can boards land?
 
+![Two overhead sketches show the same eight trees. In the first, four sample boards are centred on selected tree bases. In the second, the same shapes land at independently sampled positions. One still lands close to a tree by chance. The detector sees laser returns without labels for tree or board.](../art/plants/apple-board-placement.svg)
+
 Open **Advanced scan settings → Weeds, obstacles and fixtures**. Choose **Include** under Boards. **At plants** places nine boards at planted crop centers. **Anywhere** samples nine positions across the 10 m square using the field seed. Choose **Apply and scan**, then read **Boards** in the scan summary to see how many laser rays actually returned from those surfaces. The recipe download and share link preserve your choice.
 
 On an apple planting, choose **Board placement** in **Compare scans and detectors**. Both maps use the same tree-base rule. Turn on **Show scan points** to see board returns in orange and select a tree to inspect its closest pin. [Replay a tree whose pin moved](https://mvalancy.github.io/crop-trainer/?crop=apple&plantArchitecture=4&plantForm=central-leader&plantCondition=healthy&appleCanopy=leafy&seed=22153127&sensor=reference&budget=60000&ground=true&noise=clean&weeds=off&sticks=off&boards=on&studyMode=boards&studyMetric=orchard&studyCloud=on&studyZoom=tree&studyBox=0#scan-study) · [Read the measured comparison](orchard-boards.md)
 
 ## How many rays reach the field?
+
+![Sample positions intersect two leaves and the soil. Dots show where a surface was measured.](../art/lesson-returns.svg)
 
 Set **Validation ray budget** in the Training Shed to vary scan density on held-out fields. Training uses the budget selected for its own split, which defaults to seeded variation. Open a scored tile to see how many rays its layout sampled and how many returns survived noise and soil removal. The **Ray scout** farm challenge uses the same distinction. Two requests above the layout's capacity produce the same number of sampled rays.
 
@@ -104,6 +116,8 @@ On tomato seed 721, more rays raised the number of labeled plant instances match
 
 ## Does matching training density help on sparse scans?
 
+![Actual target positions from plot 216917. At left the height detector matched 15 plants at 30,000 rays. At right it matched 103 at one million. Circles indicate a match within 15 centimetres and crosses indicate a miss. A line sweeps across both maps.](../art/seedling-density.svg)
+
 On two fresh seeds, training at 12,000 rays improved mean F1 for all three crops on held-out 12,000-ray OS1-64 scans. The comparison used six training fields, three held-out fields, both soil variants, 40 neural epochs and a 0.50 score cutoff. Each pair had identical validation scans and training plantings. Resampling the training scans changed their candidate peaks and the number of balanced examples.
 
 | Crop | Seed 1221 · train 12k / 60k | Seed 1222 · train 12k / 60k |
@@ -115,6 +129,8 @@ On two fresh seeds, training at 12,000 rays improved mean F1 for all three crops
 For lettuce seed 1221, F1 at 7.5, 10 and 15 cm was 0.642, 0.727 and 0.767 with 12k training rays, and 0.159, 0.167 and 0.178 with 60k. The Node CPU run spent 2.41 s generating, 0.09 s training and 0.07 s validating at 12k, compared with 3.52 s, 0.17 s and 0.03 s at 60k. These scores describe this simulated sparse layout. In the Training shed, open **Scanner and ray budgets** to set the two splits independently. [Replay lettuce at 12k training rays](https://mvalancy.github.io/crop-trainer/trainer/?crop=lettuce&seed=1221&sensor=os1-64&trainingRayBudget=12000&validationRayBudget=12000&engine=cpu) · [Replay the 60k control](https://mvalancy.github.io/crop-trainer/trainer/?crop=lettuce&seed=1221&sensor=os1-64&trainingRayBudget=60000&validationRayBudget=12000&engine=cpu)
 
 ## Does the same fit work on dense scans?
+
+![Grow practice fields, fit weights, then measure on separate plantings. Keep both scans of each planting in one split.](../art/field-split.svg)
 
 Choose **Training scan density** in the benchmark. The CPU fits the same neural architecture twice per seed, using 12,000 and 60,000 requested rays per training scan. Select a validation budget and compare the fits on identical held-out tiles. The results show the sampled rays and balanced examples that reached each fit. Select a contender to replay it in the Training shed. [Run the density benchmark](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=density&sensor=os1-64&crop=lettuce&seed=1321&validationRayBudget=60000)
 
@@ -134,6 +150,8 @@ Matching the budgets improved mean F1 in each pair. On dense artichoke scans at 
 On dense artichoke seed 1321, the 12k and 60k Node CPU runs spent 1.84 / 2.43 seconds generating, 71 / 85 ms training and 22 / 16 ms scoring. F1 at 7.5, 10 and 15 cm was 0.459, 0.574 and 0.707 for 12k training, and 0.663, 0.819 and 0.964 for 60k. Each fit includes its own normalization and balanced training examples.
 
 ## Can one detector handle both sparse and dense scans?
+
+![An overhead sketch shows grid and ring sampling patterns. A small plant can fall between samples.](../art/scanner-patterns.svg)
 
 In **Benchmark → Training scan density**, select **Include a mixed-density fit** to add a third detector. It learns from three plantings scanned at 12,000 rays and three at 60,000. Run the benchmark at one validation budget, follow the repeat link in the same tab, and run it again. The new table shows each detector’s mean F1 at both densities. Read the lower of those two scores if your detector needs to handle either scan density. [Try the artichoke experiment](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=density&crop=artichoke&sensor=os1-64&seed=1421&includeMixed=1&validationRayBudget=60000)
 
