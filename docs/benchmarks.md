@@ -18,6 +18,10 @@ On the v3 branched-bud artichoke test (seed 817221, mixed plant condition), Chro
 
 Choose the grid and OS1-64 layout comparison. The browser trains one detector per seed, then scans each held-out planting twice at the same ray count. Both scans use that seed’s fitted weights. Inspect the extra pins and misses at 15 cm. To see how a plant can fall between two rings, open the illustrated example from the generator. [Run the seedling benchmark](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=layouts&crop=tomato&plantArchitecture=2&plantForm=seedling&plantCondition=healthy&sensor=reference&trainingRayBudget=1000000&validationRayBudget=60000&seed=82173) · [See the rays around one seedling](scanners.md#why-can-the-same-ray-budget-miss-a-seedling)
 
+## Can the model learn which extra peaks are plants?
+
+Choose **Does ignoring gaps help a trained detector?** Both networks see scans of the same plants. Their peak rules propose different sets of locations, so each network trains on its own examples and scales its own inputs. Read the number of extra pins alongside the number of plants found. Click a contender name in Results to open that fit’s settings in the Training Shed. [Compare the two fits on simulated ring scans](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=averaging&crop=tomato&plantArchitecture=2&plantForm=seedling&plantCondition=healthy&sensor=os1-64&trainingRayBudget=60000&validationRayBudget=60000&seed=82173) · [Check the soil-only experiment](seedling-peaks.md)
+
 ## Which plants did only one model find?
 
 Run **Logistic vs neural · CPU**, then expand **Which plants did each model find?** Choose a scan and a matching distance. The table counts every labeled plant once. Select a box found by just one model to open its center in the 3D viewer and earn the **Model scout** stamp. A cyan ring tracks the highlighted plant as you orbit or zoom. **Copy scan link** preserves the box selection. In the Training Shed, you can also open a highlighted missed plant in 3D.

@@ -10,7 +10,7 @@ import {trainNetworkCPU,predictNetwork} from './trainer/neural.js';
 const [command,output,...args]=process.argv.slice(2);
 const trainUsage = 'node run.mjs train new-report.json [settings.json] [--weights new-weights.json]';
 const cliUsage = 'node run.mjs serve [port]\n'+trainUsage+
-  '\nnode run.mjs preflight\n  Train on CPU and replay the held-out synthetic scans through the field CLI. Prints JSON.';
+  '\nnode run.mjs preflight [--peak-averaging occupied|zero-filled]\n  Train on CPU and replay the held-out synthetic scans through the field CLI. Prints JSON.';
 if(command==='serve'){
  const allowed=new Set(['index.html','farm.js','first-steps.js','field-lesson.js','farm.css','viewer.js','benchmark/index.html','benchmark/watch.js','benchmark/main.js','benchmark/density.js','art/title.svg','art/lettuce-study.webp','trainer/index.html','trainer/main.js','trainer/data.js','trainer/field.js','trainer/plants/portrait.css','trainer/model.js','trainer/neural.js','trainer/network.js','trainer/fit-worker.js','trainer/sandbox.js','trainer/crops.js','trainer/sensors.js','README.md','AGENTS.md','LICENSE']);
  for(const module of ['live-scene','scan-session','growing-systems','plant-version','generate-worker','scan-study','scan-study-worker','scan-study-ui','scan-study-map','orchard','field-test-ui','field-test-worker','score-scan','inference','ply','references']) allowed.add('trainer/'+module+'.js');
@@ -35,15 +35,17 @@ if(command==='serve'){
  });
  server.listen(port,'127.0.0.1',()=>console.log('Open http://127.0.0.1:'+port+'/'));
 }else if(command==='preflight'){
- if(output !== undefined) throw Error('Use node run.mjs preflight with no arguments.');
+ if(output !== undefined && (output!=='--peak-averaging' || args.length!==1 || !['occupied','zero-filled'].includes(args[0]))) {
+  throw Error('Use node run.mjs preflight with no arguments or with --peak-averaging occupied|zero-filled.');
+ }
  const {preflight} = await import('./cli-preflight.mjs');
- console.log(JSON.stringify(await preflight(),null,2));
+ console.log(JSON.stringify(await preflight(args[0]),null,2));
 }else if(command==='train'&&output){
  const configuration = args[0] && !args[0].startsWith('--') ? args.shift() : null;
  if (output.startsWith('--') || (args.length && (args.length !== 2 || args[0] !== '--weights' || !args[1] || args[1].startsWith('--')))) throw Error(trainUsage);
  const weightsPath = args[1];
  await checkOutputPaths(weightsPath ? [output,weightsPath] : [output]);
- const defaults={crop:'lettuce',plantArchitecture:1,plantForm:undefined,plantCondition:undefined,seed:27,trainFields:6,valFields:3,epochs:40,model:'neural',hiddenLayers:[4],activation:'tanh',optimizer:'sgd',batchSize:0,momentum:.9,learningRate:.25,initSeed:12345,sensorMode:'mixed',validationSensorMode:undefined,trainingRayBudget:0,validationRayBudget:0,minimumHeight:.035,threshold:.5};
+ const defaults={crop:'lettuce',plantArchitecture:1,plantForm:undefined,plantCondition:undefined,seed:27,trainFields:6,valFields:3,epochs:40,model:'neural',hiddenLayers:[4],activation:'tanh',optimizer:'sgd',batchSize:0,momentum:.9,learningRate:.25,initSeed:12345,sensorMode:'mixed',validationSensorMode:undefined,trainingRayBudget:0,validationRayBudget:0,minimumHeight:.035,threshold:.5,peakAveraging:undefined};
  const config=configuration?JSON.parse(await readFile(configuration,'utf8')):{};
  if(!config||typeof config!=='object'||Array.isArray(config))throw Error('Expected a JSON settings object.');
  for(const key of Object.keys(config))if(!Object.hasOwn(defaults,key))throw Error('Unknown setting '+key);

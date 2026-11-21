@@ -1,4 +1,4 @@
-import {detectScan} from './inference.js?v=orchard1';
+import {detectScan} from './inference.js?v=peak1';
 import {measureStages} from './data.js?v=systems1';
 import {parseReferences,evaluatePins} from './references.js?v=systems1';
 import {MAX_PLY_POINTS} from './ply.js';

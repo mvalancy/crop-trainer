@@ -14,6 +14,7 @@ export function densitySnapshot(report) {
   const {settings, datasets, rows} = report;
   if (![12000, 60000].includes(settings.validationRayBudget)) return null;
   const experiment = [settings.crop, settings.minimumHeight];
+  if (settings.peakAveraging === 'occupied') experiment.push(['peakAveraging','occupied']);
   const scores = rows.map(row => {
     const {recipeManifest, stats} = datasets[row.datasetIndex];
     const scans = recipeManifest.map(tile => {

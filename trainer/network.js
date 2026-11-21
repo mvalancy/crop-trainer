@@ -102,10 +102,29 @@ export const featureNames = ['Smoothed peak height','Center cell height','Mean i
   'Mean outer height','Peak above outer mean','High cells in middle ring','High cells in outer ring',
   'Occupied inner cells','Occupied outer cells','Log return count','Shape asymmetry','Peak above background'];
 
+const peakSchemas = {'zero-filled':'crop-peak-13-v1',occupied:'crop-peak-13-occupied-v1'};
+
+export function savedPeakAveraging(model) {
+  const mode = Object.keys(peakSchemas).find(key => peakSchemas[key] === model?.featureSchema);
+  if (!mode) throw Error('Unsupported saved peak feature schema. Use weights exported by a compatible Crop Trainer.');
+  if (model.peakAveraging !== undefined && model.peakAveraging !== mode) {
+    throw Error('The saved peak averaging rule disagrees with its feature schema.');
+  }
+  return mode;
+}
+
 // Both training entry points export the same inference metadata for a completed fit.
-export function weightArtifact({settings,scaling,weights,trainer,epochs}) {
+export function weightArtifact({settings,scaling,weights,trainer,epochs,stats}) {
+  const {peakAveraging='zero-filled'} = settings;
+  if (typeof peakAveraging !== 'string' || !Object.hasOwn(peakSchemas,peakAveraging)) {
+    throw Error('Unsupported peak averaging rule for weight export.');
+  }
+  if (stats && peakAveraging !== (stats.peakAveraging ?? 'zero-filled')) {
+    throw Error('The requested peak averaging rule differs from the fitted dataset.');
+  }
   return {
-    format:'crop-trainer-weights-v1', trainer, featureSchema:'crop-peak-13-v1',
+    format:'crop-trainer-weights-v1', trainer, featureSchema:peakSchemas[peakAveraging],
+    ...(peakAveraging === 'occupied' ? {peakAveraging} : {}),
     inputs:featureNames.length, featureNames, hiddenLayers:settings.hiddenLayers,
     activation:settings.activation, output:'sigmoid', layout:'layer-major, neuron-major, incoming weights then bias',
     crop:settings.crop, ...plantSettings(settings), minimumHeight:settings.minimumHeight, threshold:settings.threshold,
@@ -113,9 +132,10 @@ export function weightArtifact({settings,scaling,weights,trainer,epochs}) {
   };
 }
 
-// Score raw candidate rows from features(tile, minimumHeight) using a saved fit.
-export function scoreSavedWeights(rawFeatures, model) {
-  if (model?.format !== 'crop-trainer-weights-v1' || model.featureSchema !== 'crop-peak-13-v1' || model.inputs !== 13 ||
+// The original two-argument call declares standard zero-filled feature rows.
+export function scoreSavedWeights(rawFeatures, model, peakAveraging='zero-filled') {
+  if (savedPeakAveraging(model) !== peakAveraging) throw Error('Extract the candidate rows with the saved peak averaging rule.');
+  if (model?.format !== 'crop-trainer-weights-v1' || model.inputs !== 13 ||
       model.scaling?.means?.length !== 13 || model.scaling?.std?.length !== 13 ||
       !model.scaling.means.every(Number.isFinite) || !model.scaling.std.every(v => Number.isFinite(v) && v > 0) ||
       !Array.isArray(model.weights) || !model.weights.every(Number.isFinite)) throw Error('Expected an exported Crop Trainer weight file.');

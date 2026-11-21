@@ -8,17 +8,25 @@ import {fileURLToPath} from 'node:url';
 import {promisify} from 'node:util';
 import {field} from './trainer/field.js';
 import {encodePly} from './trainer/ply.js';
+import {savedPeakAveraging} from './trainer/network.js';
 
 const execute = promisify(execFile);
 const trainEntry = fileURLToPath(new URL('./run.mjs', import.meta.url));
 const scoreEntry = fileURLToPath(new URL('./score-scan.mjs', import.meta.url));
 
-export async function preflight() {
+export async function preflight(peakAveraging='zero-filled') {
   const cwd = await mkdtemp(join(tmpdir(), 'crop-trainer-preflight-'));
   try {
     const start = performance.now();
-    await execute(process.execPath, [trainEntry, 'train', 'training.json', '--weights', 'weights.json'], {cwd});
+    const settings=[];
+    if (peakAveraging!=='zero-filled') {
+      await writeFile(join(cwd,'settings.json'),JSON.stringify({peakAveraging}));
+      settings.push('settings.json');
+    }
+    await execute(process.execPath, [trainEntry, 'train', 'training.json', ...settings, '--weights', 'weights.json'], {cwd});
     const train = JSON.parse(await readFile(join(cwd, 'training.json'), 'utf8'));
+    const model = JSON.parse(await readFile(join(cwd,'weights.json'),'utf8'));
+    assert.equal(savedPeakAveraging(model),peakAveraging);
     const validation = train.recipeManifest.filter(tile => tile.split === 'validation');
     assert.equal(validation.length, train.stats.valTiles);
     assert.ok(validation.length > 0, 'The training report must contain held-out scans.');
@@ -36,6 +44,7 @@ export async function preflight() {
       await execute(process.execPath, [scoreEntry, 'weights.json', id+'.ply', id+'.report.json',
         '--labels', id+'.labels.json'], {cwd});
       const result = JSON.parse(await readFile(join(cwd, id+'.report.json'), 'utf8'));
+      assert.equal(result.detector.featureSchema,model.featureSchema);
       assert.equal(result.pointCount, scan.xyz.length/3);
       assert.equal(result.references.length, scan.labels.boxes.length);
       const counts = result.evaluation.scores.map(({cm, tp, fp, fn}) => ({cm, tp, fp, fn}));
@@ -57,6 +66,7 @@ export async function preflight() {
 
     return {
       task: 'synthetic-field-preflight', passed: true, backend: train.backend, node: process.version,
+      ...(peakAveraging==='occupied' ? {featureSchema:model.featureSchema,peakAveraging} : {}),
       platform: process.platform, architecture: process.arch,
       crop: train.crop, seed: train.seed, epochs: train.epochs, meanF1: train.meanF1,
       trainingTimings: train.timings, replayMs: Math.round(performance.now()-replayStart),

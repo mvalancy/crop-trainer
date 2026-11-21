@@ -16,7 +16,7 @@
 <section class="panel benchSetup">
 <form id="benchForm" class="benchForm">
 <fieldset><legend>Choose a comparison</legend><div class="benchFields">
-<label class="comparisonChoice">Question<select id="comparison"><option value="models" selected>Which model places more accurate pins?</option><option value="backend">How fast does WebGPU train compared with CPU?</option><option value="heights">Does including shorter peaks help?</option><option value="epochs">Does training for longer help?</option><option value="density">Does training on denser scans help?</option><option value="layouts">Does the scan layout change which plants we find?</option><option value="cutoffs">What happens when we accept lower scores?</option></select></label>
+<label class="comparisonChoice">Question<select id="comparison"><option value="models" selected>Which model places more accurate pins?</option><option value="backend">How fast does WebGPU train compared with CPU?</option><option value="heights">Does including shorter peaks help?</option><option value="epochs">Does training for longer help?</option><option value="density">Does training on denser scans help?</option><option value="layouts">Does the scan layout change which plants we find?</option><option value="averaging">Does ignoring gaps help a trained detector?</option><option value="cutoffs">What happens when we accept lower scores?</option></select></label>
 <label>Crop<select id="crop"><option value="lettuce">Lettuce</option><option value="artichoke">Globe artichoke</option><option value="tomato">Young tomato</option><optgroup label="Experimental growing systems"><option value="apple">Apple orchard</option><option value="grapevine">Trellised vineyard</option><option value="bench-lettuce">Greenhouse bench lettuce</option><option value="high-wire-tomato">Greenhouse high-wire tomato</option></optgroup></select></label>
 </div></fieldset>
 <p id="comparisonHelp" class="hint"></p>
@@ -33,6 +33,7 @@
 <div id="epochControl">
 <label>Epochs per fit<input id="fitEpochs" type="number" min="1" max="5000" step="1" value="40" required=""></label></div>
 <label id="heightControl">Minimum peak height<select id="minimumHeight"><option value="default">Crop default</option><option value="0.065">6.5 cm</option><option value="0.035">3.5 cm</option></select></label>
+<label id="averagingControl">Peak averaging<select id="peakAveraging" required><option value="zero-filled">All cells · standard</option><option value="occupied">Sampled cells only · experimental</option></select></label>
 </div></fieldset>
 <fieldset><legend>Training scans</legend><div class="benchFields">
 <label>Training layout<select id="sensor"></select></label>
@@ -157,6 +158,6 @@
 </main>
 <footer class="siteFoot"><span>Created by Matthew Valancy</span>
 <div><a href="../AGENTS.md">Agent quickstart</a><a href="../#missions">Farm journal</a><a href="../LICENSE">MIT license</a></div></footer>
-<script type="module" src="main.js?v=layouts1"></script>
+<script type="module" src="main.js?v=peak1"></script>
 </body>
 </html>

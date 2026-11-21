@@ -4,7 +4,7 @@ const rate = v => v === null ? '—' : (100*v).toFixed(1)+'%';
 function methodsFor(report) {
   const detector = report.detector;
   const cm = meters => (meters*100).toFixed(1)+' cm';
-  const peaks = 'Peak floor '+cm(detector.minimumHeight);
+  const peaks = 'Peak floor '+cm(detector.minimumHeight)+(detector.peakAveraging==='occupied'?' · average over sampled cells':'');
   const spacing = 'minimum spacing '+cm(detector.pinSeparation);
   const methods={
     model:{label:'Trained model',pins:report.pins,evaluation:report.evaluation,
@@ -135,7 +135,7 @@ export function initFieldTest(downloadJSON) {
       updateControls(); return;
     }
     status.textContent = 'Reading '+file.name+'…';
-    const active = worker = new Worker(new URL('./field-test-worker.js?v=orchard1',import.meta.url),{type:'module'});
+    const active = worker = new Worker(new URL('./field-test-worker.js?v=peak1',import.meta.url),{type:'module'});
     updateControls();
     function fail(message) {
       if (active !== worker) return;

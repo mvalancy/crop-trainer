@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {features} from '../trainer/data.js';
+import {buildDataset,features,rescanValidation} from '../trainer/data.js';
+import {field} from '../trainer/field.js';
 
 test('an unsampled neighbour and a measured soil return contribute different weights in the occupied filter',()=>{
   const isolated={xyz:[2.025,3.025,.125]};
@@ -28,4 +29,33 @@ test('fully observed support gives the same single-peak features with either fil
   const stock=features({xyz},.065);
   assert.equal(stock.pos.length,1);
   assert.deepEqual(features({xyz},.065,'occupied'),stock);
+});
+
+test('the chosen peak rule follows the training, held-out and alternate layout scans', async () => {
+  const settings = {seed:82173,crop:'tomato',plantArchitecture:2,plantForm:'seedling',
+    trainFields:2,valFields:1,trainingRayBudget:60000,validationRayBudget:60000};
+  for (const invalid of [null,'guess']) {
+    await assert.rejects(buildDataset({...settings,peakAveraging:invalid,generate:()=>assert.fail('generated before validation')}),/averaging/);
+  }
+
+  const stock = await buildDataset(settings);
+  assert.deepEqual(await buildDataset({...settings,peakAveraging:'zero-filled'}),stock);
+  assert.equal(Object.hasOwn(stock.stats,'peakAveraging'),false);
+
+  const occupied = await buildDataset({...settings,peakAveraging:'occupied'});
+  assert.equal(occupied.stats.peakAveraging,'occupied');
+  assert.deepEqual(occupied.manifest,stock.manifest);
+  assert.notDeepEqual(occupied.scaling,stock.scaling);
+
+  const rescanned = await rescanValidation(occupied,'os1-64');
+  assert.deepEqual(rescanned.scaling,occupied.scaling);
+  for (const dataset of [occupied,rescanned]) {
+    for (const tile of dataset.validation) {
+      const raw = features(field(tile.recipe),dataset.stats.minimumHeight,'occupied');
+      const normalized = Float32Array.from(raw.X,(value,i)=>
+        (value-occupied.scaling.means[i%13])/occupied.scaling.std[i%13]);
+      assert.deepEqual(tile.pos,raw.pos);
+      assert.deepEqual(tile.X,normalized);
+    }
+  }
 });

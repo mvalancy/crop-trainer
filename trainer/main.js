@@ -1,9 +1,9 @@
 import {scanSession} from './scan-session.js?v=plants3';
 import {setupPlantControls, plantSettings} from './plant-version.js?v=plants3';
 import {createLiveScene} from './live-scene.js';
-import {initFieldTest} from './field-test-ui.js?v=orchard3';
+import {initFieldTest} from './field-test-ui.js?v=peak1';
 import {initSandbox, modelSettings, duration, trainInWorker, inspectWeights, runPresets, startingPreset} from './sandbox.js?v=field-practice1';
-import {MAX_SANDBOX_EPOCHS, trainerId, weightArtifact} from './network.js?v=plants2';
+import {MAX_SANDBOX_EPOCHS, trainerId, weightArtifact} from './network.js?v=peak1';
 import {returnBand,sampleCloud} from './field.js?v=plants3';
 import {cropProfile} from './crops.js?v=systems1';
 import {allProfiles, sensorOptions, validationSensorOptions, sensorDetails, rayBudgetOptions, trainingRayOptions, trainingRayValue, ALTERNATING_BUDGET} from './sensors.js?v=dense1';
@@ -25,7 +25,9 @@ applyRunPreset(initialPlan);
 trainingRayOptions($('trainingRayBudget'), params.get('trainingRayBudget'));
 rayBudgetOptions($('validationRayBudget'), params.get('validationRayBudget'));
 $('scanOptions').open = ['sensor', 'validationSensor', 'trainingRayBudget', 'validationRayBudget'].some(key => params.has(key));
-$('detectorOptions').open = params.has('threshold') || params.has('minimumHeight');
+const sampledPeaks = params.get('peakAveraging') === 'occupied';
+if (sampledPeaks) $('peakAveraging').value = 'occupied';
+$('detectorOptions').open = sampledPeaks || params.has('threshold') || params.has('minimumHeight');
 const seedParam = params.get('seed');
 if (/^\d+$/.test(seedParam) && Number(seedParam) <= 0xffffffff) $('seed').value = String(Number(seedParam));
 const cropParam = params.get('crop');
@@ -50,29 +52,54 @@ describeScanner();
 function updateBenchmarkLinks() {
  const seed = $('seed').valueAsNumber;
  const validSeed = Number.isInteger(seed) && seed >= 0 && seed < 0xffffffff;
- for (const [id, comparison] of [['cutoffBench', 'cutoffs'], ['epochBench', 'epochs'], ['densityBench', 'density'], ['heightBench','heights']]) {
+ for (const [id, comparison] of [['cutoffBench', 'cutoffs'], ['epochBench', 'epochs'], ['densityBench', 'density'], ['heightBench','heights'], ['averagingBench','averaging']]) {
   const query = new URLSearchParams({comparison, crop:$('crop').value, ...readPlantControls(), sensor:$('scanner').value, seed});
+  if (comparison !== 'averaging' && $('peakAveraging').value === 'occupied') query.set('peakAveraging', 'occupied');
   if (comparison !== 'heights') query.set('minimumHeight', $('peakHeight').value);
   if (comparison === 'density' && $('trainingRayBudget').value === ALTERNATING_BUDGET) query.set('includeMixed', '1');
   if (comparison !== 'density' && trainingRayValue($('trainingRayBudget'))) query.set('trainingRayBudget', $('trainingRayBudget').value);
   if (Number($('validationRayBudget').value)) query.set('validationRayBudget', $('validationRayBudget').value);
   if ($('validationSensor').value !== 'follow') query.set('validationSensor', $('validationSensor').value);
   const link = $(id);
-  link.hidden = !validSeed || (comparison !== 'epochs' && (!$('epochs').validity.valid || $('epochs').valueAsNumber>5000 || $('stopMode').value==='time'));
-  if (comparison !== 'epochs') query.set('epochs', $('epochs').value);
+  const fixedEpochs = $('stopMode').value === 'epochs' && $('epochs').validity.valid && $('epochs').valueAsNumber <= 5000;
+  link.hidden = !validSeed || (comparison !== 'epochs' && comparison !== 'averaging' && !fixedEpochs);
+  if (comparison === 'averaging') {
+   link.textContent = fixedEpochs ? 'Compare both peak rules on matched scans' : 'Compare both peak rules at 40 epochs';
+  }
+  if (comparison !== 'epochs') query.set('epochs', comparison === 'averaging' && !fixedEpochs ? '40' : $('epochs').value);
   link.href = '../benchmark/?'+query;
  }
 }
 $('crop').addEventListener('change', updateBenchmarkLinks);
 $('plantArchitecture').addEventListener('change', updateBenchmarkLinks);
-for (const id of ['plantForm','plantCondition','peakHeight','scanner','validationSensor','trainingRayBudget','validationRayBudget','seed','epochs','stopMode']) $(id).addEventListener('input', updateBenchmarkLinks);
+for (const id of ['plantForm','plantCondition','peakHeight','peakAveraging','scanner','validationSensor','trainingRayBudget','validationRayBudget','seed','epochs','stopMode']) $(id).addEventListener('input', updateBenchmarkLinks);
 // File uploads work independently of training imports and GPU discovery.
 const setFieldTestModel=initFieldTest(downloadJSON);
 initSandbox(params);
 let finishTraining=null, calibration=null;
-let controller=null,losses=[],lastPreview=null,backendReady=false,deps,webgpuAvailable=false,lastRun=null,lastPaint=0;
+let controller=null,losses=[],lastPreview=null,backendReady=false,deps,webgpuAvailable=null,lastRun=null,lastPaint=0;
+function updateRunAvailability() {
+ backendReady = !!deps && ($('engine').value === 'cpu' || webgpuAvailable !== null);
+ if (!controller) {
+  $('run').disabled = !backendReady;
+  $('estimate').disabled = !backendReady;
+ }
+}
+async function checkAdapter() {
+ let adapter, message;
+ try {
+  adapter=await navigator.gpu?.requestAdapter();
+  message=adapter ? 'WebGPU available · '+deps[1].describeAdapter(adapter).kind :
+   (navigator.gpu ? 'Ready to train on CPU · no WebGPU adapter found' : 'Ready to train on CPU · this browser has no WebGPU');
+ } catch { message='Ready to train on CPU · WebGPU check failed'; }
+ webgpuAvailable=!!adapter;
+ $('engine').querySelector('[value="webgpu"]').disabled=!adapter;
+ if (!adapter && $('engine').value==='webgpu') $('engine').value='auto';
+ $('gpu').textContent=message;
+ updateRunAvailability();
+}
 try {
- deps=await Promise.all([import('./data.js?v=plants3'),import('./model.js?v=benchmark1'),import('./neural.js?v=live1')]);
+ deps=await Promise.all([import('./data.js?v=peak1'),import('./model.js?v=benchmark1'),import('./neural.js?v=live1')]);
  $('epochs').max=MAX_SANDBOX_EPOCHS;
  const epochsParam = params.get('epochs');
  if (/^\d+$/.test(epochsParam) && Number(epochsParam) >= 1 && Number(epochsParam) <= MAX_SANDBOX_EPOCHS) {
@@ -83,21 +110,14 @@ try {
   $('threshold').value = Number(thresholdParam);
  }
  updateBenchmarkLinks();
- if (params.get('engine') === 'cpu') $('engine').value = 'cpu';
+ const engineParam=params.get('engine');
+ if (engineParam==='cpu' || engineParam==='webgpu') $('engine').value=engineParam;
  $('train').max=deps[0].FIELD_LIMITS.train;
  $('validation').max=deps[0].FIELD_LIMITS.validation;
- let gpuStatus='Ready to train on CPU · this browser has no WebGPU';
- try{
-  if(navigator.gpu){
-   const adapter=await navigator.gpu.requestAdapter();
-   webgpuAvailable=!!adapter;
-   gpuStatus=adapter?'WebGPU available · '+deps[1].describeAdapter(adapter).kind:'Ready to train on CPU · no WebGPU adapter found';
-  }
- }catch{gpuStatus='Ready to train on CPU · WebGPU check failed'}
- $('engine').querySelector('[value="webgpu"]').disabled=!webgpuAvailable;
- if(webgpuAvailable && params.get('engine')==='webgpu')$('engine').value='webgpu';
- $('gpu').textContent=gpuStatus;
- backendReady=true;$('run').disabled=false;$('estimate').disabled=false;
+ $('gpu').textContent='Checking WebGPU · CPU training is ready';
+ $('engine').addEventListener('change', updateRunAvailability);
+ updateRunAvailability();
+ void checkAdapter();
  $('status').textContent='Watch the pins as the detector learns. The results map lets you inspect a plant it found or missed.';
 }catch(e){
  $('gpu').textContent='Training unavailable';$('stage').textContent='Training not ready';$('status').textContent=e.message;
@@ -109,7 +129,7 @@ function status(stage,detail,value){
 }
 const requestedBand = params.get('missBand');
 const replayMisses = [...$('missBand').options].some(option => option.value === requestedBand);
-let auditTiles=[],fieldViews=new Map(),auditThreshold=.5, auditRayBudget=0;
+let auditTiles=[],fieldViews=new Map(),auditThreshold=.5, auditRayBudget=0, auditPeakAveraging;
 function showField(){
  const field=auditTiles[Number($('auditField').value)];
  lastPreview=fieldViews.get(field?.tile_id);
@@ -199,6 +219,7 @@ $('overlayStage').addEventListener('change',showField);
 function scanViewerLink(tile, budget = auditRayBudget) {
  const scanQuery = new URLSearchParams({crop:tile.crop, ...plantSettings(tile), seed:tile.seed, sensor:tile.sensor, ground:tile.ground, tile:tile.tile_id});
  if (budget) scanQuery.set('budget', budget);
+ if (auditPeakAveraging === 'occupied') scanQuery.set('peakAveraging', 'occupied');
  return '../?'+scanQuery+'#field';
 }
 function showStages(){
@@ -406,9 +427,10 @@ function displayGroundStudy({byGround, tiles}) {
 $('soilMetric').addEventListener('change', () => {
  if (lastRun) displayGroundStudy(lastRun);
 });
-function display(v,threshold,validationRayBudget){
+function display(v,threshold,validationRayBudget,peakAveraging){
  $('runReview').hidden=false;$('reviewLink').hidden=false;$('scored').hidden=false;
  auditRayBudget=validationRayBudget;
+ auditPeakAveraging=peakAveraging;
  auditThreshold=threshold;
  displayGroundStudy(v);
  if (requestedSoilMetric === $('soilMetric').value) $('groundStudy').open = true;
@@ -459,7 +481,8 @@ $('copyReport').onclick=async()=>{
 $('cancel').onclick=()=>{if(controller){controller.abort();$('cancel').disabled=true;status('Canceling…','Waiting for the current operation to stop.')}};
 function readSettings() {
  const model = modelSettings();
- return {...model,crop:$('crop').value,...readPlantControls(),seed:$('seed').valueAsNumber,
+ return {...model,crop:$('crop').value,...readPlantControls(),
+  ...($('peakAveraging').value === 'occupied' ? {peakAveraging:'occupied'} : {}),seed:$('seed').valueAsNumber,
   trainFields:$('train').valueAsNumber,valFields:$('validation').valueAsNumber,sensorMode:$('scanner').value,
   validationSensorMode:$('validationSensor').value === 'follow' ? undefined : $('validationSensor').value,
   trainingRayBudget:trainingRayValue($('trainingRayBudget')),validationRayBudget:Number($('validationRayBudget').value),
@@ -632,7 +655,7 @@ async function runFit(trial){
   }
   losses=fit.loss.map((loss,i)=>({epoch:fit.lossEpochs[i],loss}));
   if(losses.length>1024){const skip=Math.ceil(losses.length/1024);losses=losses.filter((_,i)=>i%skip===0||i===losses.length-1);}
-  display(scores,threshold,validationRayBudget);
+  display(scores,threshold,validationRayBudget,settings.peakAveraging);
   const timings={generationMs:generated-start,trainingMs:trained-generated,validationMs:finished-trained,totalMs:finished-start};
   displayBenchmark(timings,fit.backend,epochs,set.stats.samples);
   showFitData(set,fit.weights.length,epochs);

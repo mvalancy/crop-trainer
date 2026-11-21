@@ -88,7 +88,14 @@
 <div class="detailFields">
 
 <label>Minimum peak height<select id="peakHeight"><option value="0.065">6.5 cm · standard</option><option value="0.035" selected="">3.5 cm · include lower peaks</option></select><span>Find peaks at this height during training and validation. The 3.5 cm setting includes shorter and more sparsely sampled plants.</span></label>
+<label>Average height across
+<select id="peakAveraging" aria-label="Average height across" aria-describedby="averagingHint"><option value="zero-filled">All cells</option><option value="occupied">Sampled cells only</option></select>
+<span id="averagingHint">All cells counts gaps as zero, which can hide short seedlings. The sampled-cell rule is experimental. Ignoring gaps can also add pins on bare soil.</span></label>
 <label>Detection score cutoff<input id="threshold" type="number" min="0" max="1" step="any" value="0.5" required=""><span>A lower cutoff keeps more candidate pins before spacing. Use the cutoff benchmark to compare extra pins and missed plants.</span></label>
+<details class="peakHelp" id="averagingStudy"><summary>How did sampled-cell averaging do?</summary>
+<p>On eight clean synthetic grid scans at 60,000 rays each, two separately trained networks each found 19 of 821 tomato seedlings within 15 cm. The height-only rule using the same sampled cells found 257. On simulated rings, sampled-cell averaging improved the networks’ F1.</p>
+<p><a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/seedling-peaks.md#can-training-reject-the-extra-soil-peaks">See the matched seedling experiments</a></p></details>
+<a id="averagingBench" href="../benchmark/?comparison=averaging">Compare both peak rules on matched scans</a>
 <details class="peakHelp">
 <summary>Which height should I try?</summary>
 <p>Lower peaks can recover plants with sparse returns. For the original lettuce geometry (v1) with the starter neural model and mixed scans, lowering the cutoff from 6.5 to 3.5 cm raised mean F1 from 0.650 to 0.749 on seed 27 and from 0.575 to 0.704 on seed 28.</p>
@@ -232,6 +239,6 @@
 </main>
 <footer class="siteFoot"><span>Created by Matthew Valancy</span>
 <div><a href="../AGENTS.md">Agent quickstart</a><a href="../#missions">Farm journal</a><a href="../LICENSE">MIT license</a></div></footer>
-<script type="module" src="./main.js?v=early-upload1"></script>
+<script type="module" src="./main.js?v=peak1"></script>
 </body>
 </html>
