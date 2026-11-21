@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 208" role="img" aria-labelledby="title desc">
+  <title id="title">A grapevine and its overhead scan</title>
+  <desc id="desc">One trunk divides into two woody arms. Shoots grow upward from them and bear leaves. On the right, vertical laser paths end in dots on the upper surfaces or the ground. Parts of the trunk have no returns.</desc>
+  <defs>
+    <path id="blade" d="M0 0 Q4 -7 9 -8 L9 -11 L13 -9 L20 -16 L19 -11 L24 -12 Q18 -3 12 -2 Q5 1 0 0Z"/>
+    <g id="vine" stroke-linejoin="round" stroke-linecap="round">
+      <g fill="none" stroke="#815236">
+        <path stroke-width="8" d="M117 135 Q112 118 117 103 L115 88"/>
+        <path stroke-width="5" d="M115 89 Q98 81 82 88 L49 86 M115 89 Q130 84 151 87 L182 84"/>
+      </g>
+      <g fill="none" stroke="#477044" stroke-width="3">
+        <path d="M57 86 Q58 72 53 52 M78 87 Q84 61 77 40 M95 85 Q95 60 102 43 M133 85 Q139 59 134 37 M154 87 Q149 64 156 47 M175 85 Q176 67 184 54"/>
+      </g>
+      <g fill="#79a35d" stroke="#416b44" stroke-width="1">
+        <use href="#blade" transform="translate(55 66) rotate(-21)"/>
+        <use href="#blade" transform="translate(54 58) scale(-.88 .88)"/>
+        <use href="#blade" transform="translate(80 59) rotate(-12)"/>
+        <use href="#blade" transform="translate(79 48) scale(-1 1)"/>
+        <use href="#blade" transform="translate(97 66) scale(-1 .86)"/>
+        <use href="#blade" transform="translate(99 52) rotate(-8)"/>
+        <use href="#blade" transform="translate(136 58) scale(-1 1)"/>
+        <use href="#blade" transform="translate(135 44) rotate(6)"/>
+        <use href="#blade" transform="translate(151 68) rotate(8)"/>
+        <use href="#blade" transform="translate(155 53) scale(-.8 .8)"/>
+        <use href="#blade" transform="translate(178 68) rotate(-1)"/>
+        <use href="#blade" transform="translate(181 59) scale(-.9 .9)"/>
+      </g>
+      <path d="M20 137H211" fill="none" stroke="#a88859" stroke-width="3"/>
+    </g>
+  </defs>
+  <style>
+    text { font-family: system-ui,sans-serif; fill: #254534; }
+    .rays { stroke: #287871; fill: none; stroke-width: 1.2; stroke-dasharray: 3 3; }
+    @media (prefers-reduced-motion: no-preference) {
+      .rays { animation: scan 2.8s linear infinite; }
+      @keyframes scan { to { stroke-dashoffset: -18; } }
+    }
+  </style>
+  <rect x="1" y="1" width="518" height="206" rx="14" fill="#f8f6e8" stroke="#c9ceb6"/>
+  <path d="M259 16V191" stroke="#d1d3bd"/>
+  <g font-size="20" font-weight="650"><text x="19" y="30">Plant structure</text><text x="278" y="30">Overhead returns</text></g>
+  <g transform="translate(9 34)"><use href="#vine"/></g>
+  <g transform="translate(267 34)">
+    <use href="#vine" opacity=".27"/>
+    <path id="rays" class="rays" d="M24 8V135.6 M36 8V48.2 M48 8V51.8 M60 8V33 M72 8V40.8 M84 8V51.6 M96 8V39.6 M108 8V40.4 M120 8V37.2 M132 8V52.8 M144 8V37.2 M156 8V30.8 M168 8V49.6 M180 8V57.4 M192 8V57.6 M204 8V135.6"/>
+    <g id="dots" fill="#165f59" stroke="#fff" stroke-width="1.2">
+      <circle cx="24" cy="135.6" r="2.9"/>
+      <circle cx="36" cy="48.2" r="2.9"/>
+      <circle cx="48" cy="51.8" r="2.9"/>
+      <circle cx="60" cy="33" r="2.9"/>
+      <circle cx="72" cy="40.8" r="2.9"/>
+      <circle cx="84" cy="51.6" r="2.9"/>
+      <circle cx="96" cy="39.6" r="2.9"/>
+      <circle cx="108" cy="40.4" r="2.9"/>
+      <circle cx="120" cy="37.2" r="2.9"/>
+      <circle cx="132" cy="52.8" r="2.9"/>
+      <circle cx="144" cy="37.2" r="2.9"/>
+      <circle cx="156" cy="30.8" r="2.9"/>
+      <circle cx="168" cy="49.6" r="2.9"/>
+      <circle cx="180" cy="57.4" r="2.9"/>
+      <circle cx="192" cy="57.6" r="2.9"/>
+      <circle cx="204" cy="135.6" r="2.9"/>
+    </g>
+  </g>
+  <g font-size="14"><text x="28" y="192">Trunk, cordons and shoots</text><text x="287" y="192">First surface along each ray</text></g>
+</svg>

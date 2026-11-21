@@ -1,7 +1,8 @@
 import {benchmarkView} from './watch.js';
-import {scanSession} from '../trainer/scan-session.js';
-import {DENSITY_HISTORY_KEY, HEIGHT_HISTORY_KEY, densitySnapshot, pairDensityScores} from './density.js?v=peakpair2';
-import {buildDataset, validateModel, compareMatchedBoxes, coverageAtDistance, PEAK_HEIGHTS} from '../trainer/data.js?v=live1';
+import {scanSession} from '../trainer/scan-session.js?v=plants2';
+import {setupPlantControls, plantSettings} from '../trainer/plant-version.js';
+import {DENSITY_HISTORY_KEY, HEIGHT_HISTORY_KEY, densitySnapshot, pairDensityScores} from './density.js?v=plants2';
+import {buildDataset, validateModel, compareMatchedBoxes, coverageAtDistance, PEAK_HEIGHTS} from '../trainer/data.js?v=plants2';
 import {trainNetworkCPU, trainNetworkGPU, predictNetwork} from '../trainer/neural.js';
 import {trainCPU, MAX_EPOCHS} from '../trainer/model.js';
 import {cropProfile} from '../trainer/crops.js?v=systems1';
@@ -15,7 +16,11 @@ let controller, report, gpuAvailable = false;
 sensorOptions($('sensor'), true);
 validationSensorOptions($('validationSensor'));
 const requested = new URLSearchParams(location.search);
-$('benchOptions').open = ['seed','sensor','validationSensor','trainingRayBudget','validationRayBudget','epochs','minimumHeight','includeMixed'].some(key=>requested.has(key));
+$('benchOptions').open = ['plantArchitecture','plantForm','plantCondition','seed','sensor','validationSensor','trainingRayBudget','validationRayBudget','epochs','minimumHeight','includeMixed'].some(key=>requested.has(key));
+// Earlier shared comparisons omit a geometry version. Keep their plantings
+// reproducible. A fresh Benchmark uses the current plant architecture.
+const replayKeys = ['comparison','crop','sensor','seed','epochs','trainingRayBudget','validationRayBudget',
+  'validationSensor','minimumHeight','includeMixed','fieldMetric','cutoffDistance','live'];
 function revealSettingsAnchor(hash) {
   const target = document.getElementById(hash.slice(1));
   const disclosure = target?.closest('#benchOptions,#benchExamples');
@@ -37,6 +42,8 @@ for (const id of ['comparison', 'crop', 'sensor', 'validationSensor', 'minimumHe
   const value = requested.get(id);
   if ([...$(id).options].some(option => option.value === value)) $(id).value = value;
 }
+const readPlantControls = setupPlantControls($('crop'), $('plantArchitecture'), $('plantForm'), $('plantCondition'),
+  requested, replayKeys.some(key => requested.has(key)) ? 1 : 2);
 trainingRayOptions($('trainingRayBudget'), requested.get('trainingRayBudget'));
 rayBudgetOptions($('validationRayBudget'), requested.get('validationRayBudget'));
 const requestedSeed = requested.get('seed');
@@ -189,7 +196,7 @@ function appendRow(row, comparison, settings) {
   cutoff.textContent = row.threshold;
   if (['density','epochs','cutoffs','heights'].includes(comparison)) {
     const query = new URLSearchParams({
-      crop:settings.crop, sensor:settings.sensorMode, seed:row.seed, epochs:row.epochs, threshold:row.threshold, engine:'cpu'
+      crop:settings.crop, ...plantSettings(settings), sensor:settings.sensorMode, seed:row.seed, epochs:row.epochs, threshold:row.threshold, engine:'cpu'
     });
     query.set('minimumHeight', row.minimumHeight);
     if (row.trainingRayBudget) query.set('trainingRayBudget', row.trainingRayBudget);
@@ -434,7 +441,7 @@ function displayFields() {
       tr.insertCell().textContent = dataset.seed;
       const link = document.createElement('a');
       const scan = dataset.recipeManifest.find(tile => tile.split === 'validation' && tile.seed === seed && tile.recipe.ground);
-      const query = new URLSearchParams({crop:settings.crop, seed, sensor:field.sensor, ground:true, tile:scan.tile_id});
+      const query = new URLSearchParams({crop:settings.crop, ...plantSettings(settings), seed, sensor:field.sensor, ground:true, tile:scan.tile_id});
       if (settings.validationRayBudget) query.set('budget', settings.validationRayBudget);
       link.href = '../?'+query+'#field';
       link.textContent = seed;
@@ -502,7 +509,7 @@ function displayPairedBoxes() {
   const boxOptions = (boxes, row) => boxes.map(box => new Option(label(row)+' only · box '+box, String(box)));
   $('pairBox').replaceChildren(new Option('Whole scan', ''), ...boxOptions(firstOnly,first), ...boxOptions(secondOnly,second));
   $('pairBox').disabled = !firstOnly.length && !secondOnly.length;
-  const query = new URLSearchParams({crop:report.settings.crop, seed:firstTile.seed, sensor:firstTile.sensor, ground:firstTile.ground, tile:tileId});
+  const query = new URLSearchParams({crop:report.settings.crop, ...plantSettings(report.settings), seed:firstTile.seed, sensor:firstTile.sensor, ground:firstTile.ground, tile:tileId});
   if (report.settings.validationRayBudget) query.set('budget', report.settings.validationRayBudget);
   $('pairViewer').href = '../?'+query+'#field';
   updateBoxLinks();
@@ -558,7 +565,8 @@ $('benchForm').onsubmit = async event => {
   const comparison=$('comparison').value;
   const trainingRayBudget = comparison === 'density' ? undefined : trainingRayValue($('trainingRayBudget'));
   const validationRayBudget = Number($('validationRayBudget').value);
-  const settings={seed,crop,sensorMode,validationSensorMode,trainingRayBudget,validationRayBudget,trainFields:6,valFields:3};
+  const geometry = readPlantControls();
+  const settings={seed,crop,...geometry,sensorMode,validationSensorMode,trainingRayBudget,validationRayBudget,trainFields:6,valFields:3};
   if (comparison !== 'heights') settings.minimumHeight = Number($('minimumHeight').value) || cropProfile(crop).peakHeight;
   if (comparison !== 'epochs') settings.epochs = $('fitEpochs').valueAsNumber;
   const neuralCPU = {model:'neural', backend:'CPU', train:trainNetworkCPU};
@@ -647,7 +655,7 @@ $('benchForm').onsubmit = async event => {
     }
     showOutcome(rows, comparison, crop);
     const replay = new URL(location.pathname, location.origin);
-    replay.search = new URLSearchParams({comparison, crop, sensor:sensorMode, seed});
+    replay.search = new URLSearchParams({comparison, crop, ...geometry, sensor:sensorMode, seed});
     if(!livePreview)replay.searchParams.set('live','off');
     if ($('fieldMetric').value !== 'mean') replay.searchParams.set('fieldMetric', $('fieldMetric').value);
     if (comparison !== 'heights' && $('minimumHeight').value !== 'default') replay.searchParams.set('minimumHeight', settings.minimumHeight);

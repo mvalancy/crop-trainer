@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 720 276" role="img" aria-labelledby="title desc">
+  <title id="title">One vine, three ways to read its wood</title>
+  <desc id="desc">Three side views show leafy shoots rising from two arms, a single long arm, and two leafless arms cut back to short spurs. Gold rings mark each vine's planting base.</desc>
+  <style>
+    text { font: 600 18px system-ui, sans-serif; fill: #193f34 }
+    .wood { fill: none; stroke: #855334; stroke-width: 7; stroke-linejoin: round; stroke-linecap: round }
+    .spur { fill: none; stroke: #98603d; stroke-width: 5; stroke-linecap: round }
+    .shoot { fill: none; stroke: #557a43; stroke-width: 4; stroke-linecap: round }
+    .base { fill: #ffedb0; stroke: #98661b; stroke-width: 3 }
+    @media (prefers-reduced-motion: no-preference) {
+      .leaves { animation: foliage 7s infinite }
+      .berries { animation: cluster 7s infinite }
+      @keyframes foliage { 0%,100% { opacity:.5 } 25%,85% { opacity:1 } }
+      @keyframes cluster { 0%,28%,100% { opacity:.25 } 48%,84% { opacity:1 } }
+    }
+  </style>
+  <defs>
+    <g id="blade">
+      <path d="M0 0C-5-4-13-5-18-12L-13-12-17-19-9-17-10-22C-2-19 2-10 0 0Z" fill="#548c50" stroke="#315b3d" stroke-width="1.4" stroke-linejoin="round"/>
+      <path d="M0 0Q-4-11-12-16" fill="none" stroke="#a6cb77" stroke-width="1"/>
+    </g>
+    <g id="fruit" fill="#76577f" stroke="#493850" stroke-width=".8">
+      <circle cx="-4" cy="1" r="4"/><circle cx="2" cy="0" r="4"/>
+      <circle cx="-2" cy="6" r="4"/><circle cx="3" cy="5" r="3.5"/><circle cy="11" r="3.2"/>
+    </g>
+    <g id="shoot">
+      <path class="shoot" d="M0 0Q-4-15 0-30T-2-57"/>
+      <g class="leaves"><use xlink:href="#blade" x="0" y="-12"/><use xlink:href="#blade" transform="translate(-1 -21) scale(-.95 .94)"/><use xlink:href="#blade" transform="translate(1 -32) scale(.92 .92)"/><use xlink:href="#blade" transform="translate(-1 -44) scale(-.74 .76)"/></g>
+      <g class="berries"><path d="M-2-13Q7-12 7-6" fill="none" stroke="#557a43" stroke-width="1.7"/><use xlink:href="#fruit" x="7" y="-5"/></g>
+    </g>
+  </defs>
+  <rect x="1" y="1" width="718" height="274" rx="17" fill="#f7f6e9" stroke="#d8ddc8"/>
+  <path d="M24 207H696" stroke="#b8ac87" stroke-width="2"/>
+  <path d="M244 45V237M477 45V237" stroke="#d9ddcd" stroke-dasharray="3 5"/>
+  <g transform="translate(132 204)">
+    <path class="wood" d="M0 0L-4-37 0-63M0-63Q-30-70-77-64M0-63Q27-67 77-61"/>
+    <path class="spur" d="M-69-65l-3-6m39 5 2-8m55 9 2-8m37 11 3-7"/>
+    <use xlink:href="#shoot" transform="translate(-72 -71) rotate(-5) scale(.85 1.04)"/>
+    <use xlink:href="#shoot" transform="translate(-31 -74) rotate(6) scale(1 1.33)"/>
+    <use xlink:href="#shoot" transform="translate(27 -72) rotate(-6) scale(.95 1.18)"/>
+    <use xlink:href="#shoot" transform="translate(67 -69) rotate(4) scale(.86 .9)"/>
+    <circle class="base" r="5.5"/>
+  </g>
+  <g transform="translate(290 204)">
+    <path class="wood" d="M0 0L-5-32 0-57Q4-64 14-64Q67-68 143-59"/>
+    <path class="spur" d="M18-64l1-8m35 7 1-8m38 10 2-6m41 8 2-7"/>
+    <use xlink:href="#shoot" transform="translate(19 -72) rotate(-7) scale(.89 1.1)"/>
+    <use xlink:href="#shoot" transform="translate(55 -73) rotate(3) scale(1 1.28)"/>
+    <use xlink:href="#shoot" transform="translate(94 -69) rotate(-4) scale(.91 1.06)"/>
+    <use xlink:href="#shoot" transform="translate(136 -67) rotate(5) scale(.84 .85)"/>
+    <circle class="base" r="5.5"/>
+  </g>
+  <g transform="translate(595 204)">
+    <path class="wood" d="M0 0L3-34-2-60M-2-60Q-34-67-83-59M-2-60Q31-66 82-58"/>
+    <path class="spur" d="M-74-60l-2-9m24 7 2-11m23 10-4-9m52 12 5-12m23 10 1-10m22 12 3-9"/>
+    <circle class="base" r="5.5"/>
+  </g>
+  <g text-anchor="middle"><text x="132" y="247">Bilateral cordon</text><text x="359" y="247">Unilateral cordon</text><text x="596" y="247">Dormant spurs</text></g>
+</svg>

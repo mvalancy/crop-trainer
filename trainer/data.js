@@ -1,5 +1,6 @@
 import {cropProfile} from './crops.js?v=systems1';
-import {field, returnBand} from './field.js?v=dense1';
+import {field, returnBand} from './field.js?v=plants2';
+import {plantSettings} from './plant-version.js';
 import {predict} from './model.js';
 
 export const PEAK_HEIGHTS = [0.065, 0.035];
@@ -18,11 +19,12 @@ function sensorOrder(seed){
  for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
  return a;
 }
-export function makeRecipe(seed,ground,sampling,crop='lettuce'){
+export function makeRecipe(seed,ground,sampling,crop='lettuce',plantArchitecture=1,plantForm='mixed',plantCondition='healthy'){
+ const geometry = plantSettings({crop,plantArchitecture,plantForm,plantCondition});
  const profile=cropProfile(crop);
  const r=rand(seed^0x5c451271), noise=r();
  return{
-  seed,ground,crop,...(profile.fixtures?{infrastructure:true}:{}),points:26000+Math.floor(r()*5)*4000,radius:(.145+.067*r())*profile.radiusFactor,spacing:(.279+.11*r())*profile.spacingFactor,
+  seed,ground,crop,...geometry,...(profile.fixtures?{infrastructure:true}:{}),points:26000+Math.floor(r()*5)*4000,radius:(.145+.067*r())*profile.radiusFactor,spacing:(.279+.11*r())*profile.spacingFactor,
   weeds:r()<.5,sticks:r()<.35,boards:r()<.28,sampling,
   scanNoise:{seed:mix(seed^0x17b737d0),xy:noise<.25?0:.4+.9*r(),z:noise<.25?0:.25+.9*r(),
     density:noise<.25?0:8+19*r(),gaps:noise<.65?0:1+4*r(),stray:noise<.6?0:.08+.28*r(),cluster:noise<.25?0:7+16*r()}
@@ -67,7 +69,8 @@ export function features(tile, minimumHeight=.065){
  }
  return{X:Float32Array.from(vec),pos};
 }
-export async function buildDataset({seed=27,crop='lettuce',trainFields=6,valFields=3,sensorMode='reference',validationSensorMode=sensorMode,trainingRayBudget=0,validationRayBudget=0,minimumHeight=.065,generate,onScan,onProgress=()=>{},signal}={}){
+export async function buildDataset({seed=27,crop='lettuce',plantArchitecture=1,plantForm='mixed',plantCondition='healthy',trainFields=6,valFields=3,sensorMode='reference',validationSensorMode=sensorMode,trainingRayBudget=0,validationRayBudget=0,minimumHeight=.065,generate,onScan,onProgress=()=>{},signal}={}){
+ const geometry = plantSettings({crop,plantArchitecture,plantForm,plantCondition});
  if(!PEAK_HEIGHTS.includes(minimumHeight))throw new Error('Choose a supported minimum peak height.');
  if(!Number.isInteger(seed)||seed<0||seed>0xffffffff||!Number.isInteger(trainFields)||trainFields<2||trainFields>FIELD_LIMITS.train||!Number.isInteger(valFields)||valFields<1||valFields>FIELD_LIMITS.validation)throw new Error('Use a valid seed and the available field count limits.');
  if (trainingRayBudget !== ALTERNATING_BUDGET && trainingRayBudget !== 0 && !RAY_BUDGETS.includes(trainingRayBudget)) throw new Error('Choose a supported training ray budget.');
@@ -86,7 +89,7 @@ export async function buildDataset({seed=27,crop='lettuce',trainFields=6,valFiel
   if (rayBudget === ALTERNATING_BUDGET) rayBudget = DENSITY_BUDGETS[(seed + idx) % 2];
   for(let v=0;v<2;v++){
    check(signal);
-   const recipe = makeRecipe(id, v === 0, profile, crop);
+   const recipe = makeRecipe(id, v === 0, profile, crop, plantArchitecture, plantForm, plantCondition);
    if (rayBudget) recipe.points = rayBudget;
    const step={split:trainingField?'Training':'Validation',done:2*k+v+1,total,firstValidation:k===trainFields && v===0};
    const t=generate ? await generate(recipe,step) : field(recipe);
@@ -146,7 +149,7 @@ export async function buildDataset({seed=27,crop='lettuce',trainFields=6,valFiel
  const normalize=a=>{for(let i=0;i<a.length;i++){const j=i%DIMS;a[i]=(a[i]-means[j])/std[j];}};
  normalize(X);for(const t of validation)normalize(t.X);
  return{X,Y,dims:DIMS,validation,scaling:{means:Array.from(means),std:Array.from(std)},
-  stats:{crop,trainFields,valFields,trainTiles:training.length,valTiles:validation.length,minimumHeight,samples:Y.length,sampleLimit:SAMPLE_LIMIT,trainingExamplesByField:[...bySeed.values()],sensorMode,validationSensorMode,trainingRayBudget,validationRayBudget,fieldSeeds:{training:trainSeeds,validation:valSeeds},generator:'crop-trainer-v1'},
+  stats:{crop,...geometry,trainFields,valFields,trainTiles:training.length,valTiles:validation.length,minimumHeight,samples:Y.length,sampleLimit:SAMPLE_LIMIT,trainingExamplesByField:[...bySeed.values()],sensorMode,validationSensorMode,trainingRayBudget,validationRayBudget,fieldSeeds:{training:trainSeeds,validation:valSeeds},generator:'crop-trainer-v1'},
   manifest:[...training,...validation].map((t,i)=>({split:i<training.length?'train':'validation',seed:t.seed,tile_id:t.tile_id,returnCount:t.returnCount,sampledRays:t.sampledRays,recipe:t.recipe}))};
 }
 const matchingSlack = 1e-12;
@@ -274,7 +277,7 @@ export async function validateModel(set,weights,{threshold=.5,predictScores=pred
    missesByTolerance.push({cm:100 * radius, boxIndices, withCropReturns, missedByCoverage});
    return {cm: 100 * radius, tp, fp: predictions.length - tp, fn: t.truth.length - tp};
   });
-  tiles.push({seed:t.seed,ground:t.ground,tile_id:t.tile_id,crop:t.recipe.crop,requestedRays:t.recipe.points,sampledRays:t.sampledRays,returnCount:t.returnCount,sensor:t.recipe.sampling.key,coverage:t.coverage,byTolerance,missesByTolerance,stages15cm:measureStages(stages,t.truth,byTolerance[2].tp)});
+  tiles.push({seed:t.seed,ground:t.ground,tile_id:t.tile_id,crop:t.recipe.crop,...plantSettings(t.recipe),requestedRays:t.recipe.points,sampledRays:t.sampledRays,returnCount:t.returnCount,sensor:t.recipe.sampling.key,coverage:t.coverage,byTolerance,missesByTolerance,stages15cm:measureStages(stages,t.truth,byTolerance[2].tp)});
   previews.set(t.tile_id,{truth:t.truth,proposalScores,plantReturns:t.plantReturns,missesByTolerance,predictions,ground:t.ground,seed:t.seed,points:t.points,stages});
   onProgress({done:i+1,total:set.validation.length,stage:'validation',tile:t,predictions,missed:missesByTolerance[2].boxIndices});await pause();
  }

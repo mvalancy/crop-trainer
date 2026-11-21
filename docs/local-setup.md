@@ -15,6 +15,8 @@ node --test
 node run.mjs train first-harvest.json
 ```
 
+The CPU command defaults to the fixed 40-epoch Quick check. In the browser, the first run spends about 30 seconds fitting. A timed run exports the number of epochs actually completed.
+
 Use **Download run settings** in the training shed to replay a browser experiment on another computer. For example, a completed seed 27 run exports its settings as `crop-settings-27.json`. Put that file beside `run.mjs` and run `node run.mjs train replay.json crop-settings-27.json`. The model trains from scratch on the same synthetic fields.
 
 A browser run can use WebGPU on a supported adapter over HTTPS or localhost. Generation and validation use the CPU. The agent guide includes the full settings schema, a paired experiment, and a prompt for Gemini or another local coding agent. [AGENTS.md](../AGENTS.md)

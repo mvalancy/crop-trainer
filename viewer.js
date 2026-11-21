@@ -8,6 +8,7 @@ export function createViewer(canvas, controls) {
   let pivot = fieldCenter, elevationScale = 80;
   let frame = 0, spinning = false, previousTime = 0;
   const colors = ['#667d70', '#badf74', '#58ae81', '#ca9763', '#f1b674', '#acbce0', '#86b8dc'];
+  const tissueColors = ['#566e68', '#f6ae64', '#9cdb78', '#d5a7df'];
   const elevation = Array.from({length:64}, (_, i) => 'hsl('+(175-i*1.65)+' 53% '+(34+i*.48)+'%)');
   let denseLayer;
   const clamp = (value, low, high) => Math.min(high, Math.max(low, value));
@@ -57,10 +58,13 @@ export function createViewer(canvas, controls) {
         context.lineTo(ox+q[0]*scale,oy+q[1]*scale);context.stroke();
       }
     }
+    const byTissue = controls.color.value === 'tissue' && scan.parts;
+    const labels = byTissue ? scan.parts : controls.color.value === 'class' ? scan.cls : null;
+    const palette = byTissue ? tissueColors : colors;
     if (scan.cls.length > 100000) {
-      denseLayer ??= denseRenderer(colors, elevation);
+      denseLayer ??= denseRenderer(colors, tissueColors, elevation);
       denseLayer(context, scan, {w,h,ratio,scale,ox,oy,c,s,cp,sp,pivot,elevationScale,
-        byClass:controls.color.value==='class', moving:spinning || pointers.size>0});
+        labels, paletteOffset:byTissue ? colors.length : 0, moving:spinning || pointers.size>0});
     } else {
       const size=clamp(scale*.043,1.25,5);
       if(!sorted){
@@ -74,9 +78,21 @@ export function createViewer(canvas, controls) {
       }
       for(const i of order){
         const j=i*3;
-        context.fillStyle=controls.color.value==='class'?colors[scan.cls[i]]:elevation[clamp(Math.round(scan.xyz[j+2]*elevationScale),0,63)];
+        context.fillStyle=labels ? palette[labels[i]] : elevation[clamp(Math.round(scan.xyz[j+2]*elevationScale),0,63)];
         context.fillRect(ox+projected[j]*scale,oy+projected[j+1]*scale,size,size);
       }
+    }
+    if (controls.stems.checked && scan.skeleton) {
+      const lines = scan.skeleton;
+      context.beginPath();
+      for (let i=0; i<lines.length; i+=6) {
+        const a = project(lines[i],lines[i+1],lines[i+2]);
+        const b = project(lines[i+3],lines[i+4],lines[i+5]);
+        context.moveTo(ox+a[0]*scale, oy+a[1]*scale);
+        context.lineTo(ox+b[0]*scale, oy+b[1]*scale);
+      }
+      context.strokeStyle='#123832'; context.lineWidth=2.6; context.stroke();
+      context.strokeStyle='#82efe6'; context.lineWidth=1.2; context.stroke();
     }
     if(controls.pins.checked){
       context.lineWidth=1.5;
@@ -116,7 +132,7 @@ export function createViewer(canvas, controls) {
     if (!w || !h) return;
     spin(false);
     controls.view.value = 'custom';
-    pivot = [(min[0]+max[0])/2, (min[1]+max[1])/2, max[2]];
+    pivot = [(min[0]+max[0])/2, (min[1]+max[1])/2, (min[2]+max[2])/2];
     const diameter = Math.hypot(max[0]-min[0], max[1]-min[1], max[2]-min[2]);
     zoom = clamp(.35*Math.min(w,h) / (diameter*Math.min(w/15,h/12)), 1, 12);
     panX = 0; panY = 0; sorted = false; schedule();
@@ -165,7 +181,7 @@ export function createViewer(canvas, controls) {
   canvas.addEventListener('dblclick',reset);
   controls.reset.onclick=reset;controls.zoomIn.onclick=()=>magnify(1.3);controls.zoomOut.onclick=()=>magnify(1/1.3);
   controls.spin.onclick=()=>spin(!spinning);controls.view.onchange=()=>{spin(false);fit(controls.view.value);};
-  controls.highlight.onchange=controls.pins.onchange=controls.color.onchange=schedule;
+  controls.highlight.onchange=controls.pins.onchange=controls.stems.onchange=controls.color.onchange=schedule;
   document.addEventListener('visibilitychange',()=>{if(document.hidden)spin(false);});
   new ResizeObserver(schedule).observe(canvas);
   fit();
@@ -175,6 +191,10 @@ export function createViewer(canvas, controls) {
       const newPlanting = scan && (scan.p.seed !== value.p.seed || scan.p.crop !== value.p.crop);
       if (newPlanting && pivot !== fieldCenter) reset();
       scan = value;
+      controls.stems.disabled = !scan.skeleton?.length;
+      if (controls.stems.disabled) controls.stems.checked = false;
+      controls.color.querySelector('[value="tissue"]').disabled = !scan.parts;
+      if (!scan.parts && controls.color.value === 'tissue') controls.color.value = 'class';
       elevationScale = value.labels.growing_system ? 63 / Math.max(.8,...value.labels.boxes.map(b=>b.max[2])) : 80;
       const sortedPoints = scan.cls.length <= 100000 ? scan.cls.length : 0;
       projected = new Float32Array(3*sortedPoints);
@@ -188,17 +208,18 @@ export function createViewer(canvas, controls) {
 
 // A depth buffer keeps the front point in each pixel without sorting a million
 // returns every time the camera turns. The transparent layer sits over the grid.
-function denseRenderer(classColors, elevationColors) {
+function denseRenderer(classColors, tissueColors, elevationColors) {
   const layer = document.createElement('canvas');
   const brush = layer.getContext('2d');
-  const palette = [...classColors, ...elevationColors];
+  const palette = [...classColors, ...tissueColors, ...elevationColors];
+  const elevationOffset = classColors.length + tissueColors.length;
   layer.width = palette.length;
   layer.height = 1;
   palette.forEach((color,i) => {brush.fillStyle=color; brush.fillRect(i,0,1,1);});
   const rgba = new Uint32Array(brush.getImageData(0,0,palette.length,1).data.buffer);
   let image, pixels, depths;
   return (context, scan, camera) => {
-    const {w,h,ratio,scale,ox,oy,c,s,cp,sp,pivot,elevationScale,byClass,moving} = camera;
+    const {w,h,ratio,scale,ox,oy,c,s,cp,sp,pivot,elevationScale,labels,paletteOffset,moving} = camera;
     // Footprints grow with zoom. Keep native device pixels for fine detail.
     const pixelSize = Math.max(1/ratio, Math.min(4, scale*.015));
     const width = Math.ceil(w/pixelSize), height = Math.ceil(h/pixelSize);
@@ -222,7 +243,7 @@ function denseRenderer(classColors, elevationColors) {
       const index=py*width+px, depth=along*cp+z*sp;
       if (depth < depths[index]) continue;
       depths[index]=depth;
-      const color=byClass ? scan.cls[i] : classColors.length+Math.max(0,Math.min(63,Math.round(xyz[3*i+2]*elevationScale)));
+      const color=labels ? paletteOffset+labels[i] : elevationOffset+Math.max(0,Math.min(63,Math.round(xyz[3*i+2]*elevationScale)));
       pixels[index]=rgba[color];
     }
     brush.putImageData(image,0,0);

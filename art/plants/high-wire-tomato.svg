@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 720 276" role="img" aria-labelledby="title desc">
+  <title id="title">Following the stems of a greenhouse tomato</title>
+  <desc id="desc">A short young tomato carries compound leaves. A fruiting single leader leans along the row and bears hanging trusses. A twin-leader plant forks near its base and carries fruit on both stems. One gold ring per plant marks the shared planting target.</desc>
+  <style>
+    text { font: 600 18px system-ui, sans-serif; fill:#264338 }
+    .main { fill:none; stroke:#58764b; stroke-width:5; stroke-linejoin:round; stroke-linecap:round }
+    .stalk { fill:none; stroke:#5a7946; stroke-width:2; stroke-linecap:round }
+    .base { fill:#ffedb0; stroke:#98661b; stroke-width:3 }
+    @media (prefers-reduced-motion: no-preference) {
+      .truss { animation: ripen 8s infinite }
+      .head-tip { animation: tip 8s infinite }
+      @keyframes ripen { 0%,100% { fill:#b4ae55 } 50%,78% { fill:#c86140 } }
+      @keyframes tip { 0%,65%,100% { opacity:.65 } 25%,88% { opacity:1 } }
+    }
+  </style>
+  <defs>
+    <g id="leaf">
+      <path class="stalk" d="M0 0Q15-9 32-7"/>
+      <g fill="#538658" stroke="#365d45" stroke-width=".9">
+        <path d="M8-4Q9-13 17-15Q17-8 8-4Z"/><path d="M12-5Q21-7 23 1Q17 1 12-5Z"/>
+        <path d="M19-6Q22-15 29-16Q28-10 19-6Z"/><path d="M23-7Q31-9 36-2Q29-1 23-7Z"/>
+        <path d="M32-7Q39-13 46-10Q41-5 32-7Z"/>
+      </g>
+    </g>
+    <g id="truss" class="truss" fill="#c86140" stroke="#795337" stroke-width="1.2">
+      <path class="stalk" d="M0 0q11 1 12 7l5 17m-4-16 6-1m-5 5-5 3m7 2 7-1"/>
+      <circle cx="20" cy="12" r="5.5"/><circle cx="7" cy="19" r="6"/>
+      <circle cx="24" cy="22" r="5.3"/><circle cx="17" cy="29" r="5"/>
+    </g>
+    <g id="leader">
+      <path class="main" d="M0 0C15-8 38-26 47-51S54-103 55-145"/>
+      <use xlink:href="#leaf" transform="translate(44 -43) scale(-.9 1) rotate(-6)"/>
+      <use xlink:href="#leaf" transform="translate(50 -67) rotate(-4)"/>
+      <use xlink:href="#leaf" transform="translate(53 -87) scale(-1 .95) rotate(-9)"/>
+      <use xlink:href="#leaf" transform="translate(54 -107) scale(.81 .9) rotate(-16)"/>
+      <g class="head-tip"><use xlink:href="#leaf" transform="translate(54 -125) scale(-.67 .78) rotate(-20)"/><use xlink:href="#leaf" transform="translate(55 -140) scale(.46 .55) rotate(-24)"/></g>
+      <use xlink:href="#truss" transform="translate(48 -57)"/><use xlink:href="#truss" transform="translate(53 -97) scale(-.8 .85)"/>
+    </g>
+  </defs>
+  <rect x="1" y="1" width="718" height="274" rx="17" fill="#f5f7ed" stroke="#d8ddce"/>
+  <path d="M26 31H694" stroke="#91a29b" stroke-width="2"/>
+  <path d="M25 208H695M25 218H695" stroke="#a6b4a9" stroke-width="2"/>
+  <path d="M246 47V231M472 47V231" stroke="#d5dfd5" stroke-dasharray="3 5"/>
+  <g transform="translate(117 207)">
+    <path class="main" d="M0 0Q10-25 12-68" stroke-width="3"/>
+    <use xlink:href="#leaf" transform="translate(6 -17) scale(-.67 .8)"/>
+    <use xlink:href="#leaf" transform="translate(9 -32) scale(.75 .8) rotate(5)"/>
+    <use xlink:href="#leaf" transform="translate(10 -46) scale(-.66 .72) rotate(-12)"/>
+    <use xlink:href="#leaf" transform="translate(12 -59) scale(.47 .62) rotate(-17)"/>
+    <circle class="base" r="5.5"/>
+  </g>
+  <g transform="translate(337 207)"><use xlink:href="#leader"/><circle class="base" r="5.5"/></g>
+  <g transform="translate(591 207)">
+    <path class="main" d="M0 0L2-14"/>
+    <use xlink:href="#leader" transform="translate(2 -14) scale(-.85 .88)"/>
+    <use xlink:href="#leader" transform="translate(2 -14) scale(.89 .94)"/>
+    <circle class="base" r="5.5"/>
+  </g>
+  <g text-anchor="middle"><text x="130" y="249">Before fruit set</text><text x="359" y="249">Single leader</text><text x="589" y="249">Twin leader</text></g>
+</svg>

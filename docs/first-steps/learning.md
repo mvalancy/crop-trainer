@@ -25,7 +25,7 @@ What would a “no” label do at the same starting point? The slope becomes +0.
 
 ![Training loss from the 40-epoch starter CPU run, dropping from 0.651 to 0.321, with each point drawn from its recorded loss history.](../../art/lesson-loss.svg)
 
-An **epoch** is one pass through the practice examples. The seed-27 starter used 3,052 balanced candidates, six practice fields and 40 epochs. With full-batch updates, all candidates contribute to one update per epoch. Mini-batches update the weights several times during the pass. The starter chart records loss just before each full-batch update. With mini-batches, each batch contributes its loss just before its own update. Final validation uses the weights after the last update.
+An **epoch** is one pass through the practice examples. The recorded seed-27 Quick check used 3,052 balanced candidates, six practice fields and 40 epochs. With full-batch updates, all candidates contribute to one update per epoch. Mini-batches update the weights several times during the pass. The starter chart records loss just before each full-batch update. With mini-batches, each batch contributes its loss just before its own update. Final validation uses the weights after the last update.
 
 ## Give the detector a fair exam
 

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="286" viewBox="0 0 600 286" role="img" aria-labelledby="title desc">
+<title id="title">Three ways to grow a lettuce</title>
+<desc id="desc">Loose-leaf and butterhead heads seen from above, and a side view of upright romaine. Younger leaf whorls appear in order.</desc>
+<style>
+ text{font-family:system-ui,sans-serif;fill:#213f32}.stage2{animation:unfold .9s ease-out both}.stage3{animation:unfold 1.1s .45s ease-out both}
+ @keyframes unfold{from{opacity:.12}to{opacity:1}}
+ @media(prefers-reduced-motion:reduce){.stage2,.stage3{animation:none}}
+</style>
+<defs>
+ <pattern id="paper" width="12" height="12" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r=".8" fill="#b6c3a5"/></pattern>
+ <g id="ruffled"><path d="M0 3Q-4-6-9-10Q-22-14-18-23Q-29-24-21-33Q-29-40-18-43Q-22-52-12-51Q-10-63 0-56Q8-63 11-53Q23-54 18-44Q30-40 22-33Q27-27 17-22Q17-13 8-11Z" fill="currentColor" stroke="#305b3d" stroke-width="1.8"/><path d="M0 1Q3-20 0-51" fill="none" stroke="#d3dfa6" stroke-width="2"/></g>
+ <g id="bowl"><path d="M0 3C-17-7-30-37-17-48Q-1-64 14-50C32-36 20-15 0 3Z" fill="currentColor" stroke="#38583a" stroke-width="1.9"/><path d="M1 0Q9-25 1-49" fill="none" stroke="#e7eabe" stroke-width="2"/></g>
+ <g id="upright"><path d="M0 0C-8-23-22-60-18-95Q-17-117-6-118C9-119 11-94 12-76Q11-40 0 0Z" fill="currentColor" stroke="#345e42" stroke-width="2.4"/><path d="M0-3Q-2-59-6-108" fill="none" stroke="#cfdea2" stroke-width="3"/></g>
+</defs>
+<rect width="600" height="286" rx="18" fill="#f4f4e5"/>
+<rect x="8" y="8" width="584" height="270" rx="12" fill="url(#paper)" stroke="#c1cbb4"/>
+<text x="28" y="47" font-size="28" font-weight="650">Lettuce leaf forms</text>
+<path d="M27 64H573M204 79V238M396 79V238" stroke="#c5ceb8" fill="none"/>
+<g transform="translate(108 159)"><g color="#629a60">
+<use href="#ruffled"/><use href="#ruffled" transform="rotate(52)"/><use href="#ruffled" transform="rotate(104)"/><use href="#ruffled" transform="rotate(155)"/><use href="#ruffled" transform="rotate(207)"/><use href="#ruffled" transform="rotate(258)"/><use href="#ruffled" transform="rotate(308)"/></g>
+<g class="stage2" color="#96bb6e" transform="scale(.67) rotate(25)">
+<use href="#ruffled"/><use href="#ruffled" transform="rotate(72)"/><use href="#ruffled" transform="rotate(144)"/><use href="#ruffled" transform="rotate(216)"/><use href="#ruffled" transform="rotate(288)"/></g>
+<g class="stage3" color="#ccdf8c" transform="scale(.34)"><use href="#ruffled"/><use href="#ruffled" transform="rotate(120)"/><use href="#ruffled" transform="rotate(240)"/></g></g>
+<g transform="translate(300 159)"><g color="#61915b"><use href="#bowl"/><use href="#bowl" transform="rotate(60)"/><use href="#bowl" transform="rotate(120)"/><use href="#bowl" transform="rotate(180)"/><use href="#bowl" transform="rotate(240)"/><use href="#bowl" transform="rotate(300)"/></g>
+<g class="stage2" color="#99b86e" transform="rotate(28) scale(.75)"><use href="#bowl"/><use href="#bowl" transform="rotate(72)"/><use href="#bowl" transform="rotate(144)"/><use href="#bowl" transform="rotate(216)"/><use href="#bowl" transform="rotate(288)"/></g>
+<g class="stage3"><path d="M-25 6C-29-20 2-37 18-20S32 19 11 23Q-12 30-25 6Z" fill="#b4c875" stroke="#607f47" stroke-width="2"/><path d="M-17 1Q6-16 18 10Q4 5 1 19" fill="none" stroke="#e8edb4" stroke-width="2"/></g></g>
+<g transform="translate(486 213)"><g color="#42764f"><use href="#upright" transform="rotate(-35) scale(.77)"/><use href="#upright" transform="rotate(36) scale(.79)"/></g>
+<g class="stage2" color="#76a360"><use href="#upright" transform="rotate(-16) scale(.95)"/><use href="#upright" transform="rotate(20)"/></g><g class="stage3" color="#a6c674"><use href="#upright" transform="rotate(3) scale(.92)"/></g></g>
+<g text-anchor="middle" font-size="24"><text x="108" y="259">Loose-leaf</text><text x="300" y="259">Butterhead</text><text x="486" y="259">Romaine</text></g></svg>

@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 222" role="img" aria-labelledby="title desc">
+  <title id="title">Young tomato from seed leaves to a branching transplant</title>
+  <desc id="desc">Three plants show cotyledons and early true leaves, a main shoot with compound leaves, and a side shoot growing from a leaf axil. A ring highlights the axil where the side shoot starts.</desc>
+  <defs>
+    <path id="unit" d="M0 0Q-1-5 1-8L3-8L2-12L5-12L7-19L10-16L13-18L12-13L15-13L13-9Q11-4 0 0Z" stroke="#456b43" stroke-width="1.2" stroke-linejoin="round"/>
+    <g id="compound" fill="#8ab561">
+      <path d="M0 0Q24-7 43-20" fill="none" stroke="#527746" stroke-width="2"/>
+      <use href="#unit" transform="translate(11 -4) rotate(-57) scale(.84)"/>
+      <use href="#unit" transform="translate(12 -4) rotate(62) scale(.75)"/>
+      <use href="#unit" transform="translate(24 -10) rotate(-52) scale(.8)"/>
+      <use href="#unit" transform="translate(25 -10) rotate(60) scale(.72)"/>
+      <use href="#unit" transform="translate(35 -15) rotate(25) scale(.95)"/>
+    </g>
+    <g id="shoot">
+      <path d="M0 0Q-3-24 4-51L1-88" fill="none" stroke="#5e7f50" stroke-width="4.5" stroke-linecap="round"/>
+      <use href="#compound" transform="translate(0 -24) scale(-.89 .89)"/>
+      <use href="#compound" transform="translate(2 -41) rotate(8)"/>
+      <use href="#compound" transform="translate(4 -57) scale(-.75 .75)"/>
+      <use href="#compound" transform="translate(3 -72) rotate(-8) scale(.67)"/>
+      <use href="#unit" transform="translate(1 -88) scale(-.58 .63)" fill="#9cbd72"/>
+    </g>
+  </defs>
+  <style>
+    text {font-family:system-ui,sans-serif;fill:#254534}
+    @media (prefers-reduced-motion:no-preference) {
+      .axil {animation:focus 3.2s ease-in-out infinite}
+      @keyframes focus {0%,100%{stroke-width:1.5} 48%{stroke-width:3.5}}
+    }
+  </style>
+  <rect x="1" y="1" width="538" height="220" rx="14" fill="#f8f6e8" stroke="#c9ceb6"/>
+  <text x="19" y="29" font-size="18" font-weight="650">A second shoot from a leaf axil</text>
+  <path d="M25 162H514" stroke="#b89e78" stroke-width="2" fill="none"/>
+  <g transform="translate(87 160)">
+    <path d="M0 0Q-2-17 1-35" fill="none" stroke="#618254" stroke-width="3"/>
+    <path d="M0-21Q-22-37-31-28Q-22-17 0-21Q17-35 27-30Q21-19 0-21Z" fill="#93b975" stroke="#52784a"/>
+    <use href="#unit" transform="translate(0 -31) scale(-.61 .61)" fill="#9bbb76"/><use href="#unit" transform="translate(1 -34) rotate(20) scale(.60)" fill="#a2c37d"/>
+  </g>
+  <use href="#shoot" transform="translate(254 160)"/>
+  <g transform="translate(414 160)">
+    <use href="#shoot"/>
+    <g transform="translate(0 -24) rotate(-36) scale(.69)"><use href="#shoot"/></g>
+    <circle class="axil" cx="0" cy="-24" r="7.5" fill="none" stroke="#ac662f" stroke-width="2"/>
+  </g>
+  <g text-anchor="middle" font-size="17"><text x="87" y="198">Seedling</text><text x="254" y="198">Transplant</text><text x="413" y="198">Branching</text></g>
+</svg>

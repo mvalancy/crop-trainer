@@ -2,11 +2,13 @@ import {encodePly} from './trainer/ply.js?v=export1';
 import {setupFirstSteps} from './first-steps.js';
 import {createFieldLesson} from './field-lesson.js';
 import {cropProfile} from './trainer/crops.js?v=systems1';
-import {scanSession} from './trainer/scan-session.js';
-import {makeRecipe} from './trainer/data.js?v=dense1';
+import {scanSession} from './trainer/scan-session.js?v=plants2';
+import {makeRecipe} from './trainer/data.js?v=plants2';
+import {formsFor} from './trainer/plants/forms.js';
+import {setupFieldPlants} from './trainer/plants/field-controls.js';
 import {getSensor, sensorOptions, sensorDetails, rayBudgetOptions, layoutCapacity, DEFAULT_GENERATOR_RAYS} from './trainer/sensors.js?v=dense1';
 import {createLiveScene} from './trainer/live-scene.js';
-import {createViewer} from './viewer.js?v=planting1';
+import {createViewer} from './viewer.js?v=wood2';
 
 const $ = id => document.getElementById(id);
 let fieldLesson;
@@ -17,9 +19,15 @@ setupFirstSteps(() => {
   }
 });
 const viewer = createViewer($('map'), {
-  mode:$('mode'), view:$('view'), highlight:$('highlight'), color:$('color'), pins:$('pins'), spin:$('spin'),
+  mode:$('mode'), view:$('view'), highlight:$('highlight'), color:$('color'), pins:$('pins'), stems:$('modelStems'), spin:$('spin'),
   zoomIn:$('zoomIn'), zoomOut:$('zoomOut'), reset:$('fit')
 });
+function updateTissueLegend() {
+  $('tissueLegend').hidden = $('color').value !== 'tissue';
+  $('modelLegend').hidden = !$('modelStems').checked;
+}
+$('color').addEventListener('change', updateTissueLegend);
+$('modelStems').addEventListener('change', updateTissueLegend);
 const live=createLiveScene($('scanScene'));
 let scan, previousRayTrial;
 function showSystemControls() {
@@ -50,6 +58,7 @@ const requestedSeed = requested.get('seed');
 if (/^\d+$/.test(requestedSeed) && Number(requestedSeed) <= 0xffffffff) {
   $('seed').value = String(Number(requestedSeed));
 }
+const plantSettings = setupFieldPlants(requested);
 if (requested.get('ground') === 'false') $('ground').checked = false;
 function showResolution() {
   const sensor = getSensor($('scan').value);
@@ -114,7 +123,9 @@ $('focusPlant').onclick = () => {
 function grow(checkReplay = false) {
   const crop = $('crop').value;
   const sensor = getSensor($('scan').value);
-  const recipe = makeRecipe(Number($('seed').value), $('ground').checked, sensor, crop);
+  let plants;
+  try { plants = plantSettings(); } catch (error) { $('generationStatus').textContent=error.message;return; }
+  const recipe = {...makeRecipe(Number($('seed').value), $('ground').checked, sensor, crop,plants.plantArchitecture), ...plants};
   if (cropProfile(crop).fixtures) recipe.infrastructure=$('fixtures').checked;
   if (Number($('budget').value)) recipe.points = Number($('budget').value);
   for (const key of obstacles) if ($(key).value !== 'seeded') recipe[key] = $(key).value === 'on';
@@ -125,6 +136,7 @@ function grow(checkReplay = false) {
   }
   const url = new URL('./', location.href);
   for (const [id, key] of replaySelects) url.searchParams.set(key, $(id).value);
+  for(const [key,value] of Object.entries(plants)) url.searchParams.set(key,value);
   url.searchParams.set('budget', $('budget').value);
   if(recipe.infrastructure===false) url.searchParams.set('fixtures','off');
   const previous = scan ? new URL($('scanLink').href) : new URL(location.href);
@@ -170,6 +182,14 @@ function applyScan(value, recipe, url, selectedBox, expectedTile) {
     $('highlight').value = String(Number(selectedBox));
   }
   viewer.setScan(scan);
+  updateTissueLegend();
+  $('stemSummary').hidden = !scan.parts;
+  if (scan.parts) {
+    let stemHits = 0;
+    for (const part of scan.parts) if (part === 1) stemHits++;
+    $('stemSummary').textContent = (scan.skeleton.length/6).toLocaleString()+
+      ' modeled stem segments · '+stemHits.toLocaleString()+' scan returns hit stem or wood.';
+  }
   fieldLesson?.setScan(scan);
   url.searchParams.set('seed', recipe.seed);
   url.searchParams.set('ground', recipe.ground);
@@ -191,6 +211,15 @@ function applyScan(value, recipe, url, selectedBox, expectedTile) {
   $('count').textContent = scan.labels.boxes.length+' '+(profile.system?profile.name:recipe.crop)+' plants · '+recipe.points.toLocaleString()+' rays requested · '+scan.sampledRays.toLocaleString()+' sampled · '+scan.cls.length.toLocaleString()+' returns · '+(ground+(recipe.ground?' included':' removed'))+' · seed '+recipe.seed;
   $('scanId').textContent = scan.labels.tile_id;
   $('fieldCaption').textContent = profile.name+' · '+scan.labels.boxes.length.toLocaleString()+' plants';
+  const composition=$('plantComposition');
+  composition.hidden=!scan.labels.plantArchitecture;
+  if(!composition.hidden) {
+    const forms=formsFor(recipe.crop);
+    const text=forms.map(({id,label})=>[label,scan.labels.boxes.filter(b=>b.plant_form===id).length])
+      .filter(([,count])=>count).map(([name,count])=>count+' '+name.toLowerCase());
+    const damaged=scan.labels.boxes.filter(b=>b.plant_condition==='damaged').length;
+    composition.textContent=text.join(' · ')+' · '+damaged+' damaged';
+  }
   const {zero, oneToFour, fiveOrMore} = scan.coverage;
   $('plantCoverage').textContent = zero+' plants with zero crop returns · '+oneToFour+' with 1–4 · '+fiveOrMore+' with 5 or more';
   const bins=[ground==='floor'?'Floor':'Soil','Crop','Weeds','Sticks','Boards','Stray'];
@@ -199,10 +228,15 @@ function applyScan(value, recipe, url, selectedBox, expectedTile) {
     const entry=document.createElement('div'), term=document.createElement('dt'), count=document.createElement('dd');
     term.textContent=name; count.textContent=(scan.counts[i]||0).toLocaleString();entry.append(term,count);return entry;
   }));
-  const training = new URLSearchParams({crop:recipe.crop,sensor:recipe.sampling.key});
+  const training = new URLSearchParams({plan:'practice',crop:recipe.crop,sensor:recipe.sampling.key});
   const budget = url.searchParams.get('budget');
+  training.set('plantArchitecture',recipe.plantArchitecture??1);
+  if(recipe.plantArchitecture===2){
+    training.set('plantForm',recipe.plantForm);training.set('plantCondition',recipe.plantCondition);
+  }
   if (Number(budget)) training.set('validationRayBudget', budget);
   $('trainLayout').textContent=recipe.infrastructure===false?'Train this crop and layout with fixtures →':'Train this crop and layout →';
+  if(recipe.appleCanopy==='dormant') $('trainLayout').textContent='Train on leafy orchard fields →';
   $('trainLayout').href = 'trainer/?'+training;
   $('lessonTrain').href = $('trainLayout').href;
   $('lessonCrop').textContent = profile.name;

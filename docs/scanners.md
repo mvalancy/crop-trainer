@@ -5,14 +5,16 @@
 | Crop | Synthetic geometry | Starting peak height | Minimum distance between final pins |
 | --- | --- | ---: | ---: |
 | Lettuce | Compact overlapping leaves in paired rows | 3.5 cm | 12.5 cm |
-| Globe artichoke | Large lobed leaves around a raised terminal bud | 6.5 cm | 40 cm |
+| Globe artichoke | Divided blades in a vegetative rosette, or a stem bearing one or several buds | 6.5 cm | 40 cm |
 | Young tomato | Compound foliage and an upright growing tip | 6.5 cm | 22 cm |
-| Apple orchard | Spaced trunks with uneven crowns | 6.5 cm | 105 cm |
-| Trellised vineyard | Overlapping vine canopies along posts and wires | 6.5 cm | 65 cm |
+| Apple orchard | Central leaders or open-vase trees with connected woody scaffolds and shoots | 6.5 cm | 105 cm |
+| Trellised vineyard | One or two cordon arms with rising shoots, or dormant pruned spurs | 6.5 cm | 65 cm |
 | Greenhouse bench lettuce | Rosettes on raised benches over a level floor | 6.5 cm | 16 cm |
-| Greenhouse high-wire tomato | Leaning stems and layered foliage, wires and troughs | 6.5 cm | 31 cm |
+| Greenhouse high-wire tomato | One or two fruiting leaders, or a younger plant before fruit set, over a trough | 6.5 cm | 31 cm |
 
-For these four growing systems, each label includes the planted base in metres (`base_xy_m`). The viewer, trainer and scorer use that XY position even when the canopy leans. The three original crops retain their bounding-box center targets. Toggle **Include growing-system fixtures** for two scans with identical plants. Benches, posts, wires and troughs count as fixtures with no plant ID. The soil toggle controls ground returns separately.
+Open **Plant form and condition** for the named forms, seeded mix and damage settings. Each crop has a growing guide with a photographic reference and an animated diagram. With structured plants, choose **Plant tissue** to color the first returns or enable **Model stem lines** to inspect hidden centerlines. Only XYZ coordinates enter the detector. [Illustrated generator guides](../trainer/plants/README.md) · [Paired tests across all seven crops](crop-form-benchmark.md)
+
+For the orchard, vineyard, bench and high-wire systems, each label includes the planted base in metres (`base_xy_m`). The viewer, trainer and scorer use that XY position even when the canopy leans. The three original crops retain their bounding-box center targets. Toggle **Include growing-system fixtures** for two scans with identical plants. Benches, posts, wires and troughs count as fixtures with no plant ID. The soil toggle controls ground returns separately.
 
 Try the [vineyard](https://mvalancy.github.io/crop-trainer/?crop=grapevine&seed=32137#field) or [high-wire greenhouse](https://mvalancy.github.io/crop-trainer/?crop=high-wire-tomato&seed=32137#field). Each projected ray samples the highest surface at its XY location. Orbiting the viewer rotates those returns. Physical side views, glass reflections, fruit counts and yield require additional measurements. See the [field dataset guide](field-datasets.md) for sources to compare against.
 

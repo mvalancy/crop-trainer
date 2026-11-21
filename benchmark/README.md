@@ -12,6 +12,7 @@ Read the result at 15 cm. How many planted centers did each detector find, and h
 | Change a comparison in the browser | [Benchmark controls](index.html) · [Experiment runner](main.js) |
 | Pair results from two different ray budgets | [Density comparisons](density.js) |
 | Reproduce a synthetic experiment locally | [Paired CPU experiment](paired-evidence.mjs) · [Measured results](../docs/evidence.md) |
+| Compare crop forms and plant damage | [Run the CPU comparison](plant-forms.mjs) · [Seven-crop results](../docs/crop-form-benchmark.md) |
 | Test synthetic weights on surveyed vines | [Vineyard replay and results](../docs/field-datasets.md#replay-the-vineyard-test) · [Scan preparation](prepare-vineyard.mjs) |
 
 [Crop Trainer home](../README.md) · [Inside the training shed](../trainer/README.md)

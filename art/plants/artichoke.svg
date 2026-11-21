@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="318" viewBox="0 0 600 318" role="img" aria-labelledby="title desc">
+<title id="title">From a divided leaf rosette to three artichoke buds</title>
+<desc id="desc">Two side views have spreading divided leaves. The later form adds a terminal bud high on a thick stalk and two smaller buds on branches.</desc>
+<style>
+ text{font-family:system-ui,sans-serif}
+ .shoot{stroke-dasharray:1;animation:extend 1s ease-out both}.heads{animation:emerge .85s .7s ease-out both}
+ @keyframes extend{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+ @keyframes emerge{from{opacity:.12}to{opacity:1}}
+ @media(prefers-reduced-motion:reduce){.shoot,.heads{animation:none}}
+</style>
+<defs>
+ <g id="blade"><path d="M0 0Q28-36 77-35" fill="none" stroke="#c7dac3" stroke-width="3"/>
+ <path d="M5-5Q5-25 18-35Q18-21 16-16Q26-43 39-48Q36-31 34-28Q50-49 62-49L52-34Q69-40 78-35Q68-29 56-28Q65-23 67-16Q50-18 42-27Q49-16 48-11Q32-15 25-22Q32-9 28-5Q17-12 15-14L10-9Z" fill="currentColor" stroke="#a2bdac" stroke-width="1.3"/></g>
+ <g id="rosette"><g color="#638b7c"><use href="#blade" transform="scale(-1.12 1.1) rotate(13)"/><use href="#blade" transform="rotate(12) scale(1.15)"/></g><g color="#84a895"><use href="#blade" transform="rotate(-25)"/><use href="#blade" transform="scale(-1 1) rotate(-27)"/></g></g>
+ <g id="bud" stroke="#234635" stroke-width="1.8"><path d="M0 18C-18 15-22-1-18-15Q-12-14-9-9Q-9-22-2-27Q4-23 8-15Q13-21 16-19C23-2 16 15 0 18Z" fill="#98b279"/>
+ <path d="M-16-9Q-4-4 0 11Q-12 9-16-9ZM17-12Q6-4 4 10Q16 6 17-12Z" fill="#78975f"/>
+ <path d="M-10 1Q-2-4 1-13Q9-5 10 0Q10 10 1 14Q-6 12-10 1Z" fill="#b2bf7d"/>
+ <path d="M-10 10Q-4 8 1 1Q6 8 10 9Q6 16 0 17Z" fill="#859c68"/></g>
+</defs>
+<rect width="600" height="318" rx="18" fill="#203d36"/>
+<g fill="none" stroke="#4b6b5f" stroke-width="1"><path d="M22 60H578M22 244H578M301 77V235"/><path d="M40 247l7-3 7 3m92 0 7-3 7 3m236 0 7-3 7 3m83 0 7-3 7 3"/></g>
+<text x="25" y="43" font-size="28" font-weight="650" fill="#e7edd7">Globe artichoke</text>
+<g transform="translate(153 239) scale(1.26)"><use href="#rosette"/></g>
+<g transform="translate(444 239)"><use href="#rosette" transform="scale(1.25)"/>
+<g fill="none" stroke="#a8bea1" stroke-linecap="round"><path class="shoot" d="M0 0Q3-70-3-124" pathLength="1" stroke-width="9"/><path class="shoot" d="M1-63Q31-70 43-94M1-65Q-32-78-43-96" pathLength="1" stroke-width="5"/></g>
+<g class="heads"><use href="#bud" transform="translate(-3 -128)"/><use href="#bud" transform="translate(-44 -97) rotate(-17) scale(.68)"/><use href="#bud" transform="translate(44 -95) rotate(14) scale(.72)"/></g></g>
+<g text-anchor="middle" font-size="24" fill="#e3ecd8"><text x="153" y="286">Basal rosette</text><text x="444" y="286">Branching buds</text></g></svg>

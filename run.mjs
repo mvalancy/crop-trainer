@@ -1,6 +1,7 @@
 import {readFile} from 'node:fs/promises';
 import {checkOutputPaths,writeNewJson} from './cli-output.mjs';
 import {createServer} from 'node:http';
+import {plantSettings} from './trainer/plant-version.js';
 import {cropProfile} from './trainer/crops.js';
 import {buildDataset,validateModel,checkScoreThreshold} from './trainer/data.js';
 import {MAX_SANDBOX_EPOCHS, trainerId, weightArtifact} from './trainer/network.js';
@@ -12,12 +13,12 @@ const cliUsage = 'node run.mjs serve [port]\n'+trainUsage+
   '\nnode run.mjs preflight\n  Train on CPU and replay the held-out synthetic scans through the field CLI. Prints JSON.';
 if(command==='serve'){
  const allowed=new Set(['index.html','farm.js','first-steps.js','field-lesson.js','farm.css','viewer.js','benchmark/index.html','benchmark/watch.js','benchmark/main.js','benchmark/density.js','art/title.svg','art/lettuce-study.webp','trainer/index.html','trainer/main.js','trainer/data.js','trainer/field.js','trainer/model.js','trainer/neural.js','trainer/network.js','trainer/fit-worker.js','trainer/sandbox.js','trainer/crops.js','trainer/sensors.js','README.md','AGENTS.md','LICENSE']);
- for(const module of ['live-scene','scan-session','growing-systems','generate-worker','field-test-ui','field-test-worker','score-scan','inference','ply','references']) allowed.add('trainer/'+module+'.js');
- for(const page of ['README','training','scanners','field-inspection','benchmarks','research','local-setup','field-datasets','field-validation','scan-cli','evidence','edge-deployment','research-evidence']) allowed.add('docs/'+page+'.md');
+ for(const module of ['live-scene','scan-session','growing-systems','plant-version','generate-worker','field-test-ui','field-test-worker','score-scan','inference','ply','references']) allowed.add('trainer/'+module+'.js');
+ for(const page of ['README','training','scanners','field-inspection','benchmarks','research','local-setup','field-datasets','field-validation','scan-cli','evidence','edge-deployment','research-evidence','industry-practice','crop-architecture','crop-form-benchmark']) allowed.add('docs/'+page+'.md');
  for(const lesson of ['README','models','learning','scoring','fieldwork']) allowed.add('docs/first-steps/'+lesson+'.md');
  for(const diagram of ['returns','patch','weights','network','labels','loss','pins','matches','stages','vine']) allowed.add('art/lesson-'+diagram+'.svg');
- for(const folder of ['art','benchmark','test','trainer']) allowed.add(folder+'/README.md');
- for(const figure of ['scan-learn-find','paired-field','field-notebook','seed-replay','sprout-strip','field-deployment']) allowed.add('art/'+figure+'.svg');
+ for(const folder of ['art','benchmark','test','trainer','trainer/plants','art/plants']) allowed.add(folder+'/README.md');
+ for(const figure of ['scan-learn-find','paired-field','field-notebook','seed-replay','sprout-strip','field-deployment','plant-architecture']) allowed.add('art/'+figure+'.svg');
  const types={html:'text/html',js:'text/javascript',css:'text/css',svg:'image/svg+xml',webp:'image/webp',md:'text/plain'};
  const port=Number(output||4173);
  if(!Number.isInteger(port)||port<1||port>65535)throw Error('Choose a port from 1 to 65535.');
@@ -25,7 +26,9 @@ if(command==='serve'){
   try{
    let path=new URL(req.url,'http://localhost').pathname.slice(1);
    if(!path||path.endsWith('/'))path+='index.html';
-   if(!allowed.has(path)){res.writeHead(404).end();return;}
+   const plantFile = /^trainer\/plants\/[a-z][a-z0-9-]*\.(js|md)$/.test(path) ||
+      /^art\/plants\/[a-z][a-z0-9-]*\.svg$/.test(path);
+   if(!allowed.has(path) && !plantFile){res.writeHead(404).end();return;}
    const data=await readFile(new URL('./'+path,import.meta.url));
    res.writeHead(200,{'Content-Type':(types[path.split('.').at(-1)]||'text/plain')+'; charset=utf-8'}).end(data);
   }catch{res.writeHead(404).end();}
@@ -40,11 +43,12 @@ if(command==='serve'){
  if (output.startsWith('--') || (args.length && (args.length !== 2 || args[0] !== '--weights' || !args[1] || args[1].startsWith('--')))) throw Error(trainUsage);
  const weightsPath = args[1];
  await checkOutputPaths(weightsPath ? [output,weightsPath] : [output]);
- const defaults={crop:'lettuce',seed:27,trainFields:6,valFields:3,epochs:40,model:'neural',hiddenLayers:[4],activation:'tanh',optimizer:'sgd',batchSize:0,momentum:.9,learningRate:.25,initSeed:12345,sensorMode:'mixed',validationSensorMode:undefined,trainingRayBudget:0,validationRayBudget:0,minimumHeight:.035,threshold:.5};
+ const defaults={crop:'lettuce',plantArchitecture:1,plantForm:undefined,plantCondition:undefined,seed:27,trainFields:6,valFields:3,epochs:40,model:'neural',hiddenLayers:[4],activation:'tanh',optimizer:'sgd',batchSize:0,momentum:.9,learningRate:.25,initSeed:12345,sensorMode:'mixed',validationSensorMode:undefined,trainingRayBudget:0,validationRayBudget:0,minimumHeight:.035,threshold:.5};
  const config=configuration?JSON.parse(await readFile(configuration,'utf8')):{};
  if(!config||typeof config!=='object'||Array.isArray(config))throw Error('Expected a JSON settings object.');
  for(const key of Object.keys(config))if(!Object.hasOwn(defaults,key))throw Error('Unknown setting '+key);
  const settings={...defaults,minimumHeight:cropProfile(config.crop).peakHeight,...config};
+ Object.assign(settings, plantSettings(settings));
  if(settings.model==='linear')settings.hiddenLayers=[];
  const {model,epochs,threshold}=settings;
  checkScoreThreshold(threshold);

@@ -336,7 +336,7 @@ tbody tr:nth-child(even) { background: #f6f8f0; }
   }
   .heroActions > .primary { border-color: var(--lime); }
   .heroActions > a + a { border-color: #809888; }
-  .scanLayers > label, .plot .downloads > #ply, .shareActions > #shareStatus,
+  .plot .downloads > #ply, .shareActions > #shareStatus,
   #controls .action > .primary, .pairInspect > label { grid-column: 1/-1; }
   .shareActions > #shareStatus:empty { display: none; }
   .benchForm .action { grid-template-columns: 2fr 1fr; }
@@ -706,4 +706,16 @@ tbody tr:nth-child(even) { background: #f6f8f0; }
   .benchSetup > .benchStatus { grid-column: 2; }
   #benchOptions > div { grid-template-columns: repeat(2,minmax(0,1fr)); }
   #benchOptions fieldset:first-child { grid-column: 1 / -1; }
+}
+
+.specimenCard {display:grid;grid-template-columns:minmax(5.5rem,1fr) minmax(0,1fr);align-items:center;gap:.8rem;margin:0;padding:.6rem .85rem;background:#edf1e5;border:1px solid #d6dfcc;border-radius:.55rem;}
+.specimenCard canvas {display:block;width:100%;height:auto;}
+.specimenCard figcaption {display:grid;gap:.15rem;color:#345542;font-size:.82rem;}
+.specimenCard figcaption small {color:#536852;font:500 .72rem var(--mono);}
+.specimenCard figcaption b {font:600 1.05rem/1.18 var(--serif);}
+.anatomyGuide {justify-self:start;font-size:.88rem;}
+@media (min-width:865px) and (min-height:650px) {
+  /* Keep the whole plot and its controls within reach while editing a plant. */
+  .lab:has(#anatomySettings[open]) > .plot {position:sticky;top:.75rem;align-self:start;}
+  .lab:has(#anatomySettings[open]) .viewer {flex:none;min-height:0;height:clamp(17rem,49vh,34rem);}
 }

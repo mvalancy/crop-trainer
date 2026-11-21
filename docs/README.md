@@ -15,6 +15,7 @@ See what a laser measures, try a two-clue model by hand, and check whether a pin
 | I want to… | Open |
 | --- | --- |
 | Understand how dots become predictions | [How training works](training.md) |
+| See the real plants behind the generator or build a new crop | [Crop forms and photo references](crop-architecture.md) · [Add a crop](../trainer/plants/README.md) |
 | Grow, scan, share or export a field | [Fields and scanners](scanners.md) |
 | Find out why a plant was missed | [Inspecting detections](field-inspection.md) |
 | Compare two detectors on the same fields | [Benchmarks](benchmarks.md) |
@@ -24,6 +25,7 @@ See what a laser measures, try a two-clue model by hand, and check whether a pin
 | See how far synthetic training has worked on real plants | [What the research supports](research-evidence.md) |
 | Find real field data or replay the vineyard test | [Public field datasets](field-datasets.md) |
 | Design a test on real farms | [Field validation](field-validation.md) |
+| Compare the sandbox with agricultural technology teams’ methods | [Industry practices and missing experiments](industry-practice.md) |
 | Read the papers and check dataset licenses | [Datasets and research](research.md) |
 | Run locally or replay a browser experiment | [Local setup](local-setup.md) |
 

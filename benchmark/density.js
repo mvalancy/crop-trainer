@@ -10,7 +10,8 @@ export function densitySnapshot(report) {
     const {recipeManifest, stats} = datasets[row.datasetIndex];
     const scans = recipeManifest.map(tile => {
       if (tile.split === 'train') return tile.tile_id;
-      const {points, ...planting} = tile.recipe;
+      const {points, plantArchitecture = 1, ...planting} = tile.recipe;
+      if (plantArchitecture !== 1) planting.plantArchitecture = plantArchitecture;
       return planting;
     });
     experiment.push([row.seed, row.trainingRayBudget, row.epochs, row.threshold, stats.generator, scans]);

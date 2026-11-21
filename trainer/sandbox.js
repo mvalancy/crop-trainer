@@ -1,6 +1,20 @@
 import {networkShape,featureNames} from './network.js?v=field-test1';
 export {featureNames};
 
+export const runPresets = {
+  practice: {train:16, validation:8, stopMode:'time', length:0.5},
+  quick: {train:6, validation:3, stopMode:'epochs', length:40}
+};
+
+export function startingPreset(params) {
+  // Existing experiment links replay the original fixed epoch and field counts.
+  if (params.has('epochs') || params.get('plan') === 'quick') return 'quick';
+  if (params.get('plan') === 'practice') return 'practice';
+  const experimentKeys = ['embed', 'engine', 'seed', 'model', 'crop', 'sensor', 'validationSensor',
+    'trainingRayBudget', 'validationRayBudget', 'threshold', 'minimumHeight', 'soilMetric', 'missBand'];
+  return experimentKeys.some(key => params.has(key)) ? 'quick' : 'practice';
+}
+
 const $ = id => document.getElementById(id);
 export function duration(ms) {
   const sec = Math.ceil(ms/1000);

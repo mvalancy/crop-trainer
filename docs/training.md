@@ -44,11 +44,11 @@ Try changing the starter to two hidden layers of 8 and 4. Keep the field seed, c
 
 Open **What went into this fit?** in the Training Shed results. Each bar counts the examples one planting contributed after class balancing. Expand the table to inspect its counts or open its scan. The preview holds the camera on the first validation field so that you can compare the pins between epochs.
 
-For the seed-27 starter, the six practice fields supplied **581, 402, 533, 440, 492 and 604** examples in field order. That is 3,052 rows of 13 local measurements. Forty epochs revisit those rows 122,080 times while fitting 61 adjustable numbers. The generator, feature extraction and labeling run once before fitting. The six validation scans come from three additional plantings.
+For the seed-27 **Quick check** with the original canopy generator (v1), the six practice fields supplied **581, 402, 533, 440, 492 and 604** examples in field order. That is 3,052 rows of 13 local measurements. Forty epochs revisit those rows 122,080 times while fitting 61 adjustable numbers. The generator, feature extraction and labeling run once before fitting. The six validation scans come from three additional plantings.
 
-We also completed the 128-practice-field, 64-validation-field lettuce preset at seed 27 for 5,000 epochs with the CPU command. All 128 practice fields contributed, ranging from 114 to 571 examples apiece. The balanced pool reached its 48,000-row cap. The fit made **240,000,000 example visits**. On this host generation and feature preparation took 37.9 s, fitting took 156.6 s, and scoring took 0.8 s. On the 128 held-out scans the F1 scores were 0.7522 at 7.5 cm, 0.8310 at 10 cm and 0.8512 at 15 cm. These are synthetic detection scores. Run the same settings on your own device for a timing comparison.
+We also ran that v1 lettuce generator with 128 practice fields and 64 validation fields at seed 27 for 5,000 epochs on the CPU. All 128 practice fields contributed, ranging from 114 to 571 examples apiece. The balanced pool reached its 48,000-row cap. The fit made **240,000,000 example visits**. On this host generation and feature preparation took 37.9 s, fitting took 156.6 s, and scoring took 0.8 s. On the 128 held-out scans the F1 scores were 0.7522 at 7.5 cm, 0.8310 at 10 cm and 0.8512 at 15 cm. These are synthetic detection scores. Run the same settings on your own device for a timing comparison.
 
-In a mixed-layout lettuce run (seed 20261121, 3.5 cm peak floor), the four training fields supplied **427, 379, 524 and 538** of the 1,868 balanced examples. To check the fourth field's influence, we carried the source field ID through the class shuffles and verified that the resulting inputs and labels exactly matched the normal run. We then flipped the labels of just those 538 examples, keeping every input and the other three fields' labels fixed.
+In a mixed-layout v1 lettuce run (seed 20261121, 3.5 cm peak floor), the four training fields supplied **427, 379, 524 and 538** of the 1,868 balanced examples. To check the fourth field's influence, we carried the source field ID through the class shuffles and verified that the resulting inputs and labels exactly matched the normal run. We then flipped the labels of just those 538 examples, keeping every input and the other three fields' labels fixed.
 
 After two epochs with batches of 32, learning rate 0.125 and initialization seed 178, the four-unit tanh model's training loss changed from **0.4723 to 0.6171**. Its largest absolute weight change was **0.4914**. Logistic regression's loss changed from **0.4554 to 0.6051**. CPU and Chromium's software WebGPU adapter (SwiftShader) agreed to within 1.2 × 10⁻⁷ on every fitted weight. This measures whether training responded to the labels. Accuracy on new fields needs a separate held-out score.
 
@@ -78,7 +78,7 @@ Each line prints the adapter, measured change and expected change. Run the CPU e
 
 ### Do more practice fields improve a score?
 
-We compared 2, 6 and 24 practice fields on three fresh dataset seeds. Each column kept the same six validation plantings (12 scans), verified by tile ID. The smaller training sets shared their raw scans with the start of the larger sets. Every fit built its own balanced pool and scaling from its training fields.
+We compared 2, 6 and 24 practice fields on three fresh dataset seeds using the v1 canopy generator. Each column kept the same six validation plantings (12 scans), verified by tile ID. The smaller training sets shared their raw scans with the start of the larger sets. Every fit built its own balanced pool and scaling from its training fields.
 
 | Practice fields | Seed 3193 mean F1 | Seed 3194 mean F1 | Seed 3195 mean F1 |
 | ---: | ---: | ---: | ---: |
@@ -88,13 +88,36 @@ We compared 2, 6 and 24 practice fields on three fresh dataset seeds. Each colum
 
 Six fields scored higher than two on all three seeds. Moving from six to 24 helped on one. Increasing the number of practice fields changes the mix of scanner layouts, examples and normalization. The effect on fresh plantings varied with the seed.
 
-To repeat a column, use lettuce, mixed scanners, seeded ray budgets, a 3.5 cm minimum peak, the starter four-unit tanh network and CPU. Choose six validation fields and 40 full-batch epochs. Hold the dataset seed, learning rate (0.25), initialization (12345) and cutoff (0.50) fixed while changing **Training fields**. Compare the validation tile IDs in the three JSON exports before comparing mean F1.
+To repeat a column, use v1 lettuce, mixed scanners, seeded ray budgets, a 3.5 cm minimum peak, the starter four-unit tanh network and CPU. Choose six validation fields and 40 full-batch epochs. Hold the dataset seed, learning rate (0.25), initialization (12345) and cutoff (0.50) fixed while changing **Training fields**. Compare the validation tile IDs in the three JSON exports before comparing mean F1.
+
+## Why did training finish so quickly?
+
+A training run can take milliseconds or hours. What matters is the number of examples, the work the model does per example, and how often it revisits them. Crop Trainer first converts millions of laser coordinates across a run into height peaks. It measures 13 features per candidate and fits a four-unit network with **61 trainable numbers**. Those features are computed once. Additional epochs revisit the same examples.
+
+**Field practice**, the first run in the browser, grows 16 training plantings and eight held-out plantings. Each gets scans with and without soil. The device spends about **30 seconds fitting** after the fields are ready. **Quick check** trades that time budget for six training fields, three held-out fields and 40 epochs. The CLI also starts with this fixed schedule.
+
+### What does another 30 seconds teach?
+
+We grew seed-27 lettuce with each generator and trained the four-unit network twice. Within each pair, the exports had the same 48 scan IDs, initial weights, mixed scanner layouts and full-batch learning rate of 0.25. One fit ran for 40 epochs and the other for a 30-second budget. All measurements came from CPU fitting in Chromium on a Linux desktop. To time your own phone, choose **Time a trial**.
+
+| Generator | Schedule | Epochs | Make fields | Fit | Score | Total | Mean F1 |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Original canopies (v1) | 40 epochs | 40 | 6.29 s | 0.30 s | 0.14 s | 6.73 s | 0.816 |
+| Original canopies (v1) | 30 seconds | 4,965 | 4.43 s | 30.06 s | 0.15 s | 34.64 s | 0.836 |
+| Structured plants (v2) | 40 epochs | 40 | 2.28 s | 0.28 s | 0.14 s | 2.70 s | 0.708 |
+| Structured plants (v2) | 30 seconds | 4,588 | 2.02 s | 30.05 s | 0.14 s | 32.22 s | 0.801 |
+
+On the v2 fields, the longer fit raised F1 from **0.670 to 0.758** at 7.5 cm, **0.722 to 0.816** at 10 cm and **0.734 to 0.830** at 15 cm. It revisited the same 7,842 labeled examples. The v1 pool had 7,904 examples and different scan geometry, so compare schedules *within* each generator. Each pair covers one synthetic seed. [Try v2 Field practice](https://mvalancy.github.io/crop-trainer/trainer/?plan=practice&plantArchitecture=2&engine=cpu&seed=27) · [Replay with v1 canopies](https://mvalancy.github.io/crop-trainer/trainer/?plan=practice&plantArchitecture=1&engine=cpu&seed=27)
+
+Larger crop models can operate on whole clouds. Zhou and colleagues trained a PointNet++ variant to segment maize stems point by point. Using 50 training clouds with roughly 20 million labeled photogrammetry points, they reported **5–6 hours** for 32 epochs on one RTX 4070 Ti SUPER. The task, input representation and hardware all change how much work one epoch takes. [Zhou et al., §§2.3 and 4.4](https://doi.org/10.3389/fpls.2025.1724096) · [How agricultural teams train and test detectors](industry-practice.md)
+
+For a comparison across devices or models, use fixed epochs, identical seeds and a common held-out set. A timed run exports its completed epoch count for replay. When deciding whether to train longer, check whether misses, extra pins and count errors improve on unseen fields. Training loss can keep falling after field results have leveled off.
 
 ## Plan a longer run
 
 Choose **Time a trial** to generate the requested fields, fit for 16 epochs on the selected backend and score the validation set. The estimate uses the measured per-epoch time after the first four epochs and adds setup and scoring. Changing the model, data settings or backend calls for a fresh estimate. Machine load and browser scheduling can change the eventual time.
 
-Under **Training schedule and optimizer**, choose a fixed epoch count or **Training time** (1 minute to 24 hours). The time budget covers fitting. Your live estimate updates from completed epochs. The current epoch finishes before scoring starts. During training, **Finish & score now** keeps the learned weights and runs validation. **Cancel** discards the active fit. Keep the tab open and the device awake. Reloading the page ends the run. CPU fitting runs in a worker so you can still use the controls.
+Under **Training schedule and optimizer**, choose a fixed epoch count or **Training time** (30 seconds to 24 hours). The time budget covers fitting. Your live estimate updates from completed epochs. The current epoch finishes before scoring starts. During training, **Finish & score now** keeps the learned weights and runs validation. **Cancel** discards the active fit. Keep the tab open and the device awake. Reloading the page ends the run. CPU fitting runs in a worker so you can still use the controls.
 
 ## Take your model with you
 

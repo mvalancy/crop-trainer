@@ -11,8 +11,8 @@ New to LiDAR? [Try spotting a plant in the browser](https://mvalancy.github.io/c
 ## Earn your first harvest 🌱
 
 1. **Plant lettuce.** Open the training shed and leave the starter settings as they are.
-2. **Press “Generate, train & score.”** The app grows six practice fields. It knows where it planted each lettuce, so it can teach the model which clusters of dots look like plant centers.
-3. **Check the harvest.** The model gets three fresh fields. On the results map, look for a green ring with no red dot nearby. You’ve spotted a plant the model may have missed.
+2. **Press “Generate, train & score.”** The app grows 16 practice fields and spends about 30 seconds fitting the model. Each known lettuce teaches it which clusters of dots look like plant centers.
+3. **Check the harvest.** The model gets eight fresh fields. On the results map, look for a green ring with no red dot nearby. You’ve spotted a plant the model may have missed.
 
 ![A scan turns lettuce into dots. The model learns from known centers, then predicts pins on a fresh field.](art/scan-learn-find.svg)
 
@@ -20,7 +20,7 @@ Training uses your GPU through WebGPU when available. Your CPU can do the whole 
 
 ## What will you grow next?
 
-[Explore a field in 3D](https://mvalancy.github.io/crop-trainer/#field), or try the same training run with **globe artichokes** or **young tomatoes**. Which crop is easiest to find?
+Can you still spot the trunk after an apple tree loses a limb? Try the orchard, or pick a crop from seven illustrated growing guides. [Explore a broken apple orchard](https://mvalancy.github.io/crop-trainer/?crop=apple&plantArchitecture=2&plantForm=open-vase&plantCondition=damaged&sensor=reference&budget=100000&seed=39061#field) · [Meet the plants](trainer/plants/README.md)
 
 Have a scan of your own? [Try your detector on a local PLY](https://mvalancy.github.io/crop-trainer/trainer/#field-test) and see how it compares with picking the tallest peaks.
 

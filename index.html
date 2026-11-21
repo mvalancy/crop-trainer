@@ -4,7 +4,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Crop Trainer · The procedural farm</title>
 <meta name="description" content="Generate crop LiDAR scans, explore them in 3D, and train crop detectors locally with CPU or WebGPU.">
-<link rel="stylesheet" href="farm.css?v=fieldlesson1"></head>
+<link rel="stylesheet" href="farm.css?v=wood2"></head>
 <body class="farm"><a class="skip" href="#main">Skip to content</a>
 <header class="siteBar">
 <div class="barInner"><a class="brand" href="./"><span class="mark" aria-hidden="true"><i></i></span>Crop Trainer</a>
@@ -37,12 +37,14 @@
 <div class="viewTools">
 <label>Drag mode<select id="mode"><option value="orbit">Orbit</option><option value="pan">Pan</option></select></label>
 <label>Camera<select id="view"><option value="oblique">Oblique</option><option value="top">Top down</option><option value="side">Side</option><option value="custom" disabled="">Free orbit</option></select></label>
-<label>Color by<select id="color"><option value="class">Return class</option><option value="height">Elevation</option></select></label>
+<label>Color by<select id="color"><option value="class">Return class</option><option value="height">Elevation</option><option value="tissue" disabled>Plant tissue</option></select></label>
 <label>Highlight plant<select id="highlight"><option value="">None</option></select></label>
-<div class="scanLayers"><label class="check"><input id="pins" type="checkbox" checked=""> Label centers</label><button type="button" id="focusPlant" disabled>Explore a plant</button><button type="button" id="switchSoil" disabled>View without soil</button></div></div>
+<div class="scanLayers"><label class="check"><input id="pins" type="checkbox" checked=""> Label centers</label><label class="check"><input id="modelStems" type="checkbox" disabled> Model stem lines</label><button type="button" id="focusPlant" disabled>Explore a plant</button><button type="button" id="switchSoil" disabled>View without soil</button></div></div>
+<p class="hint" id="tissueLegend" hidden>Orange marks stem and wood returns, green marks leaf blades, violet marks crown clusters, buds or fruit, and gray marks other returns.</p>
+<p class="hint" id="modelLegend" hidden>Turquoise lines trace the modeled stems through the canopy, including sections hidden from the scanner.</p>
 <details class="cameraHelp">
 <summary>Camera controls</summary>
-<p class="hint" id="cameraHelp">Drag to orbit. Shift-drag or right-drag to pan. Scroll to zoom. On touch, use two fingers to pan and pinch. With the canvas focused, arrow keys rotate, Shift + arrows pan, + / − zoom, F centers the highlighted plant for close-up orbit, and R resets the field view.</p></details>
+<p class="hint" id="cameraHelp">Drag to orbit. Shift-drag or right-drag to pan. Scroll to zoom. On touch, use two fingers to pan and pinch. With the canvas focused, arrow keys rotate, Shift + arrows pan, + / − zoom, F centers the highlighted plant for close-up orbit, and R resets the field view. Structured plants (v2) add plant tissue colors and model stem lines.</p></details>
 </article>
 <aside id="scan-settings">
 <h3>Scan settings</h3>
@@ -53,6 +55,16 @@
 <label>Field seed<input type="number" id="seed" min="0" max="4294967295" step="1" required="" value="27" aria-describedby="seedHint"></label>
 <p class="hint" id="seedHint">Change the seed to grow a new planting of this crop.</p>
 <p class="hint" id="systemInfo" hidden></p></fieldset>
+<details id="anatomySettings">
+<summary>Plant form and condition</summary>
+<div class="detailFields">
+<label>Plant architecture<select id="plantArchitecture" required><option value="2">Structured plants · v2</option><option value="1">Original plants · v1</option></select></label>
+<label>Plant form<select id="plantForm" required></select></label>
+<label>Condition<select id="plantCondition" required><option value="healthy">Healthy plants</option><option value="mixed">About one in four damaged</option><option value="damaged">All plants damaged</option></select></label>
+<label>Apple foliage<select id="appleCanopy" required><option value="leafy">Leaf on</option><option value="dormant">Dormant · leaf off</option></select></label>
+<figure class="specimenCard" id="specimenCard"><canvas id="specimenCanvas" width="280" height="188" role="img"></canvas><figcaption><small>Plant preview</small><b id="specimenName"></b><span id="specimenDetail"></span></figcaption></figure>
+<a id="plantGuide" class="anatomyGuide" href="https://github.com/mvalancy/crop-trainer/tree/main/trainer/plants">Growing guide ↗</a>
+</div></details>
 <details class="scannerSetup" open>
 <summary>LiDAR setup <span id="scanPreset"></span></summary>
 <div class="detailFields">
@@ -77,6 +89,8 @@
 <dl class="readouts" id="readouts"></dl>
 <h4>Plant coverage</h4>
 <p id="plantCoverage"></p>
+<p class="hint" id="plantComposition" hidden></p>
+<p class="hint" id="stemSummary" hidden></p>
 <p class="hint">With label centers enabled, a gold × marks a plant with zero surviving crop returns. A coral ring marks a plant with at least one.</p>
 </div><div class="scanFiles"><h3>Download or share</h3>
 <div class="downloads">
@@ -141,6 +155,6 @@
 </main>
 <footer class="siteFoot"><span>Created by Matthew Valancy</span>
 <div><a href="AGENTS.md">Agent quickstart</a><a href="#missions">Farm journal</a><a href="LICENSE">MIT license</a></div></footer>
-<script type="module" src="farm.js?v=fieldexport1"></script>
+<script type="module" src="farm.js?v=wood2"></script>
 </body>
 </html>

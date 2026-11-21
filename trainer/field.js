@@ -1,6 +1,10 @@
 import {layoutDimensions, MAX_SCAN_RAYS} from './sensors.js?v=dense1';
 import {cropProfile, bladeWidth, bladeHeight} from './crops.js?v=systems1';
 import {canopyPlant,scanFixtures} from './growing-systems.js';
+import {formsFor,checkPlantForm,checkPlantCondition} from './plants/forms.js';
+import {plantTraits, seededRandom} from './plants/traits.js';
+import {structuredPlant} from './plants/index.js';
+import {checkPlantArchitecture} from './plant-version.js';
 export function returnBand(count) {
  if (count === 0) return 'zero';
  return count < 5 ? 'oneToFour' : 'fiveOrMore';
@@ -24,11 +28,23 @@ export function sampleCloud(xyz, classes, ground = true) {
 export function field(p,onRow){
 const crop = p.crop ?? 'lettuce';
 const profile = cropProfile(crop);
-let seed=p.seed>>>0;function rng(s){return ()=>{s=(s+0x6d2b79f5)>>>0;let a=Math.imul(s^(s>>>15),1|s);a^=a+Math.imul(a^(a>>>7),61|a);return ((a^(a>>>14))>>>0)/4294967296}}
+const structured = checkPlantArchitecture(p.plantArchitecture ?? 1) === 2;
+const form = structured ? checkPlantForm(crop,p.plantForm) : undefined;
+const condition = structured ? checkPlantCondition(p.plantCondition) : undefined;
+const forms = structured ? formsFor(crop) : [];
+if (!structured && ((p.plantForm && p.plantForm !== 'mixed') || (p.plantCondition && p.plantCondition !== 'healthy'))) {
+  throw Error('Plant forms and damage require structured plants.');
+}
+if (p.appleCanopy != null && (crop !== 'apple' || !structured || !['leafy','dormant'].includes(p.appleCanopy))) {
+  throw Error('Choose leafy or dormant foliage for a structured apple orchard.');
+}
+let seed=p.seed>>>0; const rng=seededRandom;
 let r=rng(seed),o=rng(seed^54321),s=rng(seed^737373), sensor=p.sampling;
 const dimensions=layoutDimensions(sensor), active=dimensions!==null, [nx,ny]=dimensions ?? [0,0];
 if(!Number.isSafeInteger(p.points) || p.points<1 || p.points>MAX_SCAN_RAYS) throw Error('Choose a ray budget from 1 to 1,000,000.');
 let n=active?Math.min(p.points,nx*ny):p.points, g=Math.ceil(Math.sqrt(n)), xyz=new Float32Array(n*3), cls=new Uint8Array(n), ids=new Uint16Array(n), boxes=[],centers=[],tau=2*Math.PI,sz=10;
+const parts = structured ? new Uint8Array(n) : null;
+const skeleton = structured ? [] : null;
 let terrain=profile.system==='greenhouse'?()=>0:(x,y)=>.016*Math.sin(1.3*x+.4*y)+.016*Math.sin(1.7*y)+.004*x+.005*Math.cos(12*y);
 let at=new Int32Array(g*g).fill(-1), next=active?new Int32Array(n):null, noise=new Float32Array(n);
 if(!active){
@@ -48,8 +64,18 @@ if(!active){
  }
 }
 function rays(cx,cy,R,fn){for(let y=Math.max(0,(cy-R)*g/sz|0);y<=Math.min(g-1,(cy+R)*g/sz|0);y++)for(let x=Math.max(0,(cx-R)*g/sz|0);x<=Math.min(g-1,(cx+R)*g/sz|0);x++)for(let i=at[y*g+x];i>=0;i=next?next[i]:-1)fn(i,xyz[3*i]-cx,xyz[3*i+1]-cy)}
-function hit(i,h,c,id){if(h>xyz[3*i+2]){xyz[3*i+2]=h;cls[i]=c;ids[i]=id}}
+function hit(i,h,c,id,part=0){if(h>xyz[3*i+2]){xyz[3*i+2]=h;cls[i]=c;ids[i]=id;if(parts)parts[i]=part}}
 function plant(x,y,R,weed){
+if(structured && !weed){
+  const id=boxes.length+1;
+  const traits=plantTraits(seed,id,forms,form,condition);
+  const box=structuredPlant(crop,{...traits,x,y,soil:terrain(x,y),radius:R,rays,skeleton,
+    canopy:p.appleCanopy,write:(i,h,part)=>hit(i,h,1,id,part)});
+  box.plant_form=traits.form;
+  box.plant_condition=traits.damaged?'damaged':'healthy';
+  if(profile.system)box.base_xy_m=[x,y];
+  boxes.push(box);centers.push([x,y]);return;
+}
 if(profile.system && !weed){
   boxes.push(canopyPlant(crop,x,y,R,terrain(x,y),r,rays,hit,boxes.length+1));
   centers.push([x,y]);return;
@@ -87,14 +113,14 @@ if(profile.fixtures && p.infrastructure!==false) scanFixtures(crop,profile.rows,
 if(p.weeds)for(let j=0;j<64;j++)plant(.2+o()*9.6,.2+o()*9.6,.08+.13*o(),true);
 if(p.sticks)for(let j=0;j<30;j++){let x=o()*10,y=o()*10,a=o()*tau,c=Math.cos(a),s=Math.sin(a),l=.15+.30*o(),w=.012+.018*o();rays(x,y,l+w,(i,dx,dy)=>{let u=c*dx+s*dy,v=-s*dx+c*dy;if(Math.abs(u)<l&&Math.abs(v)<w)hit(i,terrain(x+dx,y+dy)+w+Math.sqrt(w*w-v*v),3,0)})}
 if(p.boards && centers.length)for(let j=0;j<9;j++){let [x,y]=centers[Math.floor(o()*centers.length)],a=o()*tau,c=Math.cos(a),s=Math.sin(a),l=.28+.30*o(),w=.09+.1*o();rays(x,y,l+w,(i,dx,dy)=>{let u=c*dx+s*dy,v=-s*dx+c*dy;if(Math.abs(u)<l&&Math.abs(v)<w)hit(i,terrain(x,y)+.34+.025*u,4,0)})}
-let lost=0,counts=Array(profile.system?7:5).fill(0);for(let i=0;i<n;i++){lost+=before[i]===1&&cls[i]!==1;counts[cls[i]]++;xyz[3*i+2]+=noise[i]}let outXYZ=xyz,outCls=cls,outIds=ids, outputN=n;
+let lost=0,counts=Array(profile.system?7:5).fill(0);for(let i=0;i<n;i++){lost+=before[i]===1&&cls[i]!==1;counts[cls[i]]++;xyz[3*i+2]+=noise[i]}let outXYZ=xyz,outCls=cls,outIds=ids,outParts=parts, outputN=n;
 let q=p.scanNoise, noiseActive=q&&['xy','z','density','gaps','stray','cluster'].some(k=>q[k]>0);
 if(noiseActive){
  const base=q.seed>>>0, stream=(salt)=>rng(base^salt), xy=stream(0x948765bc), zz=stream(0x35f620e4), den=stream(0x7caaf129), gap=stream(0xb910cd71), stray=stream(0xdab3a018);
  const cluster=stream(0x1f035610);
  const norm=(r)=>Math.sqrt(-2*Math.log(Math.max(1e-12,r())))*Math.cos(tau*r()), clip=(x)=>Math.min(9.99999,Math.max(0,x)), outliers=Math.round(n*q.stray/100);
  const ds=[den()*tau,den()*tau], centersGap=Array.from({length:4},()=>[gap()*sz,gap()*sz]), stripAt=1+8*gap(), stripAngle=gap()*tau, stripWave=gap()*tau, gc=Math.cos(stripAngle), gs=Math.sin(stripAngle), gapFraction=q.gaps/100, stripW=gapFraction*1.35, gapRadius=Math.sqrt(gapFraction*sz*sz*.72/(centersGap.length*Math.PI));
- outXYZ=new Float32Array((n+outliers)*3);outCls=new Uint8Array(n+outliers);outIds=new Uint16Array(n+outliers);outputN=0;counts=Array(profile.system?7:6).fill(0);
+ outXYZ=new Float32Array((n+outliers)*3);outCls=new Uint8Array(n+outliers);outIds=new Uint16Array(n+outliers);if(parts)outParts=new Uint8Array(n+outliers);outputN=0;counts=Array(profile.system?7:6).fill(0);
  for(let i=0;i<n;i++){
    const x=xyz[i*3],y=xyz[i*3+1],z=xyz[i*3+2], coarse=(1+Math.sin(.76*x+.51*y+ds[0])*Math.sin(.39*x-.84*y+ds[1]))/2;
    const dx=q.xy?norm(xy)*q.xy/100:0,dy=q.xy?norm(xy)*q.xy/100:0,dz=q.z?norm(zz)*q.z/100:0;
@@ -104,6 +130,7 @@ if(noiseActive){
    outXYZ[v]=q.xy?clip(x+dx):x;
    outXYZ[v+1]=q.xy?clip(y+dy):y;
    outXYZ[v+2]=q.z?z+dz:z;
+   if(parts)outParts[outputN-1]=parts[i];
    outIds[outputN-1]=ids[i];outCls[outputN-1]=cls[i];counts[cls[i]]++;
  }
  if(q.cluster&&outputN>1){
@@ -114,7 +141,7 @@ if(noiseActive){
      outXYZ[to*3]=clip(outXYZ[from*3]+Math.cos(a)*rad);
      outXYZ[to*3+1]=clip(outXYZ[from*3+1]+Math.sin(a)*rad);
      outXYZ[to*3+2]=outXYZ[from*3+2]+.002*(2*cluster()-1);
-     outIds[to]=outIds[from];
+     outIds[to]=outIds[from];if(parts)outParts[to]=outParts[from];
      counts[outCls[to]]--;outCls[to]=outCls[from];counts[outCls[to]]++;
    }
  }
@@ -122,7 +149,7 @@ if(noiseActive){
    const x=stray()*sz,y=stray()*sz,offset=(.12+.68*stray())*(stray()<.18?-1:1);
    outXYZ.set([x,y,terrain(x,y)+offset],3*outputN);outCls[outputN++]=5;counts[5]++;
  }
- outXYZ=outXYZ.slice(0,outputN*3);outCls=outCls.slice(0,outputN);
+ outXYZ=outXYZ.slice(0,outputN*3);outCls=outCls.slice(0,outputN);if(parts)outParts=outParts.slice(0,outputN);
 }
 // Positive IDs follow the originating plant through dropout and clustered copies.
 const plantReturns = Array(boxes.length).fill(0);
@@ -140,8 +167,9 @@ if(p.ground===false){
    if(outCls[i]===0){groundRemoved++;continue;}
    const src=3*i,dst=3*keep;
    outXYZ[dst]=outXYZ[src];outXYZ[dst+1]=outXYZ[src+1];outXYZ[dst+2]=outXYZ[src+2];
+   if(parts)outParts[keep]=outParts[i];
    outCls[keep++]=outCls[i];
  }
- outputN=keep;outXYZ=outXYZ.slice(0,3*keep);outCls=outCls.slice(0,keep);counts[0]=0;
+ outputN=keep;outXYZ=outXYZ.slice(0,3*keep);outCls=outCls.slice(0,keep);if(parts)outParts=outParts.slice(0,keep);counts[0]=0;
 }
-let canonical=JSON.stringify(['crop-trainer-v1',...(profile.system?['growing-system-v1',crop,!!profile.fixtures && p.infrastructure!==false]:crop==='lettuce'?[]:['crop-shape-v1',crop]),seed,n,sz,p.spacing,p.radius,8,.36,2.1,.04,.024,.05,.012,.004,!!p.weeds,!!p.sticks,!!p.boards,...(p.ground===false?['ground-removed-v1']:[]),...(active?['sensor-v1',sensor.key,sensor.pattern,nx,ny,sensor.along,sensor.across]:[]),...(noiseActive?['noise-v1',q.seed,q.xy,q.z,q.density,q.gaps,q.stray,...(q.cluster?['cluster-v1',q.cluster]:[])]:[])]);let hash=14695981039346656037n;for(let i=0;i<canonical.length;i++)hash=BigInt.asUintN(64,(hash^BigInt(canonical.charCodeAt(i)))*1099511628211n);let tile_id=hash.toString(16).padStart(16,'0');return {xyz:outXYZ,cls:outCls,counts,plantReturns,coverage,lost,groundRemoved,sampledRays:n,labels:{tile_id,crop,...(profile.system?{center_target:'plant-base-xy',growing_system:profile.system}:{}),tile_size_m:[10,10],num_points:outputN,boxes},p}}
+let canonical=JSON.stringify(['crop-trainer-v1',...(structured?['plant-architecture-v2',crop,form,condition,...(crop==='apple'?[p.appleCanopy??'leafy']:[])]:[]),...(profile.system?['growing-system-v1',crop,!!profile.fixtures && p.infrastructure!==false]:crop==='lettuce'?[]:['crop-shape-v1',crop]),seed,n,sz,p.spacing,p.radius,8,.36,2.1,.04,.024,.05,.012,.004,!!p.weeds,!!p.sticks,!!p.boards,...(p.ground===false?['ground-removed-v1']:[]),...(active?['sensor-v1',sensor.key,sensor.pattern,nx,ny,sensor.along,sensor.across]:[]),...(noiseActive?['noise-v1',q.seed,q.xy,q.z,q.density,q.gaps,q.stray,...(q.cluster?['cluster-v1',q.cluster]:[])]:[])]);let hash=14695981039346656037n;for(let i=0;i<canonical.length;i++)hash=BigInt.asUintN(64,(hash^BigInt(canonical.charCodeAt(i)))*1099511628211n);let tile_id=hash.toString(16).padStart(16,'0');return {xyz:outXYZ,cls:outCls,...(structured?{parts:outParts,skeleton:Float32Array.from(skeleton)}:{}),counts,plantReturns,coverage,lost,groundRemoved,sampledRays:n,labels:{tile_id,crop,...(structured?{plantArchitecture:2,plantForm:form,plantCondition:condition}:{}),...(profile.system?{center_target:'plant-base-xy',growing_system:profile.system}:{}),tile_size_m:[10,10],num_points:outputN,boxes},p}}

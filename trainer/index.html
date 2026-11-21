@@ -30,6 +30,10 @@
 <div class="formPair">
 <label>Crop<select id="crop"><option value="lettuce">Lettuce</option><option value="artichoke">Globe artichoke</option><option value="tomato">Young tomato</option><optgroup label="Experimental growing systems"><option value="apple">Apple orchard</option><option value="grapevine">Trellised vineyard</option><option value="bench-lettuce">Greenhouse bench lettuce</option><option value="high-wire-tomato">Greenhouse high-wire tomato</option></optgroup></select></label>
 <label>Train using<select id="engine"><option value="auto">Automatic</option><option value="cpu">CPU</option><option value="webgpu" disabled="">WebGPU (experimental)</option></select></label></div>
+<label>Run length<select id="runPreset">
+<option value="practice">Field practice · 30 seconds</option>
+<option value="quick">Quick check · 40 epochs</option>
+<option value="custom">Custom schedule…</option></select></label>
 <div class="action">
 <button type="submit" class="primary" id="run" disabled="">Generate, train &amp; score</button>
 <button type="button" id="cancel" disabled="">Cancel</button>
@@ -48,16 +52,16 @@
 <div id="status">The field will appear here when you start.</div><progress id="progress" aria-label="Run progress" value="0" max="100"></progress></div>
 <a class="reviewLink" id="reviewLink" href="#resultsTitle" hidden>View scores and download weights ↓</a>
 <details class="method">
-<summary>How generation, training and validation work</summary><ol><li>Generate separate seeded fields for training and validation. Each is scanned with ground included and removed.</li><li>Project XYZ into a 5 cm grid. Measure 13 features at each candidate height peak. Nearby labeled centers supply positive examples and far-away peaks supply negatives.</li><li>Balance training examples and normalize them using training statistics. Fit the selected network or logistic model by minimizing binary cross-entropy.</li><li>Score peaks on unseen fields and retain those at or above the selected detection cutoff. Keep the higher-confidence pin when candidates fall inside the crop’s spacing filter. Match remaining pins to planted centers at three distances.</li><li>Field generation and scoring use the CPU. Model fitting uses your selected backend. An epoch is one pass over the training examples.</li></ol><p><a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/training.md">Training controls and weight-file guide →</a></p><p class="fine">To compare speeds, keep seed, field counts and epochs the same. Download the settings to repeat a finished experiment with the CPU command in the <a href="../AGENTS.md">agent guide</a>. The benchmark JSON also includes weights, timing and scores.</p>
+<summary>How generation, training and validation work</summary><ol><li>Generate separate seeded fields for training and validation. Each is scanned with ground included and removed.</li><li>Project XYZ into a 5 cm grid. Measure 13 features at each candidate height peak. Nearby labeled centers supply positive examples and far-away peaks supply negatives.</li><li>Balance training examples and normalize them using training statistics. Fit the selected network or logistic model by minimizing binary cross-entropy.</li><li>Score peaks on unseen fields and retain those at or above the selected detection cutoff. Keep the higher-confidence pin when candidates fall inside the crop’s spacing filter. Match remaining pins to planted centers at three distances.</li><li>Field generation and scoring use the CPU. Model fitting uses your selected backend. An epoch is one pass over the training examples.</li></ol><p><a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/training.md">Training controls and weight-file guide →</a></p><p><a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/industry-practice.md">How agricultural teams train detectors →</a></p><p class="fine">To compare speeds, keep seed, field counts and epochs the same. Download the settings to repeat a finished experiment with the CPU command in the <a href="../AGENTS.md">agent guide</a>. The benchmark JSON also includes weights, timing and scores.</p>
 <p class="fine">Each planting is scanned with and without soil. Both scans stay in the same split.</p></details>
 </section>
 <section class="advancedPanel" aria-labelledby="settingsTitle">
 <h2 id="settingsTitle">Experiment settings</h2>
 <div class="settingsGrid"><details id="fitOptions"><summary>Training schedule and optimizer</summary>
 <div class="detailFields">
-<label>Stop after<select id="stopMode"><option value="epochs">Number of epochs</option><option value="time">Training time</option></select></label>
-<label id="epochsLabel">Epochs<input id="epochs" type="number" min="1" max="100000000" step="1" value="40" required><span>One epoch uses every training example once.</span></label>
-<label id="minutesLabel" hidden>Training minutes<input id="minutes" type="number" min="1" max="1440" step="1" value="30" required disabled><span>1 minute to 24 hours. The timer starts with the first training epoch. Keep this tab open and the device awake.</span></label>
+<label>Stop after<select id="stopMode"><option value="epochs">Number of epochs</option><option value="time" selected>Training time</option></select></label>
+<label id="epochsLabel" hidden>Epochs<input id="epochs" type="number" min="1" max="100000000" step="1" value="40" required disabled><span>One epoch uses every training example once.</span></label>
+<label id="minutesLabel">Training minutes<input id="minutes" type="number" min="0.5" max="1440" step="0.5" value="0.5" required><span>30 seconds to 24 hours. Field generation and scoring take additional time. Keep this tab open and the device awake.</span></label>
 <label>Optimizer<select id="optimizer"><option value="sgd">Gradient descent</option><option value="momentum">Gradient descent with momentum</option></select></label>
 <label>Update weights after<select id="batchSize"><option value="0">All training examples</option><option value="32">32 examples</option><option value="128">128 examples</option><option value="512">512 examples</option></select><span>Smaller batches update more often during each epoch.</span></label>
 <label>Learning rate<input id="learningRate" type="number" min="0.000001" max="2" step="any" value="0.25" required><span>How far each update moves the weights. When combining small batches with momentum, try 0.025 first.</span></label>
@@ -65,8 +69,11 @@
 <label id="initLabel">Weight initialization seed<input id="initSeed" type="number" min="0" max="4294967295" value="12345" required><span>Neural weights start from this seed. Logistic weights start at zero.</span></label>
 </div></details>
 <details id="datasetOptions"><summary>Fields and dataset seed</summary><div class="detailFields"><label>Dataset seed<input id="seed" type="number" min="0" max="4294967295" step="1" value="27" required=""></label>
-<label>Training fields<input id="train" type="number" min="2" max="256" step="1" value="6" required=""></label>
-<label>Validation fields<input id="validation" type="number" min="1" max="128" step="1" value="3" required=""></label>
+<label>Plant architecture<select id="plantArchitecture" required><option value="2" selected>Structured plants · v2</option><option value="1">Original plants · v1</option></select></label>
+<label>Plant form<select id="plantForm" required><option value="mixed">Seeded mix</option></select></label>
+<label>Plant condition<select id="plantCondition" required><option value="healthy">Healthy</option><option value="mixed">Seeded damage · about 1 in 4</option><option value="damaged">All damaged</option></select></label>
+<label>Training fields<input id="train" type="number" min="2" max="256" step="1" value="16" required=""></label>
+<label>Validation fields<input id="validation" type="number" min="1" max="128" step="1" value="8" required=""></label>
 <button type="button" id="stress">Load stress settings</button></div></details>
 <details id="scanOptions">
 <summary>Scanner and ray budgets</summary>
@@ -84,7 +91,7 @@
 <label>Detection score cutoff<input id="threshold" type="number" min="0" max="1" step="any" value="0.5" required=""><span>A lower cutoff keeps more candidate pins before spacing. Use the cutoff benchmark to compare extra pins and missed plants.</span></label>
 <details class="peakHelp">
 <summary>Which height should I try?</summary>
-<p>Lower peaks can recover plants with sparse returns. For lettuce with the starter neural model and mixed scans, lowering the cutoff from 6.5 to 3.5 cm raised mean F1 from 0.650 to 0.749 on seed 27 and from 0.575 to 0.704 on seed 28.</p>
+<p>Lower peaks can recover plants with sparse returns. For the original lettuce geometry (v1) with the starter neural model and mixed scans, lowering the cutoff from 6.5 to 3.5 cm raised mean F1 from 0.650 to 0.749 on seed 27 and from 0.575 to 0.704 on seed 28.</p>
 <p>Both cutoffs used six training fields, three unseen fields and 40 epochs per seed. Try a fresh seed to see whether the gain holds.</p></details><a id="heightBench" href="../benchmark/?comparison=heights">Compare 6.5 and 3.5 cm peak heights</a><a id="epochBench" href="../benchmark/?comparison=epochs">Compare 10, 40 and 100 training epochs</a><a id="cutoffBench" href="../benchmark/?comparison=cutoffs">Compare three cutoffs at this training duration</a></div></details>
 </div></section>
 </form>
@@ -225,6 +232,6 @@
 </main>
 <footer class="siteFoot"><span>Created by Matthew Valancy</span>
 <div><a href="../AGENTS.md">Agent quickstart</a><a href="../#missions">Farm journal</a><a href="../LICENSE">MIT license</a></div></footer>
-<script type="module" src="./main.js?v=field-audit1"></script>
+<script type="module" src="./main.js?v=plants2"></script>
 </body>
 </html>

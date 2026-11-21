@@ -1,3 +1,4 @@
+import {plantSettings} from './plant-version.js';
 import {cropProfile} from './crops.js?v=systems1';
 
 // Each layer stores output neurons in order, with incoming weights followed by bias.
@@ -107,7 +108,7 @@ export function weightArtifact({settings,scaling,weights,trainer,epochs}) {
     format:'crop-trainer-weights-v1', trainer, featureSchema:'crop-peak-13-v1',
     inputs:featureNames.length, featureNames, hiddenLayers:settings.hiddenLayers,
     activation:settings.activation, output:'sigmoid', layout:'layer-major, neuron-major, incoming weights then bias',
-    crop:settings.crop, minimumHeight:settings.minimumHeight, threshold:settings.threshold,
+    crop:settings.crop, ...plantSettings(settings), minimumHeight:settings.minimumHeight, threshold:settings.threshold,
     pinSeparation:cropProfile(settings.crop).pinSeparation, scaling, weights:Array.from(weights), epochs
   };
 }

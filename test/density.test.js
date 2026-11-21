@@ -40,6 +40,16 @@ test('pair only the same training scans, held-out plantings and fit settings', (
   }
 });
 
+test('density comparisons replay an unversioned scan as v1 and keep v2 separate', () => {
+  const archived = densitySnapshot(experiment(12000));
+  const dense = experiment(60000);
+  const recipe = dense.datasets[0].recipeManifest[1].recipe;
+  recipe.plantArchitecture = 1;
+  assert.equal(pairDensityScores(archived, densitySnapshot(dense)).length, 1);
+  recipe.plantArchitecture = 2;
+  assert.deepEqual(pairDensityScores(archived, densitySnapshot(dense)), []);
+});
+
 test('pair peak heights across ray budgets only for the same fit', () => {
   function heightRun(budget, height) {
     const report = experiment(budget);
