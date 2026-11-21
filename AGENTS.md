@@ -159,6 +159,8 @@ A generator URL can include `box=0` or another zero-based box index. Include the
 
 In the field generator, expand **Compare two scans of this field**. Choose **Ray budget** to vary density on the displayed layout, or **Scan layout** to scan the same planting with 60,000 reference-grid rays and 60,000 simulated OS1-64 rays. Select a marked plant to open it in either 3D scan. The downloaded JSON records each full recipe, tile ID, actual sampled rays, per-plant returns, matched proposals and scored pins. The map can show up to 9,000 example points per scan. All acquired points enter scoring. The apple option includes a geometric base locator. Replay the multi-field studies with `node benchmark/seedling-density.mjs` and `node benchmark/orchard-bases.mjs`. [Seedling results](docs/seedling-density.md) · [Orchard results](docs/orchard-bases.md)
 
+Choose **Height pin · sampled cells only** on the maps to inspect another height detector. Its kernel omits empty cells and still counts a measured zero-height return. Compare extra pins as well as matches. The soil-only check can be replayed with `node benchmark/seedling-peaks.mjs`. [Measured peak and soil examples](docs/seedling-peaks.md)
+
 ### Compare training duration
 
 Open `/benchmark/?comparison=epochs&crop=artichoke&seed=551`. Each seed generates one dataset. Three neural fits start from the same initial weights with the same examples, scaling, learning rate (0.25) and score cutoff (0.50). Each fit runs from scratch so its training time covers its entire duration. The second seed runs the budgets in reverse order.

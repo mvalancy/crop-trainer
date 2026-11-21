@@ -1,5 +1,6 @@
 const inset=12;
-const measured={returns:p=>p.returns>0,peaks:p=>p.peak,pins:p=>p.height,orchard:p=>p.orchard};
+const measured={returns:p=>p.returns>0,peaks:p=>p.peak,pins:p=>p.height,sampledPins:p=>p.sampledHeight,orchard:p=>p.orchard};
+const pinLists={pins:'heightPins',sampledPins:'sampledHeightPins',orchard:'orchardPins'};
 
 export function reached(plant,metric) {return measured[metric](plant);}
 
@@ -39,7 +40,7 @@ export function studyMap(canvas) {
         ctx.arc(cx,cy,5.5,0,Math.PI*2);ctx.stroke();
       }
     }
-    const pins=metric==='pins'?result.heightPins:metric==='orchard'?result.orchardPins:null;
+    const pins=result[pinLists[metric]];
     if(pins){
       ctx.strokeStyle='#f4db73';ctx.lineWidth=1;
       for(const [px,py] of pins){ctx.beginPath();ctx.arc(x(px),y(py),3.5,0,2*Math.PI);ctx.stroke();}

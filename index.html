@@ -127,10 +127,10 @@
 <figure><figcaption><strong id="studyTitleA"></strong><span id="studyCountA"></span></figcaption><canvas id="studyFirst" role="img" aria-labelledby="studyTitleA studyCountA" aria-describedby="studyLegend"></canvas></figure>
 <figure><figcaption><strong id="studyTitleB"></strong><span id="studyCountB"></span></figcaption><canvas id="studySecond" role="img" aria-labelledby="studyTitleB studyCountB" aria-describedby="studyLegend"></canvas></figure></div>
 <div id="studyInspect" hidden>
-<div class="studyChoices"><label>Mark plants by<select id="studyMetric" aria-describedby="studyMetricHelp studyChange"><option value="returns">At least one crop return</option><option value="peaks">Matched height peak · 15 cm</option><option value="pins">Height-only pin · 15 cm</option><option value="orchard">Orchard base pin · 15 cm</option></select></label>
+<div class="studyChoices"><label>Mark plants by<select id="studyMetric" aria-describedby="studyMetricHelp studyChange"><option value="returns">At least one crop return</option><option value="peaks">Matched height peak · 15 cm</option><option value="pins">Height-only pin · 15 cm</option><option value="sampledPins">Height pin · sampled cells only · 15 cm</option><option value="orchard">Orchard base pin · 15 cm</option></select></label>
 <label class="studyOverlay"><input id="studyCloud" type="checkbox"> Show up to 9,000 scan points</label>
 <p id="studyLegend"><span><i class="studyDot" aria-hidden="true"></i>Dot meets the measure</span><span><i class="studyCross" aria-hidden="true">×</i>Cross misses it</span></p>
-<p id="studyChange"></p><p id="studyMetricHelp"></p>
+<p id="studyChange"></p><p id="studyMetricHelp"></p><p id="studyPeakGuide" hidden><a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/seedling-peaks.md">When do these extra peaks help?</a></p>
 <label>Inspect a plant<select id="studyTarget" aria-describedby="studyTargetDetail"><option value="">All plants</option></select></label>
 <p id="studyTargetDetail" role="status" aria-atomic="true"></p></div>
 <div class="studyActions"><a id="studyLinkA">First scan in 3D</a><a id="studyLinkB">Second scan in 3D</a><a id="studyShare">Comparison link</a><button type="button" id="studySave">Download results</button></div></div></div>
@@ -191,6 +191,6 @@
 </main>
 <footer class="siteFoot"><span>Created by Matthew Valancy</span>
 <div><a href="AGENTS.md">Agent quickstart</a><a href="#missions">Farm journal</a><a href="LICENSE">MIT license</a></div></footer>
-<script type="module" src="farm.js?v=layout-study1"></script>
+<script type="module" src="farm.js?v=peak-study1"></script>
 </body>
 </html>

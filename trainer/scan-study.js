@@ -1,10 +1,16 @@
-import {features, matchCenters, detectionStages, targetCenters} from './data.js?v=plants3';
+import {features, matchCenters, detectionStages, targetCenters} from './data.js?v=peak-study1';
 import {detectOrchardBases} from './orchard.js';
 import {cropProfile} from './crops.js';
 import {evaluatePins} from './references.js';
 import {RAY_BUDGETS, getSensor} from './sensors.js';
 
 const localPoint = ([localX,localY]) => ({localX,localY});
+
+function heightResult(peaks, separation, references) {
+  const heights = peaks.pos.map((_,i) => peaks.X[13*i]);
+  const pins = detectionStages(peaks,heights,0,separation).selected;
+  return {pins,...evaluatePins(pins.map(localPoint),references)};
+}
 
 export function studyRecipes(recipe, mode, budgets) {
   if (mode === 'layouts') {
@@ -24,10 +30,9 @@ export function analyzeStudyScan(scan) {
   const centers = targetCenters(scan.labels.boxes);
   const references = centers.map(localPoint);
   const peaks = features({xyz:scan.xyz},profile.peakHeight);
-  const heights = peaks.pos.map((_,i) => peaks.X[13*i]);
-  const heightPins = detectionStages(peaks,heights,0,profile.pinSeparation).selected;
+  const height = heightResult(peaks,profile.pinSeparation,references);
+  const sampled = heightResult(features({xyz:scan.xyz},profile.peakHeight,'occupied'),profile.pinSeparation,references);
   const proposals = matchCenters(peaks.pos,centers,.15);
-  const height = evaluatePins(heightPins.map(localPoint),references);
 
   const orchardPins = scan.p.crop === 'apple'
     ? detectOrchardBases(scan.xyz).pins.map(({x,y}) => [x,y]) : null;
@@ -36,6 +41,7 @@ export function analyzeStudyScan(scan) {
     x,y,returns:scan.plantReturns[i],
     peak:proposals.pinByBox[i] !== -1,
     height:height.pinByReference15[i] !== -1,
+    sampledHeight:sampled.pinByReference15[i] !== -1,
     ...(orchard ? {orchard:orchard.pinByReference15[i] !== -1} : {})
   }));
   return {
@@ -44,7 +50,8 @@ export function analyzeStudyScan(scan) {
     returnedPoints:scan.cls.length,peakFloorMeters:profile.peakHeight,
     separationMeters:profile.pinSeparation,observedPlants:plants.filter(p => p.returns > 0).length,
     proposalCount:peaks.pos.length,matchedProposals:proposals.count,
-    heightScores:height.scores,heightPins,plants,
+    heightScores:height.scores,heightPins:height.pins,plants,
+    sampledHeightScores:sampled.scores,sampledHeightPins:sampled.pins,
     ...(orchard ? {orchardScores:orchard.scores,orchardPins,orchardMethod:'height-band-occupancy-v1'} : {})
   };
 }

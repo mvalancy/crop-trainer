@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 436" role="img" aria-labelledby="title desc">
+  <title id="title">One height rule, two different peaks</title>
+  <desc id="desc">Two measured three-by-three windows from simulated ring scan 1370561. Counting only sampled cells lifts a seedling peak from 5.06 to 8.99 cm and a bare-soil peak from 4.60 to 6.70 cm. Both cross the 6.5 cm candidate threshold. Dashes show cells with no return.</desc>
+  <style>
+    text { font-family: system-ui, sans-serif; fill: #eff6e9; }
+    .heading { font: bold 23px Georgia, serif; }
+    .panel-title { font: bold 17px Georgia, serif; }
+    .body { font-size: 13px; }
+    .cell { font-size: 12px; text-anchor: middle; font-weight: 600; }
+    .dim { fill: #c5d5c4; }
+    .axis { fill: #d4dfd1; font-size: 12px; }
+    .mark { animation: pulse 4.8s ease-in-out infinite; }
+    @keyframes pulse { 0%, 18%, 100% { stroke-opacity: .65; } 42%, 75% { stroke-opacity: 1; } }
+    @media (prefers-reduced-motion:reduce) { .mark { animation:none; } }
+  </style>
+  <rect width="480" height="436" rx="17" fill="#16332d"/>
+  <text x="20" y="34" class="heading">How a scan gap changes a peak</text>
+  <text x="20" y="58" class="body dim">Each square is 5 cm wide. Numbers show maximum height in cm.</text>
+  <g transform="translate(16 72)"><rect width="448" height="152" rx="11" fill="#224039"/>
+    <text x="12" y="24" class="panel-title">A young tomato</text>
+    <rect x="12" y="97" width="33" height="29" rx="3" fill="#355249"/><text x="28.5" y="116" class="cell" style="fill:#b1c4b7">–</text>
+    <rect x="47" y="97" width="33" height="29" rx="3" fill="#355249"/><text x="63.5" y="116" class="cell" style="fill:#b1c4b7">–</text>
+    <rect x="82" y="97" width="33" height="29" rx="3" fill="#d9b28a"/><text x="98.5" y="116" class="cell" style="fill:#19332a">5.6</text>
+    <rect x="12" y="66" width="33" height="29" rx="3" fill="#accd84"/><text x="28.5" y="85" class="cell" style="fill:#19332a">8.9</text>
+    <rect x="47" y="66" width="33" height="29" rx="3" fill="#accd84"/><text x="63.5" y="85" class="cell" style="fill:#19332a">12.0</text>
+    <rect x="82" y="66" width="33" height="29" rx="3" fill="#d9b28a"/><text x="98.5" y="85" class="cell" style="fill:#19332a">4.8</text>
+    <rect x="12" y="35" width="33" height="29" rx="3" fill="#355249"/><text x="28.5" y="54" class="cell" style="fill:#b1c4b7">–</text>
+    <rect x="47" y="35" width="33" height="29" rx="3" fill="#355249"/><text x="63.5" y="54" class="cell" style="fill:#b1c4b7">–</text>
+    <rect x="82" y="35" width="33" height="29" rx="3" fill="#355249"/><text x="98.5" y="54" class="cell" style="fill:#b1c4b7">–</text>
+    <text x="135" y="48" class="body">All nine cells</text><text x="425" y="48" text-anchor="end" class="body">5.06 cm</text>
+    <rect x="135" y="55" width="290" height="7" rx="3" fill="#405a50"/><rect x="135" y="55" width="122.28" height="7" rx="3" fill="#92b6af"/>
+    <text x="135" y="97" class="body">Sampled cells only</text><text x="425" y="97" text-anchor="end" class="body">8.99 cm</text>
+    <rect x="135" y="104" width="290" height="7" rx="3" fill="#405a50"/><rect x="135" y="104" width="217.26" height="7" rx="3" fill="#c2e78f"/>
+    <path class="mark" d="M292.08 52v14 M292.08 101v14" stroke="#ffd17e" stroke-width="2.5"/>
+    <text x="12" y="142" class="axis">The center cell contains a leaf return.</text></g>
+  <g transform="translate(16 233)"><rect width="448" height="152" rx="11" fill="#224039"/>
+    <text x="12" y="24" class="panel-title">Bare soil</text>
+    <rect x="12" y="97" width="33" height="29" rx="3" fill="#355249"/><text x="28.5" y="116" class="cell" style="fill:#b1c4b7">–</text>
+    <rect x="47" y="97" width="33" height="29" rx="3" fill="#355249"/><text x="63.5" y="116" class="cell" style="fill:#b1c4b7">–</text>
+    <rect x="82" y="97" width="33" height="29" rx="3" fill="#355249"/><text x="98.5" y="116" class="cell" style="fill:#b1c4b7">–</text>
+    <rect x="12" y="66" width="33" height="29" rx="3" fill="#d9b28a"/><text x="28.5" y="85" class="cell" style="fill:#19332a">6.9</text>
+    <rect x="47" y="66" width="33" height="29" rx="3" fill="#d9b28a"/><text x="63.5" y="85" class="cell" style="fill:#19332a">6.8</text>
+    <rect x="82" y="66" width="33" height="29" rx="3" fill="#d9b28a"/><text x="98.5" y="85" class="cell" style="fill:#19332a">7.1</text>
+    <rect x="12" y="35" width="33" height="29" rx="3" fill="#d9b28a"/><text x="28.5" y="54" class="cell" style="fill:#19332a">6.4</text>
+    <rect x="47" y="35" width="33" height="29" rx="3" fill="#d9b28a"/><text x="63.5" y="54" class="cell" style="fill:#19332a">6.0</text>
+    <rect x="82" y="35" width="33" height="29" rx="3" fill="#355249"/><text x="98.5" y="54" class="cell" style="fill:#b1c4b7">–</text>
+    <text x="135" y="48" class="body">All nine cells</text><text x="425" y="48" text-anchor="end" class="body">4.60 cm</text>
+    <rect x="135" y="55" width="290" height="7" rx="3" fill="#405a50"/><rect x="135" y="55" width="111.17" height="7" rx="3" fill="#92b6af"/>
+    <text x="135" y="97" class="body">Sampled cells only</text><text x="425" y="97" text-anchor="end" class="body">6.70 cm</text>
+    <rect x="135" y="104" width="290" height="7" rx="3" fill="#405a50"/><rect x="135" y="104" width="161.92" height="7" rx="3" fill="#c2e78f"/>
+    <path class="mark" d="M292.08 52v14 M292.08 101v14" stroke="#ffd17e" stroke-width="2.5"/>
+    <text x="12" y="142" class="axis">Every return in this control is soil.</text></g>
+  <text x="20" y="412" class="axis">Dash = no return</text>
+  <path d="M194 401v12" stroke="#ffd17e" stroke-width="3"/>
+  <text x="203" y="412" class="axis">6.5 cm threshold for a candidate peak</text>
+</svg>

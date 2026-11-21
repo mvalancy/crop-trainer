@@ -18,7 +18,7 @@ See what a laser measures, try a two-clue model by hand, and check whether a pin
 | See the real plants behind the generator or build a new crop | [Crop forms and photo references](crop-architecture.md) · [Add a crop](../trainer/plants/README.md) |
 | Grow, scan, share or export a field | [Fields and scanners](scanners.md) |
 | Find out why a plant was missed | [Inspecting detections](field-inspection.md) |
-| See why one scan misses a seedling or a tree base | [Two ray budgets on the same seedlings](seedling-density.md) · [Finding an apple trunk under its crown](orchard-bases.md) |
+| See why one scan misses a seedling or a tree base | [Two ray budgets on the same seedlings](seedling-density.md) · [Seeing height peaks between rays](seedling-peaks.md) · [Finding an apple trunk under its crown](orchard-bases.md) |
 | Compare two detectors on the same fields | [Benchmarks](benchmarks.md) |
 | See when training beats picking tall peaks | [Held-out crop experiments](evidence.md) |
 | Score a local PLY against surveyed centers | [Browser field test](training.md#test-a-plot-of-your-own) · [Local command](scan-cli.md) |

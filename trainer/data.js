@@ -31,20 +31,30 @@ export function makeRecipe(seed,ground,sampling,crop='lettuce',plantArchitecture
  };
 }
 export function targetCenters(boxes){return boxes.map(({min,max,base_xy_m})=>base_xy_m ?? [(min[0]+max[0])/2,(min[1]+max[1])/2]);}
-export function features(tile, minimumHeight=.065){
+export function features(tile, minimumHeight=.065, averaging='zero-filled'){
  // Only XYZ, never the synthetic return classes or supplied training boxes.
+ if(averaging!=='zero-filled' && averaging!=='occupied')throw new Error('Choose zero-filled or occupied peak averaging.');
  const xy=tile.xyz,N=SIZE*SIZE, max=new Float32Array(N), count=new Uint32Array(N);
  for(let i=0;i<xy.length;i+=3){
   let x=clamp(Math.floor(xy[i]/STEP),0,SIZE-1),y=clamp(Math.floor(xy[i+1]/STEP),0,SIZE-1),j=at(x,y);
   max[j]=Math.max(max[j],xy[i+2]);count[j]++;
  }
+ // This experimental height baseline averages only the bins the scan visited.
+ // A measured ground return still contributes its weight to the denominator.
+ const observed=averaging==='occupied' ? new Uint8Array(N) : null;
+ if(observed)for(let j=0;j<N;j++)observed[j]=count[j]>0;
+ const kernelSum=(values,j)=>values[j]*4+
+  (values[j-1]+values[j+1]+values[j-SIZE]+values[j+SIZE])*2+
+  values[j-SIZE-1]+values[j-SIZE+1]+values[j+SIZE-1]+values[j+SIZE+1];
  const smooth=new Float32Array(N);
  for(let y=1;y<SIZE-1;y++)for(let x=1;x<SIZE-1;x++){
-  let j=at(x,y);smooth[j]=(max[j]*4+(max[j-1]+max[j+1]+max[j-SIZE]+max[j+SIZE])*2+max[j-SIZE-1]+max[j-SIZE+1]+max[j+SIZE-1]+max[j+SIZE+1])/16;
+  const j=at(x,y);
+  if(observed && !observed[j])continue;
+  smooth[j]=kernelSum(max,j)/(observed?kernelSum(observed,j):16);
  }
  const vec=[],pos=[];
  for(let y=1;y<SIZE-1;y++)for(let x=1;x<SIZE-1;x++){
-  const j=at(x,y),h=smooth[j];if(h<minimumHeight)continue;
+  const j=at(x,y),h=smooth[j];if(h<minimumHeight || (observed && !observed[j]))continue;
   let peak=true;
   for(let dy=-1;dy<=1&&peak;dy++)for(let dx=-1;dx<=1;dx++){
    const k=at(x+dx,y+dy);if(smooth[k]>h||(k<j&&smooth[k]===h)){peak=false;break;}

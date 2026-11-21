@@ -17,7 +17,7 @@ node --test
 | Network settings or saved-weight predictions | [Networks](network.test.js) · [Inference](inference.test.js) |
 | Scan files or survey coordinates | [PLY reader](ply.test.js) · [Reference labels](references.test.js) · [Field-test command](field-test-cli.test.js) |
 | Plant attachments and earlier generator versions | [Lettuce, buds and greenhouse supports](plant-attachments.test.js) |
-| Comparing scans or locating an apple trunk | [Two ray budgets](scan-study.test.js) · [Orchard geometry and survey frames](orchard.test.js) |
+| Comparing scans or locating an apple trunk | [Paired scans](scan-study.test.js) · [Height peaks near scan gaps](peak-averaging.test.js) · [Orchard geometry and survey frames](orchard.test.js) |
 | Pairing benchmark results | [Density comparisons](density.test.js) |
 
 [Crop Trainer home](../README.md) · [Local setup](../docs/local-setup.md)

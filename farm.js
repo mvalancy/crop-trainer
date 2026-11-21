@@ -1,6 +1,6 @@
 import {encodePly} from './trainer/ply.js?v=export1';
 import {setupFirstSteps} from './first-steps.js';
-import {initScanStudy} from './trainer/scan-study-ui.js?v=layout-study1';
+import {initScanStudy} from './trainer/scan-study-ui.js?v=peak-study1';
 import {createFieldLesson} from './field-lesson.js';
 import {cropProfile} from './trainer/crops.js?v=systems1';
 import {scanSession} from './trainer/scan-session.js?v=plants3';

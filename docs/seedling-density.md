@@ -97,6 +97,8 @@ Each pair lists results for training seeds `82173` and `379331`, in that order. 
 node benchmark/seedling-density.mjs --match-training-layout > seedling-trained-layouts.json
 ```
 
+The next experiment changed how the detector treats empty cells. On four confirmation plots its height-only baseline recovered more seedlings and also marked more bare soil. [Inspect the two peak rules on the same scans](seedling-peaks.md)
+
 ## Reproduce the original scan-density sweep
 
 Run this from the repository root with Node.js 22 or later.

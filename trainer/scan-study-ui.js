@@ -1,4 +1,4 @@
-import {studyMap,reached} from './scan-study-map.js';
+import {studyMap,reached} from './scan-study-map.js?v=peak-study1';
 import {RAY_BUDGETS,sensorName} from './sensors.js';
 import {cropProfile} from './crops.js';
 
@@ -6,6 +6,7 @@ const metricText={
   returns:'A plant is marked when at least one surviving scan point came from it. The generator tracks the source of each point.',
   peaks:'A plant is marked when a height peak can be matched within 15 cm. A nearby peak can come from soil or clutter.',
   orchard:'Gold rings are tree-base estimates from the experimental orchard locator. It uses the spread of XYZ points at several heights. A green dot marks a tree matched within 15 cm.',
+  sampledPins:'Gold rings mark peaks found by averaging heights only where rays landed. This can reveal a short plant between gaps. Raised soil can also produce a peak. Compare the extra pins with the standard height method.',
   pins:'Gold rings are predictions. The height-only baseline keeps the tallest peaks first and removes neighbors within the crop’s minimum spacing. Each pin can match one plant within 15 cm.'
 };
 const format=n=>n.toLocaleString();
@@ -60,13 +61,17 @@ export function initScanStudy(params) {
       const out=el(i?'studyCountB':'studyCountA'),r=results[i];
       if(r){
         const marked=r.plants.filter(p=>reached(p,mode)).length;
-        out.textContent=format(marked)+' of '+r.plants.length+' plants · '+format(r.sampledRays)+' rays sampled';
+        const scoring={pins:r.heightScores,sampledPins:r.sampledHeightScores,orchard:r.orchardScores}[mode];
+        const extras=scoring?.find(s=>s.cm===15)?.fp;
+        const extraCount=extras===undefined?'':' · '+format(extras)+' extra pins';
+        out.textContent=format(marked)+' of '+r.plants.length+' plants'+extraCount+' · '+format(r.sampledRays)+' rays sampled';
       }
     }
     if(!complete)return;
     const targetText=results[0].target==='plant-base-xy'
       ? 'Positions mark the planted bases.' : 'Positions mark the horizontal midpoints of the modeled plant boxes.';
     el('studyMetricHelp').textContent=metricText[mode]+' '+targetText;
+    el('studyPeakGuide').hidden=mode!=='sampledPins';
     let gained=0,lost=0;
     results[0].plants.forEach((p,i)=>{
       const a=reached(p,mode),b=reached(results[1].plants[i],mode);
@@ -92,6 +97,7 @@ export function initScanStudy(params) {
     const body=el('studyScoreBody');body.replaceChildren();
     for(const r of results){
       const methods=[['Height only',r.heightScores]];
+      methods.push(['Sampled cells',r.sampledHeightScores]);
       if(r.orchardScores)methods.push(['Orchard base',r.orchardScores]);
       for(const [name,scores] of methods)for(const s of scores){
         const row=body.insertRow();
@@ -127,7 +133,7 @@ export function initScanStudy(params) {
     el('studyTitleB').textContent=layouts?'OS1-64 · simulated rings':format(budgets[1])+' rays requested';
     el('studyCountA').textContent='Sampling…';el('studyCountB').textContent='Waiting…';status.textContent='Growing the first scan…';render();
     function fail(message){reset();status.textContent=message;}
-    try{worker=new Worker(new URL('./scan-study-worker.js?v=layout-study1',import.meta.url),{type:'module'});}
+    try{worker=new Worker(new URL('./scan-study-worker.js?v=peak-study1',import.meta.url),{type:'module'});}
     catch(error){fail(error.message);return;}
     const active=worker;active.onerror=e=>{if(active===worker)fail(e.message||'The comparison worker stopped.');};
     active.onmessage=({data})=>{
