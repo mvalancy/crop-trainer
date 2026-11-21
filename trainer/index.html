@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Train &amp; validate · Crop Trainer</title>
-<link rel="stylesheet" href="../farm.css?v=plant-study3"></head>
+<link rel="stylesheet" href="../farm.css?v=peak-windows1"></head>
 <body class="shed"><a class="skip" href="#main">Skip to content</a>
 <header class="siteBar">
 <div class="barInner"><a class="brand" href="../"><span class="mark" aria-hidden="true"><i></i></span>Crop Trainer</a>
@@ -92,9 +92,20 @@
 <select id="peakAveraging" aria-label="Average height across" aria-describedby="averagingHint"><option value="zero-filled">All cells</option><option value="occupied">Sampled cells only</option></select>
 <span id="averagingHint">All cells counts gaps as zero, which can hide short seedlings. The sampled-cell rule is experimental. Ignoring gaps can also add pins on bare soil.</span></label>
 <label>Detection score cutoff<input id="threshold" type="number" min="0" max="1" step="any" value="0.5" required=""><span>A lower cutoff keeps more candidate pins before spacing. Use the cutoff benchmark to compare extra pins and missed plants.</span></label>
-<details class="peakHelp" id="averagingStudy"><summary>How did sampled-cell averaging do?</summary>
-<p>On eight clean synthetic grid scans at 60,000 rays each, two separately trained networks each found 19 of 821 tomato seedlings within 15 cm. The height-only rule using the same sampled cells found 257. On simulated rings, sampled-cell averaging improved the networks’ F1.</p>
-<p><a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/seedling-peaks.md#can-training-reject-the-extra-soil-peaks">See the matched seedling experiments</a></p></details>
+<details class="peakHelp" id="averagingStudy"><summary>Try the height rule on two scan patches</summary>
+<figure class="peakWindows" id="peakWindows" hidden>
+<figcaption>Two 3 × 3 patches from one synthetic ring scan. Filled cells caught a laser return.</figcaption>
+<div class="windowReadings" aria-live="polite" aria-atomic="true">
+<p class="windowScale">Bar scale 0–10 cm · line at <strong id="windowMinimum"></strong></p>
+<div class="windowPatch" data-cells="000111001" data-all="5.06" data-sampled="8.99">
+<span class="windowCells" role="img" aria-label="Four of nine cells received returns"></span>
+<div><strong>Tomato seedling</strong><div class="windowTrack" aria-hidden="true"></div><span class="windowReading"></span></div></div>
+<div class="windowPatch soilWindow" data-cells="110111000" data-all="4.60" data-sampled="6.70">
+<span class="windowCells" role="img" aria-label="Five of nine cells received returns"></span>
+<div><strong>Bare soil</strong><div class="windowTrack" aria-hidden="true"></div><span class="windowReading"></span></div></div>
+</div></figure>
+<p class="fine">A patch above the line can become a peak. The model scores those peaks before nearby pins are thinned out. <a href="../art/seedling-peak-window.svg">See the measured cell heights</a></p>
+<p class="fine">On eight clean grid scans, the sampled-cell height rule found 257 of 821 seedlings within 15 cm. Two networks trained with that rule each found 19. <a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/seedling-peaks.md#can-training-reject-the-extra-soil-peaks">Compare grid and ring results</a></p></details>
 <a id="averagingBench" href="../benchmark/?comparison=averaging">Compare both peak rules on matched scans</a>
 <details class="peakHelp">
 <summary>Which height should I try?</summary>
@@ -239,6 +250,6 @@
 </main>
 <footer class="siteFoot"><span>Created by Matthew Valancy</span>
 <div><a href="../AGENTS.md">Agent quickstart</a><a href="../#missions">Farm journal</a><a href="../LICENSE">MIT license</a></div></footer>
-<script type="module" src="./main.js?v=peak1"></script>
+<script type="module" src="./main.js?v=peak-windows1"></script>
 </body>
 </html>

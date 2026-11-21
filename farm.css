@@ -471,6 +471,23 @@ tbody tr:nth-child(even) { background: #f6f8f0; }
 .monitorPanel .firstRun {margin:0 0 1rem;}
 .monitorPanel .firstRun figcaption {margin:.85rem 0;}
 #trainingScene:not([hidden]) + #firstRun {display:none;}
+.peakWindows { margin: .7rem 0; }
+.peakWindows figcaption { color: var(--muted); font-size: .86rem; }
+.peakWindows .windowReadings { display: grid; gap: .7rem; margin-top: .55rem; }
+.peakWindows .windowScale { margin: 0; font-size: .8rem; color: var(--muted); }
+.peakWindows .windowPatch { --patch: #427341; display: grid; grid-template-columns: auto minmax(0,1fr); align-items: center; gap: .55rem; font-size: .86rem; }
+.peakWindows .soilWindow { --patch: #975d35; }
+.peakWindows .windowCells { display: grid; grid-template-columns: repeat(3,.42rem); gap: 2px; }
+.peakWindows .windowCells i { height: .42rem; border: 1px solid #b2c0af; }
+.peakWindows .windowCells .sampled { background: var(--patch); border-color: var(--patch); }
+.peakWindows .windowTrack { position: relative; height: .43rem; border-radius: .15rem; background: #dde4d9; margin: .35rem 0; }
+.peakWindows .windowTrack::before { content: ''; display: block; width: var(--height); height: 100%; border-radius: inherit; background: var(--patch); }
+.peakWindows .windowTrack::after { content: ''; position: absolute; left: var(--minimum); top: -.18rem; bottom: -.18rem; border-left: 2px solid var(--ink); }
+.peakWindows .windowReading { font: .78rem/1.4 var(--sans); color: var(--muted); font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: no-preference) {
+  .peakWindows .windowTrack::before { transition: width .18s; }
+  .peakWindows .windowTrack::after { transition: left .18s; }
+}
 .runReview {margin-top:1.25rem;}
 .runReview > h2 {margin-bottom:.8rem;}
 .runReview .downloads,.runReview .export {margin-top:.8rem;}

@@ -38,6 +38,36 @@ $('crop').addEventListener('change', selectCropDefault);
 selectCropDefault();
 const requestedHeight = params.get('minimumHeight');
 if ([...$('peakHeight').options].some(option => option.value === requestedHeight)) $('peakHeight').value = requestedHeight;
+{
+ const figure=$('peakWindows');
+ const patches=figure.querySelectorAll('.windowPatch');
+ for (const patch of patches) {
+  const cells=patch.querySelector('.windowCells');
+  for (const sampled of patch.dataset.cells) {
+   const cell=document.createElement('i');
+   if (sampled==='1') cell.className='sampled';
+   cells.append(cell);
+  }
+ }
+ const update=()=>{
+  const minimum=100*Number($('peakHeight').value);
+  const sampled=$('peakAveraging').value==='occupied';
+  const scaleCm=10;
+  figure.style.setProperty('--minimum',100*minimum/scaleCm+'%');
+  $('windowMinimum').textContent=minimum.toFixed(1)+' cm minimum';
+  for (const patch of patches) {
+   const height=Number(sampled ? patch.dataset.sampled : patch.dataset.all);
+   patch.style.setProperty('--height',100*height/scaleCm+'%');
+   const outcome=height >= minimum ? 'meets minimum' : 'below minimum';
+   patch.querySelector('.windowReading').textContent=height.toFixed(2)+' cm · '+outcome;
+  }
+ };
+ $('peakHeight').addEventListener('input',update);
+ $('peakAveraging').addEventListener('input',update);
+ $('crop').addEventListener('change',update);
+ update();
+ figure.hidden=false;
+}
 sensorOptions($('scanner'), true);
 validationSensorOptions($('validationSensor'));
 const validationParam = params.get('validationSensor');
