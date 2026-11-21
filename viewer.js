@@ -163,7 +163,6 @@ export function createViewer(canvas, controls) {
   });
   const reset=()=>{spin(false);controls.view.value='oblique';fit();};
   canvas.addEventListener('dblclick',reset);
-  controls.focus.onclick=focusPlant;
   controls.reset.onclick=reset;controls.zoomIn.onclick=()=>magnify(1.3);controls.zoomOut.onclick=()=>magnify(1/1.3);
   controls.spin.onclick=()=>spin(!spinning);controls.view.onchange=()=>{spin(false);fit(controls.view.value);};
   controls.highlight.onchange=controls.pins.onchange=controls.color.onchange=schedule;
@@ -171,6 +170,7 @@ export function createViewer(canvas, controls) {
   new ResizeObserver(schedule).observe(canvas);
   fit();
   return {
+    focusPlant,
     setScan(value) {
       const newPlanting = scan && (scan.p.seed !== value.p.seed || scan.p.crop !== value.p.crop);
       if (newPlanting && pivot !== fieldCenter) reset();

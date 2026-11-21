@@ -3,12 +3,12 @@ import {scanSession} from './trainer/scan-session.js';
 import {makeRecipe} from './trainer/data.js?v=dense1';
 import {getSensor, sensorOptions, sensorDetails, rayBudgetOptions, layoutCapacity, DEFAULT_GENERATOR_RAYS} from './trainer/sensors.js?v=dense1';
 import {createLiveScene} from './trainer/live-scene.js';
-import {createViewer} from './viewer.js?v=dense1';
+import {createViewer} from './viewer.js?v=planting1';
 
 const $ = id => document.getElementById(id);
 const viewer = createViewer($('map'), {
   mode:$('mode'), view:$('view'), highlight:$('highlight'), color:$('color'), pins:$('pins'), spin:$('spin'),
-  zoomIn:$('zoomIn'), zoomOut:$('zoomOut'), reset:$('fit'), focus:$('focusPlant')
+  zoomIn:$('zoomIn'), zoomOut:$('zoomOut'), reset:$('fit')
 });
 const live=createLiveScene($('scanScene'));
 let scan, previousRayTrial;
@@ -20,6 +20,8 @@ function showSystemControls() {
 }
 sensorOptions($('scan'));
 const requested = new URLSearchParams(location.search);
+const narrowField = matchMedia('(max-width: 740px)');
+document.querySelector('.scannerSetup').open = !narrowField.matches;
 $('crop').addEventListener('change',showSystemControls);
 const obstacles = ['weeds', 'sticks', 'boards'];
 for (const name of obstacles) {
@@ -44,6 +46,8 @@ function showResolution() {
   const capacity = layoutCapacity(sensor);
   const budget = Number($('budget').value);
   const sampled = Math.min(capacity, budget);
+  const budgetLabel = budget ? budget.toLocaleString()+' rays requested' : 'seeded ray budget';
+  $('scanPreset').textContent = $('scan').selectedOptions[0].textContent+' · '+budgetLabel;
   $('sensorInfo').textContent = sensorDetails(sensor.key);
   let detail = 'Layout limit: '+capacity.toLocaleString()+' rays per scan.';
   if (budget && sensor.key === 'reference') {
@@ -70,7 +74,9 @@ $('copyScan').onclick = async () => {
 };
 
 function updateBoxLink() {
-  $('focusPlant').disabled = $('highlight').value === '';
+  $('focusPlant').disabled = !scan?.labels.boxes.length;
+  $('focusPlant').textContent = $('highlight').value === '' ? 'Explore a plant' : 'Focus plant';
+  if (!scan) return;
   const url = new URL($('scanLink').href);
   if ($('highlight').value === '') url.searchParams.delete('box');
   else url.searchParams.set('box', $('highlight').value);
@@ -78,6 +84,22 @@ function updateBoxLink() {
   $('shareStatus').textContent = '';
 }
 $('highlight').addEventListener('change', updateBoxLink);
+$('focusPlant').onclick = () => {
+  if (!scan?.plantReturns.length) return;
+  if ($('highlight').value === '') {
+    // Start the close-up on a canopy with plenty of visible scan points.
+    const returns = scan.plantReturns;
+    let best = 0;
+    for (let i = 1; i < returns.length; i++) {
+      if (returns[i] > returns[best]) best = i;
+    }
+    $('highlight').value = String(best);
+    updateBoxLink();
+  }
+  viewer.focusPlant();
+  $('map').focus({preventScroll:true});
+  if (narrowField.matches) $('scan-viewer').scrollIntoView({block:'start'});
+};
 
 function grow(checkReplay = false) {
   const crop = $('crop').value;
@@ -110,7 +132,7 @@ async function showScan(recipe, url, selectedBox, expectedTile, checkReplay = fa
   const scene={title:name+' canopy',metric:'Preparing terrain',legend:'Sampled canopy and terrain',detail:'Seed '+recipe.seed,fraction:0};
   live.show(scene);
   $('generationStatus').textContent = 'Building the scan…';
-  if(!checkReplay && matchMedia('(max-width:740px)').matches) $('scan-viewer').scrollIntoView({block:'start'});
+  if(!checkReplay && narrowField.matches) $('scan-viewer').scrollIntoView({block:'start'});
   try {
     const value=await session.generate(recipe,frame=>{
       live.show({cloud:frame.cloud,metric:'Row '+frame.row+' / '+frame.rows,
@@ -157,6 +179,7 @@ function applyScan(value, recipe, url, selectedBox, expectedTile) {
   previousRayTrial = {key:trialKey, sampledRays:scan.sampledRays};
   $('count').textContent = scan.labels.boxes.length+' '+(profile.system?profile.name:recipe.crop)+' plants · '+recipe.points.toLocaleString()+' rays requested · '+scan.sampledRays.toLocaleString()+' sampled · '+scan.cls.length.toLocaleString()+' returns · '+(ground+(recipe.ground?' included':' removed'))+' · seed '+recipe.seed;
   $('scanId').textContent = scan.labels.tile_id;
+  $('fieldCaption').textContent = profile.name+' · '+scan.labels.boxes.length.toLocaleString()+' plants';
   const {zero, oneToFour, fiveOrMore} = scan.coverage;
   $('plantCoverage').textContent = zero+' plants with zero crop returns · '+oneToFour+' with 1–4 · '+fiveOrMore+' with 5 or more';
   const bins=[ground==='floor'?'Floor':'Soil','Crop','Weeds','Sticks','Boards','Stray'];
