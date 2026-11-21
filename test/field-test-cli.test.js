@@ -97,6 +97,7 @@ test('CLI trains and saves a portable model that reproduces its held-out validat
   const weights = JSON.parse(await readFile(join(cwd,'weights.json')));
   assert.equal(weights.format,'crop-trainer-weights-v1');
   assert.equal(weights.epochs,2);
+  assert.equal(report.samplePasses,2*report.stats.samples);
   assert.deepEqual(weights.scaling,report.scaling);
   assert.deepEqual(weights.weights,report.weights);
   assert.equal(weights.crop,'tomato');

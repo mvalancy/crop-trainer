@@ -51,7 +51,7 @@ if(command==='serve'){
  const validation=await validateModel(set,fit.weights,{threshold,predictScores:(x,w,d)=>predictNetwork(x,w,d,settings.hiddenLayers,settings.activation)});
  const finished=performance.now();
  const timings={generationMs:generated-start,trainingMs:trained-generated,validationMs:finished-trained,totalMs:finished-start};
- const report={schema:3,timings,settings,domain:'synthetic',backend:'CPU',trainer:trainerId(settings),...settings,stats:set.stats,recipeManifest:set.manifest,scaling:set.scaling,weights:[...fit.weights],loss:fit.loss,lossEpochs:fit.lossEpochs,meanF1:validation.meanF1,scores:validation.scores,countError:validation.countError,byGround:validation.byGround, byField:validation.byField, tiles:validation.tiles};
+ const report={schema:3,timings,samplePasses:fit.epochsCompleted*set.stats.samples,settings,domain:'synthetic',backend:'CPU',trainer:trainerId(settings),...settings,stats:set.stats,recipeManifest:set.manifest,scaling:set.scaling,weights:[...fit.weights],loss:fit.loss,lossEpochs:fit.lossEpochs,meanF1:validation.meanF1,scores:validation.scores,countError:validation.countError,byGround:validation.byGround, byField:validation.byField, tiles:validation.tiles};
  const files = [[output,report]];
  if (weightsPath) files.push([weightsPath,weightArtifact(report)]);
  await writeNewJson(files);
