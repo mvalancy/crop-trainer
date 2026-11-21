@@ -12,3 +12,5 @@ From the project root, start the browser app with `npm start` or `node cli/run.m
 | Check that exports, scans and scores replay end to end | `node cli/run.mjs preflight` |
 
 Give each output a fresh filename. The scoring command accepts surveyed locations via `--labels centers.csv`. [Local setup](../docs/local-setup.md) · [Field-scoring options](../docs/scan-cli.md)
+
+Compare how far an orchard pin moves between two physical scans of the same apple tree using your own copy of LFuji-air. [Replay the fan-off and fan-on comparison](../docs/field-datasets.md#do-pins-stay-in-the-same-place-when-the-foliage-moves)

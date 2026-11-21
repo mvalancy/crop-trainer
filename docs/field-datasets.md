@@ -26,6 +26,7 @@ We could verify apple LiDAR scans and published trunk surveys. None of the relea
 - **Trzebnica, Poland.** Hadas and colleagues surveyed the bottoms of 50 selected apple stems with about 3 cm horizontal accuracy. The public deposit describes 476 trees and its two apple archives contain normalized ground and above-ground point clouds. A team could inspect how many low returns reach the stems today. To score pins, it would also need the original base coordinates and the boundary of a fully surveyed patch. The deposit is CC BY 4.0. [Field methods, §2.3](https://isprs-archives.copernicus.org/articles/XLII-2/407/2018/isprs-archives-XLII-2-407-2018.pdf) · [Data and file manifest](https://zenodo.org/records/15831891) · [License](https://api.datacite.org/dois/10.5281/zenodo.15831891)
 - **OrchardQuant-3D, England.** The authors positioned 1,104 apple trees using row-end centroids and row geometry, with interpolation at gaps. The v1.2 RTK archive contains four region-of-interest points in `roi_points.shp`. These can help locate a plot, but they cannot establish the position of each trunk. The stated BSD license covers the code and algorithms. [Study methods](https://doi.org/10.1111/pbi.70229) · [Release and RTK archive](https://github.com/The-Zhou-Lab/OrchardQuant-3D/releases/tag/V1.2)
 - **Tree-SLAM, Netherlands.** Researchers measured all 65 trees in one apple row with an RTK survey pole. They took a reading on each side of each trunk and averaged the opposite readings to locate its center. Their public CC BY 4.0 archive contains 8,917 images and 8,917 YOLO label files for apple and pear trunk segmentation. Replaying the apple location test would require the separate mapping recordings, the 65 surveyed coordinates and their shared frame. [Survey method and row counts, §2.2](https://arxiv.org/html/2507.12093v1#S2.SS2) · [Versioned data and license](https://doi.org/10.4121/5b453456-60ef-4fc7-a3af-d6609906d85c.v1)
+- **SeeTree, Washington.** This map covers 16 rows of Jazz apples. The team located trees by combining RGB-D trunk detections with vehicle-mounted RTK and averaging repeated sightings. They removed obstructed views and placed a few hidden trees between their neighbors. Treat those coordinates as estimates when testing an occluded trunk. The 200 tagged trees identified which tree the robot had reached. [Map construction, §3.2](https://doi.org/10.1016/j.compag.2024.109454) · [Authors’ sample map and recordings](https://github.com/Jostan86/pf_orchard_localization#usage)
 
 For a new survey, record the center of each trunk where it enters the soil, including trunks hidden by foliage or guards. Save the plot boundary, coordinate frame and registration error alongside the coordinates. A count from the whole orchard cannot tell whether individual pins land within 15 cm. [Field validation protocol](field-validation.md) · [Synthetic apple locator results](orchard-bases.md)
 
@@ -36,6 +37,26 @@ For a new survey, record the center of each trunk where it enters the soil, incl
 For a local visibility test, reserve stations S2 and S3 to mark the center of that 25 cm trunk slice before looking at any predictions. In the same frame, compare pins from S1 alone with pins from S1 plus its opposite view, S4. Report horizontal offsets, missing pins and cases where the reference slice is too obscured to mark. This measures agreement with a visible trunk slice on individual trees. Whole-row base accuracy still requires a surveyed plot.
 
 The authors link the scans and registration matrices through a contact form. The form cites CC BY-NC-SA 4.0 and also asks users to agree to non-profit research or academic use and no redistribution. [Dataset access](https://github.com/NingWang1999/BranchMatch#benchmark-dataset) · [Download terms](https://www.wjx.top/vm/QyYKf73.aspx)
+
+### Do pins stay in the same place when the foliage moves?
+
+Gené-Mola and colleagues scanned 11 consecutive Fuji apple trees with a sprayer fan off and on. We checked all 88 LFuji-air scan filenames against the experimental design. Each tree has both east and west passes at heights of 1.8 and 2.5 m in the same metric world frame. The eight GNSS tracks locate the scanner, and the 1,353 annotation files mark fruit. An independent survey of the trunk bases would still be needed for a 15 cm accuracy score. The authors specify CC BY-NC-SA 4.0 and research or educational use. [Dataset and terms](https://hdl.handle.net/10459.1/68782) · [Acquisition and coordinates](https://doi.org/10.1016/j.dib.2020.105248) · [Forced-air experiment](https://doi.org/10.1016/j.compag.2019.105121)
+
+We ran the geometric orchard locator on the 22 east-side, 1.8 m scans. **In the individual tree crops, the default 1.05 m pin spacing produced one pin in both passes for all 11 trees.** The median distance between corresponding pins was 4.49 cm. On tree 08 the pin moved 27.28 cm even though the count stayed at one. The distance includes any pass-to-pass registration error. A pin can repeat in the same wrong place.
+
+| Minimum pin spacing | Trees with one pin in each pass | Of those, pins within 15 cm of each other | Median shift for those pairs | Pins on reconstructed groups, fan off / on |
+| --- | ---: | ---: | ---: | ---: |
+| 0.75 m | 6 of 11 | 6 of 6 | 4.48 cm | 17 / 24 |
+| 1.05 m | 11 of 11 | 10 of 11 | 4.49 cm | 11 / 12 |
+| 1.35 m | 11 of 11 | 10 of 11 | 4.49 cm | 7 / 9 |
+
+For the first three measurements, each input was the authors’ crop around one tree. We compared pins by tree ID only when each pass produced exactly one. For the last column we concatenated neighboring crops in four groups (01–03, 04–06, 07–09, 10–11), keeping fan-off and fan-on returns separate. We used the deposited coordinates without additional alignment or point deduplication. These groups contain the authors’ selected returns from 11 trees. An uncropped row could also contain background between trees. Both settings above 1 m produced the same isolated pins, yet the wider spacing suppressed more pins in the grouped scans.
+
+**Replay locally.** Extract the source archive under its terms. From the Crop Trainer repository, run the command below with Node 22 or newer. For each tree or group the helper uses every XYZ return. It sets each lower-left horizontal coordinate to the floor of the fan-off minimum minus 3 m. The ground is level at the first percentile of fan-off elevations, linearly interpolated between sorted samples. Both passes share that 10 m square and ground estimate. The output lists counts by tree and group and reports the shift only for single-pin pairs. [Local replay source](https://github.com/mvalancy/crop-trainer/blob/main/cli/fuji-repeatability.mjs)
+
+```sh
+node cli/fuji-repeatability.mjs /path/to/AllTrees_pcloud
+```
 
 ## Replay the vineyard test
 

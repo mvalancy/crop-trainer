@@ -136,6 +136,8 @@ Run `node benchmark/studies/orchard-spacing.mjs confirmation > orchard-spacing.j
 
 ## What a field test would have to establish
 
+In 22 physical scans of 11 Fuji trees, the default spacing gave each individually cropped tree one pin on both passes. When the sprayer fan moved the leaves, one tree’s pin shifted 27.28 cm. Grouping neighboring tree crops changed the pin counts again. The dataset records repeat passes and lacks surveyed trunk-base positions. [Physical repeatability experiment and local replay](field-datasets.md#do-pins-stay-in-the-same-place-when-the-foliage-moves)
+
 AppleQSM used terrestrial laser scans and processed individual apple trees to extract trunk and branch characteristics. The study covered 84 trees from two cultivars. It motivates looking for woody structure when the application needs a trunk location. Its scan geometry, task and evaluation differ from locating all bases in a single overhead plot. [Qiu and colleagues, AppleQSM](https://pubmed.ncbi.nlm.nih.gov/38721548/)
 
 For a physical trial, survey every base in held-out rows independently of predicted pins. Record ground reference, acquisition viewpoint, foliage state, training system and spacing. Test trellis posts, weeds and adjacent crowns as possible sources of extra or misplaced pins. Report precision, recall and F1 at the required distance alongside count error. A row-side scan can reveal wood behind the crown and can lose the far side of a trunk behind a post. Register it to the same survey before comparing it to an overhead scan. [Field validation protocol](field-validation.md) · [Orchard data and licensing](field-datasets.md)
