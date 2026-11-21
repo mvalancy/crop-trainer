@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {detectOrchardBases} from '../trainer/models/orchard.js';
+import {detectOrchardBases,inspectOrchardBases} from '../trainer/models/orchard.js';
+import {field} from '../trainer/generator/field.js';
+import {getSensor} from '../trainer/generator/sensors.js';
+import {makeRecipe,matchCenters,targetCenters} from '../trainer/models/data.js';
 import {runFieldTest} from '../trainer/field-test/score-scan.js';
 
 function syntheticColumn(x,y) {
@@ -29,6 +32,29 @@ test('bare soil and an isolated high return do not supply vertical support',()=>
   assert.throws(()=>detectOrchardBases([2,3,Infinity]),/finite/);
   assert.throws(()=>detectOrchardBases([-1,3,1]),/plot/);
   assert.throws(()=>detectOrchardBases([1,2]),/XYZ/);
+});
+
+test('collecting the support trace preserves every prediction in a paired v3/v4 orchard',()=>{
+  const expected=[
+    {version:3,tile:'ac90cc2ee71a50fe',state:'matched',support:20,spaced:1},
+    {version:4,tile:'c1222bdf0546d761',state:'spacing',support:3,spaced:0}
+  ];
+  for (const {version,tile,state,support,spaced} of expected) {
+    const recipe=makeRecipe(14151223,true,getSensor('reference'),'apple',version,'central-leader','healthy');
+    const scan=field({...recipe,appleCanopy:'leafy',points:60000,weeds:false,sticks:false,boards:false,scanNoise:null});
+    assert.equal(scan.labels.tile_id,tile);
+    const result=detectOrchardBases(scan.xyz);
+    const trace=detectOrchardBases(scan.xyz,{includeStages:true});
+    const {supportCells,spacedCells,...sameOutput}=trace;
+    assert.deepEqual(sameOutput,result);
+    assert.equal(supportCells.length,result.candidateCount);
+    assert.equal(spacedCells.length,result.pins.length);
+
+    const truth=targetCenters(scan.labels.boxes);
+    const {pinByBox}=matchCenters(result.pins.map(({x,y})=>[x,y]),truth,.15);
+    const tree=inspectOrchardBases(trace,truth,pinByBox)[2];
+    assert.deepEqual([tree.state,tree.supportCellCount,tree.spacedCellCount],[state,support,spaced]);
+  }
 });
 
 test('plot boundary roundoff maps to the nearest valid orchard cell',()=>{

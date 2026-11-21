@@ -15,6 +15,18 @@ In a **central-leader** tree, a tapering main axis continues to the top. Lower s
 3. Lateral shoots grow from positions on each scaffold. Their foliage is a group of rotated ellipsoids attached to those shoots. The seed varies the orientation, reach, bend, height and cluster size. Numbers in this rule are synthetic design choices.
 4. The overhead scanner intersects those volumes and tapered woody surfaces. The nearest visible surface produces the return. The label marks the planting base even when leaves hide the trunk completely. Use **Plant tissue** coloring to distinguish woody returns. The optional structure overlay shows the complete modeled centerlines. [Apple generator](apple.js) · [Surface sampler](surfaces.js)
 
+## What does a dot above the tree tell you?
+
+An overhead laser can hit a branch tip half a metre to the side of the trunk. A detector that follows tall patches can put its pin there. To locate a planting for a survey, we need the horizontal position where the trunk meets the ground.
+
+![Two views of one synthetic dormant apple tree. Four height bands contain returns. In the top view a square marks the orchard pin inside the 15 cm circle around the planted base. The height-only triangle falls outside.](../../art/plants/apple-base-pins.svg)
+
+The side view groups the **same scan dots by height**. Each row counts returns from its band floor up to the next floor, within 1.05 m horizontally of the labeled base. The top band extends upward. The locator works with smaller groups of occupied cells around each possible pin and checks whether the crown surrounds that spot on several sides. A location can have support even when a whole band is empty.
+
+The top view looks straight down on the same dots. The nearest height-only pin landed **55.8 cm** from the trunk. The orchard locator placed its nearest pin **10.6 cm** away, inside the **15 cm** matching circle. The cross and circle use the simulator’s planting record to score the predictions afterward.
+
+To inspect tree 0 yourself, open the comparison and choose **Compare scans**. The second map uses v4 scaffold widths. Change **Mark plants by** between **Height-only pin · 15 cm** and **Orchard base pin · 15 cm**. This example uses a dormant tree from one synthetic plot. The orchard study includes the misses across many trees and canopy states. [Replay this tree](https://mvalancy.github.io/crop-trainer/?crop=apple&plantArchitecture=4&plantForm=open-vase&plantCondition=healthy&appleCanopy=dormant&seed=11043331&sensor=reference&budget=60000&ground=true&noise=clean&weeds=off&sticks=off&boards=off&studyMode=scaffolds&studyMetric=orchard&studyBox=0#scan-study) · [Compare the detectors across whole plots](../../docs/orchard-bases.md#what-changed-on-held-out-synthetic-trees)
+
 ## Break a branch or take away its leaves
 
 Choose **All plants damaged** to shorten one scaffold into a woody stub. Its distal shoots and their clusters disappear. The other scaffolds use the same random draws as in the intact tree. On a vase, losing one of three main limbs can open a large gap. On a central leader the same type of break can be much less conspicuous. **About one in four damaged** selects a reproducible subset by planting ID. [Inspect a broken vase orchard](https://mvalancy.github.io/crop-trainer/?crop=apple&plantArchitecture=3&plantForm=open-vase&plantCondition=damaged&seed=39061&sensor=reference&budget=100000&noise=clean#field)

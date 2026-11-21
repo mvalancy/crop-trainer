@@ -29,6 +29,14 @@ We could verify apple LiDAR scans and published trunk surveys. None of the relea
 
 For a new survey, record the center of each trunk where it enters the soil, including trunks hidden by foliage or guards. Save the plot boundary, coordinate frame and registration error alongside the coordinates. A count from the whole orchard cannot tell whether individual pins land within 15 cm. [Field validation protocol](field-validation.md) · [Synthetic apple locator results](orchard-bases.md)
 
+### Does a second view reveal a hidden trunk?
+
+**BranchMatch** provides four terrestrial laser scans per tree for 10 dormant Aztec Fuji apple trees in Beijing. The authors cropped each tree and used spherical markers to register its views. The reported 0.59 mm mean error measures that alignment. Table 1 gives trunk diameters measured 25 cm above a fitted ground plane. The paper supplies no independent survey of where each trunk enters the soil. [Field methods and Table 1](https://pmc.ncbi.nlm.nih.gov/articles/PMC12546229/)
+
+For a local visibility test, reserve stations S2 and S3 to mark the center of that 25 cm trunk slice before looking at any predictions. In the same frame, compare pins from S1 alone with pins from S1 plus its opposite view, S4. Report horizontal offsets, missing pins and cases where the reference slice is too obscured to mark. This measures agreement with a visible trunk slice on individual trees. Whole-row base accuracy still requires a surveyed plot.
+
+The authors link the scans and registration matrices through a contact form. The form cites CC BY-NC-SA 4.0 and also asks users to agree to non-profit research or academic use and no redistribution. [Dataset access](https://github.com/NingWang1999/BranchMatch#benchmark-dataset) · [Download terms](https://www.wjx.top/vm/QyYKf73.aspx)
+
 ## Replay the vineyard test
 
 **Question.** Can a detector trained on synthetic trellised vines place pins on surveyed trunks in an early-season laser scan? The model and threshold were fixed before scoring the physical strip. Both detectors used the same points, ground plane and 18 references.

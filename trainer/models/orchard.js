@@ -64,7 +64,7 @@ function supportAt(bands, crown, x, y) {
   return support*(.20+.80*occupied/4)*(1+2.5*balance);
 }
 
-export function detectOrchardBases(xyz) {
+export function detectOrchardBases(xyz, {includeStages=false}={}) {
   if ((!Array.isArray(xyz) && !ArrayBuffer.isView(xyz)) || !Number.isInteger(xyz.length) ||
       xyz.length%3!==0 || xyz.length>3_000_000) throw Error('Provide up to one million interleaved XYZ returns.');
   const {bands,crown}=occupiedBands(xyz), support=new Float32Array(size*size), candidates=[];
@@ -91,5 +91,52 @@ export function detectOrchardBases(xyz) {
     }
     return {x:wx/sum, y:wy/sum, score};
   });
-  return {pins,candidateCount:candidates.length,threshold,separationMeters:separation};
+  const result = {pins,candidateCount:candidates.length,threshold,separationMeters:separation};
+  if (includeStages) {
+    const center = cell => ({x:(cell.x+.5)*step, y:(cell.y+.5)*step, score:cell.score});
+    result.supportCells = candidates.map(center);
+    result.spacedCells = selected.map(center);
+  }
+  return result;
+}
+
+// Coordinates and distances are in local plot metres. Only the final pin
+// assignment comes from the scorer. The two cell counts describe proximity.
+export function inspectOrchardBases(result, referenceXY, pinByReference15) {
+  if (!result.supportCells || !result.spacedCells || referenceXY.length !== pinByReference15.length) {
+    throw Error('Use orchard stages and a 15 cm pin assignment for each reference base.');
+  }
+  if (!referenceXY.length) return [];
+  const cells = new Array(size*size);
+  for (const cell of result.supportCells) {
+    cells[Math.floor(cell.y/step)*size+Math.floor(cell.x/step)] = cell;
+  }
+  const radius = .15, limit = radius**2 + 1e-12; // Match the one-to-one scorer's boundary tolerance.
+  return referenceXY.map(([x,y],index) => {
+    const squaredDistance = point => (point.x-x)**2+(point.y-y)**2;
+    let supportCellCount=0, strongestCell=null;
+    // Four cells on either side cover the 15 cm disk, including edge roundoff.
+    const ix=Math.floor(x/step), iy=Math.floor(y/step);
+    for (let j=Math.max(0,iy-4); j<=Math.min(size-1,iy+4); j++) {
+      for (let i=Math.max(0,ix-4); i<=Math.min(size-1,ix+4); i++) {
+        const cell=cells[j*size+i];
+        if (!cell || squaredDistance(cell)>limit) continue;
+        supportCellCount++;
+        if (!strongestCell || cell.score>strongestCell.score) strongestCell=cell;
+      }
+    }
+    let spacedCellCount=0, nearestSquared=Infinity, nearestPinIndex=null;
+    for (let i=0; i<result.pins.length; i++) {
+      if (squaredDistance(result.spacedCells[i])<=limit) spacedCellCount++;
+      const d=squaredDistance(result.pins[i]);
+      if (d<nearestSquared) { nearestSquared=d; nearestPinIndex=i; }
+    }
+    let state='support';
+    if (pinByReference15[index]>=0) state='matched';
+    else if (nearestSquared<=limit) state='assigned-elsewhere';
+    else if (spacedCellCount) state='refinement';
+    else if (supportCellCount) state='spacing';
+    return {state,supportCellCount,spacedCellCount,strongestCell,nearestPinIndex,
+      nearestPinMeters:nearestPinIndex===null ? null : Math.sqrt(nearestSquared)};
+  });
 }

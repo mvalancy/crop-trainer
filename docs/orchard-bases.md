@@ -21,9 +21,11 @@ Run `node benchmark/studies/orchard-visibility.mjs` from the repository root for
 
 ## How the detectors place a pin
 
-The starter network scores local height peaks and filters nearby pins. For apples it was trained to recognize peaks close to known planting bases. Its inputs and candidate locations still depend on where the canopy has a local maximum. [How the network works](training.md)
+The height-only detector ranks high spots on a smoothed height map. The starter network scores those candidate peaks using 13 features. Both approaches filter nearby pins. An apple tree can have several high spots, each over a different branch. To see how far a crown peak can be from the planted base, follow one dormant tree from its side view to its top view. [Read the illustrated apple example](../trainer/plants/apple.md#what-does-a-dot-above-the-tree-tell-you) · [How the network works](training.md)
 
 The geometric challenger reads metric XYZ in a ground-referenced 10 m square. It marks occupied 5 cm cells in five height bands starting at 0.48, 0.78, 1.12, 1.55 and 2.04 m. A candidate gets support from several heights nearby and from canopy on multiple sides. Candidates with an index of at least 4 compete for a pin, at a nominal minimum spacing of 1.05 m before final position refinement. The score is a geometric index. Regions with too little support receive no pin. This method needs no stem classifications, tree count, planting grid or surveyed bases at prediction time. Its lowest band starts above most of the region in the visibility audit. [Locator implementation](../trainer/models/orchard.js)
+
+A missing pin can have different causes. The scan may supply too little evidence for any nearby cell to reach the cutoff. Or a cell can qualify and a higher-scoring neighbor can take its place during spacing. Each surviving pin then moves toward the strongest cells immediately around it. The scorer uses those final locations for one-to-one matching against the independently known bases.
 
 ## What changed on held-out synthetic trees?
 
@@ -84,6 +86,27 @@ Each cell lists matched trees, extra pins and missed trees, in that order. The J
 Run `node benchmark/studies/orchard-damage.mjs > orchard-damage.json` from the project root. One Node 24 CPU replay took 3.27 s to generate the scans, 1.02 s for the orchard locator, 0.45 s for the height baseline and 0.035 s to score them. A second replay reproduced the tile IDs, counts and distances. [Experiment code and fixed seeds](../benchmark/studies/orchard-damage.mjs)
 
 </details>
+
+## Where did a v4 base pin go?
+
+On six fresh synthetic plantings, the orchard locator found **409 of 512 tree appearances** within 15 cm using the v3 scaffold widths and **402** using v4’s variable widths. That net loss of seven hides 36 lost matches and 29 new ones. Of the 36 losses, **31 still had a grid cell within 15 cm with enough height-band support**. The spacing rule retained cells elsewhere first. Four bases had no qualifying cell nearby, and one still had a nearby cell after spacing but lost its match during final centering. These counts identify the stage where nearby candidates disappeared. Establishing whether a different spacing distance would improve accuracy requires a separate comparison. The simulator kept the trunk bases, branch centerlines and sampled XY coordinates identical within every pair.
+
+For example, tree 2 on field `14151223` had 20 qualifying cells near its base in v3. One survived spacing and the final pin landed 7.7 cm from the base. In v4 three cells still qualified but none survived spacing. The nearest final pin was 79.2 cm away. Both scans used 60,000 grid rays on healthy, leafy central leaders. Open each version and inspect the same labeled base. [Open v3](https://mvalancy.github.io/crop-trainer/?crop=apple&plantArchitecture=3&plantForm=central-leader&plantCondition=healthy&appleCanopy=leafy&seed=14151223&sensor=reference&budget=60000&ground=true&noise=clean&weeds=off&sticks=off&boards=off&box=2&tile=ac90cc2ee71a50fe#field) · [Open v4](https://mvalancy.github.io/crop-trainer/?crop=apple&plantArchitecture=4&plantForm=central-leader&plantCondition=healthy&appleCanopy=leafy&seed=14151223&sensor=reference&budget=60000&ground=true&noise=clean&weeds=off&sticks=off&boards=off&box=2&tile=c1222bdf0546d761#field)
+
+To isolate where the changed returns mattered, we replaced v4 return heights with the corresponding v3 heights in two separate tests. Restoring heights only **within 40 cm of the surveyed bases** recovered six net matches. Restoring only the outer region lost one more. These hybrid scans use the simulator’s known bases and the other version’s measurements. Restoring those points can change both height-band support and the ranking between competing cells. The result identifies a sensitive region in this simulator. Constructing equivalent scans in the field would require paired measurements.
+
+| Confirmation scans and detector | F1 at 7.5 cm | F1 at 10 cm | F1 at 15 cm | Matched / extra / missed at 15 cm |
+| --- | ---: | ---: | ---: | ---: |
+| V3, orchard locator | .462 | .609 | .793 | 409 / 110 / 103 |
+| V4, orchard locator | .448 | .578 | .780 | 402 / 117 / 110 |
+| V4 with v3 heights inside 40 cm, orchard locator | .464 | .617 | .791 | 408 / 111 / 104 |
+| V4 with v3 heights outside 40 cm, orchard locator | .454 | .580 | .778 | 401 / 118 / 111 |
+| V3, spaced height peaks | .074 | .100 | .126 | 107 / 1,083 / 405 |
+| V4, spaced height peaks | .092 | .122 | .148 | 124 / 1,035 / 388 |
+
+Four development plantings gave 305/352 v3 and 291/352 v4 matches. All detector settings and both seed lists were fixed before scoring. Each independent planting was rendered eight ways by crossing central-leader/open-vase form, leafy/dormant foliage and grid/OS1-64-inspired sampling. The confirmation split therefore contains 64 distinct bases seen eight times. V4’s 15 cm F1 decreased on four confirmation plantings and increased on two. The result measures simulated healthy trees at one ray budget with soil present and no added clutter or scan noise.
+
+Run `node benchmark/studies/orchard-support.mjs confirmation > orchard-support.json` from the project root. Omit `confirmation` to include the development split. The JSON records all three tolerances, per-field counts, tile IDs, distances and the stage reached for each tree. One Node 24 CPU confirmation took 3.73 s, including 1.97 s for generating scans, 1.18 s for the locator, 0.25 s for the height rule, 0.052 s for stage diagnostics and 0.008 s for matching. Both detectors use fixed rules, so there was no fitting phase. A second run reproduced all counts and distances. Enabling the stage trace preserved the original locator’s pins and scores on all 320 original and hybrid scan inputs. [Replay code and fixed seeds](../benchmark/studies/orchard-support.mjs)
 
 ## What a field test would have to establish
 
