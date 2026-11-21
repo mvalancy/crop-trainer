@@ -39,7 +39,6 @@ jobs:
       - run: npm run preflight
       - run: npm run build:pages -- "$RUNNER_TEMP/crop-trainer-pages"
       - run: npx --no-install playwright install --with-deps --only-shell chromium
-      - run: npm run test:pages -- "$RUNNER_TEMP/crop-trainer-pages"
       - name: Find verified dev revision
         id: preview
         env:
@@ -57,6 +56,10 @@ jobs:
       - name: Stage the development workspace at /next/
         working-directory: preview-source
         run: node ci/build-pages.mjs "$RUNNER_TEMP/crop-trainer-pages/next"
+      - name: Test the classic app and its narrated WIP entrance together
+        run: npm run test:pages -- "$RUNNER_TEMP/crop-trainer-pages"
+        env:
+          CHECK_WIP_RELEASE: '1'
       - name: Upload verified Pages artifact
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
