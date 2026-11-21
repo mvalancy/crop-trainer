@@ -40,7 +40,7 @@ export async function checkFieldFilm(browser, base) {
       const near = (a,b) => Math.abs(a-b) < 1.5;
       assert.ok(near(art.x+art.width/2,pane.x+pane.width/2) && near(art.y+art.height/2,pane.y+pane.height/2),'Prediction must be centered at '+width+'×'+height);
       assert.ok(near(line.x+line.width/2,pane.x+pane.width/2));
-      assert.ok(controls.bottom <= height+1,'Film controls must fit at '+width+'×'+height);
+      assert.ok(controls.bottom <= height+1,'Film controls extend to '+controls.bottom+' at '+width+'×'+height);
       assert.ok(art.width > 200 && art.top >= screen.top && art.bottom <= screen.bottom+1);
       assert.ok(caption.right <= art.left+1 || caption.top >= art.bottom-1);
       assert.ok(caption.bottom <= controls.top+1 && layout.overflow < 1);
