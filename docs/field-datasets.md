@@ -7,11 +7,45 @@ Crop Trainer predicts one horizontal position per plant. To score a real plot, y
 | **Vineyard · TLS-Grapevine2024** | Registered terrestrial laser scans of two rows in Portugal over nine growth stages. The archive contains 52 distinct trunk positions. Use these for base detection. The 38 vines with detailed agronomic observations are a separate subset. | CC BY 4.0. Credit Gomes and colleagues, cite the version, and describe preprocessing. [Archive](https://zenodo.org/records/18259014) · [License metadata](https://api.datacite.org/dois/10.5281/zenodo.18259014) |
 | **Apple orchard · HOPS** | Tree instances, trunks and fruit across orchard point clouds. For a visibility test, estimate one base from the labeled near-ground points on each visible trunk. These positions come from the same scan and share its blind spots. Keep terrestrial laser scans and reconstructed scans in separate results. Crop large files before opening them in the app. | The authors provide downloads. Redistribution terms for the full collection still need confirmation. [Project and splits](https://www.ipb.uni-bonn.de/data/hops/index.html) · [Paper](https://arxiv.org/abs/2503.13188) |
 | **Apple fruit · Fuji-SfM** | Image-based 3D reconstructions of 11 trees with 1,455 annotated apples. Use for fruit localization or canopy geometry. It supplies no equivalent set of trunk-base targets. HOPS also uses Fuji-SfM in its tests. | **Conflicting license statements.** The catalog lists CC BY 4.0 and the deposited license specifies CC BY-NC-SA 4.0. Seek clarification before redistributing or using commercially. [Deposit](https://zenodo.org/records/3712808) · [Catalog](https://api.datacite.org/dois/10.5281/zenodo.3712808) · [Deposited license](https://zenodo.org/records/3712808/files/LICENSE.txt?download=1) |
-| **Open-field lettuce · AgRibotLeafyVeg** | 112 overhead RealSense RGB-D observations over four dates in Bari. Each mask selects one sampled plant. Neighbors may be marked as background, so whole-frame precision and plant counts would be misleading. Use the masks to check visibility or canopy shape. For metric locations, verify camera calibration and scan pose first. | CC0 1.0. One raw depth frame and its mask were checked for matching 1280 × 720 dimensions. [Authors’ data, label definitions and license](https://github.com/ispstiima/AgRibotLeafyVeg) |
+| **Open-field lettuce · AgRibotLeafyVeg** | 112 overhead RealSense RGB-D frames and 128 focal plant masks over four dates in Bari. Each mask selects one harvested plant. [Measure how much of the canopy has depth](#how-much-of-a-lettuce-plant-has-measured-depth). | CC0 1.0. [Authors’ data and label definitions](https://github.com/ispstiima/AgRibotLeafyVeg/tree/6a1b5e79ffef06bd7d9444280d2e4243d62d1500) · [License](https://github.com/ispstiima/AgRibotLeafyVeg/blob/6a1b5e79ffef06bd7d9444280d2e4243d62d1500/LICENSE) |
 | **Greenhouse lettuce · IoT4Lettuce** | Hydroponic growing trial with 45 plants, two cultivars and several sensors, including Livox and depth cameras. One corrected Flexx2 plant PLY loaded as 5,941 XYZ points in the app parser. For a whole-bench test, establish the frame and obtain all planting positions. | CC BY 4.0. The multi-sensor archive is roughly 39 GB. [Deposit](https://zenodo.org/records/20759414) · [License metadata](https://api.datacite.org/dois/10.5281/zenodo.20759414) |
 | **High-wire tomato greenhouse** | RGB images of Tasty Tom trusses with fruit, stem and organ annotations. Inspect stem lean, overlap and occlusion when designing the simulator. These images alone cannot supply registered metric trunk locations. | Authors specify CC BY 4.0. [Dataset and annotation guide](https://github.com/akshaykburusa/tomato_greenhouse_dataset) |
 | **Tomato plant geometry · TomatoPGT** | 42 reconstructed scans from three vegetative plants with part labels and graph structure. Group scans by original plant when comparing geometry. Mature greenhouse rows require separate validation. | CC BY 4.0. [Versioned deposit](https://data.mendeley.com/datasets/72md54c7n7/1) · [License metadata](https://api.datacite.org/dois/10.17632/72md54c7n7.1) |
 | **Globe artichoke** | Aerial imagery studies can inform spacing and count experiments. A field-scale XYZ survey with complete metric plant centers and verified reuse terms remains an open gap. [Published artichoke center errors and missed plants](research-evidence.md#what-researchers-have-measured) | Dataset terms unconfirmed. [Field study](https://www.sciencedirect.com/science/article/pii/S0168169923005732) |
+
+## How much of a lettuce plant has measured depth?
+
+A leaf visible in a color image can leave a hole in the depth map. Milella and colleagues photographed romaine lettuce outdoors in Bari, Italy, with a RealSense D435 about 0.9–1.3 m above the ground. We matched all 128 plant masks to their color-aligned 16-bit depth maps. Some frames show two separately masked plants. A white pixel selects the focal plant and a zero depth means the camera supplied no distance there. [Study, files and mask definitions](https://github.com/ispstiima/AgRibotLeafyVeg/tree/6a1b5e79ffef06bd7d9444280d2e4243d62d1500) · [RealSense depth encoding](https://dev.realsenseai.com/docs/projection-in-realsense-sdk-2-0/)
+
+| 2025 visit (32 plants each) | Median plant mask area (pixels) | Median mask with nonzero depth | Adjacent in-mask pixels both missing | Expected after shuffling within each mask |
+| --- | ---: | ---: | ---: | ---: |
+| April 15 | 6,838 | 83.3% | 15.65% | 3.64% |
+| April 30 | 31,003 | 96.6% | 2.80% | 0.15% |
+| May 13 | 93,152 | 96.7% | 4.20% | 0.38% |
+| May 21 | 107,398 | 99.3% | 0.81% | 0.02% |
+
+The earliest visit had the smallest projected plants and the most missing depth. Gaps clustered on all four dates. For a synthetic robustness test, compare **scattered missing returns** with **contiguous gaps** at the same total return count and score the same held-out plants. These camera measurements motivate that comparison. Selecting a LiDAR dropout rate requires measurements from the target scanner.
+
+We counted each horizontal and vertical neighbor pair inside a mask once. For a mask with `k` missing pixels out of `n`, randomly relocating its holes gives each pair a `(k/n) × ((k−1)/(n−1))` chance of losing both ends. The last two columns pool pairs within each date. Coverage and area are per-plant medians. The researchers harvested different plants at each visit. Camera height, view, plant size, weather and mask alignment could all affect coverage. A nonzero distance can still be wrong. Pixels outside a focal mask include neighboring plants, so this check cannot separate soil from foliage or score plot-wide plant detections.
+
+To replay locally, download the [pinned CC0 collection](https://github.com/ispstiima/AgRibotLeafyVeg/tree/6a1b5e79ffef06bd7d9444280d2e4243d62d1500). The offline check uses Node and ImageMagick (`magick` or `convert` on your path). It needs only the `plant_mask_*.png` and `depth_aligned_*.raw` files, in their original date and plot directories.
+
+```sh
+node cli/lettuce-depth.mjs /path/to/AgRibotLeafyVeg
+```
+
+### Does the detector notice the shape of a gap?
+
+We tested the gap pattern on synthetic romaine. Each 30,000-ray plot supplied three scans from the same coordinates. One kept all returns. The second dropped a random 20% of each plant’s returns, rounded per plant. The third dropped exactly as many from the same plant by removing the returns nearest a randomly chosen spot in the XY plane. Every soil return stayed. One four-unit network trained on six mixed-layout fields; six new planting seeds screened the comparison and six more confirmed it with the same weights and cutoff.
+
+| Confirmation layout | Complete scan F1 | Scattered gaps F1 | One patch per plant F1 | Height-peak baseline F1 (same three scans) |
+| --- | ---: | ---: | ---: | --- |
+| Grid | 0.858 | 0.787 | 0.778 | 0.608 / 0.593 / 0.587 |
+| 64-ring layout | 0.881 | 0.810 | 0.804 | 0.721 / 0.703 / 0.695 |
+
+These are pooled 10 cm matches. Across the six grid scans, both masks removed 2,173 of 180,000 returns (1.2%). True matches fell from 977 to 847 (scattered) or 834 (patches), out of 1,287 plants. Both masks removed 1.3% of all returns on the ring layout. Losing canopy samples hurt on both layouts. The smaller difference between patch and scattered loss changed direction on the screening grid at 10 cm. A useful scanner check is to record returns **per plant**, alongside the total point count. The 20% loss and one-patch shape are deliberately chosen stress tests for one synthetic crop form. The camera data above supplies neither a LiDAR gap radius nor a measured LiDAR loss rate.
+
+Run the [paired synthetic study](../benchmark/studies/lettuce-return-gaps.mjs) with `node benchmark/studies/lettuce-return-gaps.mjs`. Its JSON gives both sets of seeds, the weight hash, both detectors’ scores at 7.5, 10 and 15 cm, and separate generation, fitting, masking and scoring times.
 
 ## Can a ring of returns estimate the soil height near a seedling?
 
