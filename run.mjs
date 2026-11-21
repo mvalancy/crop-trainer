@@ -18,6 +18,11 @@ if(command==='serve'){
  for(const lesson of ['README','models','learning','scoring','fieldwork']) allowed.add('docs/first-steps/'+lesson+'.md');
  for(const diagram of ['returns','patch','weights','network','labels','loss','pins','matches','stages','vine']) allowed.add('art/lesson-'+diagram+'.svg');
  for(const folder of ['art','benchmark','test','trainer','trainer/plants','art/plants']) allowed.add(folder+'/README.md');
+ for(const study of [
+  'canopy-size','ground-reference','orchard-bases','orchard-branch-caliber','orchard-damage',
+  'orchard-visibility','paired-evidence','plant-forms','prepare-vineyard','seedling-density',
+  'seedling-peak-fit','seedling-peaks','seedling-stages'
+ ]) allowed.add('benchmark/'+study+'.mjs');
  for(const figure of ['scan-learn-find','paired-field','field-notebook','seed-replay','sprout-strip','field-deployment','plant-architecture','orchard-bases','seedling-density','seedling-layouts','seedling-peak-window']) allowed.add('art/'+figure+'.svg');
  const types={html:'text/html',js:'text/javascript',css:'text/css',svg:'image/svg+xml',webp:'image/webp',md:'text/plain'};
  const port=Number(output||4173);

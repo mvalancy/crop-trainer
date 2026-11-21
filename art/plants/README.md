@@ -10,6 +10,6 @@ These original schematics show how organs connect, where a plant is anchored and
 | Greenhouse bench lettuce | [Bench lettuce SVG](bench-lettuce.svg) | [Leaf cover over a fixed support](../../trainer/plants/bench-lettuce.md) |
 | Globe artichoke | [Artichoke SVG](artichoke.svg) | [Leaf rosette and flowering heads](../../trainer/plants/artichoke.md) |
 | Young tomato | [Young tomato SVG](young-tomato.svg) | [Seed leaves, leaflets and side shoots](../../trainer/plants/young-tomato.md) |
-| Apple orchard | [Apple SVG](apple.svg) | [Tree architecture and leaf cover](../../trainer/plants/apple.md) |
+| Apple orchard | [Tree structure](apple.svg) · [Branch calipers](apple-calipers.svg) | [Architecture and branch measurements](../../trainer/plants/apple.md) |
 | Trellised grapevine | [Grapevine SVG](grapevine.svg) | [Trunk, cordons and row structure](../../trainer/plants/grapevine.md) |
 | High-wire tomato | [High-wire tomato SVG](high-wire-tomato.svg) | [Leaders, trusses and one shared base](../../trainer/plants/high-wire-tomato.md) |

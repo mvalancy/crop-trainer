@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 482" role="img" aria-labelledby="title desc">
+  <title id="title">Measuring apple branch thickness</title>
+  <desc id="desc">Follow a primary branch 6.35 cm from its attachment to the trunk. Calipers measure diameter across the branch, at right angles to its axis. For each tree, divide its thinnest measured primary branch by its thickest. Purdue caliper charts show about 35% for Tree 1 and 29% for Tree 3. Eight simulated trees of each form gave about 53% for central leaders and nearly 100% for open vases.</desc>
+  <style>
+    text {font-family:system-ui,sans-serif}
+    .title {font-size:23px;font-weight:700;fill:#f4f5e8}
+    .sub {font-size:16px;fill:#d0dfd0}
+    .measure {font-size:16px;font-weight:650;fill:#ffdd8c}
+    .jaw {fill:none;stroke:#82dfdb;stroke-width:3;stroke-linejoin:round;stroke-linecap:round}
+    .contact {fill:#9ff8ef;animation:mark 5s ease-in-out infinite}
+    .heading {font-size:19px;font-weight:700;fill:#183c33}
+    .note {font-size:15px;fill:#375348}
+    .group {font-size:15px;font-weight:700;fill:#345849}
+    .row {font-size:15.5px;fill:#183c33}
+    .value {font-size:16px;font-weight:700;fill:#183c33;font-variant-numeric:tabular-nums}
+    .track {fill:#dce5d9}
+    @keyframes mark {0%,40%,100% {opacity:1} 70% {opacity:.45}}
+    @media (prefers-reduced-motion:reduce) {.contact {animation:none}}
+  </style>
+  <rect width="380" height="482" rx="14" fill="#f4f4e9"/>
+  <path d="M14 0H366Q380 0 380 14V213H0V14Q0 0 14 0Z" fill="#173a32"/>
+  <text x="20" y="34" class="title">Measuring branch thickness</text>
+  <text x="20" y="58" class="sub">Follow the limb, then measure across it.</text>
+
+  <!-- The branch centerline runs horizontally inside its rotated frame. -->
+  <g transform="translate(72 167) rotate(-24)">
+    <path d="M-5-13C46-11 89-9 135-7Q154-6 167-11L194-23
+             Q196-23 197-20L172-5Q159 4 137 6L-4 13Z" fill="#c98a58"/>
+    <path d="M15 7Q79 2 136 2Q153 2 167-6" fill="none" stroke="#96633e" stroke-width="2"/>
+  </g>
+  <path d="M51 198C54 168 58 122 56 81Q68 77 80 81C81 105 83 124 86 139
+           Q87 147 103 146L108 153Q91 160 83 177L81 198Z" fill="#b77f55"/>
+  <path d="M60 194Q67 147 64 112M73 93Q72 117 77 133" fill="none" stroke="#825b40" stroke-width="2" stroke-linecap="round"/>
+  <g transform="translate(72 167) rotate(-24)">
+    <path d="M0 0H110" fill="none" stroke="#554433" stroke-width="1.6" stroke-dasharray="4 3"/>
+    <circle r="3.5" fill="#ffdd8c" stroke="#664626" stroke-width="1.5"/>
+    <g fill="none" stroke="#ffdd8c" stroke-width="1.5">
+      <path d="M0 6V29M103 10V29M0 25H103"/>
+      <path d="M0 25l5-3m-5 3 5 3m98-3-5-3m5 3-5 3"/>
+    </g>
+    <text x="52" y="47" text-anchor="middle" class="measure">6.35 cm</text>
+    <g class="jaw">
+      <path d="M127-35V33"/>
+      <path d="M127-20H103V-8.5M127 21H103V8.5"/>
+      <path d="M132-32v9m0 40v9" stroke-width="1.5"/>
+    </g>
+    <g class="contact"><circle cx="103" cy="-8.5" r="2.5"/><circle cx="103" cy="8.5" r="2.5"/></g>
+  </g>
+  <path d="M204 138L228 159H242" fill="none" stroke="#a5d5cc" stroke-width="1.5"/>
+  <text x="247" y="165" class="sub">Caliper jaws</text>
+
+  <text x="20" y="243" class="heading">Thinnest ÷ thickest diameter</text>
+  <text x="20" y="266" class="note">Compare the measured branches of one tree.</text>
+  <text x="20" y="298" class="group">Observed · Purdue calipers</text>
+  <g class="track">
+    <rect x="141" y="312" width="144" height="9" rx="3"/><rect x="141" y="339" width="144" height="9" rx="3"/>
+    <rect x="141" y="397" width="144" height="9" rx="3"/><rect x="141" y="424" width="144" height="9" rx="3"/>
+  </g>
+  <g fill="#86582e"><rect x="141" y="312" width="50.4" height="9" rx="3"/><rect x="141" y="339" width="41.76" height="9" rx="3"/></g>
+  <g class="row"><text x="20" y="323">Tree 1</text><text x="20" y="350">Tree 3</text></g>
+  <g class="value" text-anchor="end"><text x="358" y="323">≈35%</text><text x="358" y="350">≈29%</text></g>
+
+  <text x="20" y="383" class="group">Simulated · eight v3 trees per form</text>
+  <g fill="#357562"><rect x="141" y="397" width="76.32" height="9" rx="3"/><rect x="141" y="424" width="143.7" height="9" rx="3"/></g>
+  <g class="row"><text x="20" y="408">Central leader</text><text x="20" y="435">Open vase</text></g>
+  <g class="value" text-anchor="end"><text x="358" y="408">≈53%</text><text x="358" y="435">≈100%</text></g>
+  <text x="20" y="465" class="note">A full bar means equal diameters.</text>
+</svg>
