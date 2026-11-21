@@ -11,7 +11,7 @@ const root=resolve(process.argv[2]);
 await stat(resolve(root,'index.html'));
 const prefix='/crop-trainer/';
 const types={'.html':'text/html','.css':'text/css','.js':'text/javascript','.mjs':'text/javascript',
-  '.svg':'image/svg+xml','.json':'application/json','.png':'image/png'};
+  '.svg':'image/svg+xml','.webp':'image/webp','.json':'application/json','.png':'image/png'};
 const server=createServer(async(req,res)=>{
   try {
     const path=decodeURIComponent(new URL(req.url,'http://localhost').pathname);
@@ -39,6 +39,18 @@ try {
   async function open(path) {
     const response=await page.goto(new URL(path,base).href);
     assert.equal(response?.status(),200);
+    const icons=await page.locator('link[rel="icon"], link[rel="apple-touch-icon"]').evaluateAll(links=>
+      Promise.all(links.map(async link=>{
+        const image=new Image();
+        image.src=link.href;
+        await image.decode();
+        return [link.rel,link.sizes.value,new URL(link.href).pathname,image.naturalWidth,image.naturalHeight];
+      })));
+    assert.deepEqual(icons,[
+      ['icon','32x32',prefix+'art/crop-mark-32.png',32,32],
+      ['icon','any',prefix+'art/crop-mark.svg',64,64],
+      ['apple-touch-icon','180x180',prefix+'art/crop-touch.png',180,180]
+    ]);
   }
   async function downloadJSON(button) {
     const [download]=await Promise.all([page.waitForEvent('download'),button.click()]);
@@ -71,8 +83,16 @@ try {
     await page.setViewportSize(viewport);
     await open('?crop=apple&plantArchitecture=3&plantForm=open-vase&budget=12000&seed=8119411');
     await page.locator('#copyScan:enabled').waitFor();
-    const anatomy=page.locator('#anatomySettings');
+    await page.locator('#scan-settings a[href="#advanced-scan"]').click();
+    const anatomy=page.locator('#advanced-scan #anatomySettings');
     if (!(await anatomy.evaluate(el=>el.open))) await anatomy.locator('summary').click();
+    const originalAppleId=await id.textContent();
+    await page.locator('#appleCanopy').selectOption('dormant');
+    await page.locator('#applyScanSettings').click();
+    await page.waitForFunction(first=>document.querySelector('#scanId').textContent!==first &&
+      new URL(document.querySelector('#scanLink').href).searchParams.get('appleCanopy')==='dormant',originalAppleId);
+    assert.ok(await page.evaluate(()=>document.querySelector('.scanSummary').getBoundingClientRect().bottom <=
+      document.querySelector('#advanced-scan').getBoundingClientRect().top+1), 'Advanced settings must follow the scan summary');
     await page.locator('.scanSummary').evaluate(el=>scrollTo({top:el.getBoundingClientRect().top+scrollY-innerHeight/2,behavior:'instant'}));
     assert.ok(await page.evaluate(()=>document.querySelector('#scan-viewer').getBoundingClientRect().bottom <=
       document.querySelector('.scanSummary').getBoundingClientRect().top+1), 'Apple viewer overlaps scan summary at '+viewport.width+'px');
@@ -81,9 +101,12 @@ try {
     const canvas=page.locator('#map');
     await canvas.evaluate(el=>el.scrollIntoView({block:'center',behavior:'instant'}));
     await canvas.hover();
-    const before=await page.evaluate(()=>scrollY);
+    const before=await page.evaluate(()=>({y:scrollY,top:document.querySelector('#scan-viewer').getBoundingClientRect().top}));
     await page.mouse.wheel(0,210);
-    await page.waitForFunction(y=>scrollY>y,before);
+    await page.waitForFunction(y=>scrollY>y,before.y);
+    const drift=await page.evaluate(({y,top})=>Math.abs((scrollY-y) +
+      document.querySelector('#scan-viewer').getBoundingClientRect().top-top),before);
+    assert.ok(drift<2,'The inline apple viewer should move with the document when scrolling');
     const fullscreen=page.locator('.viewer > .viewExpandButton');
     await fullscreen.click();
     const expanded=page.locator('.viewer.viewExpanded');
@@ -95,7 +118,7 @@ try {
     await fullscreen.click();
     await page.locator('.viewer.viewExpanded').waitFor({state:'detached',timeout:10_000});
   }
-  console.log('Apple viewer left the advanced-settings summary clickable, scrolled the page and entered/exited fullscreen at desktop and mobile sizes.');
+  console.log('Apple viewer applied a foliage change, kept the summary clickable, scrolled the page and entered/exited fullscreen at desktop and mobile sizes.');
 
   await open('trainer/?plan=quick&engine=cpu&crop=lettuce&seed=27&sensor=reference&epochs=3');
   await page.locator('#run').click();

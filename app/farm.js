@@ -6,7 +6,7 @@ import {cropProfile} from '../trainer/generator/crops.js?v=systems1';
 import {scanSession} from '../trainer/generator/scan-session.js?v=plants3';
 import {makeRecipe} from '../trainer/models/data.js?v=plants3';
 import {formsFor} from '../trainer/plants/forms.js';
-import {setupFieldPlants} from '../trainer/plants/field-controls.js?v=field-desk1';
+import {setupFieldPlants} from '../trainer/plants/field-controls.js?v=scan-settings2';
 import {getSensor, sensorOptions, sensorDetails, rayBudgetOptions, layoutCapacity, DEFAULT_GENERATOR_RAYS} from '../trainer/generator/sensors.js?v=dense1';
 import {createLiveScene} from '../trainer/ui/live-scene.js';
 import {createViewer} from './viewer.js?v=wood2';
@@ -41,7 +41,22 @@ sensorOptions($('scan'));
 const requested = new URLSearchParams(location.search);
 const scanStudy=initScanStudy(requested);
 const narrowField = matchMedia('(max-width: 740px)');
-document.querySelector('.scannerSetup').open = !narrowField.matches;
+const growForm = $('grow');
+function revealSetting(control) {
+  for (let parent = control; parent; parent = parent.parentElement) {
+    if (parent.tagName === 'DETAILS') parent.open = true;
+  }
+}
+function followSettingsLink() {
+  const target = $(location.hash.slice(1));
+  if (!target?.closest('#advanced-scan')) return;
+  revealSetting(target);
+  requestAnimationFrame(() => target.scrollIntoView({block:'start',behavior:'instant'}));
+}
+window.addEventListener('hashchange', followSettingsLink);
+document.addEventListener('invalid', event => {
+  if (event.target.form === growForm) revealSetting(event.target);
+}, true);
 $('crop').addEventListener('change',showSystemControls);
 const obstacles = ['weeds', 'sticks', 'boards'];
 for (const name of obstacles) {
@@ -59,6 +74,8 @@ rayBudgetOptions($('budget'), requested.size ? requested.get('budget') : DEFAULT
 const requestedSeed = requested.get('seed');
 if (/^\d+$/.test(requestedSeed) && Number(requestedSeed) <= 0xffffffff) {
   $('seed').value = String(Number(requestedSeed));
+} else if (requestedSeed !== null) {
+  $('seed').value = '';
 }
 const plantSettings = setupFieldPlants(requested);
 if (requested.get('ground') === 'false') $('ground').checked = false;
@@ -81,6 +98,25 @@ function showResolution() {
 }
 $('scan').onchange = $('budget').onchange = showResolution;
 showResolution();
+
+// Show a bad shared choice at the control while dependent menus can still
+// describe their default crop or sensor. Selecting any real option repairs it.
+for (const [id, key] of [...replaySelects, ['budget', 'budget']]) {
+  if (!requested.has(key)) continue;
+  const control = $(id);
+  const requestedValue = requested.get(key);
+  const value = id === 'budget' && /^\d+$/.test(requestedValue) ? String(Number(requestedValue)) : requestedValue;
+  if ([...control.options].some(option => option.value === value)) continue;
+  const invalidOption = new Option('Unsupported choice · choose again', control.value);
+  invalidOption.disabled = true;
+  control.prepend(invalidOption);
+  invalidOption.selected = true;
+  control.setCustomValidity('Choose a supported '+key+' for this scan.');
+  control.addEventListener('change', () => {
+    invalidOption.remove();
+    control.setCustomValidity('');
+  }, {once:true});
+}
 
 $('copyScan').onclick = async () => {
   const href = $('scanLink').href;
@@ -123,6 +159,17 @@ $('focusPlant').onclick = () => {
 };
 
 function grow(checkReplay = false) {
+  if (!growForm.reportValidity()) {
+    $('generationStatus').textContent = 'Check the highlighted scan setting, then grow the field.';
+    if (checkReplay) {
+      const invalid = Array.from(growForm.elements).find(control => control.willValidate && !control.validity.valid);
+      if (invalid) requestAnimationFrame(() => {
+        invalid.focus({preventScroll:true});
+        invalid.scrollIntoView({block:'center',behavior:'instant'});
+      });
+    }
+    return;
+  }
   const crop = $('crop').value;
   const sensor = getSensor($('scan').value);
   let plants;
@@ -253,7 +300,14 @@ $('switchSoil').onclick = () => {
   $('ground').checked = recipe.ground;
   showScan(recipe, new URL($('scanLink').href), $('highlight').value);
 };
-$('grow').onsubmit = event => { event.preventDefault(); grow(); };
+growForm.onsubmit = event => {
+  event.preventDefault();
+  if (event.submitter === $('applyScanSettings')) {
+    $('scan-viewer').focus({preventScroll:true});
+    if (!narrowField.matches) $('scan-viewer').scrollIntoView({block:'start'});
+  }
+  grow();
+};
 function download(parts, extension) {
   const link=document.createElement('a'),url=URL.createObjectURL(new Blob(parts));
   link.href=url;link.download=scan.labels.tile_id+extension;link.click();setTimeout(()=>URL.revokeObjectURL(url),10000);
@@ -271,5 +325,6 @@ function journal(){
 }
 window.addEventListener('pageshow', journal);
 window.addEventListener('storage', journal);
+followSettingsLink();
 grow(true);
 journal();

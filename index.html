@@ -3,15 +3,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Crop Trainer · The procedural farm</title>
+<link rel="icon" type="image/png" sizes="32x32" href="art/crop-mark-32.png">
+<link rel="icon" type="image/svg+xml" sizes="any" href="art/crop-mark.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="art/crop-touch.png">
 <meta name="description" content="Generate crop LiDAR scans, explore them in 3D, and train crop detectors locally with CPU or WebGPU.">
-<link rel="stylesheet" href="app/farm.css?v=field-desk1">
-<link rel="stylesheet" href="trainer/plants/portrait.css">
+<link rel="stylesheet" href="app/farm.css?v=scan-workspace2">
+<link rel="stylesheet" href="trainer/plants/portrait.css?v=scan-settings2">
 <link rel="stylesheet" href="app/help.css?v=field-desk1">
 <script type="module" src="app/help.js?v=field-desk1"></script>
 </head>
 <body class="farm"><a class="skip" href="#main">Skip to content</a>
 <header class="siteBar">
-<div class="barInner"><a class="brand" href="./"><span class="mark" aria-hidden="true"><i></i></span>Crop Trainer</a>
+<div class="barInner"><a class="brand" href="./"><img class="mark" src="art/crop-mark.svg" width="32" height="32" alt="">Crop Trainer</a>
 <nav aria-label="Main navigation"><a href="#field" aria-current="page">Field generator</a><a href="trainer/">Training shed</a><a href="benchmark/">Benchmark</a></nav><a class="repoLink" href="https://github.com/mvalancy/crop-trainer" aria-label="Crop Trainer on GitHub">GitHub <span aria-hidden="true">↗</span></a></div></header>
 <main id="main">
 <section class="hero" aria-labelledby="hero-title">
@@ -28,7 +31,7 @@
 <p>Each dot is one laser return. Rings mark known plant centers. Zoom in on a plant or grow a different crop in Scan settings.</p></div>
 <div class="lab">
 
-<article class="plot" id="scan-viewer">
+<article class="plot" id="scan-viewer" tabindex="-1">
 <div class="plotHead">
 <div><h3>3D scan viewer</h3><p id="fieldCaption">Growing your field…</p></div><a class="mobileShortcut" href="#scan-settings">Settings ↓</a></div>
 <div class="viewer"><canvas id="map" width="860" height="530" tabindex="0" aria-label="Interactive 3D point cloud" aria-describedby="cameraHelp cameraKeys"></canvas>
@@ -51,55 +54,21 @@
 <p class="hint" id="cameraHelp">Drag with a mouse or swipe sideways to turn the field. Scroll or swipe up and down to read the page. Use + and − to zoom. In full screen you can also zoom with the wheel or pinch, and pan with two fingers. Shift-drag or right-drag to pan with a mouse.</p>
 <p class="hint" id="cameraKeys">With the scan focused, arrow keys rotate, Shift + arrows pan, + and − zoom, F centers the highlighted plant, and R resets the view.</p></details>
 </article>
-<aside id="scan-settings">
+<aside id="scan-settings" tabindex="-1">
 <h3>Scan settings</h3>
 <form id="grow">
 <fieldset>
 <legend>Planting</legend>
 <label>Crop<select id="crop" data-help="The crop sets the plant shapes and row spacing. Try lettuce for a low, broad canopy or apple for tall trees with visible trunks."><option value="lettuce">Lettuce</option><option value="artichoke">Globe artichoke</option><option value="tomato">Young tomato</option><optgroup label="Experimental growing systems"><option value="apple">Apple orchard</option><option value="grapevine">Trellised vineyard</option><option value="bench-lettuce">Greenhouse bench lettuce</option><option value="high-wire-tomato">Greenhouse high-wire tomato</option></optgroup></select></label>
 <label>Field seed<input type="number" id="seed" data-help="Keep this number and the other settings to reproduce a field. Pick a new number to test whether a finding holds on another planting." min="0" max="4294967295" step="1" required="" value="27" aria-describedby="seedHint"></label>
-<p class="hint" id="seedHint">Change the seed to grow a new planting of this crop.</p>
-<p class="hint" id="systemInfo" hidden></p></fieldset>
-<details id="anatomySettings">
-<summary>Plant form and condition</summary>
-<div class="detailFields">
-<label>Plant architecture<select id="plantArchitecture" data-help="This is the version of the plant shapes. Keep the original version to replay a shared scan. For apples, v4 varies branch thickness within each tree." required><option value="3" selected>Connected plants · v3</option><option value="4" hidden>Variable apple scaffolds · v4</option><option value="2">Structured plants · v2</option><option value="1">Original plants · v1</option></select></label>
-<label>Plant form<select id="plantForm" data-help="Choose one growth habit for the whole field, or choose a mix to let the seed pick a form for each plant." required></select></label>
-<label>Condition<select id="plantCondition" data-help="Damage changes the plant shape. A tree can lose a limb or a tomato plant can lose its growing tip. The planting locations stay fixed." required><option value="healthy">Healthy plants</option><option value="mixed">About one in four damaged</option><option value="damaged">All plants damaged</option></select></label>
-<label>Apple foliage<select id="appleCanopy" data-help="Leaf off exposes the branches. Keep the seed and tree form fixed to compare the same wood with and without its leaves." required><option value="leafy">Leaf on</option><option value="dormant">Dormant · leaf off</option></select></label>
-<section id="specimenCard" class="specimenComparison" aria-labelledby="specimenName">
-<h4 id="specimenName">Compare one plant</h4>
-<div class="specimenPair">
-<figure><canvas id="specimenCanvas" width="400" height="380" role="img" aria-describedby="specimenDetail"></canvas><figcaption>Intact</figcaption></figure>
-<figure><canvas id="damagedCanvas" width="400" height="380" role="img" aria-describedby="specimenDetail"></canvas><figcaption>Damaged</figcaption></figure>
-</div>
-<p id="specimenDetail"></p>
-<label class="specimenAngle">Rotate both plants<input id="specimenAngle" type="range" min="0" max="360" step="5" value="35"></label>
-<div class="specimenModes">
-<label class="check specimenHatch"><input type="checkbox" id="specimenGaps" checked><span>Show gaps</span></label>
-<button id="damageZoom" type="button" aria-pressed="false">Damage close-up</button>
-</div>
-<p id="specimenContext"></p>
-</section>
-<a id="plantGuide" class="anatomyGuide" href="https://github.com/mvalancy/crop-trainer/tree/main/trainer/plants">Growing guide ↗</a>
-</div></details>
-<details class="scannerSetup" open>
-<summary>LiDAR setup <span id="scanPreset"></span></summary>
-<div class="detailFields">
+<p hidden id="seedHint">Change the seed to grow a new planting of this crop.</p>
+</fieldset>
+<fieldset class="quickScanner"><legend>LiDAR</legend>
 <label>Scanner layout<select id="scan" data-help="Choose where rays land. The grid spreads them across the plot. The Ouster presets use a ring pattern inspired by the sensor’s channel and column counts."></select></label>
-<p class="hint" id="sensorInfo"></p>
 <label>Ray budget<select id="budget" data-help="The requested number of laser samples across this 10 m square. A layout can run out of sample positions. The scan summary shows how many were used." aria-describedby="resolutionInfo"></select></label>
-<p class="hint" id="resolutionInfo"></p>
-<label>Scan noise<select id="noise" data-help="Clean keeps the layout’s normal sampling pattern. Rough adds effects such as scattered points and gaps. Seeded variation repeats the same noise settings for the same field seed."><option value="seeded">Seeded variation</option><option value="clean">Clean returns</option><option value="rough">Jitter, gaps and stray returns</option></select></label>
-<label class="check"><input type="checkbox" id="ground" data-help="Keep points that hit the soil or greenhouse floor. Turning this off removes those points from the finished scan and keeps the same plants." checked=""> Include ground returns</label></div></details>
-<details>
-<summary>Weeds and obstacles</summary>
-<label id="fixturesLabel" class="check" hidden><input id="fixtures" data-help="Include the posts, wires, benches or troughs used by this growing system. Their points can hide parts of plants or resemble them in a scan." type="checkbox" checked> Include growing-system fixtures</label>
-<div class="clutter">
-<label>Weeds<select id="weeds" data-help="Adds small plants that the crop detector should ignore. From seed lets this planting’s recipe decide whether weeds appear."></select></label>
-<label>Sticks<select id="sticks" data-help="Adds narrow pieces of wood on the ground. Try including them to see whether a detector mistakes a stick for a crop."></select></label>
-<label>Boards<select id="boards" data-help="Adds raised boards over some plant locations. A board can intercept a ray before it reaches a leaf."></select></label></div></details>
-<div class="growActions"><button class="primary">Grow and scan <span aria-hidden="true">→</span></button><a class="mobileShortcut" href="#scan-viewer">Back to scan ↑</a></div>
+</fieldset>
+<div class="growActions"><button type="submit" class="primary">Grow and scan <span aria-hidden="true">→</span></button></div>
+<a class="advancedJump" href="#advanced-scan">Advanced scan settings ↓</a>
 <p id="generationStatus" role="status"></p>
 </form></aside></div>
 <section class="scanSummary panel" aria-labelledby="summaryTitle"><div><h3 id="summaryTitle">Scan summary</h3>
@@ -110,14 +79,65 @@
 <p class="hint" id="plantComposition" hidden></p>
 <p class="hint" id="stemSummary" hidden></p>
 <p class="hint">With label centers enabled, a gold × marks a plant with zero surviving crop returns. A coral ring marks a plant with at least one.</p>
-</div><div class="scanFiles"><h3>Download or share</h3>
-<div class="downloads">
-<button id="ply" disabled="">Download scan (.ply)</button>
-<button id="labels" disabled="">Labels (.json)</button>
-<button id="recipe" data-help="A recipe saves the field seed and settings for replay. For the actual laser points, download the PLY. For the known plant locations, download the labels." disabled="">Recipe (.json)</button></div>
-<p class="fileId">Scan ID <code id="scanId"></code></p>
-<p class="shareActions"><a id="scanLink">Open scan link</a> <button id="copyScan" type="button" disabled="">Copy scan link</button> <span id="shareStatus" role="status"></span></p>
-<details class="formatHelp"><summary>About the files</summary><p class="hint">PLY contains little-endian XYZ coordinates in metres. The label file gives each plant’s bounding box and crop return count. The recipe and scan link use the settings of the displayed scan. Choose Grow and scan to apply your edits.</p></details><a id="trainLayout" href="trainer/" class="trainLink">Train this crop and layout →</a></div></section>
+</div>
+<section class="scanFiles" aria-labelledby="scanFilesTitle">
+<h3 id="scanFilesTitle" data-help="The PLY contains the displayed scan’s XYZ points in metres. Labels give each plant’s bounding box and return count. The recipe and share link reproduce the field. Choose Grow and scan to apply edited settings.">Download or share</h3>
+<div class="scanDownloads" role="group" aria-label="Download scan files">
+<button type="button" id="ply" aria-label="Download scan (.ply)" disabled><span>Scan</span><small>.ply</small></button>
+<button type="button" id="labels" aria-label="Labels (.json)" disabled><span>Labels</span><small>.json</small></button>
+<button type="button" id="recipe" aria-label="Recipe (.json)" disabled><span>Recipe</span><small>.json</small></button>
+</div>
+<div class="scanSharing">
+<p class="scanIdentity"><span>Scan ID</span> <code id="scanId">—</code></p>
+<div class="scanLinkActions"><button id="copyScan" type="button" disabled>Copy scan link</button><a id="scanLink">Open scan link</a></div>
+<p id="shareStatus" role="status"></p>
+</div>
+<a id="trainLayout" href="trainer/" class="trainLink">Train this crop and layout →</a>
+</section></section>
+<section id="advanced-scan" class="panel advancedScan" tabindex="-1" aria-labelledby="advancedScanTitle">
+<h3 id="advancedScanTitle">Advanced scan settings</h3>
+<details id="anatomySettings">
+<summary>Plant form and condition</summary>
+<div class="anatomyFields">
+<div class="detailFields">
+<p class="hint" id="systemInfo" hidden></p>
+<label>Plant architecture<select form="grow" id="plantArchitecture" data-help="This is the version of the plant shapes. Keep the original version to replay a shared scan. For apples, v4 varies branch thickness within each tree." required><option value="3" selected>Connected plants · v3</option><option value="4" hidden>Variable apple scaffolds · v4</option><option value="2">Structured plants · v2</option><option value="1">Original plants · v1</option></select></label>
+<label>Plant form<select form="grow" id="plantForm" data-help="Choose one growth habit for the whole field, or choose a mix to let the seed pick a form for each plant." required></select></label>
+<label>Condition<select form="grow" id="plantCondition" data-help="Damage changes the plant shape. A tree can lose a limb or a tomato plant can lose its growing tip. The planting locations stay fixed." required><option value="healthy">Healthy plants</option><option value="mixed">About one in four damaged</option><option value="damaged">All plants damaged</option></select></label>
+<label>Apple foliage<select form="grow" id="appleCanopy" data-help="Leaf off exposes the branches. Keep the seed and tree form fixed to compare the same wood with and without its leaves." required><option value="leafy">Leaf on</option><option value="dormant">Dormant · leaf off</option></select></label>
+<a id="plantGuide" class="anatomyGuide" href="https://github.com/mvalancy/crop-trainer/tree/main/trainer/plants">Growing guide ↗</a>
+</div>
+<section id="specimenCard" class="specimenComparison" aria-labelledby="specimenName">
+<h4 id="specimenName">Compare one plant</h4>
+<div class="specimenPair">
+<figure><canvas id="specimenCanvas" width="400" height="380" role="img" aria-describedby="specimenDetail"></canvas><figcaption>Intact</figcaption></figure>
+<figure><canvas id="damagedCanvas" width="400" height="380" role="img" aria-describedby="specimenDetail"></canvas><figcaption>Damaged</figcaption></figure>
+</div>
+<p id="specimenDetail"></p>
+<label class="specimenAngle">Rotate both plants<input form="grow" id="specimenAngle" type="range" min="0" max="360" step="5" value="35"></label>
+<div class="specimenModes">
+<label class="check specimenHatch"><input form="grow" type="checkbox" id="specimenGaps" checked><span>Show gaps</span></label>
+<button id="damageZoom" type="button" aria-pressed="false">Damage close-up</button>
+</div>
+<p id="specimenContext"></p>
+</section>
+</div></details>
+<details class="scannerSetup" id="sensorSettings">
+<summary>Sensor details, noise and ground <span id="scanPreset"></span></summary>
+<div class="detailFields">
+<p class="hint" id="sensorInfo"></p>
+<p class="hint" id="resolutionInfo"></p>
+<label>Scan noise<select form="grow" id="noise" data-help="Clean keeps the layout’s normal sampling pattern. Rough adds effects such as scattered points and gaps. Seeded variation repeats the same noise settings for the same field seed."><option value="seeded">Seeded variation</option><option value="clean">Clean returns</option><option value="rough">Jitter, gaps and stray returns</option></select></label>
+<label class="check"><input form="grow" type="checkbox" id="ground" data-help="Keep points that hit the soil or greenhouse floor. Turning this off removes those points from the finished scan and keeps the same plants." checked=""> Include ground returns</label></div></details>
+<details id="obstacleSettings">
+<summary>Weeds, obstacles and fixtures</summary>
+<label id="fixturesLabel" class="check" hidden><input form="grow" id="fixtures" data-help="Include the posts, wires, benches or troughs used by this growing system. Their points can hide parts of plants or resemble them in a scan." type="checkbox" checked> Include growing-system fixtures</label>
+<div class="clutter">
+<label>Weeds<select form="grow" id="weeds" data-help="Adds small plants that the crop detector should ignore. From seed lets this planting’s recipe decide whether weeds appear."></select></label>
+<label>Sticks<select form="grow" id="sticks" data-help="Adds narrow pieces of wood on the ground. Try including them to see whether a detector mistakes a stick for a crop."></select></label>
+<label>Boards<select form="grow" id="boards" data-help="Adds raised boards over some plant locations. A board can intercept a ray before it reaches a leaf."></select></label></div></details>
+<div class="advancedActions"><button type="submit" id="applyScanSettings" form="grow" class="primary">Apply and scan →</button><a href="#scan-settings">Back to scan settings ↑</a></div>
+</section>
 <details class="panel studyPanel" id="scan-study"><summary>Compare two scans of this field</summary>
 <div class="studySetup">
 <div class="studyIntro"><p id="studyField">Grow a field to compare its scans.</p>
@@ -195,6 +215,6 @@
 </main>
 <footer class="siteFoot"><span>Created by Matthew Valancy</span>
 <div><a href="AGENTS.md">Agent quickstart</a><a href="#missions">Farm journal</a><a href="LICENSE">MIT license</a></div></footer>
-<script type="module" src="app/farm.js?v=field-desk1"></script>
+<script type="module" src="app/farm.js?v=scan-settings2"></script>
 </body>
 </html>

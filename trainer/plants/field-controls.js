@@ -43,7 +43,7 @@ export function setupFieldPlants(params) {
   if(params.has('appleCanopy') && crop.value==='apple') {
     canopy.value=params.get('appleCanopy');
     if(!canopy.value) {
-      canopy.add(new Option('Unsupported foliage · choose again',''));
+      canopy.prepend(new Option('Unsupported foliage · choose again',''));
       canopy.value='';el('anatomySettings').open=true;
     }
   }
@@ -109,10 +109,8 @@ export function setupFieldPlants(params) {
     });
     canvas.addEventListener('lostpointercapture',() => {start=undefined;});
   }
-  if (params.has('plantCondition') || params.has('plantForm') || params.has('appleCanopy')) el('anatomySettings').open=true;
   update();
   return () => {
-    if (!el('grow').checkValidity()) throw Error('Choose valid planting and scan settings.');
     return {...read(),...(crop.value==='apple' && Number(version.value)>=2?{appleCanopy:canopy.value}:{})};
   };
 }

@@ -44,7 +44,7 @@ Begin with a horticultural distinction a scan could reveal. For example, romaine
 
 ## Inspect one plant before scanning
 
-Open **Plant form and condition** in Scan settings. Pick a form and turn its intact and damaged views together. Both come from the first plant on that seed, at its generated size. **Damage close-up** frames the area where the silhouette changed. Orbit the plant to see a break that another branch hides from the front. This view shows the modeled stems and leaves. The field scanner records the surfaces its rays reach. [Explore a damaged open-vase apple](https://mvalancy.github.io/crop-trainer/?crop=apple&plantArchitecture=3&plantForm=open-vase&plantCondition=damaged&seed=27#anatomySettings)
+Below the scan summary, open **Advanced scan settings → Plant form and condition**. Pick a form and turn its intact and damaged views together. Both come from the first plant on that seed, at its generated size. **Damage close-up** frames the area where the silhouette changed. Orbit the plant to see a break that another branch hides from the front. This view shows the modeled stems and leaves. The field scanner records the surfaces its rays reach. [Explore a damaged open-vase apple](https://mvalancy.github.io/crop-trainer/?crop=apple&plantArchitecture=3&plantForm=open-vase&plantCondition=damaged&seed=27#anatomySettings)
 
 ## Add a crop or growing system
 

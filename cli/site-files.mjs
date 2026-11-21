@@ -1,5 +1,5 @@
 // The local server and Pages build expose the same static app and reading material.
-const entryFiles = new Set(['index.html', 'README.md', 'AGENTS.md', 'LICENSE', '.nojekyll']);
+const entryFiles = new Set(['index.html', 'README.md', 'AGENTS.md', 'LICENSE', '.nojekyll', 'art/crop-mark-32.png', 'art/crop-touch.png']);
 const publicDirectories = new Map([
   ['app', ['js', 'css', 'md']],
   ['art', ['svg', 'webp', 'md']], ['art/plants', ['svg', 'md']],
