@@ -190,3 +190,43 @@ test('ranking rules use the same scan and show every low cell that can affect pr
   assert.equal(usualTree.orchardTrace.supportCellCount,trialTree.orchardTrace.supportCellCount);
   assert.deepEqual([usual,trial].map(r=>[r.orchardScores.at(-1).tp,r.orchardScores.at(-1).fp]),[[11,3],[12,2]]);
 });
+
+test('board placement pairs distinct scans and scores both with the same XYZ-only rule',()=>{
+  const source={...makeRecipe(21490513,true,getSensor('os1-64'),'apple',4,'central-leader','healthy'),
+    points:60000, appleCanopy:'leafy', weeds:false, sticks:false, boards:false, scanNoise:null};
+  const recipes=studyRecipes({...source,boardPlacement:'independent'},'boards');
+  const near={...source,boards:true};
+  assert.deepEqual(recipes,[near,{...near,boardPlacement:'independent'}]);
+  assert.throws(()=>studyRecipes(seedlingRecipe('reference'),'boards'),/apple orchard/);
+  const scans=recipes.map(recipe=>field(recipe)), results=scans.map(scan=>analyzeStudyScan(scan,'boards'));
+  checkStudyPair(...results);
+  assert.deepEqual(results.map(r=>[r.tileId,r.boardPlacement,r.sampledRays,r.boardReturns]),[
+    ['2067527bcc475e59','plant',60000,619],['112581f2a17baf5d','independent',60000,642]
+  ]);
+  for (const [i,r] of results.entries()) {
+    assert.equal(r.orchardRanking,'low-wood');
+    assert.equal(r.orchardSeparationMeters,1.05);
+    assert.equal(r.boardReturns,scans[i].cls.filter(c=>c===4).length);
+    assert.deepEqual(r.orchardScores,analyzeStudyScan(scans[i],'ranking',{ranking:'low-wood'}).orchardScores);
+  }
+  assert.deepEqual(results.map(r=>r.orchardScores.map(({tp,fp,fn})=>[tp,fp,fn])),[
+    [[2,12,9],[3,11,8],[6,8,5]],[[1,12,10],[2,11,9],[4,9,7]]
+  ]);
+  assert.notDeepEqual(results[0].heightScores,results[1].heightScores);
+  assert.notDeepEqual(results[0].sampledHeightScores,results[1].sampledHeightScores);
+  // Point origins annotate the preview. Hiding them must leave all detector pins intact.
+  const unlabelled={...scans[1],cls:new Uint8Array(scans[1].cls.length),counts:scans[1].counts.map(()=>0)};
+  const hidden=analyzeStudyScan(unlabelled,'boards');
+  assert.equal(hidden.boardReturns,0);
+  for (const key of ['heightPins','sampledHeightPins','orchardPins']) assert.deepEqual(hidden[key],results[1][key]);
+});
+
+test('first planted tree in the board study guide maps to Tree 0 in the inspector',()=>{
+  const source={...makeRecipe(22153127,true,getSensor('reference'),'apple',4,'central-leader','healthy'),
+    points:60000, appleCanopy:'leafy', weeds:false, sticks:false, boards:false, scanNoise:null};
+  const observations=studyRecipes(source,'boards').map(recipe=>{
+    const scan=field(recipe), tree=analyzeStudyScan(scan,'boards').plants[0];
+    return [scan.labels.tile_id,tree.boardReturns15cm,(100*tree.nearestOrchardPinM).toFixed(2)];
+  });
+  assert.deepEqual(observations,[['60d5152dcaa1f08c',22,'8.45'],['8d4bccccff0ff4ba',0,'42.16']]);
+});

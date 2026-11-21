@@ -420,6 +420,51 @@ try {
   assert.ok(await patch.isHidden(), 'A tree with no candidate should show no candidate patch');
   console.log('The lower-return study replayed one orchard scan and checked the visible low-cell evidence, fixed controls and saved result.');
 
+  const boardQuery=new URLSearchParams(orchardQuery);
+  for (const [key,value] of Object.entries({seed:21490513,sensor:'os1-64',plantArchitecture:4,plantForm:'central-leader',
+    plantCondition:'healthy',appleCanopy:'leafy',studyMode:'boards',studyMetric:'orchard',studyCloud:'on',studyBox:1})) boardQuery.set(key,value);
+  await open('?'+boardQuery+'#scan-study');
+  await page.locator('#studyRun').click();
+  await page.locator('#studySave:visible').waitFor();
+  const boardReport=await downloadJSON(page.locator('#studySave'));
+  assert.equal(boardReport.format,'crop-trainer-orchard-boards-study-v1');
+  const [near,across]=boardReport.arms;
+  assert.deepEqual(near.plants.map(p=>[p.x,p.y]),across.plants.map(p=>[p.x,p.y]));
+  const scanLinks=[];
+  for (const [arm,side,placement,tile,returns,scores] of [
+    [near,'A','plant','2067527bcc475e59',619,[[2,12,9],[3,11,8],[6,8,5]]],
+    [across,'B','independent','112581f2a17baf5d',642,[[1,12,10],[2,11,9],[4,9,7]]]
+  ]) {
+    assert.deepEqual([arm.boardPlacement,arm.tileId,arm.recipe.boards,arm.reusedScan,arm.orchardRanking],
+      [placement,tile,true,false,'low-wood']);
+    assert.deepEqual([arm.boardReturns,arm.boardPreviewReturns,arm.previewPoints],[returns,100,9000]);
+    assert.deepEqual(arm.orchardScores.map(s=>[s.tp,s.fp,s.fn]),scores);
+    assert.match(await page.locator('#studyCount'+side).innerText(),new RegExp(String(returns)));
+    scanLinks.push(new URL(await page.locator('#studyLink'+side).getAttribute('href')));
+  }
+  assert.deepEqual([near.plants[1].orchard,across.plants[1].orchard],[true,false]);
+  assert.deepEqual([near.plants[1].boardReturns15cm,across.plants[1].boardReturns15cm],[16,0]);
+  assert.match(await page.locator('#studyTargetDetail').innerText(),/16 board returns.*0 with boards across the plot/);
+  assert.ok(await page.locator('#studyBoardReturnsKey').isVisible());
+  await page.locator('#studyCloud').uncheck();
+  assert.ok(await page.locator('#studyBoardReturnsKey').isHidden());
+  assert.equal(new URL(await page.locator('#studyShare').getAttribute('href')).searchParams.get('studyMode'),'boards');
+  await page.locator('#studyZoom').check();
+  await page.locator('#studyRun').click();
+  await page.locator('#studySave:visible').waitFor();
+  assert.equal(await page.locator('#studyTarget').inputValue(),'1');
+  assert.ok(await page.locator('#studyZoom').isChecked());
+  for (const [i,url] of scanLinks.entries()) {
+    assert.equal(url.searchParams.get('studyMode'),null);
+    assert.equal(url.searchParams.get('box'),'1');
+    await page.goto(url.href);
+    await page.locator('#recipe:enabled').waitFor();
+    const saved=await downloadJSON(page.locator('#recipe'));
+    assert.equal(saved.tile_id,boardReport.arms[i].tileId);
+    assert.equal(saved.recipe.boardPlacement ?? 'plant',boardReport.arms[i].boardPlacement);
+  }
+  console.log('Board placement held the planting and detector fixed, distinguished full and preview returns and replayed both scans.');
+
   await open('trainer/?plan=quick&engine=cpu&crop=lettuce&seed=27&sensor=reference&epochs=3');
   {
     const diagram=page.locator('#detectorDiagram'), family=page.locator('#architecture');

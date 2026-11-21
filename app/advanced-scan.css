@@ -57,7 +57,8 @@
 }
 .scanEnvironment .check { min-height: 44px; }
 #advanced-scan .clutter {
-  grid-template-columns: repeat(auto-fit,minmax(min(100%,7.7rem),1fr));
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  align-items: end;
   gap: .35rem .6rem;
   margin: .4rem 0 1rem;
 }

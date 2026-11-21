@@ -4,6 +4,7 @@ import {canopyPlant,scanFixtures} from './growing-systems.js?v=plants3';
 import {formsFor,checkPlantForm,checkPlantCondition} from '../plants/forms.js';
 import {plantTraits, seededRandom} from '../plants/traits.js';
 import {plantingRow} from '../plants/planting.js';
+import {checkBoardPlacement,boardLayout} from './boards.js';
 import {structuredPlant} from '../plants/index.js?v=field-desk1';
 import {checkPlantArchitecture} from './plant-version.js?v=plants3';
 export function returnBand(count) {
@@ -29,6 +30,7 @@ export function sampleCloud(xyz, classes, ground = true) {
 export function field(p,onRow){
 const crop = p.crop ?? 'lettuce';
 const profile = cropProfile(crop);
+const boardPlacement = checkBoardPlacement(p.boardPlacement);
 const plantArchitecture = checkPlantArchitecture(p.plantArchitecture ?? 1, crop);
 const structured = plantArchitecture >= 2;
 const form = structured ? checkPlantForm(crop,p.plantForm) : undefined;
@@ -113,7 +115,16 @@ let before=cls.slice();
 if(profile.fixtures && p.infrastructure!==false) scanFixtures(crop,profile.rows,terrain,rays,hit,plantArchitecture);
 if(p.weeds)for(let j=0;j<64;j++)plant(.2+o()*9.6,.2+o()*9.6,.08+.13*o(),true);
 if(p.sticks)for(let j=0;j<30;j++){let x=o()*10,y=o()*10,a=o()*tau,c=Math.cos(a),s=Math.sin(a),l=.15+.30*o(),w=.012+.018*o();rays(x,y,l+w,(i,dx,dy)=>{let u=c*dx+s*dy,v=-s*dx+c*dy;if(Math.abs(u)<l&&Math.abs(v)<w)hit(i,terrain(x+dx,y+dy)+w+Math.sqrt(w*w-v*v),3,0)})}
-if(p.boards && centers.length)for(let j=0;j<9;j++){let [x,y]=centers[Math.floor(o()*centers.length)],a=o()*tau,c=Math.cos(a),s=Math.sin(a),l=.28+.30*o(),w=.09+.1*o();rays(x,y,l+w,(i,dx,dy)=>{let u=c*dx+s*dy,v=-s*dx+c*dy;if(Math.abs(u)<l&&Math.abs(v)<w)hit(i,terrain(x,y)+.34+.025*u,4,0)})}
+if(p.boards){
+ const boards=boardLayout({plantCenters:centers,placement:boardPlacement,seed,obstacleRandom:o,plotSize:sz});
+ for(const {x,y,angle,halfLength,halfWidth} of boards){
+  const cos=Math.cos(angle),sin=Math.sin(angle),height=terrain(x,y)+.34;
+  rays(x,y,halfLength+halfWidth,(i,dx,dy)=>{
+   const u=cos*dx+sin*dy,v=-sin*dx+cos*dy;
+   if(Math.abs(u)<halfLength && Math.abs(v)<halfWidth) hit(i,height+.025*u,4,0);
+  });
+ }
+}
 let lost=0,counts=Array(profile.system?7:5).fill(0);for(let i=0;i<n;i++){lost+=before[i]===1&&cls[i]!==1;counts[cls[i]]++;xyz[3*i+2]+=noise[i]}let outXYZ=xyz,outCls=cls,outIds=ids,outParts=parts, outputN=n;
 let q=p.scanNoise, noiseActive=q&&['xy','z','density','gaps','stray','cluster'].some(k=>q[k]>0);
 if(noiseActive){
@@ -173,4 +184,4 @@ if(p.ground===false){
  }
  outputN=keep;outXYZ=outXYZ.slice(0,3*keep);outCls=outCls.slice(0,keep);if(parts)outParts=outParts.slice(0,keep);counts[0]=0;
 }
-let canonical=JSON.stringify(['crop-trainer-v1',...(structured?['plant-architecture-v'+plantArchitecture,crop,form,condition,...(crop==='apple'?[p.appleCanopy??'leafy']:[])]:[]),...(profile.system?['growing-system-v1',crop,!!profile.fixtures && p.infrastructure!==false]:crop==='lettuce'?[]:['crop-shape-v1',crop]),seed,n,sz,p.spacing,p.radius,8,.36,2.1,.04,.024,.05,.012,.004,!!p.weeds,!!p.sticks,!!p.boards,...(p.ground===false?['ground-removed-v1']:[]),...(active?['sensor-v1',sensor.key,sensor.pattern,nx,ny,sensor.along,sensor.across]:[]),...(noiseActive?['noise-v1',q.seed,q.xy,q.z,q.density,q.gaps,q.stray,...(q.cluster?['cluster-v1',q.cluster]:[])]:[])]);let hash=14695981039346656037n;for(let i=0;i<canonical.length;i++)hash=BigInt.asUintN(64,(hash^BigInt(canonical.charCodeAt(i)))*1099511628211n);let tile_id=hash.toString(16).padStart(16,'0');return {xyz:outXYZ,cls:outCls,...(structured?{parts:outParts,skeleton:Float32Array.from(skeleton)}:{}),counts,plantReturns,coverage,lost,groundRemoved,sampledRays:n,labels:{tile_id,crop,...(structured?{plantArchitecture,plantForm:form,plantCondition:condition}:{}),...(profile.system?{center_target:'plant-base-xy',growing_system:profile.system}:{}),tile_size_m:[10,10],num_points:outputN,boxes},p}}
+let canonical=JSON.stringify(['crop-trainer-v1',...(structured?['plant-architecture-v'+plantArchitecture,crop,form,condition,...(crop==='apple'?[p.appleCanopy??'leafy']:[])]:[]),...(profile.system?['growing-system-v1',crop,!!profile.fixtures && p.infrastructure!==false]:crop==='lettuce'?[]:['crop-shape-v1',crop]),seed,n,sz,p.spacing,p.radius,8,.36,2.1,.04,.024,.05,.012,.004,!!p.weeds,!!p.sticks,!!p.boards,...(p.boards && boardPlacement==='independent'?['uniform-board-centers-v1']:[]),...(p.ground===false?['ground-removed-v1']:[]),...(active?['sensor-v1',sensor.key,sensor.pattern,nx,ny,sensor.along,sensor.across]:[]),...(noiseActive?['noise-v1',q.seed,q.xy,q.z,q.density,q.gaps,q.stray,...(q.cluster?['cluster-v1',q.cluster]:[])]:[])]);let hash=14695981039346656037n;for(let i=0;i<canonical.length;i++)hash=BigInt.asUintN(64,(hash^BigInt(canonical.charCodeAt(i)))*1099511628211n);let tile_id=hash.toString(16).padStart(16,'0');return {xyz:outXYZ,cls:outCls,...(structured?{parts:outParts,skeleton:Float32Array.from(skeleton)}:{}),counts,plantReturns,coverage,lost,groundRemoved,sampledRays:n,labels:{tile_id,crop,...(structured?{plantArchitecture,plantForm:form,plantCondition:condition}:{}),...(profile.system?{center_target:'plant-base-xy',growing_system:profile.system}:{}),tile_size_m:[10,10],num_points:outputN,boxes},p}}

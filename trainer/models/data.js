@@ -1,5 +1,5 @@
 import {cropProfile} from '../generator/crops.js?v=systems1';
-import {field, returnBand} from '../generator/field.js?v=plants3';
+import {field, returnBand} from '../generator/field.js?v=board-placement1';
 import {plantSettings} from '../generator/plant-version.js?v=plants3';
 import {predict} from './model.js';
 

@@ -1,4 +1,4 @@
-import {studyMap,reached,drawLowPatch} from './scan-study-map.js?v=orchard-ranking1';
+import {studyMap,reached,drawLowPatch} from './scan-study-map.js?v=board-placement1';
 import {RAY_BUDGETS,sensorName} from '../generator/sensors.js';
 import {cropProfile} from '../generator/crops.js';
 
@@ -15,6 +15,7 @@ const orchardMiss={
   refinement:'a cell survived spacing near the base. Final centering moved its pin outside 15 cm.',
   'assigned-elsewhere':'a final pin was within 15 cm, but it matched another tree.'
 };
+const boardNames=['At trees','Across plot'];
 const format=n=>n.toLocaleString();
 export function initScanStudy(params) {
   const el=id=>document.getElementById(id), details=el('scan-study'), form=el('studyForm');
@@ -37,7 +38,7 @@ export function initScanStudy(params) {
   }
   if ([...spacing.options].some(option=>option.value===params.get('studySpacing'))) spacing.value=params.get('studySpacing');
   const requestedMode=params.get('studyMode');
-  if(['layouts','damage','scaffolds','spacing','ranking'].includes(requestedMode))comparison.value=requestedMode;
+  if(['layouts','damage','scaffolds','spacing','ranking','boards'].includes(requestedMode))comparison.value=requestedMode;
   showSettings();
   if(Object.hasOwn(metricText,params.get('studyMetric')))metric.value=params.get('studyMetric');
   if(params.has('studyCloud'))cloud.checked=params.get('studyCloud')==='on';
@@ -64,11 +65,12 @@ export function initScanStudy(params) {
     spacing.disabled=mode!=='spacing';
     spacing.closest('label').hidden=spacing.disabled;
     const rules=ruleNames(mode);
-    run.textContent=({spacing:'Compare pin spacing',ranking:'Compare ranking rules'})[mode] ?? 'Compare scans';
-    cloud.checked=mode==='layouts' || Boolean(rules);
-    if(rules || mode==='damage' || mode==='scaffolds')metric.value='orchard';
+    run.textContent=({spacing:'Compare pin spacing',ranking:'Compare ranking rules',boards:'Compare board placement'})[mode] ?? 'Compare scans';
+    cloud.checked=mode==='layouts' || mode==='boards' || Boolean(rules);
+    if(rules || mode==='boards' || mode==='damage' || mode==='scaffolds')metric.value='orchard';
     el('studyQuestion').textContent={
       ranking:'Can low laser returns help locate a trunk? Both rules start with the same possible bases. The trial gives a spot priority if nearby points sit 15 to under 48 cm above the plot’s zero-height plane. The soil can rise or fall around that plane.',
+      boards:'Do boards make the locator guess where a tree grows? In the first scan each board is centered on a tree. In the second its position is chosen anywhere on the plot. Both scans use the same trees, board shapes and low-return ranking rule.',
       spacing:'Can two guesses belong to one tree? Use the same scan twice and change how far apart the locator keeps candidate pins. Check the matched trees and extra guesses.',
       scaffolds:'How does changing the thickness of a tree’s main branches affect woody returns and its predicted base? Both versions use the same planting, scanner and ray budget.',
       damage:'Does the base pin move when one scaffold breaks on each tree?',
@@ -88,6 +90,8 @@ export function initScanStudy(params) {
         label='Did closer pins find more trees?';
       }else if(comparison.value==='ranking'){
         page='orchard-ranking.md';label='When did low returns help locate a trunk?';
+      }else if(comparison.value==='boards'){
+        page='orchard-boards.md';label='How does moving the boards change the result?';
       }
     }
     guide.href='https://github.com/mvalancy/crop-trainer/blob/main/docs/'+page;
@@ -98,7 +102,11 @@ export function initScanStudy(params) {
     // A geometry comparison preserves the source budget, including 0 for a seeded budget.
     if(comparison.value==='damage')url.searchParams.set('plantCondition',results[arm].recipe.plantCondition);
     else if(comparison.value==='scaffolds')url.searchParams.set('plantArchitecture',results[arm].recipe.plantArchitecture);
-    else if(!ruleNames())url.searchParams.set('budget',results[arm].recipe.points);
+    else if(comparison.value==='boards'){
+      url.searchParams.set('boards','on');
+      if(arm===1)url.searchParams.set('boardPlacement','independent');
+      else url.searchParams.delete('boardPlacement');
+    }else if(!ruleNames())url.searchParams.set('budget',results[arm].recipe.points);
     url.searchParams.set('tile',results[arm].tileId);
     url.searchParams.set('sensor',results[arm].recipe.sampling.key);
     for(const key of ['studyMode','studyCloud','studyLow','studyHigh','studyMetric','studyTolerance','studySpacing','studyZoom','studyBox','box'])url.searchParams.delete(key);
@@ -124,6 +132,7 @@ export function initScanStudy(params) {
       const suffix=i?'B':'A', trace=plant.orchardTrace;
       const arm=results[i];
       const armTitle=rules?.[i] ?? ({
+        boards:boardNames[i],
         scaffolds:'v'+arm.recipe.plantArchitecture,
         damage:i?'Broken':'Intact',
         layouts:i?'OS1-64':'Grid',
@@ -168,6 +177,12 @@ export function initScanStudy(params) {
         ? format(n)+' cyan 5 cm '+(n===1?'cell':'cells')+' in this plot · returns 15 to under 48 cm high'
         : 'No cells in this plot recorded returns 15 to under 48 cm high.';
     }
+    const boardStudy=comparison.value==='boards';
+    const boardKey=el('studyBoardReturnsKey');
+    boardKey.hidden=!(boardStudy && cloud.checked && complete);
+    if(!boardKey.hidden){
+      el('studyBoardReturnsCount').textContent='Orange squares mark board hits in the full-plot previews · '+format(results[0].boardPreviewReturns)+' at trees and '+format(results[1].boardPreviewReturns)+' across the plot.';
+    }
     const showOrchard=mode==='orchard'||comparison.value==='damage'||comparison.value==='scaffolds';
     const canZoom=complete && selected>=0 && mode==='orchard';
     const focused=canZoom && zoom.checked;
@@ -175,7 +190,7 @@ export function initScanStudy(params) {
     el('studyZoomKey').hidden=!focused;
     const traced=renderOrchardTrace(selected,complete && showOrchard);
     for(const [i,map] of maps.entries()){
-      map.draw({cloud:!results[i]||cloud.checked?frames[i]:null,result:results[i],metric:mode,selected,focused,lowCellIds});
+      map.draw({cloud:!results[i]||cloud.checked?frames[i]:null,result:results[i],metric:mode,selected,focused,lowCellIds,showBoards:boardStudy});
       const out=el(i?'studyCountB':'studyCountA'),r=results[i];
       const distance=el(i?'studyDistanceB':'studyDistanceA'),plant=r?.plants[selected];
       distance.hidden=traced || !(complete&&plant&&r.orchardPins&&showOrchard);
@@ -189,7 +204,9 @@ export function initScanStudy(params) {
         const extras=scoring?.find(s=>s.cm===15)?.fp;
         const extraCount=extras===undefined?'':' · '+format(extras)+(extras===1?' extra pin':' extra pins');
         const wood=r.orchardWoodReturns===undefined?'':' · '+format(r.orchardWoodReturns)+' returns from tree wood';
-        out.textContent=format(marked)+' of '+r.plants.length+' plants'+extraCount+' · '+format(r.sampledRays)+' rays sampled'+wood;
+        out.textContent=boardStudy
+          ? format(marked)+'/'+r.plants.length+' trees'+extraCount+' · '+format(r.boardReturns)+' board returns'
+          : format(marked)+' of '+r.plants.length+' plants'+extraCount+' · '+format(r.sampledRays)+' rays sampled'+wood;
       }
     }
     if(!complete)return;
@@ -204,10 +221,11 @@ export function initScanStudy(params) {
       if(a && !b)lost++;
     });
     const change=el('studyChange');
-    if(rules && mode==='orchard'){
+    if((rules || boardStudy) && mode==='orchard'){
       const [standard,trial]=results.map(r=>r.orchardScores.find(s=>s.cm===15));
+      const subject=boardStudy?'boards across the plot':'the trial';
       const matches=gained || lost
-        ? 'At 15 cm the trial gained '+gained+(gained===1?' match':' matches')+' and lost '+lost+'.'
+        ? 'At 15 cm '+subject+' gained '+gained+(gained===1?' match':' matches')+' and lost '+lost+'.'
         : 'Both settings matched the same '+standard.tp+(standard.tp===1?' tree.':' trees.');
       const extras=trial.fp===standard.fp
         ? 'Both produced '+trial.fp+(trial.fp===1?' extra pin.':' extra pins.')
@@ -220,6 +238,7 @@ export function initScanStudy(params) {
     }
     const p=results[0].plants[selected],q=results[1].plants[selected];
     el('studyTargetDetail').textContent=p?'Plant '+selected+' received '+p.returns+' and '+q.returns+' crop returns.':'Select a plant on either map or use the list to inspect its returns.';
+    if(boardStudy && p) el('studyTargetDetail').textContent='Within 15 cm of tree '+selected+' the scans recorded '+format(p.boardReturns15cm)+' board returns with boards at trees and '+format(q.boardReturns15cm)+' with boards across the plot. The tree itself supplied '+format(p.returns)+' and '+format(q.returns)+' crop returns.';
     if (rules && p) el('studyTargetDetail').textContent='Tree '+selected+' received '+format(p.returns)+' crop returns in the shared scan.';
     el('studyLinkA').textContent=rules?'Open scan in 3D':'First scan in 3D';
     el('studyLinkB').hidden=Boolean(rules);
@@ -254,6 +273,11 @@ export function initScanStudy(params) {
       const layout=sensorName(result.recipe.sampling);
       const description=rules?layout:comparison.value==='layouts'?title:title+' · '+layout;
       line.append(name,' · '+description+' · '+format(result.sampledRays)+' sampled rays');
+      if(comparison.value==='boards') {
+        const id=document.createElement('code');
+        id.textContent=result.tileId;
+        line.append(' · scan ',id);
+      }
       arms.append(line);
     }
     const methods=[
@@ -264,7 +288,9 @@ export function initScanStudy(params) {
     for (const [name,key,help] of methods) {
       if (!results[0][key]) continue;
       const body=table.createTBody(), title=document.createElement('th');
-      title.scope='rowgroup'; title.colSpan=5; title.textContent=name; title.dataset.help=help;
+      title.scope='rowgroup'; title.colSpan=5;
+      title.textContent=comparison.value==='boards' && key==='orchardScores'?'Orchard base · low-return ranking':name;
+      title.dataset.help=help;
       body.insertRow().append(title);
       const fixedBaseline=rules && key!=='orchardScores';
       const armsToShow=fixedBaseline?[results[0]]:results;
@@ -272,7 +298,7 @@ export function initScanStudy(params) {
         const score=result[key].find(s=>s.cm===cm);
         const row=body.insertRow(), arm=document.createElement('th');
         arm.scope='row';
-        arm.textContent=fixedBaseline?'Fixed':rules?.[i] ?? (i?'Second':'First');
+        arm.textContent=fixedBaseline?'Fixed':rules?.[i] ?? (comparison.value==='boards'?boardNames[i]:i?'Second':'First');
         if(fixedBaseline)arm.dataset.help='This height detector used the same points and kept the same pin spacing in both runs.';
         row.append(arm);
         for (const value of [score.tp,score.fp,score.fn]) row.insertCell().textContent=String(value);
@@ -299,6 +325,10 @@ export function initScanStudy(params) {
       status.textContent='Scored the same '+format(results[0].returnedPoints)+' returns twice. '+change;
       return;
     }
+    if(comparison.value==='boards'){
+      status.textContent='Both scans sampled '+format(results[0].sampledRays)+' rays across the same '+plants.length+' planted tree bases. Both used low-return ranking and 1.05 m pin spacing.';
+      return;
+    }
     if(comparison.value==='layouts'){
       status.textContent='Both layouts sampled '+format(results[0].sampledRays)+' rays over the same '+plants.length+' plants.';
       return;
@@ -322,24 +352,25 @@ export function initScanStudy(params) {
     if(mode==='budgets'&&budgets[0]>=budgets[1]){
       high.setCustomValidity('Choose a second budget higher than the first.');high.reportValidity();return;
     }
+    if(complete && target.value!=='') requestedBox=Number(target.value);
     reset();el('studyResults').hidden=false;run.disabled=true;cancel.hidden=false;
-    const titles={ranking:['Usual rule','Low returns'],spacing:['Standard · 1.05 m spacing','Trial · '+spacing.value+' m spacing'],layouts:['Reference grid','OS1-64 · simulated rings'],damage:['Intact scaffolds','One broken scaffold per tree'],
+    const titles={boards:['Boards at trees','Boards across the plot'],ranking:['Usual rule','Low returns'],spacing:['Standard · 1.05 m spacing','Trial · '+spacing.value+' m spacing'],layouts:['Reference grid','OS1-64 · simulated rings'],damage:['Intact scaffolds','One broken scaffold per tree'],
       scaffolds:['Original scaffold widths · v3','Variable scaffold widths · v4'],
       budgets:budgets.map(budget=>format(budget)+' rays requested')};
-    const views=ruleNames(mode) ?? ['First scan','Second scan'];
+    const views=ruleNames(mode) ?? (mode==='boards'?boardNames:['First scan','Second scan']);
     el('studyViewA').textContent=views[0];
     el('studyViewB').textContent=views[1];
     el('studyTitleA').textContent=titles[mode][0];el('studyTitleB').textContent=titles[mode][1];
     el('studyCountA').textContent='Sampling…';el('studyCountB').textContent='Waiting…';status.textContent='Growing the first scan…';render();
     function fail(message){reset();status.textContent=message;}
-    try{worker=new Worker(new URL('./scan-study-worker.js?v=orchard-ranking1',import.meta.url),{type:'module'});}
+    try{worker=new Worker(new URL('./scan-study-worker.js?v=board-placement1',import.meta.url),{type:'module'});}
     catch(error){fail(error.message);return;}
     const active=worker;active.onerror=e=>{if(active===worker)fail(e.message||'The comparison worker stopped.');};
     active.onmessage=({data})=>{
       if(active!==worker)return;
       if(data.type==='error'){fail(data.message);return;}
       if(data.type==='row'){
-        frames[data.arm]=data.cloud;maps[data.arm].draw({cloud:data.cloud});
+        frames[data.arm]=data.cloud;maps[data.arm].draw({cloud:data.cloud,showBoards:mode==='boards'});
         el(data.arm?'studyCountB':'studyCountA').textContent='Sampling row '+data.row+' of '+data.rows;
       }else if(data.type==='arm'){
         results[data.arm]=data.result;frames[data.arm]=data.cloud;render();
@@ -375,7 +406,7 @@ export function initScanStudy(params) {
   details.addEventListener('toggle',()=>{if(details.open&&!el('studyResults').hidden)render();});
   el('studySave').onclick=()=>{
     if(!complete)return;
-    const prefix={ranking:'orchard-ranking-study',spacing:'orchard-spacing-study',damage:'damage-study',scaffolds:'scaffold-study',layouts:'layout-study',budgets:'ray-study'}[comparison.value];
+    const prefix={boards:'orchard-boards-study',ranking:'orchard-ranking-study',spacing:'orchard-spacing-study',damage:'damage-study',scaffolds:'scaffold-study',layouts:'layout-study',budgets:'ray-study'}[comparison.value];
     const report={format:'crop-trainer-'+prefix+'-v1',source:el('studyShare').href,arms:results};
     const url=URL.createObjectURL(new Blob([JSON.stringify(report,null,2)],{type:'application/json'}));
     const a=document.createElement('a');a.href=url;a.download=prefix+'-'+recipe.seed+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
@@ -385,11 +416,11 @@ export function initScanStudy(params) {
       const orchardOption=metric.querySelector('[value=orchard]');orchardOption.hidden=orchardOption.disabled=recipe.crop!=='apple';
       const damageOption=comparison.querySelector('[value=damage]');
       damageOption.hidden=damageOption.disabled=recipe.crop!=='apple'||!(recipe.plantArchitecture>=2);
-      for (const mode of ['spacing','ranking']) {
+      for (const mode of ['spacing','ranking','boards']) {
         const option=comparison.querySelector('[value='+mode+']');
         option.hidden=option.disabled=orchardOption.disabled;
       }
-      if(orchardOption.disabled && ruleNames()){
+      if(orchardOption.disabled && (ruleNames() || comparison.value==='boards')){
         const selection=comparison.selectedOptions[0].textContent;
         comparison.value='budgets';metric.value='returns';showSettings();
         status.textContent=selection+' is available with apple trees. Showing ray budgets.';
@@ -407,7 +438,7 @@ export function initScanStudy(params) {
       if(orchardOption.disabled&&metric.value==='orchard')metric.value='returns';
       updateGuide();
       el('studyField').textContent=cropProfile(recipe.crop).name+' · field '+recipe.seed+' · '+sensorName(recipe.sampling);},
-    pause(){changingField=true;reset();},
+    pause(){if(recipe)requestedBox=-1;changingField=true;reset();},
     resume(){changingField=false;run.disabled=!recipe;}
   };
 }

@@ -13,6 +13,7 @@
 .studyPanel .studyMaps figcaption { display: grid; padding: .6rem .65rem .15rem; }
 .studyPanel .studyMaps canvas { width: 100%; max-width: none; }
 .studyLowDot { width: .6rem; height: .6rem; border: 1px solid #26737b; background: #64deea; }
+.studyBoardDot { width: .6rem; height: .6rem; border: 1px solid #925021; background: #ff9e54; }
 .studyMapView { display: none; }
 #scan-study #studyInspect:not([hidden]) { display: contents; }
 .studyFocus { display: grid; align-content: start; gap: .3rem; }

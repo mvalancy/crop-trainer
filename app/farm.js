@@ -1,10 +1,10 @@
 import {encodePly} from '../trainer/field-test/ply.js?v=export1';
 import {setupFirstSteps} from './first-steps.js?v=context-help2';
-import {initScanStudy} from '../trainer/study/scan-study-ui.js?v=orchard-ranking1';
+import {initScanStudy} from '../trainer/study/scan-study-ui.js?v=board-placement1';
 import {createFieldLesson} from './field-lesson.js?v=generator-guide3';
 import {cropProfile} from '../trainer/generator/crops.js?v=systems1';
-import {scanSession} from '../trainer/generator/scan-session.js?v=plants3';
-import {makeRecipe} from '../trainer/models/data.js?v=plants3';
+import {scanSession} from '../trainer/generator/scan-session.js?v=board-placement1';
+import {makeRecipe} from '../trainer/models/data.js?v=board-placement1';
 import {formsFor} from '../trainer/plants/forms.js';
 import {setupFieldPlants} from '../trainer/plants/field-controls.js?v=drag-orbit1';
 import {getSensor, sensorOptions, sensorDetails, rayBudgetOptions, layoutCapacity, DEFAULT_GENERATOR_RAYS} from '../trainer/generator/sensors.js?v=option-fit1';
@@ -63,7 +63,7 @@ const obstacles = ['weeds', 'sticks', 'boards'];
 for (const name of obstacles) {
   for (const [value,label] of [['seeded','From seed'],['on','Include'],['off','Exclude']]) $(name).add(new Option(label,value));
 }
-const replaySelects = [['crop', 'crop'], ['scan', 'sensor'], ['noise', 'noise'], ...obstacles.map(key => [key, key])];
+const replaySelects = [['crop', 'crop'], ['scan', 'sensor'], ['noise', 'noise'], ['boardPlacement', 'boardPlacement'], ...obstacles.map(key => [key, key])];
 for (const [id, key] of replaySelects) {
   const value = requested.get(key);
   if ([...$(id).options].some(option => option.value === value)) $(id).value = value;
@@ -181,6 +181,7 @@ function grow(checkReplay = false) {
   if (cropProfile(crop).fixtures) recipe.infrastructure=$('fixtures').checked;
   if (Number($('budget').value)) recipe.points = Number($('budget').value);
   for (const key of obstacles) if ($(key).value !== 'seeded') recipe[key] = $(key).value === 'on';
+  if ($('boardPlacement').value === 'independent') recipe.boardPlacement = 'independent';
   if ($('noise').value === 'clean') {
     for (const key of ['xy','z','density','gaps','stray','cluster']) recipe.scanNoise[key] = 0;
   } else if ($('noise').value === 'rough') {
@@ -188,6 +189,7 @@ function grow(checkReplay = false) {
   }
   const url = new URL('./', location.href);
   for (const [id, key] of replaySelects) url.searchParams.set(key, $(id).value);
+  if (!recipe.boardPlacement) url.searchParams.delete('boardPlacement');
   for(const [key,value] of Object.entries(plants)) url.searchParams.set(key,value);
   url.searchParams.set('budget', $('budget').value);
   if(recipe.infrastructure===false) url.searchParams.set('fixtures','off');

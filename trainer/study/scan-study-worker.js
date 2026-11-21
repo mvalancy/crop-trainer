@@ -1,5 +1,5 @@
-import {field,sampleCloud} from '../generator/field.js?v=paired-study1';
-import {analyzeStudyScan,checkStudyPair,studyRecipes} from './scan-study.js?v=orchard-ranking1';
+import {field,sampleCloud} from '../generator/field.js?v=board-placement1';
+import {analyzeStudyScan,checkStudyPair,studyRecipes} from './scan-study.js?v=board-placement1';
 
 self.onmessage = ({data:{recipe,budgets,mode='budgets',orchardSpacing}}) => {
   try {
@@ -25,6 +25,13 @@ self.onmessage = ({data:{recipe,budgets,mode='budgets',orchardSpacing}}) => {
       result.timingsMs={generation:reuse ? 0 : generated-start,scoring:performance.now()-generated};
       results.push(result);
       const cloud=sampleCloud(scan.xyz,scan.cls);
+      if (mode==='boards') {
+        result.reusedScan=false;
+        result.previewPoints=cloud.length/4;
+        let visible=0;
+        for(let i=3;i<cloud.length;i+=4) if(cloud[i]===4) visible++;
+        result.boardPreviewReturns=visible;
+      }
       self.postMessage({type:'arm',arm,result,cloud},[cloud.buffer]);
     }
     checkStudyPair(...results);

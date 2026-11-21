@@ -1,4 +1,4 @@
-import {field} from './field.js?v=plants3';
+import {field} from './field.js?v=board-placement1';
 
 self.onmessage = ({data}) => {
   // Previously opened viewers send just the recipe and expect a single scan.

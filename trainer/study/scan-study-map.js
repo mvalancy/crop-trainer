@@ -47,7 +47,7 @@ export function studyMap(canvas) {
     const size=Math.min(width-2*inset,height-2*inset);
     return {width,height,size,x:(width-size)/2,y:(height-size)/2};
   }
-  function draw({cloud,result,metric='returns',selected=-1,focused=false,lowCellIds}={}) {
+  function draw({cloud,result,metric='returns',selected=-1,focused=false,lowCellIds,showBoards=false}={}) {
     const plant=result?.plants[selected];
     const close=focused && Boolean(plant);
     span=close?2.5:10;
@@ -67,6 +67,13 @@ export function studyMap(canvas) {
     if(cloud) {
       for(let i=0;i<cloud.length;i+=4) {
         ctx.fillStyle=cloud[i+3]===1?'#94b988':'#456452';ctx.fillRect(x(cloud[i]),y(cloud[i+1]),1.3,1.3);
+      }
+      if (showBoards) {
+        // Paint only real board hits in the preview. Keep them visible over the other samples.
+        ctx.fillStyle='#ff9e54';
+        for(let i=0;i<cloud.length;i+=4){
+          if (cloud[i+3]===4) ctx.fillRect(x(cloud[i])-1,y(cloud[i+1])-1,2,2);
+        }
       }
     }
     if(lowCellIds?.length) {
