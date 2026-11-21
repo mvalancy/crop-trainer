@@ -8,14 +8,16 @@ import {trainNetworkCPU,predictNetwork} from './trainer/neural.js';
 
 const [command,output,...args]=process.argv.slice(2);
 const trainUsage = 'node run.mjs train new-report.json [settings.json] [--weights new-weights.json]';
+const cliUsage = 'node run.mjs serve [port]\n'+trainUsage+
+  '\nnode run.mjs preflight\n  Train on CPU and replay the held-out synthetic scans through the field CLI. Prints JSON.';
 if(command==='serve'){
  const allowed=new Set(['index.html','farm.js','first-steps.js','field-lesson.js','farm.css','viewer.js','benchmark/index.html','benchmark/watch.js','benchmark/main.js','benchmark/density.js','art/title.svg','art/lettuce-study.webp','trainer/index.html','trainer/main.js','trainer/data.js','trainer/field.js','trainer/model.js','trainer/neural.js','trainer/network.js','trainer/fit-worker.js','trainer/sandbox.js','trainer/crops.js','trainer/sensors.js','README.md','AGENTS.md','LICENSE']);
  for(const module of ['live-scene','scan-session','growing-systems','generate-worker','field-test-ui','field-test-worker','score-scan','inference','ply','references']) allowed.add('trainer/'+module+'.js');
- for(const page of ['README','training','scanners','field-inspection','benchmarks','research','local-setup','field-datasets','field-validation','scan-cli','evidence']) allowed.add('docs/'+page+'.md');
+ for(const page of ['README','training','scanners','field-inspection','benchmarks','research','local-setup','field-datasets','field-validation','scan-cli','evidence','edge-deployment','research-evidence']) allowed.add('docs/'+page+'.md');
  for(const lesson of ['README','models','learning','scoring','fieldwork']) allowed.add('docs/first-steps/'+lesson+'.md');
  for(const diagram of ['returns','patch','weights','network','labels','loss','pins','matches','stages','vine']) allowed.add('art/lesson-'+diagram+'.svg');
  for(const folder of ['art','benchmark','test','trainer']) allowed.add(folder+'/README.md');
- for(const figure of ['scan-learn-find','paired-field','field-notebook','seed-replay','sprout-strip']) allowed.add('art/'+figure+'.svg');
+ for(const figure of ['scan-learn-find','paired-field','field-notebook','seed-replay','sprout-strip','field-deployment']) allowed.add('art/'+figure+'.svg');
  const types={html:'text/html',js:'text/javascript',css:'text/css',svg:'image/svg+xml',webp:'image/webp',md:'text/plain'};
  const port=Number(output||4173);
  if(!Number.isInteger(port)||port<1||port>65535)throw Error('Choose a port from 1 to 65535.');
@@ -29,6 +31,10 @@ if(command==='serve'){
   }catch{res.writeHead(404).end();}
  });
  server.listen(port,'127.0.0.1',()=>console.log('Open http://127.0.0.1:'+port+'/'));
+}else if(command==='preflight'){
+ if(output !== undefined) throw Error('Use node run.mjs preflight with no arguments.');
+ const {preflight} = await import('./cli-preflight.mjs');
+ console.log(JSON.stringify(await preflight(),null,2));
 }else if(command==='train'&&output){
  const configuration = args[0] && !args[0].startsWith('--') ? args.shift() : null;
  if (output.startsWith('--') || (args.length && (args.length !== 2 || args[0] !== '--weights' || !args[1] || args[1].startsWith('--')))) throw Error(trainUsage);
@@ -58,6 +64,6 @@ if(command==='serve'){
  if (weightsPath) console.log('Saved model weights to '+weightsPath);
  console.log('Synthetic mean F1 '+report.meanF1.toFixed(4)+' · '+set.stats.valTiles+' validation scans · '+output);
 }else{
- console.log('node run.mjs serve [port]\n'+trainUsage);
- process.exitCode=command?1:0;
+ console.log(cliUsage);
+ process.exitCode=command && !['--help','-h'].includes(command)?1:0;
 }

@@ -8,6 +8,7 @@ import test from 'node:test';
 import {fileURLToPath} from 'node:url';
 import {promisify} from 'node:util';
 import {runFieldTest} from '../trainer/score-scan.js';
+import {encodePly} from '../trainer/ply.js';
 
 const invoke = promisify(execFile);
 const entry = fileURLToPath(new URL('../score-scan.mjs',import.meta.url));
@@ -105,9 +106,7 @@ test('CLI trains and saves a portable model that reproduces its held-out validat
   const tile = report.recipeManifest.find(t=>t.split==='validation');
   const scan = field(tile.recipe);
   const id = scan.labels.tile_id;
-  const header = 'ply\nformat binary_little_endian 1.0\nelement vertex '+scan.xyz.length/3+
-    '\nproperty float x\nproperty float y\nproperty float z\nend_header\n';
-  await writeFile(join(cwd,id+'.ply'),Buffer.concat([Buffer.from(header),Buffer.from(scan.xyz.buffer)]));
+  await writeFile(join(cwd,id+'.ply'),encodePly(scan.xyz));
   await writeFile(join(cwd,id+'.labels.json'),JSON.stringify(scan.labels));
   await invoke(process.execPath,[entry,'weights.json',id+'.ply','field.json','--labels',id+'.labels.json'],{cwd});
   const replay = JSON.parse(await readFile(join(cwd,'field.json')));
@@ -149,4 +148,30 @@ test('a known two-axis grade recovers the level control in metres and centimetre
   for (const value of ['5','5,','5,NaN','1,2,3']) {
     await assert.rejects(run('invalid.json','--grade-percent',value),/finite numbers for --grade-percent/);
   }
+});
+
+test('preflight replays both soil variants with exported weights and leaves the caller’s directory empty', async t=>{
+  const cwd = await mkdtemp(join(tmpdir(),'crop-trainer-preflight-test-'));
+  t.after(()=>rm(cwd,{recursive:true,force:true}));
+  const cli = fileURLToPath(new URL('../run.mjs',import.meta.url));
+  const {stdout} = await invoke(process.execPath,[cli,'preflight'],{cwd});
+  const result = JSON.parse(stdout);
+  assert.equal(result.passed,true);
+  assert.equal(result.backend,'CPU');
+  assert.equal(result.platform,process.platform);
+  assert.equal(result.architecture,process.arch);
+  assert.equal(result.tiles.length,6);
+  assert.equal(new Set(result.tiles.map(tile=>tile.tile)).size,6);
+  const plantings = Map.groupBy(result.tiles,tile=>tile.seed);
+  assert.equal(plantings.size,3);
+  for (const pair of plantings.values()) {
+    assert.deepEqual(pair.map(tile=>tile.ground).sort(),[false,true]);
+  }
+  for (const tile of result.tiles) {
+    assert.deepEqual(tile.scores.map(s=>s.cm),[7.5,10,15]);
+    for (const score of tile.scores) assert.equal(score.tp+score.fn,tile.plants);
+    for (const score of tile.baselineScores) assert.equal(score.tp+score.fp,tile.baselinePins);
+  }
+  await assert.rejects(invoke(process.execPath,[cli,'preflight','unexpected.json'],{cwd}),/no arguments/);
+  assert.deepEqual(await readdir(cwd),[]);
 });

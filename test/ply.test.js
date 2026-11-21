@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {parsePly,MAX_PLY_BYTES} from '../trainer/ply.js';
+import {encodePly,parsePly,MAX_PLY_BYTES} from '../trainer/ply.js';
 import {field} from '../trainer/field.js';
 
 const text = new TextEncoder();
@@ -40,10 +40,7 @@ test('binary rows use declared widths, list lengths and input view offset', () =
 
 test('reads the exact binary float layout emitted by the field generator', () => {
   const scan = field({seed:574, ground:true, points:12000, radius:.16, spacing:.31});
-  const prefix = text.encode(header('element vertex '+scan.cls.length+'\n'+axis,'binary_little_endian'));
-  const source = new Uint8Array(prefix.length + scan.xyz.byteLength);
-  source.set(prefix);source.set(new Uint8Array(scan.xyz.buffer,scan.xyz.byteOffset,scan.xyz.byteLength),prefix.length);
-  const xyz = parsePly(source.buffer);
+  const xyz = parsePly(encodePly(scan.xyz));
   assert(xyz instanceof Float64Array);
   assert.equal(xyz.length, scan.xyz.length);
   assert(xyz.every((v,i)=>v===scan.xyz[i]));

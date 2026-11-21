@@ -1,5 +1,7 @@
 # Datasets and research
 
+For a short introduction to the strongest experimental evidence, start with [what researchers have measured on real plants](research-evidence.md).
+
 For sources organized by growing system, with annotation coverage, licenses and a runnable vineyard test, see [Public field datasets](field-datasets.md).
 
 - **Lettuce.** Vázquez Gálvez and colleagues describe 387 RGB-D reconstructions and three augmentations of each, covering four lettuce varieties. The metadata lists CC BY 4.0. These individual-plant clouds can inform canopy shape. Keep all augmentations of an original together when splitting examples. [Dataset and license record](https://doi.org/10.21227/5xsx-hq86) · [Machine-readable license](https://api.datacite.org/dois/10.21227/5xsx-hq86)

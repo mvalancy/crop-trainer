@@ -13,6 +13,19 @@ for (const [names, bytes, read, min, max] of [
   for (const name of names.split(' ')) types.set(name,{bytes,read,min,max});
 }
 
+// Generator coordinates are interleaved float32 XYZ. Write the declared
+// little-endian order explicitly so desktop and board exports agree.
+export function encodePly(xyz) {
+  if (!(xyz instanceof Float32Array) || xyz.length % 3) throw Error('Expected float32 XYZ triples.');
+  const header = new TextEncoder().encode('ply\nformat binary_little_endian 1.0\nelement vertex '+xyz.length / 3+
+    '\nproperty float x\nproperty float y\nproperty float z\nend_header\n');
+  const bytes = new Uint8Array(header.length + xyz.byteLength);
+  bytes.set(header);
+  const view = new DataView(bytes.buffer, header.length);
+  for (let i = 0; i < xyz.length; i++) view.setFloat32(i * 4, xyz[i], true);
+  return bytes;
+}
+
 function parseHeader(bytes) {
   const lines = [], decoder = new TextDecoder();
   let start = 0, ended = false;

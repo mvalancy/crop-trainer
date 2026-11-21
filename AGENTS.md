@@ -32,6 +32,8 @@ For timing comparisons, run both contenders through the same Benchmark entry poi
 
 Use a model exported by the Training shed and a local plot scan. If the user supplies an independently surveyed center CSV, run `node score-scan.mjs weights.json plot.ply new-result.json --labels centers.csv`. With no survey, omit `--labels` and describe the resulting pins as predictions. Use the same frame, scan and one-to-one matching for the trained detector and its height-only baseline. The output includes SHA-256 hashes and both source and local coordinates. See the [file and frame contract](docs/scan-cli.md) and [field validation protocol](docs/field-validation.md).
 
+To check a fresh field computer offline after setup, run `node run.mjs preflight`. The CPU runner round-trips exported weights and held-out synthetic PLY files. Record the revision, Node version, OS and board when reporting results. See [board setup and field capture](docs/edge-deployment.md) and the [published research behind these experiments](docs/research-evidence.md).
+
 To reproduce the four-detector comparison on separate synthetic plantings, run `node benchmark/paired-evidence.mjs`. It also calibrates tomato on separate fields and evaluates the frozen cutoff on fresh plantings. [Study design and results](docs/evidence.md)
 
 ## Run a paired experiment

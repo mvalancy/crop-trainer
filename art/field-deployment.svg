@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 360" role="img" aria-labelledby="title desc">
+  <title id="title">From a surveyed crop plot to a local detector</title>
+  <desc id="desc">A tripod LiDAR scans a ten-metre-square crop plot. An XYZ tile travels to a small board running saved model weights. On a map, survey crosses and prediction rings overlap at two plants. One cross has no ring and one ring has no cross.</desc>
+  <defs>
+    <g id="leaf" stroke="#314e39" stroke-width="1.5" stroke-linejoin="round">
+      <path d="M0 2C-7 2-11-2-12-7Q-3-9 1-1Q-1-10 3-13Q9-8 6-3Q12-8 16-5Q13 2 0 2Z" fill="#94b475"/>
+      <path d="M-7-5 0 1 5-5M0 1 10-3" fill="none"/>
+    </g>
+    <g id="survey" fill="none" stroke="#264d39" stroke-width="3" stroke-linecap="round">
+      <path d="M-4.5 0h9M0-4.5v9"/>
+    </g>
+    <circle id="pin" r="8.2" fill="none" stroke="#99452e" stroke-width="2.7"/>
+    <style>
+      text {font-family:system-ui,sans-serif;fill:#243b2f}
+      .heading {font-size:21px;font-weight:700}
+      .copy {font-size:17px}
+      @media (prefers-reduced-motion:no-preference) {
+        .rays {animation:scan 4s ease-in-out infinite}
+        .packet {animation:transfer 4s ease-in-out infinite}
+        .pins {animation:appear 4s ease-in-out infinite}
+        @keyframes scan {0%,34%,100%{opacity:.38} 14%,23%{opacity:1}}
+        @keyframes transfer {0%,30%,100%{opacity:0;transform:translateX(0)} 38%{opacity:1} 56%{opacity:1;transform:translateX(27px)} 64%,99%{opacity:0;transform:translateX(27px)}}
+        @keyframes appear {0%,56%,100%{opacity:.42} 70%,93%{opacity:1}}
+      }
+    </style>
+  </defs>
+  <rect x="1" y="1" width="438" height="358" rx="18" fill="#faf7ed" stroke="#c1c9b5"/>
+  <path d="M18 118h404M18 227h404" stroke="#d6d9c8"/>
+  <!-- A sensor lens and three returns in a staked bed. -->
+  <g transform="translate(11 7)" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m9 71 70-45 92 24-68 48Z" fill="#d1d8ac" stroke="#718063"/>
+    <path d="m26 73 65-42m-41 48 65-42m-41 48 65-42" fill="none" stroke="#bac494" stroke-width="6"/>
+    <g fill="none" stroke="#7f7256" stroke-width="2">
+      <path d="M9 71v-8m70-37v-8m92 32v-8m-68 56v-8"/>
+    </g>
+    <use href="#leaf" x="32" y="69"/><use href="#leaf" x="57" y="53"/>
+    <use href="#leaf" x="59" y="76"/><use href="#leaf" x="84" y="60"/>
+    <use href="#leaf" x="86" y="83"/><use href="#leaf" x="111" y="67"/>
+    <g class="rays" fill="none" stroke="#946c24" stroke-dasharray="2 4" stroke-width="1.7">
+      <path d="m141 24-30 39m30-39L82 57m59-33L59 49"/>
+    </g>
+    <g fill="#f4cb75" stroke="#8e681b"><circle cx="111" cy="63" r="2.3"/><circle cx="82" cy="57" r="2.3"/><circle cx="59" cy="49" r="2.3"/></g>
+    <path d="M146 32v8m0-2-12 33m12-33 13 28m-13-28 3 28" fill="none" stroke="#364941" stroke-width="3"/>
+    <path d="M139 18q8-4 15 0v13q-8 4-15 0Z" fill="#e4e7d9" stroke="#364941" stroke-width="2"/>
+    <path d="M140 23q6 3 13 0" fill="none" stroke="#335444" stroke-width="4"/>
+  </g>
+  <text class="heading" x="189" y="43">Scan a 10 × 10 m plot</text>
+  <text class="copy" x="189" y="70">Collect LiDAR returns and</text>
+  <text class="copy" x="189" y="94">survey the plant centers.</text>
+  <!-- Local file transfer into a thumbnail board with GPIO and two ports. -->
+  <g transform="translate(18 133)" stroke-linejoin="round">
+    <path d="M3 7h31l11 11v46H3Z" fill="#f4f1d9" stroke="#76856e" stroke-width="1.6"/>
+    <path d="M33 8v11h11" fill="none" stroke="#76856e"/>
+    <g fill="#538060"><circle cx="11" cy="32" r="2"/><circle cx="17" cy="25" r="1.5"/><circle cx="21" cy="32" r="1.8"/><circle cx="28" cy="29" r="2"/><circle cx="34" cy="34" r="1.5"/></g>
+    <text x="8" y="54" font-size="16" font-weight="700">XYZ</text>
+    <path d="M48 37h34l-5-4m5 4-5 4" fill="none" stroke="#7e8c78" stroke-width="2"/>
+    <circle class="packet" cx="50" cy="37" r="3.5" fill="#ba772e"/>
+    <rect x="88" y="11" width="72" height="51" rx="6" fill="#416b50" stroke="#304b38" stroke-width="2"/>
+    <g fill="#dce6bf"><circle cx="94" cy="17" r="2"/><circle cx="153" cy="57" r="2"/></g>
+    <path d="M100 18h37" stroke="#dbc582" stroke-width="4" stroke-dasharray="2 3"/>
+    <path d="M99 48h9l5-8h10m4-12h11l4-5h12m-24 22h8l4 7h8" fill="none" stroke="#89a67c" stroke-width="1.4"/>
+    <rect x="111" y="27" width="21" height="20" rx="2" fill="#263931" stroke="#b2bd9a"/>
+    <g fill="#d1d9ce" stroke="#31463c"><rect x="148" y="21" width="14" height="11"/><rect x="148" y="37" width="14" height="11"/></g>
+  </g>
+  <text class="heading" x="189" y="157">Run on the board</text>
+  <text class="copy" x="189" y="184">Pair the XYZ tile with</text>
+  <text class="copy" x="189" y="208">trained model weights.</text>
+  <!-- Three survey centers and three predictions on one map. -->
+  <g transform="translate(19 246)">
+    <rect width="151" height="91" rx="5" fill="#e7ead5" stroke="#76856e" stroke-width="1.5"/>
+    <path d="M19 27h114M19 63h114" fill="none" stroke="#cbd4b1" stroke-width="16" stroke-linecap="round"/>
+    <use href="#survey" x="38" y="27"/><use href="#survey" x="103" y="27"/><use href="#survey" x="70" y="63"/>
+    <g class="pins"><use href="#pin" x="39" y="27"/><use href="#pin" x="102" y="28"/><use href="#pin" x="118" y="61"/></g>
+  </g>
+  <text class="heading" x="189" y="258">Check the pins</text>
+  <use href="#survey" x="197" y="284"/><text class="copy" x="211" y="290">Survey</text>
+  <use href="#pin" x="290" y="284"/><text class="copy" x="305" y="290">Model</text>
+  <text class="copy" x="189" y="318">Two matches, one miss</text>
+  <text class="copy" x="189" y="342">and one extra pin.</text>
+</svg>

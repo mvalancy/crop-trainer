@@ -11,6 +11,8 @@ The first command trains the default lettuce detector on synthetic fields using 
 
 The field-test output contains predicted center coordinates, their model scores, the height-only predictions and SHA-256 hashes of the inputs. Each report needs a new filename. An unlabeled scan can show whether the pins look plausible. Measuring detection accuracy takes independent reference centers.
 
+For board setup, a practice run, and the steps from scanner to pins, see [Take a detector to the field](edge-deployment.md).
+
 ## Align a surveyed plot
 
 Use one Z-up, 10 × 10 metre plot. Express its lower-left XY corner and the ground elevation at that corner in the original scan coordinates. The default is metres with origin `0,0,0`. This example uses centimetres, a lower-left corner at (5000, 2000) and ground at Z = 18.

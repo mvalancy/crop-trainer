@@ -1,3 +1,4 @@
+import {encodePly} from './trainer/ply.js?v=export1';
 import {setupFirstSteps} from './first-steps.js';
 import {createFieldLesson} from './field-lesson.js';
 import {cropProfile} from './trainer/crops.js?v=systems1';
@@ -219,11 +220,7 @@ function download(parts, extension) {
 }
 $('labels').onclick=()=>download([JSON.stringify({...scan.labels, crop_returns_per_box:scan.plantReturns},null,2)],'.labels.json');
 $('recipe').onclick=()=>download([JSON.stringify({generator:'crop-trainer-v1',tile_id:scan.labels.tile_id,recipe:scan.p},null,2)],'.recipe.json');
-$('ply').onclick=()=>{
-  const bytes=new DataView(new ArrayBuffer(scan.xyz.byteLength));
-  scan.xyz.forEach((v,i)=>bytes.setFloat32(i*4,v,true));
-  download(['ply\nformat binary_little_endian 1.0\nelement vertex '+scan.cls.length+'\nproperty float x\nproperty float y\nproperty float z\nend_header\n',bytes],'.ply');
-};
+$('ply').onclick=()=>download([encodePly(scan.xyz)],'.ply');
 function journal(){
   try{
     const history=JSON.parse(localStorage.getItem('crop-trainer-farm-v1')||'{}');

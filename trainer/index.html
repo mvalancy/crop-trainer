@@ -118,6 +118,7 @@
 <button type="button" id="downloadWeights" hidden>Download model weights</button>
 <button type="button" id="downloadRun" hidden="">Download benchmark JSON</button>
 <button type="button" id="downloadSettings" hidden="">Download run settings</button></div>
+<a class="reviewLink" href="https://github.com/mvalancy/crop-trainer/blob/main/docs/edge-deployment.md">Run your saved detector on a Raspberry Pi or Jetson →</a>
 <details id="weightInspector" hidden><summary>Explore learned weights</summary>
 <div class="formPair"><label>Layer<select id="weightLayer"></select></label><label>Unit<select id="weightUnit"></select></label></div>
 <p class="hint">Each weight scales one input. Bias shifts the total before activation. Bar lengths are relative to the largest magnitude in this unit.</p>
@@ -179,7 +180,7 @@
 
 </section>
 <section id="field-test" class="fieldTest panel" aria-labelledby="fieldTestTitle">
-<div class="sectionHead"><h2 id="fieldTestTitle">Field test</h2><p>Run a detector on a LiDAR plot you own. Your files are processed in this browser.</p></div>
+<div class="sectionHead"><h2 id="fieldTestTitle">Field test</h2><p>See where your detector places pins in a scan of your own plot. Add surveyed plant centers to count misses and extra pins. Your files stay in this browser.</p></div>
 <form id="fieldTestForm">
 <div class="testInputs">
 <label>Detector<select id="testModelSource"><option value="file">Saved weights JSON</option><option value="current" disabled>Most recent completed fit</option></select></label>
@@ -210,7 +211,16 @@
 <div id="testStages" hidden><h3>Where did the model lose plants?</h3>
 <p id="testStageSummary"></p><p class="hint">Each stage matches peaks to surveyed centers one to one within 15 cm. A plant needs a nearby candidate before the network can score it.</p></div>
 </div>
-<div class="testGuides"><a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/evidence.md">When does training beat peak height?</a><a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/field-validation.md">Design a field trial →</a></div>
+<details class="fieldEvidence">
+<summary>Can a model find plants on a real farm?</summary>
+<p>In a Sardinian artichoke field, researchers used aerial photographs to find 543 plants in one survey. Their detector missed 58 and added seven extra. <a href="https://iris.uniss.it/bitstream/11388/319309/5/1-s2.0-S0168169923005732-main%20%284%29.pdf">Read the artichoke study (PDF)</a></p>
+<p>Our LiDAR test asked a different question. On one vineyard strip, the model placed 21 pins for 18 trunks, and just one landed within 15 cm. Comparing pins with surveyed centers reveals errors that a count can hide. <a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/field-datasets.md#replay-the-vineyard-test">Replay the vineyard test</a></p>
+</details>
+<nav class="testGuides" aria-label="Field test guides">
+<a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/field-validation.md">Design a field trial</a>
+<a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/edge-deployment.md">Set up a Raspberry Pi or Jetson Orin Nano</a>
+<a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/evidence.md">When does training beat peak height?</a>
+<a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/research-evidence.md">Read the crop detection papers</a></nav>
 </section>
 </main>
 <footer class="siteFoot"><span>Created by Matthew Valancy</span>

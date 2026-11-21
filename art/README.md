@@ -9,6 +9,7 @@ The little farm on the front page lives here. Open an SVG to see it move or open
 | [Lettuce under a scanning beam](title.svg) | [Repository welcome](../README.md) |
 | [From laser dots to lettuce pins](scan-learn-find.svg) | [Training shed guide](../trainer/README.md) |
 | [Two detectors, one planting](paired-field.svg) | [Benchmark guide](../benchmark/README.md) |
+| [From a surveyed plot to a local detector](field-deployment.svg) | [Field deployment guide](../docs/edge-deployment.md) |
 | [A notebook for exploring a field](field-notebook.svg) | [Field guide](../docs/README.md) |
 | [Two rows from the same seed](seed-replay.svg) | [Test plot](../test/README.md) |
 | [The sprout animation strip](sprout-strip.svg) | This illustration patch |
