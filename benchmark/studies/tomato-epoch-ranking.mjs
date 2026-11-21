@@ -44,7 +44,7 @@ export function rankSummary(scores,labels,threshold=null) {
 }
 
 // Use the same open matching distances as the training labels (the boundary band is unevaluated).
-function labelsFor(points,centers) {
+export function labelsFor(points,centers) {
   return points.map(([x,y])=>{
     let nearest=Infinity;
     for (const [cx,cy] of centers) nearest=Math.min(nearest,(x-cx)**2+(y-cy)**2);

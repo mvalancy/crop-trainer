@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 394" role="img" aria-labelledby="title desc">
+  <title id="title">Which plant peaks reach the cutoff?</title>
+  <desc id="desc">Two 640-epoch fits scored the same 405 peaks near labeled seedlings on six simulated ring scans. At a score cutoff of 0.70, 122 peaks passed in the first fit and 6 in the second. Each bar counts peaks in one tenth of the score range on the same vertical scale.</desc>
+  <style>
+    text { font-family: system-ui, sans-serif; fill: #223d30 }
+    .heading { font-size: 23px; font-weight: 720 }
+    .label { font-size: 15px; font-weight: 660 }
+    .sub, .tick { font-size: 14px }
+    .tick { fill: #4d6255 }
+    .bin { fill: #719388 }
+    .pass { fill: #9f4c26 }
+    .rule { stroke: #995832; stroke-width: 1.3; stroke-dasharray: 4 3 }
+    @media (prefers-reduced-motion: no-preference) {
+      .bin { transform-box: fill-box; transform-origin: center bottom; animation: grow .85s ease-out both }
+      @keyframes grow { from { transform: scaleY(.05) } to { transform: scaleY(1) } }
+    }
+  </style>
+  <rect width="480" height="394" rx="17" fill="#f7f8f0"/>
+  <text x="20" y="35" class="heading">Which plant peaks reach the cutoff?</text>
+  <text x="20" y="61" class="sub">Same 405 seedling peaks · two fits of 640 epochs</text>
+  <g aria-label="Training seed 987149">
+    <text x="20" y="90" class="label">Training seed 987,149</text>
+    <text x="451" y="90" text-anchor="end" class="label">122 peaks passed</text>
+    <rect x="327" y="100" width="120" height="78" fill="#f4e5d7"/>
+    <path d="M47 178h400" stroke="#c8d3c7"/>
+    <text x="40" y="182" text-anchor="end" class="tick">0</text>
+    <path d="M47 103h400" stroke="#c8d3c7"/>
+    <text x="40" y="107" text-anchor="end" class="tick">100</text>
+    <rect class="bin" x="49" y="178" width="36" height="0"><title>0.0–0.1, 0 peaks</title></rect>
+    <rect class="bin" x="89" y="171.25" width="36" height="6.75"><title>0.1–0.2, 9 peaks</title></rect>
+    <rect class="bin" x="129" y="162.25" width="36" height="15.75"><title>0.2–0.3, 21 peaks</title></rect>
+    <rect class="bin" x="169" y="143.5" width="36" height="34.5"><title>0.3–0.4, 46 peaks</title></rect>
+    <rect class="bin" x="209" y="141.25" width="36" height="36.75"><title>0.4–0.5, 49 peaks</title></rect>
+    <rect class="bin" x="249" y="120.25" width="36" height="57.75"><title>0.5–0.6, 77 peaks</title></rect>
+    <rect class="bin" x="289" y="117.25" width="36" height="60.75"><title>0.6–0.7, 81 peaks</title></rect>
+    <rect class="bin pass" x="329" y="136.75" width="36" height="41.25"><title>0.7–0.8, 55 peaks</title></rect>
+    <rect class="bin pass" x="369" y="148" width="36" height="30"><title>0.8–0.9, 40 peaks</title></rect>
+    <rect class="bin pass" x="409" y="157.75" width="36" height="20.25"><title>0.9–1.0, 27 peaks</title></rect>
+    <path d="M327 100v80" class="rule"/>
+    <text x="47" y="198" text-anchor="middle" class="tick">0</text>
+    <text x="247" y="198" text-anchor="middle" class="tick">0.5</text>
+    <text x="327" y="198" text-anchor="middle" class="tick">0.7</text>
+    <text x="447" y="198" text-anchor="middle" class="tick">1</text>
+  </g>
+  <g aria-label="Training seed 1273187">
+    <text x="20" y="223" class="label">Training seed 1,273,187</text>
+    <text x="451" y="223" text-anchor="end" class="label">6 peaks passed</text>
+    <rect x="327" y="233" width="120" height="78" fill="#f4e5d7"/>
+    <path d="M47 311h400" stroke="#c8d3c7"/>
+    <text x="40" y="315" text-anchor="end" class="tick">0</text>
+    <path d="M47 236h400" stroke="#c8d3c7"/>
+    <text x="40" y="240" text-anchor="end" class="tick">100</text>
+    <rect class="bin" x="49" y="302" width="36" height="9"><title>0.0–0.1, 12 peaks</title></rect>
+    <rect class="bin" x="89" y="280.25" width="36" height="30.75"><title>0.1–0.2, 41 peaks</title></rect>
+    <rect class="bin" x="129" y="268.25" width="36" height="42.75"><title>0.2–0.3, 57 peaks</title></rect>
+    <rect class="bin" x="169" y="242.75" width="36" height="68.25"><title>0.3–0.4, 91 peaks</title></rect>
+    <rect class="bin" x="209" y="239" width="36" height="72"><title>0.4–0.5, 96 peaks</title></rect>
+    <rect class="bin" x="249" y="254.75" width="36" height="56.25"><title>0.5–0.6, 75 peaks</title></rect>
+    <rect class="bin" x="289" y="290.75" width="36" height="20.25"><title>0.6–0.7, 27 peaks</title></rect>
+    <rect class="bin pass" x="329" y="306.5" width="36" height="4.5"><title>0.7–0.8, 6 peaks</title></rect>
+    <rect class="bin pass" x="369" y="311" width="36" height="0"><title>0.8–0.9, 0 peaks</title></rect>
+    <rect class="bin pass" x="409" y="311" width="36" height="0"><title>0.9–1.0, 0 peaks</title></rect>
+    <path d="M327 233v80" class="rule"/>
+    <text x="47" y="331" text-anchor="middle" class="tick">0</text>
+    <text x="247" y="331" text-anchor="middle" class="tick">0.5</text>
+    <text x="327" y="331" text-anchor="middle" class="tick">0.7</text>
+    <text x="447" y="331" text-anchor="middle" class="tick">1</text>
+  </g>
+  <text x="240" y="358" text-anchor="middle" class="label">Model score for each peak</text>
+  <text x="240" y="380" text-anchor="middle" class="sub">Shaded bins reach the 0.70 cutoff, before spacing.</text>
+</svg>

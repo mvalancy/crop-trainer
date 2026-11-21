@@ -69,6 +69,10 @@ On one AMD EPYC 7763 CPU with Node 24.22.1, the confirmation training rows took 
 
 ## Try one planting in Field Test
 
+Open either saved fit below and click **Run example**. Your browser grows the same 110 seedlings, scans them and scores the selected weights. Switch the fit and run again. At 15 cm the map changes from one matched plant to 53. You can also replace the example weights or scan with your own files. [Try 40 epochs](https://mvalancy.github.io/crop-trainer/trainer/?fieldExample=tomato-40#field-test) · [Try 640 epochs](https://mvalancy.github.io/crop-trainer/trainer/?fieldExample=tomato-640#field-test)
+
+### Recreate the files yourself
+
 1. Open the 40-epoch preset, run Training Shed and download the model weights. Repeat with the same settings at 640 epochs. [Train for 40 epochs](https://mvalancy.github.io/crop-trainer/trainer/?plan=quick&engine=cpu&crop=tomato&plantArchitecture=2&plantForm=mixed&plantCondition=healthy&trainFields=6&valFields=1&seed=987149&sensor=reference&trainingRayBudget=60000&validationRayBudget=60000&featureMode=local-ground&minimumHeight=0.035&sampleLimit=600&positiveSampling=ordinary&epochs=40) · [Train for 640 epochs](https://mvalancy.github.io/crop-trainer/trainer/?plan=quick&engine=cpu&crop=tomato&plantArchitecture=2&plantForm=mixed&plantCondition=healthy&trainFields=6&valFields=1&seed=987149&sensor=reference&trainingRayBudget=60000&validationRayBudget=60000&featureMode=local-ground&minimumHeight=0.035&sampleLimit=600&positiveSampling=ordinary&epochs=640)
 2. Open the first confirmation planting and download its scan and labels. Seed `40117063` contains 110 seedlings on the ring layout. The scan ID is `56b872a50fcac3ab`. [Open this planting](https://mvalancy.github.io/crop-trainer/?crop=tomato&plantArchitecture=2&plantForm=seedling&plantCondition=healthy&sensor=os1-64&seed=40117063&budget=60000&ground=true&weeds=off&sticks=off&boards=off&noise=clean&tile=56b872a50fcac3ab)
 3. In Field Test, choose the scan, labels and each model in turn. At the saved cutoff, the starter matches one plant with four extra pins at 15 cm. The longer fit matches 53 with 23 extra pins. Change **Match distance** to 7.5 cm on the same map. Now 44 pins match and 32 are extra. The Benchmark link above runs a separate paired comparison with its own seeded validation fields. [Open Field Test](https://mvalancy.github.io/crop-trainer/trainer/#field-test)
@@ -99,6 +103,31 @@ node benchmark/studies/tomato-duration-cutoffs.mjs confirmation cutoffs-dev.json
 
 Both commands record the same decision hash, `97cdc42c77f0199325db8c22e6d00faed3ec062452d455dfe026ca5b2f023963`. The output includes trained-weight hashes, scan IDs, per-field counts at each distance and hardware-specific timings. [Duration and cutoff study](../benchmark/studies/tomato-duration-cutoffs.mjs)
 
+## Was it the planting or the trained model?
+
+We replayed the two confirmation fits on **both** sets of six previously scored plantings. Each model saw the same scan IDs and candidate peaks at both cutoffs. This retrospective comparison changes one factor at a time. The duration cohort has 657 plants per stage, the cutoff cohort 663.
+
+The seedling columns show how many plants the **640-epoch** model found as the cutoff rose from 0.50 to 0.70. The branching columns compare **640 at 0.70** with the **40-epoch, 0.50 starter trained on the same seed**. Each cell gives the precision change in percentage points and the number of additional plants missed. All matches use 15 cm.
+
+| Training seed | Test plantings | Grid seedlings | Ring seedlings | Branching grid · precision / extra misses | Branching rings · precision / extra misses |
+| --- | --- | ---: | ---: | ---: | ---: |
+| 987149 | Duration | 58 → 10 | 260 → 107 | +6.39 / 14 | −3.29 / 9 |
+| 987149 | Cutoff | 65 → 16 | 232 → 105 | +7.70 / 12 | −3.97 / 14 |
+| 1273187 | Duration | 84 → 2 | 101 → 5 | +3.26 / 6 | +6.78 / 33 |
+| 1273187 | Cutoff | 77 → 5 | 96 → 4 | +7.07 / 21 | +5.59 / 33 |
+
+Changing the test plantings kept the same pattern. One 640-epoch fit found over 100 ring seedlings at 0.70 and exceeded the branching precision cost on both cohorts. The other fit found four or five and met the branching precision requirement on both. Neither 40-epoch fit detected any seedlings at 0.70.
+
+The fit that produced fewer pins actually **ranked ring seedling peaks better**. For the duration and cutoff cohorts respectively, its AP was .896 and .896, versus .619 and .602 for the fit trained with seed 987149. Its median score on labeled positive peaks was lower, .403 and .392 versus .601 and .575. A model can put true peaks nearer the top of its list and still put many of them below a shared cutoff. These results cover two synthetic training draws. Measuring probability calibration in a physical field would require independently labeled scans.
+
+![Two histograms of scores for the same 405 peaks near seedlings. One model passed 122 peaks at a cutoff of 0.70, the other passed six.](../art/tomato-score-cutoff.svg)
+
+This ranking used the original distance labels. The duration ring scans contained 405 positive and 1,905 background peaks, with 60 ambiguous peaks omitted. The cutoff ring scans contained 366 positive and 1,923 background peaks, with 63 omitted. The command below verifies both sets of weights, checks the scan IDs and proposal counts, and reproduces the previously published operating points before reporting the crossed results.
+
+```sh
+node benchmark/studies/tomato-duration-cutoffs.mjs crossed duration-check.json cutoffs-dev.json cutoffs-check.json > crossed.json
+```
+
 ## Reproduce the whole experiment
 
 Run these commands in order with Node.js 22 or later from the repository root. The second command reads the development decision before generating confirmation data.
@@ -110,4 +139,4 @@ node benchmark/studies/tomato-training-duration.mjs confirmation duration-dev.js
 
 Training used six healthy mixed-form v2 tomato plantings, both soil variants, seeded clutter and noise, a 60,000-ray reference grid, a 3.5 cm minimum peak, zero-filled averaging and local-ground features. Each fit began with initialization seed 12345 and used four tanh hidden units and full-batch SGD at a learning rate of 0.25. The study checks the digest of the ordered training rows and scaling and verifies that the longer CPU fits reproduce every earlier training loss. The distinct dataset seeds were `914731` for development and `987149` for confirmation. Each cohort evaluated separate soil-present plantings without added clutter or noise. The reports contain scan IDs, labels by training group, full frozen weight artifacts, timings and per-field scores for all three match distances.
 
-These results describe healthy synthetic tomatoes at one candidate height and one score cutoff. The two scan layouts behaved differently, even with identical plantings and requested ray counts. Performance on physical tomato scans still needs an independent test. [Study code](../benchmark/studies/tomato-training-duration.mjs) · [What changing the training examples did](tomato-soil-sampling.md)
+These results describe healthy synthetic tomatoes at a 3.5 cm minimum candidate height. The two scan layouts behaved differently, even with identical plantings and requested ray counts. Performance on physical tomato scans still needs an independent test. [Study code](../benchmark/studies/tomato-training-duration.mjs) · [What changing the training examples did](tomato-soil-sampling.md)
