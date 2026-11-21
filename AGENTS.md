@@ -163,7 +163,7 @@ For apple **Tree-base pin spacing**, both arms score one generated point cloud. 
 
 Choose **Height pin · sampled cells only** on the maps to inspect another height detector. Its kernel omits empty cells and still counts a measured zero-height return. Compare extra pins as well as matches. The soil-only check can be replayed with `node benchmark/studies/seedling-peaks.mjs`. [Measured peak and soil examples](docs/seedling-peaks.md)
 
-For an apple scan, choose **Tree-base ranking** and run the comparison on one point cloud. The usual arm uses the original support order. The trial adds a priority bonus for low occupied cells, and both arms keep the original crop spacing. The shared link preserves the selected tree and view. Reproduce the clean held-out study with `node benchmark/studies/orchard-ranking.mjs confirmation` and the paired clutter check with `node benchmark/studies/orchard-ranking-clutter.mjs`. [Worked examples and limits](docs/orchard-ranking.md)
+For an apple scan, choose **Tree-base ranking** and run the comparison on one point cloud. The usual rule orders candidates by support. The trial gives priority to candidates near low returns. Both keep their selected candidates at least 1.05 m apart. Share the selected tree, rerun the six held-out plantings with `node benchmark/studies/orchard-ranking.mjs confirmation`, or repeat the clutter check with `node benchmark/studies/orchard-ranking-clutter.mjs`. The current generator centers boards on selected plants. A follow-up can test boards placed independently of tree locations while keeping the trees and rays fixed. [Worked examples and limits](docs/orchard-ranking.md)
 
 ### Replay a model trained with a different peak rule
 
@@ -178,6 +178,8 @@ Group exported rows by `seed` and `epochs`. Read the duration from the row. The 
 ### Train on one growth stage and score on another
 
 Set `plantForm` to the training form and `validationPlantForm` to the held-out form. Omitting the latter uses the training form on both splits. The browser benchmark’s **Does mixing plant forms during training help?** comparison trains one detector on a named form and one on a seeded mix. Both score the same held-out tile IDs. For the fixed clean tomato study, run `node benchmark/studies/tomato-stage-training.mjs`. [Measurements and replay](docs/tomato-stage-training.md)
+
+To distinguish a change in training from a change in detection, run `node benchmark/studies/tomato-peak-floor.mjs`. It scores each set of fitted tomato weights at both candidate height floors. Group results by crop stage, scan layout and soil setting so a seedling gain on a soil-removed scan stays visible alongside its soil-present twin. [Paired height-floor results](docs/tomato-stage-training.md)
 
 ## Where to change the app
 

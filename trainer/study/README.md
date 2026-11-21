@@ -6,7 +6,7 @@ Grow a field, expand **Compare two scans**, then choose what to vary. You can ad
 
 Choose **Tree-base pin spacing** on an apple scan to compare two detector settings on exactly the same points. Pick a tree and zoom both maps to see the 15 cm match circle and its nearest pin. The inspector shows how many nearby cells qualified and how many survived spacing. The results download includes those counts, each match and the time spent generating and scoring each arm. [Try two measured examples](../../docs/orchard-bases.md#does-shorter-pin-spacing-recover-the-missed-bases)
 
-**Tree-base ranking** compares the usual order with a bonus for returns close to the ground. Both arms use one point cloud. Cyan cells show where those low returns actually landed. Pick a tree to see which eligible spots survived and how far the nearest pin moved. [Open the two field replays](../../docs/orchard-ranking.md#try-it-on-one-tree)
+**Tree-base ranking** tries two ways of ordering possible tree bases on one point cloud. Cyan squares mark low returns. Pick a tree to see which squares earned a bonus and how far the nearest pin moved. [Replay a recovered tree and a tree beside a board](../../docs/orchard-ranking.md#try-it-on-one-tree)
 
 | To change | Open |
 | --- | --- |
