@@ -938,3 +938,8 @@ tbody tr:nth-child(even) { background: #f6f8f0; }
   left: max(.5rem,env(safe-area-inset-left)); bottom: max(.5rem,env(safe-area-inset-bottom));
 }
 .viewExpanded.liveScene { padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+
+.sourceLinks { display:inline-flex; align-items:center; gap:.55rem; margin-left:auto; }
+.wipLink { display:inline-grid; place-items:center; min-height:44px; font:650 .73rem var(--mono); color:var(--forest); text-decoration:none; }
+.wipLink:hover { text-decoration:underline; }
+@media(max-width:740px) { .sourceLinks {grid-column:2;grid-row:1;} }
