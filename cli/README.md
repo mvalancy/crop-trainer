@@ -20,3 +20,7 @@ Compare how far an orchard pin moves between two physical scans of the same appl
 With local avocado scans, count hand-labeled wood and leaf returns in two height bands using `node cli/avocado-matter.mjs /path/to/extracted-avocado-dataset`. [Scans, labels and replay instructions](../docs/field-datasets.md#how-often-does-a-low-return-actually-hit-wood)
 
 With your own copy of Crops3D, run `node cli/maize-ground.mjs /path/to/Crops3D_IS/IS` to compare a local surface estimate with visible ground on five maize test plots. [Methods, coordinate assumptions and license](../docs/field-datasets.md#can-a-ring-of-returns-estimate-the-soil-height-near-a-seedling)
+
+Measure missing depth inside the plant masks in a local copy of AgRibotLeafyVeg with `node cli/lettuce-depth.mjs /path/to/AgRibotLeafyVeg`. This command uses ImageMagick to read the masks. [Lettuce depth study and data source](../docs/field-datasets.md#how-much-of-a-lettuce-plant-has-measured-depth)
+
+To repeat a limited training draw locally, download the settings from Training Shed and use them with `node cli/run.mjs train`. The settings can include `"sampleLimit": 600` and `"positiveSampling": "form-soil"`. The run report records how many positive examples came from each form and ground condition. [Paired training experiment](../docs/tomato-soil-sampling.md)

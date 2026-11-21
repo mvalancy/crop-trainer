@@ -29,3 +29,9 @@ See how many seedlings produced a laser return, a height peak and a correctly pl
 ![Two synthetic scan patches with similar smoothed peak heights. The tallest central returns rise 7.7 and 2.4 cm above their surroundings.](../../art/tomato-local-ground.svg)
 
 These patches come from a healthy seedling field with soil present. One peak lands near plant 8. The other is over 38 cm from the nearest plant. Each square in the center or ring marks a 5 cm cell with at least one return. How much a peak rises above its neighbors helps distinguish this pair. Read the experiment to see how many seedlings still go undetected across whole fields. [Open the pictured ring scan](https://mvalancy.github.io/crop-trainer/?crop=tomato&plantArchitecture=2&plantForm=seedling&plantCondition=healthy&sensor=os1-64&seed=1370561&budget=60000&ground=true&weeds=off&sticks=off&boards=off&noise=clean&tile=cb233b1e0e3f65f8) · [Try both feature sets](../../docs/tomato-local-ground.md)
+
+## Give seedlings more places in training
+
+![The same planting supplies two draws of 300 positive peaks. Balancing by stage and soil gives each group 50 places.](../../art/tomato-training-draw.svg)
+
+A small plant can have fewer eligible height peaks than a branching plant. These counts come from six mixed-stage fields. When you change the draw, the plants and laser returns stay fixed. Look at the held-out scans to see whether the extra seedling examples change which plants get pins. [Try the experiment and inspect one ring scan](../../docs/tomato-soil-sampling.md)

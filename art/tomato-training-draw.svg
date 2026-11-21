@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 358" width="460" height="358" role="img" aria-labelledby="title desc">
+  <title id="title">Which crop examples entered the fit?</title>
+  <desc id="desc">Two selections from the same mixed tomato training scans, seed 443731. Each fit uses 300 peaks within 9.5 cm of a labeled plant center and the same 300 background peaks. With soil returns present the ordinary draw selected 35 seedling, 58 transplant and 67 branching peaks. With soil removed it selected 26, 54 and 60. The balanced draw selected 50 from each group.</desc>
+  <style>
+    text {font-family:system-ui,sans-serif;fill:#163c32}
+    .title {font-size:22px;font-weight:700}
+    .group {font-size:15px;font-weight:650}
+    .column {font-size:14px;font-weight:600}
+    .label,.count {font-size:15px}
+    .count {font-variant-numeric:tabular-nums;text-anchor:end}
+    .balanced {fill:#35755c}
+    .ordinary {fill:#a96925}
+    @media (prefers-reduced-motion:no-preference) {
+      .balanced {transform-box:fill-box;transform-origin:left;animation:draw .75s ease-out both}
+      @keyframes draw {from {transform:scaleX(.28)} to {transform:scaleX(1)}}
+    }
+  </style>
+  <rect width="460" height="358" rx="15" fill="#f6f6eb"/>
+  <text x="18" y="33" class="title">Which peaks enter training?</text>
+  <text x="18" y="58" class="label">300 peaks near plants · 300 shared background peaks</text>
+  <path d="M18 73h424" stroke="#c3d1c2"/>
+  <text x="157" y="95" class="column">Ordinary draw</text>
+  <text x="311" y="95" class="column">Balanced draw</text>
+  <text class="group" x="18" y="119">Soil returns present</text>
+  <text class="label" x="25" y="145">Seedling</text>
+  <rect x="157" y="137" width="91" height="6" rx="3" fill="#e1e6d8"/>
+  <rect class="ordinary" x="157" y="137" width="45.5" height="6" rx="3"/>
+  <text class="count" x="282" y="145">35</text>
+  <rect x="311" y="137" width="91" height="6" rx="3" fill="#e1e6d8"/>
+  <rect class="balanced" x="311" y="137" width="65.0" height="6" rx="3"/>
+  <text class="count" x="436" y="145">50</text>
+  <text class="label" x="25" y="173">Transplant</text>
+  <rect x="157" y="165" width="91" height="6" rx="3" fill="#e1e6d8"/>
+  <rect class="ordinary" x="157" y="165" width="75.4" height="6" rx="3"/>
+  <text class="count" x="282" y="173">58</text>
+  <rect x="311" y="165" width="91" height="6" rx="3" fill="#e1e6d8"/>
+  <rect class="balanced" x="311" y="165" width="65.0" height="6" rx="3"/>
+  <text class="count" x="436" y="173">50</text>
+  <text class="label" x="25" y="201">Branching</text>
+  <rect x="157" y="193" width="91" height="6" rx="3" fill="#e1e6d8"/>
+  <rect class="ordinary" x="157" y="193" width="87.1" height="6" rx="3"/>
+  <text class="count" x="282" y="201">67</text>
+  <rect x="311" y="193" width="91" height="6" rx="3" fill="#e1e6d8"/>
+  <rect class="balanced" x="311" y="193" width="65.0" height="6" rx="3"/>
+  <text class="count" x="436" y="201">50</text>
+  <path d="M18 222h424" stroke="#ccdac9"/>
+  <text class="group" x="18" y="245">Soil returns removed</text>
+  <text class="label" x="25" y="271">Seedling</text>
+  <rect x="157" y="263" width="91" height="6" rx="3" fill="#e1e6d8"/>
+  <rect class="ordinary" x="157" y="263" width="33.8" height="6" rx="3"/>
+  <text class="count" x="282" y="271">26</text>
+  <rect x="311" y="263" width="91" height="6" rx="3" fill="#e1e6d8"/>
+  <rect class="balanced" x="311" y="263" width="65.0" height="6" rx="3"/>
+  <text class="count" x="436" y="271">50</text>
+  <text class="label" x="25" y="299">Transplant</text>
+  <rect x="157" y="291" width="91" height="6" rx="3" fill="#e1e6d8"/>
+  <rect class="ordinary" x="157" y="291" width="70.2" height="6" rx="3"/>
+  <text class="count" x="282" y="299">54</text>
+  <rect x="311" y="291" width="91" height="6" rx="3" fill="#e1e6d8"/>
+  <rect class="balanced" x="311" y="291" width="65.0" height="6" rx="3"/>
+  <text class="count" x="436" y="299">50</text>
+  <text class="label" x="25" y="327">Branching</text>
+  <rect x="157" y="319" width="91" height="6" rx="3" fill="#e1e6d8"/>
+  <rect class="ordinary" x="157" y="319" width="78.0" height="6" rx="3"/>
+  <text class="count" x="282" y="327">60</text>
+  <rect x="311" y="319" width="91" height="6" rx="3" fill="#e1e6d8"/>
+  <rect class="balanced" x="311" y="319" width="65.0" height="6" rx="3"/>
+  <text class="count" x="436" y="327">50</text>
+</svg>
