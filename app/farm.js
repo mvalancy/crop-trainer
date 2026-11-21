@@ -190,6 +190,9 @@ function grow(checkReplay = false) {
   const url = new URL('./', location.href);
   for (const [id, key] of replaySelects) url.searchParams.set(key, $(id).value);
   if (!recipe.boardPlacement) url.searchParams.delete('boardPlacement');
+  for (const [key, value] of [['peakAveraging', 'occupied'], ['featureMode', 'local-ground']]) {
+    if (requested.get(key) === value) url.searchParams.set(key, value);
+  }
   for(const [key,value] of Object.entries(plants)) url.searchParams.set(key,value);
   url.searchParams.set('budget', $('budget').value);
   if(recipe.infrastructure===false) url.searchParams.set('fixtures','off');
@@ -330,7 +333,9 @@ function applyScan(value, recipe, url, selectedBox, expectedTile) {
   const training = new URLSearchParams({plan:'practice',crop:recipe.crop,sensor:recipe.sampling.key});
   const budget = url.searchParams.get('budget');
   training.set('plantArchitecture',recipe.plantArchitecture??1);
-  if(requested.get('peakAveraging')==='occupied')training.set('peakAveraging','occupied');
+  for (const key of ['peakAveraging', 'featureMode']) {
+    if (url.searchParams.has(key)) training.set(key, url.searchParams.get(key));
+  }
   if(recipe.plantArchitecture>=2){
     training.set('plantForm',recipe.plantForm);training.set('plantCondition',recipe.plantCondition);
   }

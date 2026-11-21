@@ -41,6 +41,15 @@
 @media (min-width: 580px) {
   #studyForm:has(#studyLow:disabled) .helpField:has(#studyMode) { grid-column: auto; }
 }
+@media (min-width: 55rem) {
+  .studyPanel .studySetup { grid-template-columns: 1fr; align-items: start; gap: .65rem; }
+  .studyIntro { display: flex; flex-wrap: wrap; align-items: baseline; gap: .3rem 1rem; }
+  #studyQuestion { font-weight: 600; }
+  #studyForm:has(#studyLow:enabled) {
+    grid-template-columns: minmax(12rem,20rem) repeat(2,minmax(8rem,12rem)) auto;
+  }
+  #studyForm:has(#studyLow:enabled) > :is(.helpField:has(#studyMode), .studyMode) { grid-column: auto; }
+}
 @media (min-width: 1024px) {
   #scan-study .studyLayout {
     grid-template-columns: minmax(0, 1.85fr) minmax(19rem, 1fr);
