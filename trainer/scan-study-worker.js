@@ -1,23 +1,20 @@
-import {field} from './field.js?v=paired-study1';
-import {analyzeStudyScan,checkStudyPair} from './scan-study.js';
-import {RAY_BUDGETS} from './sensors.js';
+import {field,sampleCloud} from './field.js?v=paired-study1';
+import {analyzeStudyScan,checkStudyPair,studyRecipes} from './scan-study.js?v=layout-study1';
 
-self.onmessage = ({data:{recipe,budgets}}) => {
+self.onmessage = ({data:{recipe,budgets,mode='budgets'}}) => {
   try {
-    if (budgets.length!==2 || !budgets.every(n=>RAY_BUDGETS.includes(n)) || budgets[0]>=budgets[1]) {
-      throw Error('Choose a second budget higher than the first.');
-    }
     const results=[];
-    for(const [arm,points] of budgets.entries()) {
+    for(const [arm,settings] of studyRecipes(recipe,mode,budgets).entries()) {
       const start=performance.now();
-      const scan=field({...recipe,points},({cloud,row,rows})=>{
+      const scan=field(settings,({cloud,row,rows})=>{
         self.postMessage({type:'row',arm,cloud,row,rows},[cloud.buffer]);
       });
       const generated=performance.now();
       const result=analyzeStudyScan(scan);
       result.timingsMs={generation:generated-start,scoring:performance.now()-generated};
       results.push(result);
-      self.postMessage({type:'arm',arm,result});
+      const cloud=sampleCloud(scan.xyz,scan.cls);
+      self.postMessage({type:'arm',arm,result,cloud},[cloud.buffer]);
     }
     checkStudyPair(...results);
     self.postMessage({type:'complete'});

@@ -727,6 +727,9 @@ tbody tr:nth-child(even) { background: #f6f8f0; }
 .studyIntro p { margin: .25rem 0 0; }
 .studyPanel #studyField { font-size: .92rem; color: #52634e; }
 #studyForm { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); align-items: end; gap: .7rem; }
+#studyForm .studyMode { grid-column: 1 / -1; }
+.studyChoices label.studyOverlay { display: flex; align-items: center; gap: .5rem; min-height: 44px; }
+.studyOverlay input { width: 1.1rem; height: 1.1rem; margin: 0; }
 #studyForm .studyActions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: .5rem; }
 .studyPanel button, .studyPanel select { min-height: 44px; }
 #studyStatus { margin: .85rem 0; }
@@ -755,6 +758,8 @@ tbody tr:nth-child(even) { background: #f6f8f0; }
 @media (min-width: 580px) {
   #studyForm { grid-template-columns: repeat(2,minmax(8rem,12rem)) auto; justify-content: start; }
   #studyForm .studyActions { grid-column: auto; }
+  #studyForm:has(#studyLow:disabled) { grid-template-columns: minmax(12rem,18rem) auto; }
+  #studyForm:has(#studyLow:disabled) .studyMode { grid-column: auto; }
 }
 @media (min-width: 1024px) {
   .studySetup { grid-template-columns: minmax(0,1fr) auto; align-items: end; }

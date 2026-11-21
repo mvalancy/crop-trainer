@@ -155,9 +155,9 @@ For a local agent, import `compareMatchedBoxes` from `trainer/data.js`. Pair the
 
 A generator URL can include `box=0` or another zero-based box index. Include the matching `tile` value when building links from a report. This prevents a stale tile link highlighting an unrelated plant. Box highlighting affects only the camera overlay and shared URL.
 
-### Compare two ray budgets on one planting
+### Compare two scans on one planting
 
-In the field generator, expand **Compare two ray budgets on this field** and run both scans. The downloaded JSON records the full recipe, actual sampled rays, per-plant returns, matched proposals and scored pins for each arm. Keep the tile IDs with the results. A hardware-inspired layout can reach its channel limit before the requested budget. The apple option includes a geometric base locator. Its support value and the learned detector’s probability have different meanings. Replay the multi-field studies with `node benchmark/seedling-density.mjs` and `node benchmark/orchard-bases.mjs`. [Seedling results](docs/seedling-density.md) · [Orchard results](docs/orchard-bases.md)
+In the field generator, expand **Compare two scans of this field**. Choose **Ray budget** to vary density on the displayed layout, or **Scan layout** to scan the same planting with 60,000 reference-grid rays and 60,000 simulated OS1-64 rays. Select a marked plant to open it in either 3D scan. The downloaded JSON records each full recipe, tile ID, actual sampled rays, per-plant returns, matched proposals and scored pins. The map can show up to 9,000 example points per scan. All acquired points enter scoring. The apple option includes a geometric base locator. Replay the multi-field studies with `node benchmark/seedling-density.mjs` and `node benchmark/orchard-bases.mjs`. [Seedling results](docs/seedling-density.md) · [Orchard results](docs/orchard-bases.md)
 
 ### Compare training duration
 

@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 354" role="img" aria-labelledby="title desc">
+  <title id="title">One seedling sampled on a grid and a ring layout</title>
+  <desc id="desc">Actual simulated returns from the same 52 centimetre square around plant six. Both layouts sampled 60,000 rays in the full plot. The grid returned 163 points in the patch and three hit the seedling. The OS1-64-inspired rings returned 123 points here, all from soil. Each dashed box outlines the seedling’s horizontal bounds. Three orange points pulse to identify crop returns.</desc>
+  <style>
+    text{font-family:system-ui,sans-serif;fill:#203e34;text-anchor:middle}
+    .layout{font-size:20px;font-weight:650}.count{font-size:20px;font-weight:700}.sub{font-size:16px}
+    .bound{stroke:#ffdd8d;stroke-width:1.8;stroke-dasharray:5 4;fill:none}
+    .halo{fill:none;stroke:#ffb46b;stroke-width:1.4;transform-box:fill-box;transform-origin:center;animation:identify 3.6s ease-out infinite}
+    @keyframes identify{0%,35%{opacity:0;transform:scale(.7)}50%{opacity:.9}85%,100%{opacity:0;transform:scale(1.65)}}
+    @media(prefers-reduced-motion:reduce){.halo{animation:none;opacity:.55}}
+  </style>
+  <defs>
+    <clipPath id="panel0"><rect x="27" y="67" width="184" height="184" rx="2"/></clipPath>
+    <clipPath id="panel1"><rect x="248" y="67" width="184" height="184" rx="2"/></clipPath>
+  </defs>
+  <rect x=".5" y=".5" width="459" height="353" rx="14" fill="#f8f5e8" stroke="#cdd2ba"/>
+  <text x="230" y="23" class="sub">Same 52 cm patch · 60,000 rays per plot</text>
+  <g>
+    <text class="layout" x="119.0" y="51">Reference grid</text>
+    <rect x="27" y="67" width="184" height="184" rx="2" fill="#153c36"/>
+    <g clip-path="url(#panel0)">
+      <path d="M113.1 113.5h.01 M178.0 126.1h.01 M59.7 191.0h.01 M69.5 98.4h.01 M69.4 202.9h.01 M31.7 192.5h.01 M39.9 201.2h.01 M28.6 89.7h.01 M43.9 127.5h.01 M124.4 74.8h.01 M50.2 110.9h.01 M184.6 204.7h.01 M88.5 137.3h.01 M176.2 233.1h.01 M176.1 249.9h.01 M84.4 185.0h.01 M171.5 147.4h.01 M166.3 96.3h.01 M64.0 102.4h.01 M200.2 233.6h.01 M203.0 248.9h.01 M208.3 169.6h.01 M204.8 207.5h.01 M61.5 226.3h.01 M104.6 190.4h.01 M71.7 137.5h.01 M90.7 79.2h.01 M184.4 96.6h.01 M189.0 123.6h.01 M72.2 169.2h.01 M52.7 226.4h.01 M203.0 122.3h.01 M78.7 220.9h.01 M173.0 222.1h.01 M126.9 102.5h.01 M58.5 182.5h.01 M53.2 177.6h.01 M111.9 233.0h.01 M102.7 132.2h.01 M159.0 134.4h.01 M150.5 175.0h.01 M141.5 163.6h.01 M56.8 76.7h.01 M47.6 169.7h.01 M201.2 103.6h.01 M161.3 170.0h.01 M73.2 144.4h.01 M35.9 76.5h.01 M77.0 173.0h.01 M98.9 164.5h.01 M119.6 92.1h.01 M87.5 170.3h.01 M144.0 196.5h.01 M162.9 205.4h.01 M38.4 149.4h.01 M137.0 186.0h.01 M151.6 244.4h.01 M71.0 84.2h.01 M112.7 83.5h.01 M101.7 107.5h.01 M196.5 162.8h.01 M118.3 239.6h.01 M80.0 204.5h.01 M96.6 224.2h.01 M124.5 162.5h.01 M126.7 226.6h.01 M54.4 82.8h.01 M66.5 144.2h.01 M198.8 196.6h.01 M47.1 154.3h.01 M99.0 97.1h.01 M114.3 176.4h.01 M189.1 75.6h.01 M127.0 250.0h.01 M180.6 184.0h.01 M31.6 126.3h.01 M40.5 135.4h.01 M94.7 209.4h.01 M171.3 190.9h.01 M105.2 172.8h.01 M159.5 237.5h.01 M157.5 150.3h.01 M142.6 202.9h.01 M99.9 155.4h.01 M151.6 169.9h.01 M188.9 93.7h.01 M91.0 190.4h.01 M189.5 174.9h.01 M128.1 126.2h.01 M46.0 201.8h.01 M170.0 218.0h.01 M156.7 67.3h.01 M159.3 127.4h.01 M155.7 153.3h.01 M29.5 242.8h.01 M108.9 201.7h.01 M200.6 146.5h.01 M173.3 164.0h.01 M39.6 174.4h.01 M180.2 128.8h.01 M152.6 227.7h.01 M110.0 216.7h.01 M75.0 234.9h.01 M87.7 143.0h.01 M162.4 197.6h.01 M138.0 68.9h.01 M135.5 108.6h.01 M60.3 230.8h.01 M141.0 213.5h.01 M30.5 226.9h.01 M39.3 104.3h.01 M142.8 131.6h.01 M94.7 235.7h.01 M61.1 138.1h.01 M186.1 146.0h.01 M168.2 84.1h.01 M37.4 170.0h.01 M169.1 110.4h.01 M49.9 198.6h.01 M136.0 70.8h.01 M206.6 86.5h.01 M145.2 107.0h.01 M78.2 87.1h.01 M190.7 207.5h.01 M128.2 216.8h.01 M86.2 97.3h.01 M117.0 212.7h.01 M152.5 230.1h.01 M94.0 110.4h.01 M201.9 70.5h.01 M180.0 104.4h.01 M117.9 187.3h.01 M192.9 105.7h.01 M188.1 217.6h.01 M82.7 120.1h.01 M49.5 244.1h.01 M52.2 94.3h.01 M175.3 68.9h.01 M131.1 240.1h.01 M191.7 132.2h.01 M148.7 96.9h.01 M205.7 185.7h.01 M77.6 99.0h.01 M63.7 163.9h.01 M101.0 119.9h.01 M92.2 127.1h.01 M123.6 149.2h.01 M130.7 93.7h.01 M118.4 133.2h.01 M147.1 117.4h.01 M49.5 136.5h.01 M60.2 114.9h.01 M46.8 232.4h.01 M154.4 79.1h.01 M192.2 235.9h.01 M197.0 247.8h.01 M76.9 190.6h.01 M163.0 172.5h.01 M209.3 133.5h.01 M175.2 78.0h.01" stroke="#9ba99a" stroke-width="2.3" stroke-linecap="round" fill="none"/>
+      <rect x="89.7" y="132.3" width="58.6" height="53.4" class="bound"/>
+      <g fill="#ffb46b" stroke="#382619" stroke-width=".8"><circle cx="127.7" cy="177.6" r="3.5"/><circle cx="139.5" cy="154.5" r="3.5"/><circle cx="141.4" cy="141.0" r="3.5"/></g>
+      <circle class="halo" cx="127.7" cy="177.6" r="5.7"/><circle class="halo" cx="139.5" cy="154.5" r="5.7"/><circle class="halo" cx="141.4" cy="141.0" r="5.7"/>
+    </g>
+    <text x="119.0" y="277" class="count">3 crop hits</text>
+    <text x="119.0" y="298" class="sub">163 returns in patch</text>
+  </g>
+  <g>
+    <text class="layout" x="340.0" y="51">OS1-64 rings</text>
+    <rect x="248" y="67" width="184" height="184" rx="2" fill="#153c36"/>
+    <g clip-path="url(#panel1)">
+      <path d="M284.4 68.8h.01 M293.4 69.6h.01 M302.4 70.5h.01 M311.5 71.3h.01 M320.5 72.1h.01 M329.5 72.8h.01 M338.5 73.6h.01 M347.5 74.3h.01 M356.5 75.0h.01 M365.5 75.6h.01 M374.4 76.3h.01 M392.4 77.5h.01 M401.4 78.0h.01 M410.3 78.6h.01 M419.3 79.1h.01 M428.2 79.6h.01 M255.2 93.8h.01 M264.5 94.8h.01 M273.7 95.7h.01 M282.9 96.6h.01 M292.1 97.4h.01 M301.3 98.3h.01 M310.5 99.1h.01 M319.7 99.9h.01 M338.1 101.4h.01 M347.2 102.1h.01 M356.4 102.8h.01 M365.6 103.4h.01 M374.7 104.1h.01 M383.8 104.7h.01 M393.0 105.3h.01 M402.1 105.8h.01 M411.2 106.4h.01 M420.4 106.9h.01 M429.5 107.4h.01 M253.5 121.6h.01 M272.3 123.5h.01 M281.7 124.4h.01 M291.0 125.2h.01 M300.4 126.1h.01 M309.8 126.9h.01 M319.1 127.7h.01 M328.5 128.5h.01 M337.8 129.2h.01 M347.2 129.9h.01 M356.5 130.6h.01 M365.8 131.3h.01 M384.4 132.5h.01 M393.7 133.1h.01 M403.0 133.7h.01 M412.3 134.2h.01 M421.6 134.7h.01 M430.9 135.2h.01 M251.9 149.4h.01 M261.5 150.4h.01 M271.0 151.3h.01 M280.6 152.2h.01 M290.1 153.1h.01 M299.7 153.9h.01 M309.2 154.7h.01 M328.2 156.3h.01 M337.7 157.0h.01 M347.2 157.7h.01 M356.7 158.4h.01 M366.2 159.1h.01 M375.7 159.7h.01 M385.2 160.3h.01 M394.7 160.9h.01 M404.1 161.5h.01 M413.6 162.0h.01 M423.1 162.5h.01 M260.2 178.2h.01 M269.9 179.1h.01 M279.7 180.0h.01 M289.4 180.9h.01 M299.1 181.7h.01 M308.8 182.5h.01 M318.5 183.3h.01 M328.2 184.1h.01 M337.8 184.8h.01 M347.5 185.6h.01 M357.2 186.2h.01 M376.5 187.5h.01 M386.1 188.1h.01 M395.8 188.7h.01 M405.4 189.3h.01 M415.0 189.8h.01 M424.7 190.3h.01 M249.2 205.0h.01 M259.1 206.0h.01 M269.0 206.9h.01 M278.9 207.8h.01 M288.8 208.7h.01 M298.7 209.6h.01 M318.4 211.2h.01 M328.3 211.9h.01 M338.1 212.7h.01 M347.9 213.4h.01 M357.8 214.1h.01 M367.6 214.7h.01 M377.4 215.4h.01 M387.2 216.0h.01 M397.0 216.6h.01 M406.8 217.1h.01 M416.6 217.6h.01 M248.1 232.9h.01 M258.2 233.8h.01 M268.3 234.8h.01 M278.3 235.7h.01 M288.4 236.6h.01 M298.4 237.4h.01 M308.5 238.2h.01 M318.5 239.0h.01 M328.5 239.8h.01 M338.5 240.5h.01 M348.5 241.2h.01 M368.5 242.6h.01 M378.5 243.2h.01 M388.5 243.8h.01 M398.5 244.4h.01 M408.4 244.9h.01 M418.4 245.4h.01 M428.4 245.9h.01" stroke="#9ba99a" stroke-width="2.3" stroke-linecap="round" fill="none"/>
+      <rect x="310.7" y="132.3" width="58.6" height="53.4" class="bound"/>
+      <g fill="#ffb46b" stroke="#382619" stroke-width=".8"></g>
+      
+    </g>
+    <text x="340.0" y="277" class="count">0 crop hits</text>
+    <text x="340.0" y="298" class="sub">123 returns in patch</text>
+  </g>
+  <path d="M38 327h20" fill="none" stroke="#886921" stroke-width="2" stroke-dasharray="5 3"/>
+  <text x="113" y="332" class="sub">Crop bounds</text>
+  <circle cx="193" cy="327" r="4.4" fill="#ffb46b" stroke="#674221"/>
+  <text x="240" y="332" class="sub">Crop hit</text>
+  <circle cx="312" cy="327" r="2.6" fill="#748877"/>
+  <text x="360" y="332" class="sub">Soil hit</text>
+</svg>

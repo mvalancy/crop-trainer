@@ -18,7 +18,7 @@ if(command==='serve'){
  for(const lesson of ['README','models','learning','scoring','fieldwork']) allowed.add('docs/first-steps/'+lesson+'.md');
  for(const diagram of ['returns','patch','weights','network','labels','loss','pins','matches','stages','vine']) allowed.add('art/lesson-'+diagram+'.svg');
  for(const folder of ['art','benchmark','test','trainer','trainer/plants','art/plants']) allowed.add(folder+'/README.md');
- for(const figure of ['scan-learn-find','paired-field','field-notebook','seed-replay','sprout-strip','field-deployment','plant-architecture','orchard-bases','seedling-density']) allowed.add('art/'+figure+'.svg');
+ for(const figure of ['scan-learn-find','paired-field','field-notebook','seed-replay','sprout-strip','field-deployment','plant-architecture','orchard-bases','seedling-density','seedling-layouts']) allowed.add('art/'+figure+'.svg');
  const types={html:'text/html',js:'text/javascript',css:'text/css',svg:'image/svg+xml',webp:'image/webp',md:'text/plain'};
  const port=Number(output||4173);
  if(!Number.isInteger(port)||port<1||port>65535)throw Error('Choose a port from 1 to 65535.');

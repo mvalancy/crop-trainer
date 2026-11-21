@@ -2,8 +2,20 @@ import {features, matchCenters, detectionStages, targetCenters} from './data.js?
 import {detectOrchardBases} from './orchard.js';
 import {cropProfile} from './crops.js';
 import {evaluatePins} from './references.js';
+import {RAY_BUDGETS, getSensor} from './sensors.js';
 
 const localPoint = ([localX,localY]) => ({localX,localY});
+
+export function studyRecipes(recipe, mode, budgets) {
+  if (mode === 'layouts') {
+    return ['reference','os1-64'].map(key => ({...recipe, sampling:getSensor(key), points:60000}));
+  }
+  if (mode !== 'budgets' || budgets?.length !== 2 ||
+      !budgets.every(n => RAY_BUDGETS.includes(n)) || budgets[0] >= budgets[1]) {
+    throw Error('Choose a second budget higher than the first.');
+  }
+  return budgets.map(points => ({...recipe, points}));
+}
 
 // Only the observation counts use the simulator's point origins. The detectors
 // see the same XYZ a visitor would find in an exported PLY.

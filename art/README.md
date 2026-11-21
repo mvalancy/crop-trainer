@@ -11,6 +11,7 @@ The little farm on the front page lives here. Open an SVG to see it move or open
 | [Two detectors, one planting](paired-field.svg) | [Benchmark guide](../benchmark/README.md) |
 | [From a surveyed plot to a local detector](field-deployment.svg) | [Field deployment guide](../docs/edge-deployment.md) |
 | [Which seedlings received a pin?](seedling-density.svg) | [Paired density experiment](../docs/seedling-density.md) |
+| [One seedling on a grid and a ring layout](seedling-layouts.svg) | [How a ray layout samples a leaf](../docs/scanners.md#why-can-the-same-ray-budget-miss-a-seedling) |
 | [What the scanner sees of an apple trunk](orchard-bases.svg) | [Apple base experiment](../docs/orchard-bases.md) |
 | [Canopies, branches and stems](plant-architecture.svg) | [Illustrated crop guide index](plants/README.md) |
 | [A notebook for exploring a field](field-notebook.svg) | [Field guide](../docs/README.md) |

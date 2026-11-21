@@ -4,7 +4,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Crop Trainer · The procedural farm</title>
 <meta name="description" content="Generate crop LiDAR scans, explore them in 3D, and train crop detectors locally with CPU or WebGPU.">
-<link rel="stylesheet" href="farm.css?v=plant-study3">
+<link rel="stylesheet" href="farm.css?v=layout-study1">
 <link rel="stylesheet" href="trainer/plants/portrait.css"></head>
 <body class="farm"><a class="skip" href="#main">Skip to content</a>
 <header class="siteBar">
@@ -114,11 +114,12 @@
 <p class="fileId">Scan ID <code id="scanId"></code></p>
 <p class="shareActions"><a id="scanLink">Open scan link</a> <button id="copyScan" type="button" disabled="">Copy scan link</button> <span id="shareStatus" role="status"></span></p>
 <details class="formatHelp"><summary>About the files</summary><p class="hint">PLY contains little-endian XYZ coordinates in metres. The label file gives each plant’s bounding box and crop return count. The recipe and scan link use the settings of the displayed scan. Choose Grow and scan to apply your edits.</p></details><a id="trainLayout" href="trainer/" class="trainLink">Train this crop and layout →</a></div></section></div>
-<details class="panel studyPanel" id="scan-study"><summary>Compare two ray budgets on this field</summary>
+<details class="panel studyPanel" id="scan-study"><summary>Compare two scans of this field</summary>
 <div class="studySetup">
 <div class="studyIntro"><p id="studyField">Grow a field to compare its scans.</p>
-<p>Scan the same field twice. Do more laser rays help you find more plants?</p></div>
-<form id="studyForm" aria-label="Laser ray budgets"><label>First budget<select id="studyLow"></select></label><label>Second budget<select id="studyHigh"></select></label>
+<p id="studyQuestion">Do more laser rays help you find more plants?</p></div>
+<form id="studyForm" aria-label="Paired scan settings"><label class="studyMode">What changes?<select id="studyMode"><option value="budgets">Ray budget</option><option value="layouts">Scan layout · 60,000 rays each</option></select></label>
+<label>First budget<select id="studyLow"></select></label><label>Second budget<select id="studyHigh"></select></label>
 <div class="studyActions"><button class="primary" id="studyRun" disabled>Compare scans</button><button type="button" id="studyCancel" hidden>Cancel</button></div></form></div>
 <p id="studyStatus" role="status"></p>
 <div id="studyResults" hidden>
@@ -127,12 +128,13 @@
 <figure><figcaption><strong id="studyTitleB"></strong><span id="studyCountB"></span></figcaption><canvas id="studySecond" role="img" aria-labelledby="studyTitleB studyCountB" aria-describedby="studyLegend"></canvas></figure></div>
 <div id="studyInspect" hidden>
 <div class="studyChoices"><label>Mark plants by<select id="studyMetric" aria-describedby="studyMetricHelp studyChange"><option value="returns">At least one crop return</option><option value="peaks">Matched height peak · 15 cm</option><option value="pins">Height-only pin · 15 cm</option><option value="orchard">Orchard base pin · 15 cm</option></select></label>
+<label class="studyOverlay"><input id="studyCloud" type="checkbox"> Show up to 9,000 scan points</label>
 <p id="studyLegend"><span><i class="studyDot" aria-hidden="true"></i>Dot meets the measure</span><span><i class="studyCross" aria-hidden="true">×</i>Cross misses it</span></p>
 <p id="studyChange"></p><p id="studyMetricHelp"></p>
 <label>Inspect a plant<select id="studyTarget" aria-describedby="studyTargetDetail"><option value="">All plants</option></select></label>
 <p id="studyTargetDetail" role="status" aria-atomic="true"></p></div>
 <div class="studyActions"><a id="studyLinkA">First scan in 3D</a><a id="studyLinkB">Second scan in 3D</a><a id="studyShare">Comparison link</a><button type="button" id="studySave">Download results</button></div></div></div>
-<details id="studyScores" hidden><summary>Pin scores at each matching distance</summary><div class="tableScroll" tabindex="0" role="region" aria-label="Pin scores by method, sampled ray count and distance"><table aria-label="Pin scores at each matching distance"><thead><tr><th>Method</th><th>Sampled rays</th><th>Distance</th><th>Matched</th><th>Extra</th><th>Missed</th><th>F1</th></tr></thead><tbody id="studyScoreBody"></tbody></table></div></details></div>
+<details id="studyScores" hidden><summary>Pin scores at each matching distance</summary><div class="tableScroll" tabindex="0" role="region" aria-label="Pin scores by method, sampled ray count and distance"><table aria-label="Pin scores at each matching distance"><thead><tr><th>Method</th><th>Layout</th><th>Sampled rays</th><th>Distance</th><th>Matched</th><th>Extra</th><th>Missed</th><th>F1</th></tr></thead><tbody id="studyScoreBody"></tbody></table></div></details></div>
 <p class="studyGuide"><a id="studyGuide" href="https://github.com/mvalancy/crop-trainer/blob/main/docs/seedling-density.md">What happened on six seedling fields?</a></p></details>
 <details>
 <summary>How the scanner samples a crop</summary>
@@ -189,6 +191,6 @@
 </main>
 <footer class="siteFoot"><span>Created by Matthew Valancy</span>
 <div><a href="AGENTS.md">Agent quickstart</a><a href="#missions">Farm journal</a><a href="LICENSE">MIT license</a></div></footer>
-<script type="module" src="farm.js?v=plants3"></script>
+<script type="module" src="farm.js?v=layout-study1"></script>
 </body>
 </html>

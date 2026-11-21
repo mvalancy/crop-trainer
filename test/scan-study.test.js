@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {makeRecipe} from '../trainer/data.js';
 import {field} from '../trainer/field.js';
 import {getSensor} from '../trainer/sensors.js';
-import {analyzeStudyScan,checkStudyPair} from '../trainer/scan-study.js';
+import {analyzeStudyScan,checkStudyPair,studyRecipes} from '../trainer/scan-study.js';
 
 function seedlingRecipe(sensor) {
   const recipe=makeRecipe(216917,true,getSensor(sensor),'tomato',2,'seedling');
@@ -42,6 +42,20 @@ test('two requests above a ring layout ceiling show the same acquired scan',()=>
   assert.equal(low.tileId,high.tileId);
   assert.deepEqual(low.plants,high.plants);
   assert.deepEqual(low.heightPins,high.heightPins);
+});
+
+test('the layout comparison preserves planting, obstacles and noise at equal sampled rays',()=>{
+  const recipe=makeRecipe(1370561,true,getSensor('os1-32'),'tomato',2,'seedling');
+  const [grid,rings]=studyRecipes(recipe,'layouts');
+  assert.deepEqual(grid,{...recipe,points:60000,sampling:getSensor('reference')});
+  assert.deepEqual(rings,{...recipe,points:60000,sampling:getSensor('os1-64')});
+  const a=field(grid),b=field(rings);
+  assert.deepEqual(a.labels.boxes,b.labels.boxes);
+  assert.equal(a.sampledRays,60000);
+  assert.equal(b.sampledRays,60000);
+  assert.notDeepEqual(a.plantReturns,b.plantReturns);
+  assert.deepEqual(studyRecipes(recipe,'budgets',[30000,100000]).map(r=>r.sampling.key),['os1-32','os1-32']);
+  assert.throws(()=>studyRecipes(recipe,'budgets',[60000,60000]),/higher/);
 });
 
 test('generator observation labels have no influence on either orchard detector',()=>{
