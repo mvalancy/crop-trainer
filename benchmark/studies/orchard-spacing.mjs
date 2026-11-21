@@ -61,8 +61,11 @@ function blockingCells(trace,diagnosis) {
       if(earlier.rank>=rank)break;
       const distanceSquared=((candidate.col-earlier.col)**2+(candidate.row-earlier.row)**2)*step**2;
       if(distanceSquared<trace.separationMeters**2) {
-        return {candidateCell:candidate.key,candidateRank:rank,firstBlockerCell:earlier.key,
-          firstBlockerRank:earlier.rank,distanceM:Math.sqrt(distanceSquared),insideShortRadius:distanceSquared<.75**2};
+        const firstBlockerScore=trace.supportCells[earlier.rank].score;
+        assert.ok(firstBlockerScore>=tree.strongestCell.score);
+        return {candidateCell:candidate.key,candidateRank:rank,candidateScore:tree.strongestCell.score,
+          firstBlockerCell:earlier.key,firstBlockerRank:earlier.rank,firstBlockerScore,
+          distanceM:Math.sqrt(distanceSquared),insideShortRadius:distanceSquared<.75**2};
       }
     }
     assert.fail('Every rejected candidate must have an earlier retained cell within the minimum spacing');
@@ -135,12 +138,14 @@ function summary(scans) {
     changes[spacing]={gained,lost,extraPinChange:changed.fp-baseline.fp,byDefaultState};
   }
   const blockersAt15cm={defaultSpacingMisses:0,firstBlockerInsideShortRadius:0,firstBlockerOutsideShortRadius:0,
-    stillSpacingAtShort:0,sameFirstBlockerAtShort:0};
+    stillSpacingAtShort:0,sameFirstBlockerAtShort:0,higherSupport:0,equalSupport:0};
   for(const scan of scans) {
     const defaults=scan.orchard[design.defaultSpacingM].trees,shorter=scan.orchard[.75].trees;
     for(const [i,tree] of defaults.entries()) {
       if(tree.state!=='spacing')continue;
       blockersAt15cm.defaultSpacingMisses++;
+      if(tree.blocker.firstBlockerScore>tree.blocker.candidateScore)blockersAt15cm.higherSupport++;
+      else blockersAt15cm.equalSupport++;
       if(tree.blocker.insideShortRadius)blockersAt15cm.firstBlockerInsideShortRadius++;
       else blockersAt15cm.firstBlockerOutsideShortRadius++;
       const next=shorter[i];
