@@ -18,5 +18,5 @@
   <g transform="translate(50 6)"><use href="#leaf" fill="url(#blade)" stroke="#40714b" stroke-width="2"/><use href="#veins"/></g>
   <path d="M278 105H335m-11-10 12 10-12 10" fill="none" stroke="#787d5a" stroke-width="3" stroke-linecap="round"/>
   <g transform="translate(344 6)"><use href="#leaf" fill="#62988b"/><g clip-path="url(#cut)"><use href="#veins" opacity=".68"/><path fill="url(#cells)" d="M42 7h140v165H42z"/><path class="border" fill="url(#holes)" stroke="#47374c" stroke-width="1.8" d="M72 63h27v9h9v18H90v9H72V81h-9v-9h9z"/><path class="line" d="M45 15v150" stroke="#ffdf75" stroke-width="3"/></g></g>
-  <g text-anchor="middle"><text x="160" y="210">Color photograph</text><text x="454" y="210">Depth map</text><text x="454" y="235" class="small">Hatching = missing distance</text></g>
+  <g text-anchor="middle"><text x="160" y="210">Color view</text><text x="454" y="210">Depth map</text><text x="454" y="235" class="small">Hatching = missing distance</text></g>
 </svg>

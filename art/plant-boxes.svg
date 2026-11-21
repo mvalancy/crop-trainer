@@ -13,8 +13,8 @@
     @media(prefers-reduced-motion:no-preference){.box{animation:draw 7s ease-in-out infinite}.second{animation-delay:.45s}.area{animation:shade 7s ease-in-out infinite}@keyframes draw{0%{stroke-dasharray:1 99}45%,100%{stroke-dasharray:100 0}}@keyframes shade{0%,43%{opacity:.25}62%,90%{opacity:1}100%{opacity:.25}}}
   </style>
   <rect width="640" height="244" rx="18" fill="url(#earth)"/><rect width="640" height="244" rx="18" fill="url(#soil)"/>
-  <g transform="translate(233 96)"><use href="#sprig" transform="rotate(-50)"/><use href="#sprig" transform="rotate(-115) scale(1.05)"/><use href="#sprig" transform="rotate(53) scale(1.16)"/><use href="#sprig" transform="rotate(131) scale(.86)"/><use href="#sprig" transform="rotate(202) scale(.74)"/><circle r="4" fill="#d9df83"/></g>
-  <g transform="translate(349 141)"><use href="#grass"/><use href="#grass" transform="rotate(64)"/><use href="#grass" transform="rotate(118) scale(.95)"/><use href="#grass" transform="rotate(199) scale(.95)"/><use href="#grass" transform="rotate(268) scale(.93)"/><circle r="3" fill="#dbd79a"/></g>
+  <g transform="translate(233 96) scale(.9)"><use href="#sprig" transform="rotate(-50)"/><use href="#sprig" transform="rotate(-115) scale(1.05)"/><use href="#sprig" transform="rotate(53) scale(1.16)"/><use href="#sprig" transform="rotate(131) scale(.86)"/><use href="#sprig" transform="rotate(202) scale(.74)"/><circle r="4" fill="#d9df83"/></g>
+  <g transform="translate(349 141) scale(.94)"><use href="#grass"/><use href="#grass" transform="rotate(64)"/><use href="#grass" transform="rotate(118) scale(.95)"/><use href="#grass" transform="rotate(199) scale(.95)"/><use href="#grass" transform="rotate(268) scale(.93)"/><circle r="3" fill="#dbd79a"/></g>
   <rect class="box" pathLength="100" x="170" y="39" width="121" height="111" rx="1" fill="none" stroke="#ffcc7e" stroke-width="3"/>
   <rect class="box second" pathLength="100" x="285" y="73" width="129" height="134" rx="1" fill="none" stroke="#a8e6df" stroke-width="3" stroke-dasharray="8 3"/>
   <rect class="area" x="285" y="73" width="6" height="77" fill="url(#shared)"/>
