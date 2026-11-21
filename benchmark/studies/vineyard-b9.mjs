@@ -11,12 +11,13 @@ import {compareVineSurvey, readSurveyedTrunks} from './vineyard-survey.mjs';
 
 const [las, gcpDbf, trunkShp, weightsPath] = process.argv.slice(2);
 if (!weightsPath || process.argv.length !== 6) {
-  throw Error('Usage: node benchmark/studies/vineyard-b9.mjs September30m.las GCPs.dbf Trunks.shp vineyard-weights.json');
+  throw Error('Usage: node benchmark/studies/vineyard-b9.mjs September-B9-30m-or-50m.las GCPs.dbf Trunks.shp vineyard-weights.json');
 }
 const checkpointScript = fileURLToPath(new URL('./vineyard-b9-checkpoints.mjs', import.meta.url));
 const calibrationStart = performance.now();
 const {stdout} = await promisify(execFile)(process.execPath, [checkpointScript, las, gcpDbf]);
 const alignment = JSON.parse(stdout);
+if (alignment.trunkScoringEligible === false) throw Error(alignment.reason + ' Trunk scoring was skipped.');
 const registrationSeconds = (performance.now()-calibrationStart)/1000;
 const shape = await readFile(trunkShp);
 assert.equal(createHash('sha256').update(shape).digest('hex'), '573c49b7f3bbcf05cd285490f5c0003a52c92064909b8662ed5aab7dc50c5c40',

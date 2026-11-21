@@ -6,7 +6,7 @@ import {join} from 'node:path';
 
 const [lasPath, dbfPath, previewDir] = process.argv.slice(2);
 if (!dbfPath || process.argv.length > 5) {
-  throw Error('Usage: node benchmark/studies/vineyard-b9-checkpoints.mjs original-30m-flight.las GCPs.dbf [new-preview-directory]');
+  throw Error('Usage: node benchmark/studies/vineyard-b9-checkpoints.mjs September-B9-30m-or-50m.las GCPs.dbf [new-preview-directory]');
 }
 const dbf = await readFile(dbfPath);
 if (createHash('sha256').update(dbf).digest('hex') !== '13972bf73287b1f344feb69921094e8cba073142cff76b4e6984e192552367e1') {
@@ -25,8 +25,8 @@ await pointFile.read(header, 0, header.length, 0);
 const count = Number(header.readBigUInt64LE(247));
 const stride = header.readUInt16LE(105), first = header.readUInt32LE(96);
 if (header.toString('ascii', 0, 4) !== 'LASF' || header[25] !== 4 || header[104] !== 7 ||
-    count !== 15166707 || first + count * stride > (await pointFile.stat()).size) {
-  throw Error('Expected the original September 16 B9 30 m capture, decompressed as LAS 1.4 point format 7.');
+    ![15166707, 9597830].includes(count) || first + count * stride > (await pointFile.stat()).size) {
+  throw Error('Expected the original September 16 B9 30 m or 50 m capture, decompressed as LAS 1.4 point format 7.');
 }
 const scaleX = header.readDoubleLE(131), scaleY = header.readDoubleLE(139);
 const offsetX = header.readDoubleLE(155), offsetY = header.readDoubleLE(163);
@@ -71,6 +71,13 @@ await pointFile.close();
 if (previewDir) await mkdir(previewDir);
 
 const candidates = [];
+const minBrightCells = 12;
+// The 30 m fit was fixed in the original study. At 50 m we inspected the
+// fitting windows first. Only the ID 4 fit patch had a clear quartered pattern
+// and enough contrast. The darker check windows were opened after this failed.
+const reviewedRanks = count === 15166707
+  ? {2: 1, 3: 1, 4: 2, 5: 1, 6: 1, 7: 1}
+  : {4: 1, 7: 1};
 for (const w of windows) {
   const density = new Uint16Array(side**2);
   const bright = [];
@@ -101,15 +108,12 @@ for (const w of windows) {
     if (separated && (runnerUp < 0 || density[i] > density[runnerUp])) runnerUp = i;
   }
 
-  // Reviewed against the four-quadrant checker in the acquisition paper.
-  // All seven windows were inspected. ID 1 has no resolved checker. At ID 4
-  // the strongest patch is an elongated blue object, and the second is the tile.
-  const reviewedRank = w.id === 1 ? null : w.id === 4 ? 2 : 1;
+  const reviewedRank = reviewedRanks[w.id] ?? null;
   const result = {id: w.id, reviewedRank,
     brightestCells: density[strongest], runnerUpCells: density[runnerUp]};
   if (reviewedRank !== null) {
     const chosen = reviewedRank === 1 ? strongest : runnerUp;
-    if (density[chosen] < 12) throw Error('Insufficient bright cells at reviewed marker '+w.id);
+    if (density[chosen] < minBrightCells) throw Error('Insufficient bright cells at reviewed marker '+w.id);
     const row = Math.floor(chosen/side), col = chosen%side;
     const cluster = bright.filter(([x, y]) => (x-col)**2+(y-row)**2 <= 25);
     const mean = axis => cluster.reduce((sum, p) => sum+p[axis], 0)/cluster.length;
@@ -117,20 +121,37 @@ for (const w of windows) {
   }
   candidates.push(result);
 }
-const fitIds = new Set([2, 3, 4]);
-const fit = candidates.filter(c => fitIds.has(c.id));
-if (fit.some(c => !c.center)) throw Error('A calibration marker failed the contrast gate.');
-const translation = ['x','y'].map((axis, j) => fit.reduce((sum, c) =>
-  sum + targets.find(t => t.id === c.id)[axis] - c.center[j], 0)/fit.length);
-for (const c of candidates) {
-  c.usedForTranslation = fitIds.has(c.id);
-  if (c.center) {
-    const t = targets.find(t => t.id === c.id);
-    c.offsetCm = c.center.map((value, j) => 100*(value+translation[j]-[t.x,t.y][j]));
-    c.distanceCm = Math.hypot(...c.offsetCm);
+function measureAlignment() {
+  const fitIds = new Set([2, 3, 4]);
+  const fit = candidates.filter(c => fitIds.has(c.id));
+  const checkTargets = candidates.filter(c => !fitIds.has(c.id));
+  const field = {pointCount: count, localBounds: [left,bottom,right,top]};
+  const minChecks = 3, maxRmsCm = 7.5, maxIndividualCm = 15;
+  const missingFitContrast = fit.filter(c => c.brightestCells < minBrightCells).map(c => c.id);
+  const possibleChecks = checkTargets.filter(c => c.brightestCells >= minBrightCells).map(c => c.id);
+  const identifiedChecks = checkTargets.filter(c => c.center);
+
+  if (fit.some(c => !c.center) || identifiedChecks.length < minChecks) {
+    return {...field, trunkScoringEligible: false,
+      reason: 'Insufficient identifiable checkerboards for independent alignment.',
+      required: {fitIds: [...fitIds], minBrightCells, minChecks, maxRmsCm, maxIndividualCm},
+      missingFitContrast, possibleChecks, candidates};
   }
+  const translation = ['x','y'].map((axis, j) => fit.reduce((sum, c) =>
+    sum + targets.find(t => t.id === c.id)[axis] - c.center[j], 0)/fit.length);
+  for (const c of candidates) {
+    c.usedForTranslation = fitIds.has(c.id);
+    if (c.center) {
+      const t = targets.find(t => t.id === c.id);
+      c.offsetCm = c.center.map((value, j) => 100*(value+translation[j]-[t.x,t.y][j]));
+      c.distanceCm = Math.hypot(...c.offsetCm);
+    }
+  }
+  const checkRmsCm = Math.sqrt(identifiedChecks.reduce((sum, c) => sum+c.distanceCm**2, 0)/identifiedChecks.length);
+  const measurement = {...field, checkRmsCm, translation, candidates};
+  if (count === 9597830 && (checkRmsCm > maxRmsCm || identifiedChecks.some(c => c.distanceCm > maxIndividualCm))) {
+    return {...measurement, trunkScoringEligible: false, reason: 'Withheld checkerboard residuals exceed limits.'};
+  }
+  return measurement;
 }
-const checks = candidates.filter(c => !c.usedForTranslation && c.center);
-const checkRmsCm = Math.sqrt(checks.reduce((sum, c) => sum+c.distanceCm**2, 0)/checks.length);
-console.log(JSON.stringify({pointCount: count, localBounds: [left,bottom,right,top], checkRmsCm,
-  translation, candidates}, null, 2));
+console.log(JSON.stringify(measureAlignment(), null, 2));

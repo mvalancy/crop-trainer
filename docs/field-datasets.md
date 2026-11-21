@@ -325,3 +325,23 @@ All **121** survey coordinates had an occupied 5 cm ground cell within 15 cm whe
 ```sh
 node benchmark/studies/vineyard-b9.mjs b9-september.las GCPs.dbf Trunks.shp vine-weights.json
 ```
+
+### Can we compare the 30 m and 50 m vineyard scans?
+
+A vine detector can appear to miss a trunk if its scan and survey maps are even a few centimeters apart. The September 16, 2021 B9 deposit offers two DJI L1 flights over the **same vines**, flown at 4 m/s. The 50 m flight began at 17:00 and the 30 m flight at 17:15. We reserved the higher flight to see whether its own ground markers could align it accurately enough for the same detector test. [VineLiDAR flight table](https://doi.org/10.1016/j.dib.2023.109686) · [Survey and marker photograph](https://doi.org/10.1016/j.dib.2022.108876)
+
+Before opening the 50 m scan, we required recognizable checkerboards at survey IDs 2, 3 and 4 to fit a translation. At least three of IDs 1, 5, 6 and 7 had to be recognizable to check it. We kept the original 4 cm raster and minimum of 12 bright cells per marker. The three or more check distances had to average at most 7.5 cm in root mean square, with each at most 15 cm. We inspected the fitting windows first. The table gives the strongest patch in each window, so these counts are **upper bounds** on the bright cells in a recognizable checkerboard.
+
+| Intended role | Survey marker IDs | Bright cells in strongest patch, same order | Result |
+| --- | --- | --- | --- |
+| Fit the map | 2, 3, 4 | 25, 8, 28 | ID 3 falls below 12. ID 4 shows alternating quarters. |
+| Check the map | 1, 5, 6, 7 | 4, 12, 1, 17 | Only IDs 5 and 7 reach 12. Three checks are required. |
+
+The 50 m file contains **9,597,830 returns**, yet the marker detail is insufficient to establish an independent translation by this method. We stopped before loading trunk positions or model weights. The 30 m fit still applies to its own flight. Comparing detector accuracy across these heights requires stronger alignment evidence for the 50 m scan. Further reference marks with documented ground coordinates and identifiable centers in the 50 m returns would make that comparison possible.
+
+**Replay the alignment check locally.** Download the 50 m B9 LAZ from the flight deposit and `GCPs.dbf` from the survey deposit. The published MD5 for the compressed flight is `a514501e64f634ee19bf98c230c05d98`. The JSON reports the counts for each marker and whether there is enough evidence to score trunks. Both deposits credit Vélez and colleagues and carry CC BY 4.0. [Laser files](https://zenodo.org/records/8113105) · [Survey files](https://zenodo.org/records/7383601) · [Alignment code](../benchmark/studies/vineyard-b9-checkpoints.mjs)
+
+```sh
+laszip -i 20210916_FLEXIGROBOTS_L1_PRO_50M_4MS_B9.laz -o b9-september-50m.las
+node benchmark/studies/vineyard-b9-checkpoints.mjs b9-september-50m.las GCPs.dbf
+```
