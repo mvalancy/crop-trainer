@@ -91,7 +91,7 @@ export function renderGuide(route, pages) {
 <body><a class="skip" href="#chapter">Skip to chapter</a>
 <header class="siteBar"><div class="barInner"><a class="brand" href="${home}"><img class="mark" src="${home}art/crop-mark.svg" width="32" height="32" alt="">Crop Trainer</a>
 <nav aria-label="Main navigation"><a href="${home}#field">Field generator</a><a href="${home}trainer/">Training shed</a><a href="${home}benchmark/">Benchmark</a><a href="${href(contents)}" aria-current="page">Docs</a></nav>
-<a class="repoLink" href="${repository}">GitHub</a></div></header>
+<span class="sourceLinks"><a class="repoLink" href="${repository}">GitHub</a><a class="wipLink" href="https://mvalancy.github.io/crop-trainer/next/studio/" aria-label="WIP: try the development workspace" title="Try the development workspace">WIP</a></span></div></header>
 <main class="guideLayout"><aside class="guideShelf"><a class="shelfTitle" href="${href(contents)}">Field guide</a>
 <details class="chapterMenu" open><summary>Browse chapters</summary><nav aria-label="Chapters">${shelf}</nav></details></aside><article class="guideChapter" id="chapter" tabindex="-1">${html}</article></main></body></html>\n`;
 }
