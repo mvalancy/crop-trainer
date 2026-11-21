@@ -4,7 +4,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Crop Trainer · The procedural farm</title>
 <meta name="description" content="Generate crop LiDAR scans, explore them in 3D, and train crop detectors locally with CPU or WebGPU.">
-<link rel="stylesheet" href="farm.css?v=planting1"></head>
+<link rel="stylesheet" href="farm.css?v=fieldlesson1"></head>
 <body class="farm"><a class="skip" href="#main">Skip to content</a>
 <header class="siteBar">
 <div class="barInner"><a class="brand" href="./"><span class="mark" aria-hidden="true"><i></i></span>Crop Trainer</a>
@@ -14,14 +14,14 @@
 <figure class="specimen"><img src="art/lettuce-study.webp" width="1080" height="720" alt="An illustration of a lettuce rosette in green point-cloud dots" fetchpriority="high"><figcaption>Lettuce · scan illustration</figcaption></figure>
 <div class="heroCopy">
 <h1 id="hero-title">Grow a field.<br><em>Train a detector.</em></h1>
-<p>Generate synthetic crop LiDAR, inspect each plant in 3D, and train a detector on your own CPU or GPU.</p>
-<div class="heroActions"><a class="primary" href="#scan-viewer">Explore the field <span aria-hidden="true">→</span></a><a href="trainer/">Training shed</a></div></div>
+<p>Can a computer find lettuce in a cloud of laser dots? Grow a simulated field and teach a detector in your browser.</p>
+<div class="heroActions"><a class="primary" href="#guide">Try the field lesson <span aria-hidden="true">→</span></a><a href="#scan-viewer">Explore in 3D</a></div></div>
 </section>
 
 <section id="field">
 <div class="sectionHead">
 <h2>Field generator</h2>
-<p>Explore a 10 × 10 m plot in 3D. Zoom in on a plant, then grow a different crop in Scan settings.</p></div>
+<p>Each dot is one laser return. Rings mark known plant centers. Zoom in on a plant or grow a different crop in Scan settings.</p></div>
 <div class="lab">
 
 <article class="plot" id="scan-viewer">
@@ -91,23 +91,45 @@
 <p>Grid profiles distribute jittered samples over the plot. Line and sweep profiles change coverage along and across rows. Ring layouts use angular columns and channels, capped by the ray budget. The synthetic renderer takes the highest surface at each sample. Hardware-inspired presets reproduce selected channel and column counts. Beam calibration, pulse intensity, motion and multiple returns would require a richer sensor model. <a href="https://static.ouster.dev/sensor-docs/image_route1/image_route2/sensor_data/sensor-data.html">Ouster sensor data reference</a></p>
 <p>Try a sparse tomato field. At 12,000 rays, 81 of its 116 plants had a nearby height peak, and ten received a final pin within 15 cm at the default score cutoff. Zoom into the rows, then run the cutoff benchmark to see how many more plants a lower cutoff recovers. <a href="?crop=tomato&amp;sensor=os1-32&amp;seed=854812180&amp;budget=12000&amp;ground=true&amp;tile=e3a36b5c8e54f55d#field">Inspect these tomatoes</a> · <a href="benchmark/?comparison=cutoffs&amp;crop=tomato&amp;seed=822&amp;sensor=mixed&amp;validationSensor=os1-32&amp;validationRayBudget=12000">Compare tomato cutoffs</a></p></details>
 </section>
-<section id="guide">
-<h2>From scan to detector</h2>
-<div class="lessons">
-<article>
-<h3>Grow the answer key</h3>
-<p>Each plant has a bounding box. Growing-system presets also record its planting position so the scorer can measure how far a pin lands from its base.</p></article>
-<article>
-<h3>Learn from local peaks</h3>
-<p>The trainer finds height peaks in a 5 cm grid and measures 13 clues around each peak. Training updates model weights so peaks near plant centers receive higher scores.</p></article>
-<article>
-<h3>Scout unfamiliar ground</h3>
-<p>New seeds supply the validation fields. Precision counts how often a pin finds a plant. Recall counts how many plants receive a pin.</p></article></div>
-<nav class="guideLinks" aria-label="Continue exploring"><a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/first-steps/README.md">How does a model learn? Illustrated beginner lessons</a>
-<a href="trainer/">Train and inspect missed plants</a>
+<section id="guide" aria-labelledby="guideTitle">
+<div class="sectionHead"><h2 id="guideTitle">Can you spot a plant?</h2>
+<p>Follow a laser dot from a leaf to a prediction. Then try the detector’s job yourself.</p></div>
+<div class="fieldGuide">
+<div class="lessonTabs" role="tablist" aria-label="Field lesson">
+<button id="rowTab" role="tab" aria-selected="true" aria-controls="sampleRow">Scan a row</button>
+<button id="pinTab" role="tab" aria-selected="false" aria-controls="placePin" tabindex="-1">Place a pin</button>
+<button id="fitTab" role="tab" aria-selected="false" aria-controls="learnWeight" tabindex="-1">Train a model</button>
+</div>
+<section id="sampleRow" class="lessonPanel" role="tabpanel" aria-labelledby="rowTab">
+<div class="lessonCopy"><h3>Can the scanner miss a whole plant?</h3>
+<p>LiDAR measures distance with light. In this side view, a dot marks where each laser ray hits a leaf or the soil.</p>
+<p>Will more rays find the small seedling?</p>
+</div>
+<figure class="rayFigure"><svg id="rayRow" viewBox="0 0 420 166" role="img" aria-label="Side view of two plants beneath a row of simulated laser rays"></svg>
+<figcaption><fieldset class="rayChoice"><legend>Rays across this row</legend><label><input type="radio" name="rowDensity" value="7" checked>7 rays</label><label><input type="radio" name="rowDensity" value="28">28 rays</label></fieldset>
+<p id="rayFinding" role="status"></p></figcaption></figure><div class="lessonNext"><button class="primary" type="button" data-lesson-step="pinTab">Try placing a pin →</button></div></section>
+<section id="placePin" class="lessonPanel" role="tabpanel" aria-labelledby="pinTab" hidden>
+<div class="lessonCopy"><h3>Where would you put a pin?</h3>
+<p>Look down on your <strong id="lessonCrop">lettuce</strong> scan. Brighter dots are higher. Place a pin where you see a plant, then compare it with the planting map.</p>
+</div>
+<div id="pinPractice"></div><div class="lessonNext"><button type="button" data-lesson-step="fitTab">How does a model learn? →</button></div></section>
+<section id="learnWeight" class="lessonPanel" role="tabpanel" aria-labelledby="fitTab" hidden>
+<div class="lessonCopy"><h3>What changes during training?</h3>
+<p>A model gives each possible plant center a score. A <strong>weight</strong> controls how strongly a clue, such as height, affects that score.</p>
+<p>Try teaching this tiny model from one labeled plant. Then take the full detector to the Training Shed, where it learns from many examples and tests its pins on fresh fields.</p>
+</div>
+<figure class="weightFigure"><figcaption>One clue, two lookalikes</figcaption>
+<p>This example only measures height. The weed and the crop have the same height.</p>
+<div class="lessonScore"><label for="practiceScore">Practice plant</label><meter id="practiceScore" min="0" max="1" value=".5">0.50</meter><output>0.50</output></div>
+<div class="lessonScore"><label for="weedScore">Unseen weed</label><meter id="weedScore" min="0" max="1" value=".5">0.50</meter><output>0.50</output></div>
+<div class="weightActions"><button id="oneUpdate" type="button">Learn from the plant</button><button id="resetWeight" type="button" disabled>Reset</button></div>
+<p id="weightFinding" role="status">Both scores start at 0.50. Which one will rise?</p></figure><div class="lessonNext"><a id="lessonTrain" href="trainer/" class="primary">Train on fresh fields →</a></div></section>
+</div>
+<details class="lessonReading"><summary>Keep learning</summary><nav class="guideLinks" aria-label="Continue exploring">
+<a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/first-steps/README.md">Illustrated field guide</a>
+<a href="benchmark/?comparison=models">Compare two detectors</a>
 <a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/field-datasets.md">Find a public field dataset</a>
-<a href="benchmark/#experiments">Try a crop experiment</a>
-<a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/README.md">Research and local setup</a></nav>
+<a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/README.md">Research and local setup</a></nav></details>
 </section>
 <section id="missions">
 <div class="journalHead">
@@ -118,6 +140,6 @@
 </main>
 <footer class="siteFoot"><span>Created by Matthew Valancy</span>
 <div><a href="AGENTS.md">Agent quickstart</a><a href="#missions">Farm journal</a><a href="LICENSE">MIT license</a></div></footer>
-<script type="module" src="farm.js?v=planting1"></script>
+<script type="module" src="farm.js?v=fieldlesson1"></script>
 </body>
 </html>

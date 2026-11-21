@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Train &amp; validate · Crop Trainer</title>
-<link rel="stylesheet" href="../farm.css?v=layout2"></head>
+<link rel="stylesheet" href="../farm.css?v=fieldlesson1"></head>
 <body class="shed"><a class="skip" href="#main">Skip to content</a>
 <header class="siteBar">
 <div class="barInner"><a class="brand" href="../"><span class="mark" aria-hidden="true"><i></i></span>Crop Trainer</a>
@@ -11,7 +11,7 @@
 <main id="main">
 <header class="pageIntro">
 <h1>Training shed</h1>
-<p>Teach a model to find plants in laser scans. Start with the preset or build your own network.</p>
+<p>Can a detector find the center of a plant from laser dots? Pick a crop and press <strong>Generate, train &amp; score</strong> to try it.</p>
 <nav class="introLinks" aria-label="Training resources"><a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/first-steps/README.md">Illustrated first steps</a> <a href="#field-test">Test your own scan ↓</a></nav></header>
 <form id="controls" class="grid trainingWorkspace">
 <section class="setupPanel" aria-label="Run setup">
@@ -29,7 +29,7 @@
 <p class="hint">Each input describes the shape around a peak. The output scores each possible plant center from 0 to 1. Counts show the full layer widths.</p></details></section>
 <div class="formPair">
 <label>Crop<select id="crop"><option value="lettuce">Lettuce</option><option value="artichoke">Globe artichoke</option><option value="tomato">Young tomato</option><optgroup label="Experimental growing systems"><option value="apple">Apple orchard</option><option value="grapevine">Trellised vineyard</option><option value="bench-lettuce">Greenhouse bench lettuce</option><option value="high-wire-tomato">Greenhouse high-wire tomato</option></optgroup></select></label>
-<label>Training backend<select id="engine"><option value="auto">Automatic</option><option value="cpu">CPU</option><option value="webgpu" disabled="">WebGPU (experimental)</option></select></label></div>
+<label>Train using<select id="engine"><option value="auto">Automatic</option><option value="cpu">CPU</option><option value="webgpu" disabled="">WebGPU (experimental)</option></select></label></div>
 <div class="action">
 <button type="submit" class="primary" id="run" disabled="">Generate, train &amp; score</button>
 <button type="button" id="cancel" disabled="">Cancel</button>
@@ -43,9 +43,9 @@
 <figure class="liveScene" id="trainingScene" hidden></figure>
 <figure id="firstRun" class="firstRun">
 <img src="../art/scan-learn-find.svg" width="620" height="206" alt="A laser scans a head of lettuce, a network learns from labeled peaks, and two pins land on plants in a new field.">
-<figcaption>During practice the model gets an answer key. At harvest it sees only the laser dots. Look for a labeled plant it missed on the results map.</figcaption></figure>
+<figcaption>The generator knows where it planted each crop. Your detector practices with that answer key, then places its own pins on a fresh field.</figcaption></figure>
 <div class="stage"><strong id="stage" role="status">Ready to start</strong>
-<div id="status">Set up a run to see training loss and validation scores.</div><progress id="progress" aria-label="Run progress" value="0" max="100"></progress></div>
+<div id="status">The field will appear here when you start.</div><progress id="progress" aria-label="Run progress" value="0" max="100"></progress></div>
 <a class="reviewLink" id="reviewLink" href="#resultsTitle" hidden>View scores and download weights ↓</a>
 <details class="method">
 <summary>How generation, training and validation work</summary><ol><li>Generate separate seeded fields for training and validation. Each is scanned with ground included and removed.</li><li>Project XYZ into a 5 cm grid. Measure 13 features at each candidate height peak. Nearby labeled centers supply positive examples and far-away peaks supply negatives.</li><li>Balance training examples and normalize them using training statistics. Fit the selected network or logistic model by minimizing binary cross-entropy.</li><li>Score peaks on unseen fields and retain those at or above the selected detection cutoff. Keep the higher-confidence pin when candidates fall inside the crop’s spacing filter. Match remaining pins to planted centers at three distances.</li><li>Field generation and scoring use the CPU. Model fitting uses your selected backend. An epoch is one pass over the training examples.</li></ol><p><a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/training.md">Training controls and weight-file guide →</a></p><p class="fine">To compare speeds, keep seed, field counts and epochs the same. Download the settings to repeat a finished experiment with the CPU command in the <a href="../AGENTS.md">agent guide</a>. The benchmark JSON also includes weights, timing and scores.</p>
@@ -90,12 +90,22 @@
 </form>
 <section id="runReview" class="panel runReview" aria-labelledby="resultsTitle" hidden>
 <h2 id="resultsTitle">Run results</h2>
-<div id="scored" hidden><h3 class="scoreHeading">F1 by matching distance</h3>
+<div id="scored" hidden>
+<p id="matchStory"></p><a class="reviewLink" href="#fieldMapTitle">Explore a scored field ↓</a>
+<h3 class="scoreHeading">F1 by matching distance</h3>
+<p class="fine">Precision is the share of pins that found a plant. Recall is the share of plants that got a pin. F1 balances both. At 7.5 cm a pin must land closer to the center than at 15 cm.</p>
 <div class="cards" aria-label="Synthetic validation scores">
 <div><small>7.5 cm</small><b id="s75">—</b><span class="fine" id="d75"></span></div>
 <div><small>10 cm</small><b id="s10">—</b><span class="fine" id="d10"></span></div>
 <div><small>15 cm</small><b id="s15">—</b><span class="fine" id="d15"></span></div></div>
 </div>
+<section class="trainingReceipt" aria-labelledby="fitDataTitle">
+<h3 id="fitDataTitle">What went into this fit?</h3>
+<p id="fitCounts"></p>
+<figure class="contributionPlot"><div aria-hidden="true" id="fieldBars"></div><figcaption id="fieldRange"></figcaption></figure>
+<details id="fieldContributions"><summary>See examples from each planting</summary>
+<p>Each row combines the two scans of a planting. Open a field seed to inspect its soil-present scan. The trainer pools the labeled peaks, then selects equal numbers of plant and background examples, up to 48,000 examples in total.</p>
+<div class="tableScroll"><table><caption>Examples retained for each epoch</caption><thead><tr><th scope="col">Field seed</th><th scope="col">Plant</th><th scope="col">Background</th><th scope="col">Total</th></tr></thead><tbody id="fitFields"></tbody></table></div></details></section>
 <dl id="benchmark" class="bench" hidden="">
 <div><dt>Backend used</dt><dd id="bEngine"></dd></div>
 <div><dt>Field generation</dt><dd id="bGenerate"></dd></div>
@@ -147,7 +157,7 @@
 <div class="viz" hidden="" id="charts">
 <article class="lossChart"><h3>Training loss</h3><canvas id="loss" aria-label="Training loss by epoch" role="img"></canvas>
 <p id="lossText">No epochs yet.</p></article>
-<article class="fieldInspector"><h3>Selected field</h3>
+<article class="fieldInspector"><h3 id="fieldMapTitle">Selected field</h3>
 <div class="mapWorkspace"><div class="mapTools">
 <label class="fine">Map overlay<select id="overlayStage"><option value="selected">Final detections</option><option value="misses">Missed plants</option><option value="accepted">Passed score cutoff</option><option value="proposals">All height peaks</option></select></label>
 <div id="missControls" hidden="">
@@ -205,6 +215,6 @@
 </main>
 <footer class="siteFoot"><span>Created by Matthew Valancy</span>
 <div><a href="../AGENTS.md">Agent quickstart</a><a href="../#missions">Farm journal</a><a href="../LICENSE">MIT license</a></div></footer>
-<script type="module" src="./main.js?v=layout2"></script>
+<script type="module" src="./main.js?v=field-audit1"></script>
 </body>
 </html>

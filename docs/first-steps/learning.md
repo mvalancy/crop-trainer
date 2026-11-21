@@ -17,7 +17,7 @@ To update a weight, the trainer works out which direction would reduce the loss 
 
 Imagine a one-clue logistic model, with its bias held at zero for this exercise. The clue has value 1, its starting weight is 0, and the label says “yes” (1). The weighted total starts at 0, so the sigmoid gives a score of 0.50.
 
-For this model and loss, the slope for that weight is **(score − label) × clue**. Here that is (0.50 − 1) × 1 = −0.50. With a learning rate of 0.25, subtract the scaled slope from the old weight. The new weight is 0 − 0.25 × (−0.50) = **0.125**. The next score for this clue rises to about **0.531**. The example nudged the model toward the correct answer.
+For this model and loss, the slope for that weight is **(score − label) × clue**. Here that is (0.50 − 1) × 1 = −0.50. With a learning rate of 0.25, subtract the scaled slope from the old weight. The new weight is 0 − 0.25 × (−0.50) = **0.125**. The next score for this clue rises to about **0.531**. The field lesson starts with the same clue and uses a learning rate of 1. Its weight moves to 0.50 in one step and the score reaches 0.62. The weed gets exactly the same score because it has the same input.
 
 What would a “no” label do at the same starting point? The slope becomes +0.50, the weight falls to −0.125, and the score drops to about 0.469. In the shed, many examples contribute to each update, and the biases can move too.
 
@@ -25,11 +25,11 @@ What would a “no” label do at the same starting point? The slope becomes +0.
 
 ![Training loss from the 40-epoch starter CPU run, dropping from 0.651 to 0.321, with each point drawn from its recorded loss history.](../../art/lesson-loss.svg)
 
-An **epoch** is one pass through the practice examples. The seed-27 starter used 3,052 balanced candidates, six practice fields and 40 epochs. With full-batch updates, all candidates contribute to one update per epoch. Mini-batches update the weights several times during the pass. The chart shows practice loss before each epoch’s update. Final validation uses the weights after the last update.
+An **epoch** is one pass through the practice examples. The seed-27 starter used 3,052 balanced candidates, six practice fields and 40 epochs. With full-batch updates, all candidates contribute to one update per epoch. Mini-batches update the weights several times during the pass. The starter chart records loss just before each full-batch update. With mini-batches, each batch contributes its loss just before its own update. Final validation uses the weights after the last update.
 
 ## Give the detector a fair exam
 
-A **validation field** is an unseen planting kept out of fitting. The app holds out whole field seeds, since two scans of the same row can show the same lettuce. The starter uses three validation fields, each scanned with soil and with soil removed. Those six scans represent three plantings. An improving practice curve alone cannot tell you what happened to their pins.
+A **validation field** is an unseen planting kept out of fitting. The app holds out whole field seeds, since two scans of the same row can show the same lettuce. The starter uses three validation fields, each scanned with soil and with soil removed. Those six scans represent three plantings. Compare the pins with the hidden centers to find out whether a lower practice loss also helped on these plantings. If you use their scores to choose an epoch count or a cutoff, save that choice and try it once on new field seeds. That gives you a fresh test of the choice you made.
 
 **Try it.** Run the duration benchmark. For the same seed, compare 10, 40 and 100 epochs. Find the lowest practice loss, then find the highest mean validation F1 (the pin score explained next). Do they belong to the same run? Keep the crop and fields fixed while testing duration. CPU and WebGPU are two ways your browser can do the arithmetic. The backend, runtime and validation results are separate entries in the report. [Compare training durations](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=epochs&crop=lettuce&seed=27)
 

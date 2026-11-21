@@ -8,13 +8,29 @@ import {cropProfile} from '../trainer/crops.js?v=systems1';
 import {sensorOptions, validationSensorOptions, rayBudgetOptions, trainingRayOptions, trainingRayValue, ALTERNATING_BUDGET, DENSITY_BUDGETS} from '../trainer/sensors.js?v=dense1';
 
 const $ = id => document.getElementById(id);
-const formatTime = ms => (ms/1000).toFixed(2)+' s';
+const formatTime = ms => ms < 100 ? ms.toFixed(1)+' ms' : (ms/1000).toFixed(2)+' s';
 const watch=benchmarkView($('benchWatch'));
 $('watchCancel').onclick=()=>controller?.abort();
 let controller, report, gpuAvailable = false;
 sensorOptions($('sensor'), true);
 validationSensorOptions($('validationSensor'));
 const requested = new URLSearchParams(location.search);
+$('benchOptions').open = ['seed','sensor','validationSensor','trainingRayBudget','validationRayBudget','epochs','minimumHeight','includeMixed'].some(key=>requested.has(key));
+function revealSettingsAnchor(hash) {
+  const target = document.getElementById(hash.slice(1));
+  const disclosure = target?.closest('#benchOptions,#benchExamples');
+  if (!disclosure) return;
+  disclosure.open = true;
+  target.scrollIntoView({block:'start'});
+}
+revealSettingsAnchor(location.hash);
+window.addEventListener('hashchange', () => revealSettingsAnchor(location.hash));
+// Clicking the current fragment again does not dispatch hashchange.
+document.addEventListener('click', event => {
+  const link = event.target.closest('a[href]');
+  if (link?.href === location.href && link.hash) revealSettingsAnchor(link.hash);
+});
+$('benchOptions').addEventListener('invalid', () => { $('benchOptions').open = true; }, true);
 $('livePreview').checked=requested.get('live')!=='off';
 $('includeMixed').checked = requested.get('includeMixed') === '1';
 for (const id of ['comparison', 'crop', 'sensor', 'validationSensor', 'minimumHeight', 'fieldMetric', 'cutoffDistance']) {
@@ -34,12 +50,15 @@ if (/^\d+$/.test(requestedEpochs) && Number(requestedEpochs) >= 1 && Number(requ
 }
 try { gpuAvailable = Boolean(await navigator.gpu?.requestAdapter()); } catch {}
 if (!gpuAvailable) {
-  $('comparison').querySelector('[value="backend"]').disabled = true;
+  const gpuOption = $('comparison').querySelector('[value="backend"]');
+  gpuOption.disabled = true;
+  gpuOption.textContent = 'CPU vs WebGPU · unavailable in this browser';
   if ($('comparison').value === 'backend') $('comparison').value = 'models';
 }
-$('status').textContent = gpuAvailable ? 'WebGPU adapter available.' : 'CPU comparisons are available. This browser has no available WebGPU adapter.';
+const readyMessage = gpuAvailable ? 'Ready to run. CPU and WebGPU are available.' : 'Ready to run on CPU. This browser did not provide a WebGPU adapter.';
+$('status').textContent = readyMessage;
 if (!gpuAvailable && requested.get('comparison') === 'backend') {
-  $('status').textContent = 'This link requests CPU vs WebGPU. This browser has no available WebGPU adapter. The form is set to compare models on CPU.';
+  $('status').textContent = 'This link requests CPU vs WebGPU. Your browser did not provide a GPU adapter. Run benchmark will compare logistic and neural models on CPU.';
 }
 function explainComparison() {
   const compareHeights = $('comparison').value === 'heights';
@@ -54,16 +73,19 @@ function explainComparison() {
   $('epochControl').hidden = compareDurations;
   $('fitEpochs').disabled = compareDurations;
   const descriptions = {
-    heights: 'Use identical raw scans and fit a new CPU neural detector for each minimum height. Lowering the height admits shorter peaks during both training and validation.',
-    density: 'Compare CPU neural fits trained on the same plantings at 12,000 and 60,000 rays. Include a mixed fit to alternate budgets between training fields. Every fit scores the same held-out scans.',
+    heights: 'Both detectors look for high points in the same scans. One starts at 6.5 cm and one at 3.5 cm. Check whether including shorter peaks recovers plants or adds stray pins.',
+    density: 'Train on the same plantings scanned with 12,000 or 60,000 laser rays. Test both detectors on identical fresh scans to see whether denser training helped.',
     epochs: 'An epoch is one pass over the training examples. Fit the same CPU neural model from identical starting weights for 10, 40 and 100 epochs. Compare training loss with F1 on unseen fields.',
-    cutoffs: 'Fit one CPU neural network per seed, then score the same weights at cutoffs of 0.35, 0.50 and 0.65. Select a cutoff in the results to replay that fit.',
-    models: 'Fit logistic and neural models on CPU for the chosen number of epochs. Both use the same training examples and held-out fields.',
-    backend: 'Fit the same neural model for the chosen number of epochs on CPU and WebGPU. Only training uses the selected backend.'
+    cutoffs: 'Train one neural network per seed. Set the minimum score for placing a pin to 0.35, 0.50 or 0.65. Check how many extra plants and stray pins each cutoff picks up.',
+    models: 'A logistic model weights each scan feature directly. A neural network learns combinations of features. Both train on your CPU. Compare their pins on the same fresh scans.',
+    backend: 'Train the same neural network on CPU and WebGPU. Compare fitting times alongside scores. Both runs generate fields and score plant centers on the CPU.'
   };
   $('comparisonHelp').textContent = descriptions[$('comparison').value];
 }
-$('comparison').addEventListener('change', explainComparison);
+$('comparison').addEventListener('change', () => {
+  explainComparison();
+  $('status').textContent = readyMessage;
+});
 explainComparison();
 $('run').disabled = false;
 $('cancel').onclick = () => controller?.abort();
@@ -82,6 +104,78 @@ function contenderLabel(row, comparison) {
   if (comparison === 'models') return row.model === 'linear' ? 'Logistic' : 'Neural';
   return row.backend;
 }
+// Each contender has one row per dataset seed. A field's two soil variants
+// have repeated plant labels, so pooled counts describe the twelve scans.
+function showOutcome(rows, comparison, crop) {
+  const groups = new Map();
+  for (const row of rows) {
+    const label = contenderLabel(row, comparison);
+    if (!groups.has(label)) groups.set(label, []);
+    groups.get(label).push(row);
+  }
+  const summaries = Array.from(groups, ([label, runs]) => {
+    const matches = runs.map(row => row.scores.find(score => score.cm === 15));
+    const sum = (items, key) => items.reduce((total, item) => total + item[key], 0);
+    const tp = sum(matches, 'tp');
+    return {
+      label, mean:sum(runs, 'meanF1') / runs.length, trainingMs:sum(runs, 'trainingMs') / runs.length,
+      matched:tp, labels:tp + sum(matches, 'fn'), extra:sum(matches, 'fp'),
+      scores:new Map(runs.map(row => [row.seed, row.meanF1.toFixed(4)]))
+    };
+  });
+  const ranked = [...summaries].sort((a,b) => b.mean - a.mean);
+  const top = ranked.filter(s => s.mean.toFixed(4) === ranked[0].mean.toFixed(4));
+  const intro = document.createElement('h3');
+  if (top.length > 1) {
+    intro.textContent = top.length === ranked.length ? 'The average scores tied to four decimals'
+      : top.map(s => s.label).join(' and ')+' tied for the highest average score';
+  } else {
+    const best = ranked[0];
+    const ledBoth = [...best.scores].every(([seed,score]) =>
+      ranked.slice(1).every(other => Number(score) > Number(other.scores.get(seed))));
+    intro.textContent = best.label+(ledBoth ? ' led on both dataset seeds' : ' had the highest average mean F1');
+  }
+  const observation = document.createElement('p');
+  if (comparison === 'backend') {
+    intro.textContent = 'Training time on this device';
+    observation.textContent = summaries.map(s => s.label+' averaged '+formatTime(s.trainingMs)+' per fit').join(' · ')+'.';
+  } else if (top.length === 1) {
+    const [best, next] = ranked;
+    function difference(a, b, noun) {
+      const count = Math.abs(a-b);
+      if (!count) return 'the same number of '+noun+'s';
+      return count.toLocaleString()+(a>b?' more ':' fewer ')+noun+(count===1?'':'s');
+    }
+    observation.textContent = 'Compared with '+next.label+' at 15 cm, '+best.label+' found '+difference(best.matched,next.matched,'labeled center')+
+      ' and placed '+difference(best.extra,next.extra,'unmatched pin')+'.';
+  }
+  const guide = document.createElement('p');
+  const firstRuns = groups.values().next().value;
+  const scans = firstRuns.reduce((n, row) => n + row.tiles.length, 0);
+  const seeds = firstRuns.map(row => row.seed).join(' and ');
+  guide.textContent = 'Mean F1 balances missed plants and extra pins across three matching distances. Counts use a 15 cm match on '+scans+' synthetic '+cropProfile(crop).name.toLowerCase()+' scans from seeds '+seeds+', including both soil views of each planting.';
+  const list = document.createElement('ul');
+  list.id = 'outcomeList';
+  for (const entry of summaries) {
+    const item = document.createElement('li'), title = document.createElement('strong');
+    title.textContent = entry.label+' · '+entry.mean.toFixed(4)+' mean F1';
+    const count = document.createElement('span');
+    count.textContent = entry.matched.toLocaleString()+' of '+entry.labels.toLocaleString()+' centers found · '+entry.extra.toLocaleString()+' extra pins';
+    item.append(title,count);
+
+    list.append(item);
+  }
+  $('summary').replaceChildren(intro);
+  if (observation.textContent) $('summary').append(observation);
+  $('summary').append(guide,list);
+  const adapter = rows.find(row => row.adapter)?.adapter;
+  if (adapter) {
+    const note = document.createElement('p');
+    note.textContent = 'WebGPU adapter · '+[adapter.kind,adapter.description || adapter.architecture].filter(Boolean).join(' · ');
+    $('summary').append(note);
+  }
+}
+
 function appendRow(row, comparison, settings) {
   const tr=document.createElement('tr');
   const widest=row.scores.at(-1);
@@ -551,16 +645,7 @@ $('benchForm').onsubmit = async event => {
         }
       }
     }
-    const groups = new Map();
-    for (const row of rows) {
-      const label = contenderLabel(row, comparison);
-      groups.set(label, (groups.get(label) || 0) + row.meanF1);
-    }
-    const seedCount = new Set(rows.map(row => row.seed)).size;
-    const means = [...groups].map(([label, sum]) => label+' '+(sum/seedCount).toFixed(4));
-    const adapter = rows.find(row => row.adapter)?.adapter;
-    const device = adapter ? ' WebGPU adapter: '+[adapter.kind, adapter.description || adapter.architecture].filter(Boolean).join(' · ')+'.' : '';
-    $('summary').textContent='Average mean F1 across both seeds: '+means.join(' · ')+'.'+device;
+    showOutcome(rows, comparison, crop);
     const replay = new URL(location.pathname, location.origin);
     replay.search = new URLSearchParams({comparison, crop, sensor:sensorMode, seed});
     if(!livePreview)replay.searchParams.set('live','off');

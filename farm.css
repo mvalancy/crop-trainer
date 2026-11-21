@@ -588,3 +588,122 @@ tbody tr:nth-child(even) { background: #f6f8f0; }
 }
 .reviewLink {display:inline-flex;align-items:center;min-height:44px;align-self:start;font-size:.9rem;font-weight:630;}
 @media(min-width:865px){.benchContext{grid-row:1/span 2;}}
+
+/* First field lesson */
+.fieldGuide { background: var(--surface); border: 1px solid var(--line); border-radius: .9rem; overflow: hidden; }
+.lessonTabs { display: flex; gap: .35rem; padding: .55rem; border-bottom: 1px solid var(--line); background: var(--wash); }
+.lessonTabs button { background: transparent; border-color: transparent; min-height: 44px; color: var(--forest); }
+.lessonTabs button[aria-selected=true] { background: var(--forest); color: white; }
+.lessonTabs button:focus-visible { outline-offset: 0; }
+.lessonPanel { display: grid; grid-template-columns: minmax(0,.85fr) minmax(0,1.25fr); align-items: start;
+  gap: 1rem clamp(1.5rem,4vw,4rem); padding: clamp(1.1rem,3.3vw,3rem); }
+.lessonCopy { align-self: end; }
+.lessonCopy h3 { font: 500 clamp(1.65rem,2.4vw,2.45rem)/1.1 var(--serif); letter-spacing: -.03em; }
+.lessonCopy p { max-width: 47ch; }
+.lessonPanel > figure, #pinPractice { min-width: 0; grid-column: 2; grid-row: 1/span 2; align-self: center; }
+.lessonNext { grid-column: 1; }
+.lessonNext button, .lessonNext a { min-height: 44px; }
+.rayFigure, .weightFigure { border: 1px solid #b8cabb; border-radius: .7rem; overflow: hidden; background: #f0f4e9; }
+.rayFigure svg { width: 100%; height: auto; display: block; background: #18372c; }
+.rayFigure figcaption, .weightFigure { padding: 1rem clamp(.85rem,2vw,1.5rem); }
+.rayChoice { display: flex; gap: 1rem; flex-wrap: wrap; }
+.rayChoice legend, .weightFigure figcaption { font-weight: 700; }
+.rayChoice label { display: inline-flex; flex-direction: row; align-items: center; min-height: 44px; font-size: 1rem; }
+.rayChoice input[type=radio] { appearance: auto; accent-color: var(--forest); width: 1.1rem; height: 1.1rem; min-height: 0; padding: 0; margin: 0; }
+.rayFigure p, .weightFigure p { margin: .45rem 0 0; }
+.weightFigure figcaption { font-size: 1.15rem; }
+.lessonScore { display: grid; grid-template-columns: 7.5rem minmax(2rem,1fr) 3rem; align-items: center; gap: .55rem; margin: .8rem 0; }
+.lessonScore label { font-size: .96rem; }
+.lessonScore output { text-align: end; font-variant-numeric: tabular-nums; }
+.lessonScore meter { width: 100%; height: 1.25rem; accent-color: var(--forest); }
+.weightActions { display: flex; gap: .5rem; flex-wrap: wrap; margin-block: .9rem; }
+.lessonReading { margin-top: 1rem; }
+@media (prefers-reduced-motion: no-preference) {
+  .rowRay { animation: sampleRay .32s ease-out var(--arrival) backwards; }
+  @keyframes sampleRay { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: none; } }
+}
+@media (max-width:740px) {
+  .lessonPanel { display: flex; flex-direction: column; align-items: stretch; gap: 1rem; }
+  .lessonPanel > *, .lessonPanel > figure, #pinPractice { align-self: stretch; }
+  .lessonCopy p:last-child { margin-bottom: 0; }
+  .lessonTabs { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .2rem; padding: .35rem; }
+  .lessonTabs button { padding: .45rem .25rem; }
+  .lessonScore { grid-template-columns: 6.5rem minmax(1.5rem,1fr) 2.5rem; }
+}
+.trainingReceipt { margin: 1.25rem 0; padding-block: 1rem; border-block: 1px solid var(--line); }
+.trainingReceipt summary { min-height: 2rem; }
+.trainingReceipt .tableScroll { max-height: 21rem; overflow: auto; }
+.trainingReceipt caption { text-align: left; font-weight: 650; }
+.trainingReceipt thead { position: sticky; top: 0; background: var(--wash); }
+.trainingReceipt th, .trainingReceipt td { padding: .45rem; }
+.contributionPlot { margin: 1rem 0; }
+#fieldBars { display: flex; align-items: end; gap: 1px; height: 3rem; max-width: 36rem; border-bottom: 1px solid var(--line); }
+#fieldBars i { flex: 1 1 0; max-width: 2.3rem; background: #59845c; border-radius: 2px 2px 0 0; }
+.contributionPlot figcaption { color: var(--muted); font-size: .85rem; margin-top: .3rem; }
+
+/* Field lesson board */
+.field-lesson {min-width:0}
+.field-lesson .fl-figure {margin:0}
+.field-lesson .fl-head,.field-lesson .fl-key,.field-lesson .fl-actions {display:flex;align-items:center;flex-wrap:wrap;gap:.45rem .85rem}
+.field-lesson .fl-head,.field-lesson .fl-key {font-size:.82rem;color:var(--muted);line-height:1.4}
+.field-lesson .fl-head {justify-content:space-between;margin:.4rem 0}
+.field-lesson .fl-head strong {color:var(--ink)}
+.field-lesson .fl-board,.field-lesson .fl-board:hover:enabled {display:block;width:100%;padding:0;border:1px solid #354f40;border-radius:.65rem;background:#142a22;color:#e1e9d8;overflow:hidden;touch-action:manipulation;cursor:crosshair}
+.field-lesson .fl-board svg {display:block;width:100%;height:auto;aspect-ratio:5 / 3}
+.field-lesson .fl-key {margin:.55rem 0}
+.field-lesson .fl-key span {display:inline-flex;align-items:center;gap:.3rem}
+.field-lesson .fl-ramp {display:inline-block;width:2.6rem;height:.55rem;background:linear-gradient(90deg,#62786c,#a1bf81,#fff0ac);border:1px solid #708064;border-radius:2px}
+.field-lesson .fl-diamond,.field-lesson .fl-cross {font:700 1.05rem/1 system-ui}
+.field-lesson .fl-diamond {color:#955300}.field-lesson .fl-cross {color:#126e70}
+.field-lesson .fl-actions {margin:.8rem 0 .4rem}
+.field-lesson .fl-actions button {min-height:44px}
+.field-lesson .fl-help,.field-lesson .fl-status {margin:.4rem 0;font-size:.9rem}
+.field-lesson .fl-help {color:var(--muted)}
+.field-lesson .fl-status {font-weight:600}
+.field-lesson[data-phase="scored"] .fl-status {margin:.5rem 0;padding:.55rem .75rem;background:#edf4df;border-left:4px solid #53743a;border-radius:.2rem;color:#233d27}
+.field-lesson[data-phase="scored"][data-match="miss"] .fl-status {border-color:#a16b29;background:#fcf2db;color:#513b1b}
+.field-lesson .fl-help summary {cursor:pointer;text-decoration:underline;text-underline-offset:.18em}
+.field-lesson .fl-list {font-size:.88rem;margin:.6rem 0}
+.field-lesson .fl-list summary {cursor:pointer;text-decoration:underline;text-underline-offset:.18em}
+.field-lesson .fl-list ol {padding-left:1.5rem}
+.field-lesson .fl-aim {visibility:hidden}
+.field-lesson .fl-board:focus-visible .fl-aim {visibility:visible}
+.field-lesson .fl-measure {stroke-dasharray:1;animation:fl-measure .25s ease-out both}
+@keyframes fl-measure {from {stroke-dashoffset:1} to {stroke-dashoffset:0}}
+@media (prefers-reduced-motion:reduce){.field-lesson .fl-measure {animation:none}}
+
+/* Comparison setup and outcome */
+.benchSetup .benchForm { grid-column: 1 / -1; grid-template-columns: minmax(0,1fr); }
+.benchSetup #benchOptions { grid-column: 1 / -1; margin: 0; }
+.benchSetup > .benchContext { grid-row: auto; min-width: 0; }
+.benchContext figure { margin: .7rem 0; }
+.benchContext figure span { display: block; overflow: hidden; border-radius: .5rem; }
+.benchContext figure span + span { display: none; }
+.benchContext img { display: block; width: 100%; height: auto; border-radius: .5rem; background: #f7f8ec; }
+.benchSetup #comparisonHelp { margin: 0; }
+#benchOptions > div { display: grid; gap: .8rem; margin-top: .8rem; }
+#benchOptions summary, #benchExamples summary { padding-block: .5rem; cursor: pointer; font-weight: 650; }
+#benchExamples a { color: var(--forest); }
+#benchExamples nav { margin-top: .2rem; padding-top: 0; border: 0; }
+#benchResults #summary { margin: .8rem 0; }
+#summary > p { margin: .4rem 0; }
+#outcomeList { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,14rem),1fr)); gap: .6rem; margin: .8rem 0; padding: 0; list-style: none; }
+#outcomeList li { padding: .7rem .85rem; background: var(--surface); border: 1px solid var(--line); border-radius: .35rem; }
+#outcomeList span { display: block; }
+@media (max-width:27rem) {
+  .benchContext figure { display: grid; gap: .25rem; max-width: 20rem; }
+  .benchContext figure span + span { display: block; }
+  .benchContext figure img { width: 200%; max-width: none; }
+  .benchContext figure span + span img { margin-left: -100%; }
+}
+@media (min-width:741px) {
+  #benchForm > fieldset:first-child .benchFields { grid-template-columns: minmax(0,2fr) minmax(0,1fr); }
+  #benchForm .comparisonChoice { grid-column: auto; }
+}
+@media (min-width:865px) {
+  .benchSetup .benchForm { grid-column: 2; grid-row: 1; }
+  .benchSetup > .benchContext { grid-column: 1; grid-row: 1 / 3; }
+  .benchSetup > .benchStatus { grid-column: 2; }
+  #benchOptions > div { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  #benchOptions fieldset:first-child { grid-column: 1 / -1; }
+}

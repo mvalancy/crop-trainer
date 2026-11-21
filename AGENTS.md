@@ -18,6 +18,10 @@ To reproduce a completed browser experiment, choose **Download run settings**, t
 
 Browser settings exports include `hiddenLayers`, `activation`, `initSeed`, `optimizer`, `batchSize`, `learningRate` and `momentum`. Earlier settings files select the original four-unit tanh net or the logistic baseline. A time-limited run records its completed epoch count so the CLI can repeat the same number of updates. For the weight format and an inference example, see [the training guide](docs/training.md).
 
+### Check the actual training set
+
+A completed Training Shed run includes **What went into this fit?** Expand the planting list to inspect the retained class counts or open a training field. For a programmatic audit, sum `usedPositive + usedNegative` across `stats.trainingExamplesByField` and compare with `stats.samples`. Both soil variants count toward the same field. The two global class totals should match. Multiply the retained total by the completed epochs to reproduce `samplePasses`. Older exports have aggregate counts only. During fitting, the animation uses the first validation field as a fixed visual reference. [Training coverage experiment](docs/training.md#does-the-fit-use-later-fields)
+
 ### Reproduce a live pin display
 
 Open the Training shed with the run’s settings. During fitting, the gold rings use the first soil-present validation scan. To check a ring layout at a particular epoch, use the epoch shown **beside the predicted count**. Replay that many epochs from the same initialization, score the first validation tile at the same threshold and compare its selected XY centers. The loss readout can advance between pin updates. Browser previews sample up to 9,000 returns for drawing. Fitting and scoring use the full feature arrays.

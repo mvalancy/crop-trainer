@@ -57,7 +57,7 @@ initSandbox(params);
 let finishTraining=null, calibration=null;
 let controller=null,losses=[],lastPreview=null,backendReady=false,deps,webgpuAvailable=false,lastRun=null,lastPaint=0;
 try {
- deps=await Promise.all([import('./data.js?v=live1'),import('./model.js?v=benchmark1'),import('./neural.js?v=live1')]);
+ deps=await Promise.all([import('./data.js?v=field-audit1'),import('./model.js?v=benchmark1'),import('./neural.js?v=live1')]);
  $('epochs').max=MAX_SANDBOX_EPOCHS;
  const epochsParam = params.get('epochs');
  if (/^\d+$/.test(epochsParam) && Number(epochsParam) >= 1 && Number(epochsParam) <= MAX_SANDBOX_EPOCHS) {
@@ -71,19 +71,19 @@ try {
  if (params.get('engine') === 'cpu') $('engine').value = 'cpu';
  $('train').max=deps[0].FIELD_LIMITS.train;
  $('validation').max=deps[0].FIELD_LIMITS.validation;
- let gpuStatus='WebGPU unavailable · browser API missing';
+ let gpuStatus='Ready to train on CPU · this browser has no WebGPU';
  try{
   if(navigator.gpu){
    const adapter=await navigator.gpu.requestAdapter();
    webgpuAvailable=!!adapter;
-   gpuStatus=adapter?'WebGPU available · '+deps[1].describeAdapter(adapter).kind:'WebGPU unavailable · no adapter';
+   gpuStatus=adapter?'WebGPU available · '+deps[1].describeAdapter(adapter).kind:'Ready to train on CPU · no WebGPU adapter found';
   }
- }catch{gpuStatus='WebGPU unavailable · adapter check failed'}
+ }catch{gpuStatus='Ready to train on CPU · WebGPU check failed'}
  $('engine').querySelector('[value="webgpu"]').disabled=!webgpuAvailable;
  if(webgpuAvailable && params.get('engine')==='webgpu')$('engine').value='webgpu';
  $('gpu').textContent=gpuStatus;
  backendReady=true;$('run').disabled=false;$('estimate').disabled=false;
- $('status').textContent='Start with the preset, or open Design the model to change its layers.';
+ $('status').textContent='Watch the pins as the detector learns. The results map lets you inspect a plant it found or missed.';
 }catch(e){
  $('gpu').textContent='Training unavailable';$('stage').textContent='Training not ready';$('status').textContent=e.message;
 }
@@ -181,9 +181,9 @@ $('missBox').addEventListener('change', () => {
 });
 $('missDistance').addEventListener('change',showField);
 $('overlayStage').addEventListener('change',showField);
-function scanViewerLink(tile) {
+function scanViewerLink(tile, budget = auditRayBudget) {
  const scanQuery = new URLSearchParams({crop:tile.crop, seed:tile.seed, sensor:tile.sensor, ground:tile.ground, tile:tile.tile_id});
- if (auditRayBudget) scanQuery.set('budget', auditRayBudget);
+ if (budget) scanQuery.set('budget', budget);
  return '../?'+scanQuery+'#field';
 }
 function showStages(){
@@ -286,6 +286,45 @@ function displayBenchmark(t,backend,epochs,samples){
  $('bSamples').textContent=samples.toLocaleString();
  $('benchmark').hidden=false;
 }
+function showFitData(set,weightCount,epochs) {
+ const {stats} = set;
+ const fields = stats.trainingExamplesByField;
+ const plantingScans = new Map(set.manifest.filter(t=>t.split==='train' && t.recipe.ground).map(t=>[t.seed,t]));
+ const counts = fields.map(f=>f.usedPositive+f.usedNegative);
+ const maxCount = Math.max(...counts);
+ $('fieldBars').replaceChildren(...counts.map(n=>{
+   const bar = document.createElement('i');
+   bar.style.height = (100*n/maxCount)+'%';
+   return bar;
+ }));
+ $('fieldRange').textContent = 'One bar per practice field · '+Math.min(...counts).toLocaleString()+'–'+maxCount.toLocaleString()+' examples per field';
+ const used = fields.filter(f=>f.usedPositive + f.usedNegative > 0).length;
+ $('fitCounts').textContent = used+' of '+stats.trainFields+' practice fields contributed '+stats.samples.toLocaleString()+
+   ' examples per epoch. Each example has 13 measurements around one height peak. The model fitted '+weightCount.toLocaleString()+
+   ' weights and biases over '+(epochs*stats.samples).toLocaleString()+' example visits. '+stats.valFields+' separate fields were reserved for scoring.';
+ $('fieldContributions').open = false;
+ $('fitFields').replaceChildren(...fields.map(field=>{
+   const row = document.createElement('tr');
+   const seed = document.createElement('th');
+   seed.scope = 'row';
+   const tile = plantingScans.get(field.seed);
+   const link = document.createElement('a');
+   const budget = stats.trainingRayBudget ? tile.recipe.points : 0;
+   link.href = scanViewerLink({crop:stats.crop,seed:field.seed,sensor:tile.recipe.sampling.key,ground:true,tile_id:tile.tile_id},budget);
+   link.textContent = field.seed;
+   link.target = '_blank';
+   link.rel = 'noopener';
+   link.setAttribute('aria-label','Open field '+field.seed+' in a new tab');
+   seed.append(link);
+   row.append(seed);
+   for (const n of [field.usedPositive,field.usedNegative,field.usedPositive+field.usedNegative]) {
+     const cell = document.createElement('td');
+     cell.textContent = n.toLocaleString();
+     row.append(cell);
+   }
+   return row;
+ }));
+}
 function pickScore(scores,key,index){
  const x=Array.isArray(scores)?scores[index]:scores?.[key]??scores?.[String(key*100)]??scores?.[String(key*100)+'cm'];
  return typeof x==='number'?x:x?.f1??x?.fScore;
@@ -364,6 +403,9 @@ function display(v,threshold,validationRayBudget){
   const row=v?.scores?.[i],pc=n=>Number.isFinite(n)?(n*100).toFixed(0)+'%':'—';
   if(row)$('d'+id.slice(1)).textContent='Precision '+pc(row.precision)+' · Recall '+pc(row.recall);
  }
+ const {tp,fp,fn}=v.scores.find(score=>score.cm===15);
+ $('matchStory').textContent='Across '+v.tiles.length+' new synthetic scans, your detector placed a pin within 15 cm of '+
+  tp.toLocaleString()+' of '+(tp+fn).toLocaleString()+' labeled centers. That left '+fp.toLocaleString()+' extra pins and '+fn.toLocaleString()+' missed centers.';
  const recall=t=>{const {tp,fn}=t.byTolerance.at(-1);return tp/(tp+fn||1)};
  fieldViews=v.previews;
  auditTiles=[...v.tiles].sort((a,b)=>recall(a)-recall(b));
@@ -418,7 +460,8 @@ function workload() {
  if (![settings.trainFields,settings.valFields,timed?ms:epochs].every(n=>Number.isFinite(n)&&n>0)) {
   $('workload').textContent='';$('estimateText').textContent='Enter field counts and a run length to estimate the time.';return;
  }
- $('workload').textContent=(2*(settings.trainFields+settings.valFields)).toLocaleString()+' scan variants · '+
+ $('workload').textContent=settings.trainFields+' practice fields + '+settings.valFields+' test fields · '+
+   (2*(settings.trainFields+settings.valFields)).toLocaleString()+' scans · '+
    (timed?duration(ms)+' of training':epochs.toLocaleString()+' epochs');
  const key=JSON.stringify([settings,backend]);
  if(calibration?.key === key){
@@ -491,8 +534,9 @@ async function runFit(trial){
   const generated=performance.now();
   signal.throwIfAborted();status('Training on '+backend,'Starting '+backend+' training…',30);
   const tile=set.validation[0];
-  live.show({title:'Learning plant centers',cloud:previewCloud,metric:'Starting '+backend,
-   detail:'Held-out field · seed '+tile.seed,legend:'Rings · predicted centers',fraction:0});
+  const fieldsUsed=set.stats.trainingExamplesByField.filter(field=>field.usedPositive+field.usedNegative>0).length;
+  live.show({title:'Fitting on '+fieldsUsed+' of '+set.stats.trainFields+' fields',cloud:previewCloud,metric:'Starting '+backend,
+   detail:'Held-out field · seed '+tile.seed,legend:'Fixed preview · test field 1 of '+set.stats.valFields+' · predicted pins',fraction:0});
   const checkpoint=(epoch,weights)=>{
    if(signal.aborted)return;
    const scores=predictNetwork(tile.X,weights,set.dims,settings.hiddenLayers,settings.activation);
@@ -511,7 +555,7 @@ async function runFit(trial){
    const remaining=timeLimitMs?Math.max(0,timeLimitMs-p.elapsedMs):Math.max(0,targetEpochs-p.epoch)*rate;
    const fraction=timeLimitMs?p.elapsedMs/timeLimitMs:p.epoch/targetEpochs;
    live.show({metric:'Epoch '+p.epoch.toLocaleString()+' · loss '+p.loss.toFixed(3),fraction,loss:{epoch:p.epoch,loss:p.loss}});
-   status(trial?'Timing '+backend+' trial':'Training on '+backend,'Epoch '+p.epoch.toLocaleString()+
+   status(trial?'Timing '+backend+' trial':'Training on '+backend,set.stats.samples.toLocaleString()+' examples per epoch · Epoch '+p.epoch.toLocaleString()+
     (timeLimitMs?'':' / '+targetEpochs.toLocaleString())+' · '+duration(p.elapsedMs)+' elapsed · '+
     (p.epoch<4 && !timeLimitMs?'measuring speed…':'about '+duration(remaining)+' of training left'),30+55*Math.min(1,fraction));
    if(!trial){
@@ -554,6 +598,7 @@ async function runFit(trial){
   display(scores,threshold,validationRayBudget);
   const timings={generationMs:generated-start,trainingMs:trained-generated,validationMs:finished-trained,totalMs:finished-start};
   displayBenchmark(timings,fit.backend,epochs,set.stats.samples);
+  showFitData(set,fit.weights.length,epochs);
   settings.epochs=epochs;
   const trainer=trainerId(settings);
   lastRun={schema:3,settings,trainer,domain:'synthetic',backend:fit.backend,adapter:fit.adapter,requestedBackend,webgpuAvailable,sensorMode,

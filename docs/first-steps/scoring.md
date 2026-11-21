@@ -2,7 +2,7 @@
 
 # Was the pin any good?
 
-Our lettuce scored 0.772 and passed the 0.50 **cutoff**. Other peaks can pass too. Suppose two leaves on one plant both look convincing. Counting both would turn one lettuce into two. The app considers higher-scoring peaks first and suppresses a nearby duplicate using a minimum spacing for the chosen crop.
+Our lettuce scored 0.772 and passed the 0.50 **cutoff**. Other peaks can pass too. Suppose two leaves on one plant both look convincing. Counting both would turn one lettuce into two. The app considers higher-scoring peaks first and drops any that fall too close to a pin it already kept. That spacing rule can remove a second leaf peak, but it can also hide a neighboring plant.
 
 A cutoff is a score. A matching tolerance is a distance. After pin selection, the app checks how close the final pins are to labeled centers in the horizontal plane. Our example pin was **4.46 cm** from its assigned lettuce, close enough at each of the app’s three tolerances (7.5, 10 and 15 cm). The reference is used to grade that pin after prediction.
 
@@ -22,9 +22,9 @@ In this sketch, each circle is a labeled plant and each diamond is a final pin. 
 
 The app pools matches, extras and misses across the validation scans at each distance. It calculates F1 three times, then averages those values for **mean F1**. Widening the matching distance can admit a less accurately located pin. The pin positions themselves stay fixed.
 
-## Read one real validation tile
+## Score a held-out synthetic field
 
-For the soil-present seed **627223796** in the starter CPU run, the detector placed **146 pins** among **199 labeled lettuces**. At 7.5 cm, 136 matched. At 10 cm, 141 matched. At 15 cm, the same 141 matched, leaving five extras and 58 misses. The extra 5 cm of tolerance rescued no more plants on this particular tile.
+For the soil-present seed **627223796** in the starter CPU run, the detector placed **146 pins** among **199 labeled lettuces**. At 7.5 cm, 136 matched. At 10 cm, 141 matched. At 15 cm, the match count stayed at 141, leaving five extras and 58 misses. The extra 5 cm of tolerance rescued no more plants on this particular tile.
 
 **Try it.** Run the cutoff comparison. Choose one seed, find two rows with different score cutoffs, then read the extra and missed pins at the **same** distance. Which would you choose if a grower had to visit every pin? Would you make the same choice if the priority were visiting every plant? [Compare cutoffs on the same fields](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=cutoffs&crop=lettuce&seed=27)
 

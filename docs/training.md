@@ -40,6 +40,54 @@ For small batches with momentum, try a learning rate of 0.025 first. At 0.25 we 
 
 Try changing the starter to two hidden layers of 8 and 4. Keep the field seed, crop and scan settings fixed. Compare the new model’s misses on the same validation planting.
 
+### Does the fit use later fields?
+
+Open **What went into this fit?** in the Training Shed results. Each bar counts the examples one planting contributed after class balancing. Expand the table to inspect its counts or open its scan. The preview holds the camera on the first validation field so that you can compare the pins between epochs.
+
+For the seed-27 starter, the six practice fields supplied **581, 402, 533, 440, 492 and 604** examples in field order. That is 3,052 rows of 13 local measurements. Forty epochs revisit those rows 122,080 times while fitting 61 adjustable numbers. The generator, feature extraction and labeling run once before fitting. The six validation scans come from three additional plantings.
+
+In a mixed-layout lettuce run (seed 20261121, 3.5 cm peak floor), the four training fields supplied **427, 379, 524 and 538** of the 1,868 balanced examples. To check the fourth field's influence, we carried the source field ID through the class shuffles and verified that the resulting inputs and labels exactly matched the normal run. We then flipped the labels of just those 538 examples, keeping every input and the other three fields' labels fixed.
+
+After two epochs with batches of 32, learning rate 0.125 and initialization seed 178, the four-unit tanh model's training loss changed from **0.4723 to 0.6171**. Its largest absolute weight change was **0.4914**. Logistic regression's loss changed from **0.4554 to 0.6051**. CPU and Chromium's software WebGPU adapter (SwiftShader) agreed to within 1.2 × 10⁻⁷ on every fitted weight. This measures whether training responded to the labels. Accuracy on new fields needs a separate held-out score.
+
+<details>
+<summary>Check the final example on your own WebGPU adapter</summary>
+
+Open the Training shed and paste this into the browser console. Of 1,057 rows, only the last has a nonzero input. Flipping its label from 0 to 1 changes the input weight by the learning rate divided by the number of rows in its update. With batches of 32, the final update contains one row. In full-batch mode, it contains all 1,057.
+
+```js
+const {trainNetworkGPU} = await import('./neural.js');
+const x = new Float32Array(1057);
+x[1056] = 1;
+const labels = new Float32Array(x.length);
+const flipped = labels.slice();
+flipped[1056] = 1;
+for (const batchSize of [32, 0]) {
+  const options = {dims:1, hiddenLayers:[], epochs:1, lr:0.25, batchSize};
+  const a = await trainNetworkGPU(x, labels, options);
+  const b = await trainNetworkGPU(x, flipped, options);
+  console.log(a.adapter, b.weights[0] - a.weights[0], batchSize ? 0.25 : 0.25 / x.length);
+}
+```
+
+Each line prints the adapter, measured change and expected change. Run the CPU equivalent with `node --test test/fit-coverage.test.js`.
+
+</details>
+
+### Do more practice fields improve a score?
+
+We compared 2, 6 and 24 practice fields on three fresh dataset seeds. Each column kept the same six validation plantings (12 scans), verified by tile ID. The smaller training sets shared their raw scans with the start of the larger sets. Every fit built its own balanced pool and scaling from its training fields.
+
+| Practice fields | Seed 3193 mean F1 | Seed 3194 mean F1 | Seed 3195 mean F1 |
+| ---: | ---: | ---: | ---: |
+| 2 | 0.7632 | 0.6890 | 0.7429 |
+| 6 | 0.7640 | 0.7235 | 0.7480 |
+| 24 | 0.7631 | 0.7267 | 0.7218 |
+
+Six fields scored higher than two on all three seeds. Moving from six to 24 helped on one. Increasing the number of practice fields changes the mix of scanner layouts, examples and normalization. The effect on fresh plantings varied with the seed.
+
+To repeat a column, use lettuce, mixed scanners, seeded ray budgets, a 3.5 cm minimum peak, the starter four-unit tanh network and CPU. Choose six validation fields and 40 full-batch epochs. Hold the dataset seed, learning rate (0.25), initialization (12345) and cutoff (0.50) fixed while changing **Training fields**. Compare the validation tile IDs in the three JSON exports before comparing mean F1.
+
 ## Plan a longer run
 
 Choose **Time a trial** to generate the requested fields, fit for 16 epochs on the selected backend and score the validation set. The estimate uses the measured per-epoch time after the first four epochs and adds setup and scoring. Changing the model, data settings or backend calls for a fresh estimate. Machine load and browser scheduling can change the eventual time.

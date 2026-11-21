@@ -1,3 +1,5 @@
+import {setupFirstSteps} from './first-steps.js';
+import {createFieldLesson} from './field-lesson.js';
 import {cropProfile} from './trainer/crops.js?v=systems1';
 import {scanSession} from './trainer/scan-session.js';
 import {makeRecipe} from './trainer/data.js?v=dense1';
@@ -6,6 +8,13 @@ import {createLiveScene} from './trainer/live-scene.js';
 import {createViewer} from './viewer.js?v=planting1';
 
 const $ = id => document.getElementById(id);
+let fieldLesson;
+setupFirstSteps(() => {
+  if (!fieldLesson) {
+    fieldLesson = createFieldLesson($('pinPractice'));
+    if (scan) fieldLesson.setScan(scan);
+  }
+});
 const viewer = createViewer($('map'), {
   mode:$('mode'), view:$('view'), highlight:$('highlight'), color:$('color'), pins:$('pins'), spin:$('spin'),
   zoomIn:$('zoomIn'), zoomOut:$('zoomOut'), reset:$('fit')
@@ -160,6 +169,7 @@ function applyScan(value, recipe, url, selectedBox, expectedTile) {
     $('highlight').value = String(Number(selectedBox));
   }
   viewer.setScan(scan);
+  fieldLesson?.setScan(scan);
   url.searchParams.set('seed', recipe.seed);
   url.searchParams.set('ground', recipe.ground);
   url.searchParams.set('tile', scan.labels.tile_id);
@@ -193,6 +203,8 @@ function applyScan(value, recipe, url, selectedBox, expectedTile) {
   if (Number(budget)) training.set('validationRayBudget', budget);
   $('trainLayout').textContent=recipe.infrastructure===false?'Train this crop and layout with fixtures →':'Train this crop and layout →';
   $('trainLayout').href = 'trainer/?'+training;
+  $('lessonTrain').href = $('trainLayout').href;
+  $('lessonCrop').textContent = profile.name;
   $('ply').disabled=$('labels').disabled=$('recipe').disabled=false;
 }
 $('switchSoil').onclick = () => {

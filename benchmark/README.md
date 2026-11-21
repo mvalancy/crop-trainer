@@ -2,7 +2,9 @@
 
 ![Two copies of the same planting. One detector misses a plant and the other drops an extra pin.](../art/paired-field.svg)
 
-Which detector would you trust to count a row? Open the benchmark, choose a crop and run the model comparison. Both models see the same seeded fields. In the results, pick one plant that only one model found and inspect its patch of dots. [Open the benchmark →](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=models)
+Open the benchmark, pick a crop and select **Run benchmark**. The first question compares two models on your CPU. They see the same training examples and test scans. [Run the first comparison →](https://mvalancy.github.io/crop-trainer/benchmark/)
+
+Read the result at 15 cm. How many planted centers did each detector find, and how many extra pins did it place? A higher average F1 can come with more extra pins. Expand **Which plants did each model find?** to inspect one difference in 3D. To repeat the test on new plantings, change **First seed** under **Seeds, training and scan settings**.
 
 | If you want to… | Start here |
 | --- | --- |

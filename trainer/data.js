@@ -4,6 +4,7 @@ import {predict} from './model.js';
 
 export const PEAK_HEIGHTS = [0.065, 0.035];
 export const FIELD_LIMITS={train:256,validation:128};
+const SAMPLE_LIMIT = 48_000;
 import {mixedProfiles as SENSORS, getSensor, RAY_BUDGETS, ALTERNATING_BUDGET, DENSITY_BUDGETS} from './sensors.js?v=dense1';
 const SIZE=200, STEP=.05, DIMS=13, TOL=[.075,.1,.15];
 export {TOL as MATCH_RADII_METERS};
@@ -98,13 +99,25 @@ export async function buildDataset({seed=27,crop='lettuce',trainFields=6,valFiel
    onProgress({done:2*k+v+1,total,stage:'data'});await pause();
   }
  }
+ // Keep the originating tile through the class shuffles so field totals describe
+ // the exact rows used by the fit, including both soil variants for each seed.
+ const bySeed = new Map(trainSeeds.map(seed => [seed,{
+  seed,availablePositive:0,availableNegative:0,ambiguous:0,usedPositive:0,usedNegative:0
+ }]));
  const pos=[],neg=[];
  for(const [tileIndex,t] of training.entries()){
   check(signal);
+  const counts = bySeed.get(t.seed);
   for(let i=0;i<t.pos.length;i++){
-  const [x,y]=t.pos[i];let d2=Infinity;
-  for(const [a,b] of t.truth)d2=Math.min(d2,(a-x)**2+(b-y)**2);
-  if(d2<.095**2)pos.push([t.X,i]);else if(d2>.15**2)neg.push([t.X,i]);
+   const [x,y]=t.pos[i];let d2=Infinity;
+   for(const [a,b] of t.truth)d2=Math.min(d2,(a-x)**2+(b-y)**2);
+   if(d2<.095**2){
+    pos.push([t,i]);
+    counts.availablePositive++;
+   }else if(d2>.15**2){
+    neg.push([t,i]);
+    counts.availableNegative++;
+   }else counts.ambiguous++;
   }
   if((tileIndex+1)%4===0||tileIndex+1===training.length){
    onProgress({done:tileIndex+1,total:training.length,stage:'labels'});await pause();
@@ -114,12 +127,15 @@ export async function buildDataset({seed=27,crop='lettuce',trainFields=6,valFiel
  if(Math.min(pos.length,neg.length)<12)throw new Error('Not enough positive and negative candidates. Try another seed.');
  const r=rand(seed^0xaa320f63);
  for(const a of [pos,neg])for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
- const n=Math.min(pos.length,neg.length,24000);
+ const n=Math.min(pos.length,neg.length,SAMPLE_LIMIT/2);
  const X=new Float32Array(n*2*DIMS),Y=new Float32Array(n*2);
- for(let i=0;i<n;i++){
-  for(const [a,j] of [[pos,0],[neg,1]]){
-   const [z,k]=a[i];X.set(z.subarray(k*DIMS,(k+1)*DIMS),(2*i+j)*DIMS);
-   Y[2*i+j]=j===0?1:0;
+ for(const [pool,label,used] of [[pos,1,'usedPositive'],[neg,0,'usedNegative']]){
+  for(let i=0;i<n;i++){
+   const [tile,peak] = pool[i];
+   const row = i*2 + (1-label);
+   X.set(tile.X.subarray(peak*DIMS,(peak+1)*DIMS),row*DIMS);
+   Y[row]=label;
+   bySeed.get(tile.seed)[used]++;
   }
  }
  let means=new Float64Array(DIMS),std=new Float64Array(DIMS);
@@ -130,7 +146,7 @@ export async function buildDataset({seed=27,crop='lettuce',trainFields=6,valFiel
  const normalize=a=>{for(let i=0;i<a.length;i++){const j=i%DIMS;a[i]=(a[i]-means[j])/std[j];}};
  normalize(X);for(const t of validation)normalize(t.X);
  return{X,Y,dims:DIMS,validation,scaling:{means:Array.from(means),std:Array.from(std)},
-  stats:{crop,trainFields,valFields,trainTiles:training.length,valTiles:validation.length,minimumHeight,samples:Y.length,sampleLimit:48000,sensorMode,validationSensorMode,trainingRayBudget,validationRayBudget,fieldSeeds:{training:trainSeeds,validation:valSeeds},generator:'crop-trainer-v1'},
+  stats:{crop,trainFields,valFields,trainTiles:training.length,valTiles:validation.length,minimumHeight,samples:Y.length,sampleLimit:SAMPLE_LIMIT,trainingExamplesByField:[...bySeed.values()],sensorMode,validationSensorMode,trainingRayBudget,validationRayBudget,fieldSeeds:{training:trainSeeds,validation:valSeeds},generator:'crop-trainer-v1'},
   manifest:[...training,...validation].map((t,i)=>({split:i<training.length?'train':'validation',seed:t.seed,tile_id:t.tile_id,returnCount:t.returnCount,sampledRays:t.sampledRays,recipe:t.recipe}))};
 }
 const matchingSlack = 1e-12;
