@@ -107,6 +107,16 @@ Open the ordinary fit and choose **Run example**. Look at the map of planting **
 
 Try switching from 15 cm to 7.5 cm. The map keeps the model’s predicted positions. A pin farther than 7.5 cm from a planted center may now count as an extra and leave a tomato missed.
 
+### Why did Box 77 get a pin?
+
+At 15 cm, 29 seedlings matched with both training mixes, 15 matched only with ordinary training, and **Box 77** matched only with the difficult examples. The scanner returned just one point from that plant, at a height of 10.9 cm in the scan. Its 5 cm grid square also held one soil return. The surrounding three-by-three squares contained no weed returns. The trained model scored the peak **0.65105**, just above the 0.65 cutoff, and placed its pin 11.2 cm from the plant center. Open the scan and choose **Focus plant** under **View controls** to see its return in 3D. [Inspect Box 77 in the generator](https://mvalancy.github.io/crop-trainer/?crop=tomato&plantArchitecture=2&plantForm=seedling&plantCondition=healthy&sensor=os1-64&budget=60000&seed=51112017&ground=true&weeds=on&sticks=off&boards=off&noise=clean&tile=3b07cf65952362c6&box=77#scan-viewer)
+
+![Actual positions around Box 77. The original tomato return supports a pin inside the 15 cm circle. Deleting only that return leaves the soil points in place and Box 77 without a pin.](../art/tomato-one-return.svg)
+
+We replayed the same weights after deleting just that tomato point from the original XYZ scan. The peak finder stopped proposing that square, so the model had nothing there to score. The plot went from **30 matches, 22 extra pins and 84 misses** to **29 matches, 22 extras and 85 misses**. This test measures what one recorded return contributed to one detection. A new physical scan might reveal soil behind the plant. The replay retained the other 59,999 measurements exactly as captured. [One-return replay code](../benchmark/studies/tomato-one-return.mjs)
+
+Across the six weedy ring plantings, the third fit went from 168 matched seedlings to 159. That nine-plant difference hid **62 newly matched seedlings and 71 lost matches**. The replay records each affected reference at all three distances, and checks every count against the original saved confirmation. [Plant-by-plant replay](../benchmark/studies/tomato-mining-match-changes.mjs)
+
 To train your own pair, open **Do difficult backgrounds help?** in Benchmark. It fits ordinary and 50% hard backgrounds on two training seeds. Inspect the count of difficult examples, then download either fit’s weights. Benchmark grows its own validation plots. The commands below replay the published six-planting test and its clean and weedy pairs. [Train both models in your browser](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=negatives&crop=tomato&plantArchitecture=2&plantForm=mixed&plantCondition=healthy&validationPlantForm=seedling&sensor=reference&validationSensor=os1-64&trainingRayBudget=60000&validationRayBudget=60000&minimumHeight=0.035&featureMode=local-ground&sampleLimit=600&epochs=640&seed=2103181&scoreGround=present)
 
 ## Reproduce the experiment
@@ -117,6 +127,8 @@ Run from the repository root with Node.js 22 or later.
 node benchmark/studies/tomato-hard-negatives.mjs plan > hard-plan.json
 node benchmark/studies/tomato-hard-negatives.mjs fit > hard-fits.json
 node benchmark/studies/tomato-hard-negatives.mjs confirm hard-fits.json > hard-confirmation.json
+node benchmark/studies/tomato-mining-match-changes.mjs hard-fits.json hard-confirmation.json > changed-plants.json
+node benchmark/studies/tomato-one-return.mjs > box-77.json
 node benchmark/studies/tomato-hard-negative-ranking.mjs hard-fits.json > hard-ranking.json
 node benchmark/studies/tomato-hard-negatives.mjs surfaces hard-fits.json > hard-surfaces.json
 ```

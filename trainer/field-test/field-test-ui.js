@@ -400,7 +400,7 @@ export function initFieldTest(downloadJSON) {
         const overlayOptions = Object.entries(methodsFor(report)).map(([id,m])=>new Option(m.label,id));
         if (report.savedCutoff && report.references?.length) overlayOptions.splice(2,0,new Option('Changed matches','changes'));
         weedPair = exampleResultLabel ? practice.record(example.value,report,exampleScanQuery) : null;
-        if (weedPair) overlayOptions.push(new Option('Changed seedlings','weedChanges'));
+        if (weedPair) overlayOptions.push(new Option('Gains and losses','weedChanges'));
         compareWeeds.hidden = !weedPair;
         overlay.replaceChildren(...overlayOptions);
         results.hidden = false; renderOverlay(); renderScores(report);
