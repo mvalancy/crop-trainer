@@ -93,6 +93,8 @@ For a new survey, record the center of each trunk where it enters the soil, incl
 
 **For scanner calibration in a citrus orchard.** UC Riverside’s CitrusFarm release pairs Velodyne scans with a robot-mounted GPS-RTK receiver. The first `gt.csv` contains time-stamped receiver positions. The supplied CAD calibration places its center 0.220 m behind and 0.153 m above the LiDAR origin. Applying that offset matters when registering repeated passes. Scoring tree locations would also require a separate survey of trunk centers. The authors release this dataset under CC BY-SA 4.0. [Dataset and license](https://registry.opendata.aws/citrus-farm/) · [First trajectory CSV](https://ucr-robotics.s3.amazonaws.com/citrus-farm-dataset/ground_truth/01_13B_Jackal/gt.csv) · [Sensor frame and translation](https://ucr-robotics.s3.amazonaws.com/citrus-farm-dataset/Calibration/results/04-lidar-gps-result.txt)
 
+**For comparing the shapes of individual orchard trees.** PilotSCAN provides summer and autumn mobile-LiDAR reconstructions. We inspected the autumn `trees.zip` directory and found 37 individually named point clouds, including `trees/A1.txt` and `trees/C14.txt`. The header of `A1.txt` includes XYZ, ring, elevation angle, `passing_beams` and `local_transmittance`. Those fields give a starting point for investigating how much of a canopy a scan sees. The authors manually segmented these trees from the registered scans. Their `tf.zip` describes the sensor poses used in reconstruction. The release lists no independent survey of where each trunk enters the soil. Use the tree crops to compare structure across scans and check registration before interpreting an apparent shift as damage. Both reconstruction deposits specify CC BY 4.0. [Autumn tree files and methods](https://doi.org/10.5281/zenodo.20031878) · [Summer companion](https://doi.org/10.5281/zenodo.20030062)
+
 ### How often does a low return actually hit wood?
 
 Westling’s Queensland avocado dataset includes handheld scans with human labels for woody and leafy material. The 1,135 rows in `trunks.csv` look promising for scoring base locations. The field methods explain that a person selected a scanned point on one side of each real trunk. A tree 20–50 cm across can put that surface point roughly 10–25 cm from its center. Use the labels to study visibility. A 15 cm trunk-center accuracy test would need a separate survey. The scans use north–east–down coordinates and were aligned to earlier GPS-equipped mobile LiDAR scans. [Dataset and CC BY 4.0 license](https://doi.org/10.17632/h49fpprg6c.1) · [Annotation and matching methods, §§2.3 and 4.1](https://arxiv.org/pdf/2009.13727)
@@ -214,4 +216,30 @@ node benchmark/studies/prepare-vineyard.mjs /path/to/extracted-dataset vine-nort
 node benchmark/studies/vineyard-low-band.mjs /path/to/extracted-dataset vine-north vine-weights.json
 node benchmark/studies/prepare-vineyard.mjs /path/to/extracted-dataset vine-south south
 node benchmark/studies/vineyard-low-band.mjs /path/to/extracted-dataset vine-south vine-weights.json
+```
+
+### Can stacked returns locate a vine trunk?
+
+Imagine viewing a stake from the side. Several laser returns can form a narrow vertical column. From above, that column might look like just one dot. We tested whether a rule that keeps this vertical information can find the surveyed vine bases. We reserved the April 19 and January 30 scans before evaluating the rule. Both revisit the same 52 vines from April 9. They test a different acquisition and season at one site. [Gomes and colleagues’ acquisition methods](https://doi.org/10.1016/j.dib.2026.112614) · [TLS-Grapevine2024 data and attribution, CC BY 4.0](https://doi.org/10.5281/zenodo.18259014)
+
+We divided the space 15–55 cm above the fitted soil plane into eight 5 cm layers. At every occupied ground cell, the rule looks in a 15 × 15 cm neighborhood and counts the longest sequence of occupied layers. It ranks longer stacks first, breaking ties by the number of occupied 3D cells and then by ground-cell index. A footprint rule uses only the number of occupied ground cells in that same neighborhood. Both place pins at least 65 cm apart, with a pin budget equal to the existing synthetic-trained model’s prediction count on each strip. All methods use the same April ground planes and plot boundaries at all dates.
+
+| Acquisition, 52 reference bases per date | Pins per method | Model matches within 15 cm | Footprint matches | Vertical matches at 7.5 / 10 / 15 cm | Vertical extra pins / missed vines at 15 cm |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| April 9, 2024 · early leaves, previously studied | 61 | 6 | 2 | 9 / 11 / 17 | 44 / 35 |
+| April 19, 2024 · inflorescences emerging | 60 | 13 | 10 | 9 / 11 / 17 | 43 / 35 |
+| January 30, 2025 · dormancy | 59 | 4 | 3 | 5 / 9 / 19 | 40 / 33 |
+
+**The April 19 gain came from the middle strip.** Our rule had to beat both the frozen model and the footprint at 15 cm on each outer strip. It failed on both. In the north, it matched two of 17 vines and both comparators matched four. In the south, it matched four of 17, versus five for the model and three for the footprint. In the center, the model found four of 18 and the column rule found 11. On the dormant scan, the column rule found three in the north and seven in the south, up from one and zero with the model.
+
+Does the full stack add information beyond simply having many returns near a plant? We added two controls after inspecting April 9 and before scoring either reserved date. Ranking by the **number of returns** in the neighborhood found 14 vines at 15 cm on each date. Keeping only the **highest occupied layer inside the band** per ground cell, then ranking by the stack across adjacent cells, found 10, 18 and 17 on the three dates. The full stack helped on some dates and strips. A stake, weeds or another structure can also produce stacked returns. Identifying their material, or validating an apple tree’s trunk base, requires separate labels. The browser’s vineyard detector still uses the original fitted weights.
+
+**Replay locally.** First prepare `vine-strip`, `vine-north`, `vine-south` and `vine-weights.json` using the April instructions above. Set `scan` to the local processed LAS for each acquisition. The archive filenames are `BBCH13_20240409_TLS.las`, `BBCH55_20240419_TLS.las` and `BBCH00_20250130_TLS.las`. Only the study code is distributed here. On one CPU, reading and binning all three strips took 5–10 seconds per acquisition. Every JSON report includes scan counts, timings, the weight hash and per-distance scores for the learned, height-only and geometric methods. [Column measurement and scoring code](../benchmark/studies/vineyard-vertical-support.mjs)
+
+```sh
+scan=/path/to/BBCH55_20240419_TLS.las
+for strip in vine-strip vine-north vine-south
+do
+  node benchmark/studies/vineyard-vertical-support.mjs "$scan" "$strip" vine-weights.json
+done
 ```
