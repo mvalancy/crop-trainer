@@ -6,6 +6,7 @@ async function recordGeometry(instrument) {
   await instrument.locator('.instrument:visible').evaluate(workbench => {
     const elements = ['.instrumentStage', '.instrumentInspector', '.instrumentAction', '.instrumentTransport']
       .map(selector => workbench.querySelector(selector));
+    elements.push(...workbench.querySelectorAll('.instrumentReadout, #fieldCaption, #stage, #progress'));
     const live = workbench.querySelector('.liveScene canvas, #testMap');
     const extremes = new Map();
     const phases = new Set();
@@ -23,7 +24,7 @@ async function recordGeometry(instrument) {
       frames++;
       elements.forEach(el => {
         const r = el.getBoundingClientRect();
-        measure(el.className, [r.x,r.y,r.width,r.height]);
+        measure(el.id || el.className, [r.x,r.y,r.width,r.height]);
       });
       measure('viewport scroll', [scrollX,scrollY]);
       const scene = live.getBoundingClientRect();

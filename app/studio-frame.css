@@ -183,3 +183,19 @@ html:is([data-step=generate],[data-step=fit],[data-step=experiment],[data-step=t
 [data-instrument=test]:not([data-panel=test-inspector-example]) #testRunExample,
 .instrumentAction:has(#testCancel:not([hidden])) #testRunExample {display:none;}
 [data-theme=dark] .instrumentStage .firstRun:not(.scanReference) {background:#234234;}
+
+.instrumentReadout {
+  display:grid;align-content:start;align-self:center;height:2.95rem;
+  grid-template-columns:minmax(0,1fr);grid-template-rows:1.35rem minmax(0,1fr);
+  gap:.12rem;
+}
+.instrumentReadout :is(#fieldCaption,#stage) {overflow:auto;white-space:nowrap;scrollbar-width:none;}
+[data-instrument=field] .instrumentReadout :is(#generationStatus,#trainLayout) {grid-area:2/1;}
+[data-instrument=field] .instrumentReadout:has(#generationStatus:not(:empty)) #trainLayout {visibility:hidden;}
+[data-instrument=trainer] .instrumentReadout {grid-template-rows:1.25rem .38rem minmax(0,1fr);}
+.instrumentReadout #progress {margin:0;align-self:center;}
+.instrumentReadout .instrumentResult {align-self:start;line-height:1.15;}
+.instrumentReadout #testStatus {grid-row:auto;overflow:auto;font-size:.85rem;}
+[data-instrument=test] .instrumentReadout {grid-template-rows:minmax(0,1fr) auto;}
+.instrumentStage .sceneFooter {height:2.7rem;align-content:center;overflow:auto;}
+.instrumentStage .sceneFooter span {min-width:0;overflow:auto;white-space:nowrap;scrollbar-width:none;}
