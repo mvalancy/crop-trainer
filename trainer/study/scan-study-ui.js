@@ -82,19 +82,19 @@ export function initScanStudy(params) {
   function updateGuide(){
     if(!recipe)return;
     const guide=el('studyGuide');
-    let page='seedling-density.md', label='What happened on six seedling fields?';
+    let page='seedling-density.html', label='What happened on six seedling fields?';
     if(recipe.crop==='apple'){
-      page='orchard-bases.md';label='Can a scan locate the base of an apple tree?';
+      page='orchard-bases.html';label='Can a scan locate the base of an apple tree?';
       if(comparison.value==='spacing'){
         page+='#does-shorter-pin-spacing-recover-the-missed-bases';
         label='Did closer pins find more trees?';
       }else if(comparison.value==='ranking'){
-        page='orchard-ranking.md';label='When did low returns help locate a trunk?';
+        page='orchard-ranking.html';label='When did low returns help locate a trunk?';
       }else if(comparison.value==='boards'){
-        page='orchard-boards.md';label='How does moving the boards change the result?';
+        page='orchard-boards.html';label='How does moving the boards change the result?';
       }
     }
-    guide.href='https://github.com/mvalancy/crop-trainer/blob/main/docs/'+page;
+    guide.href='guide/docs/'+page;
     guide.textContent=label;
   }
   function armUrl(arm) {

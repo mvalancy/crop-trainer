@@ -3,6 +3,7 @@ import {execFileSync} from 'node:child_process';
 import {copyFile, lstat, mkdir, readdir, writeFile} from 'node:fs/promises';
 import {dirname, join, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {loadGuide, renderGuide} from '../cli/guide.mjs';
 import {forwardAsset, isPublicPath, movedAssets} from '../cli/site-files.mjs';
 
 if (process.argv.length !== 3) throw Error('Usage: node ci/build-pages.mjs EMPTY_OUTPUT_DIRECTORY');
@@ -18,8 +19,14 @@ for (const path of files) {
   await mkdir(dirname(dest), {recursive:true});
   await copyFile(src, dest);
 }
+const guide = await loadGuide(files);
+for (const route of guide.keys()) {
+  const dest = join(out, route);
+  await mkdir(dirname(dest), {recursive:true});
+  await writeFile(dest, renderGuide(route, guide));
+}
 for (const [path, target] of movedAssets) {
   if (!files.has(target) || files.has(path)) throw Error('Invalid compatibility path: ' + path);
   await writeFile(join(out, path), forwardAsset(path));
 }
-console.log(`Staged ${files.size} public files and ${movedAssets.size} compatibility paths.`);
+console.log(`Staged ${guide.size} chapters, ${files.size} public files and ${movedAssets.size} compatibility paths.`);

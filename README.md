@@ -6,6 +6,8 @@ Can you teach a computer to spot a head of lettuce? Grow a virtual field, scan i
 
 **[Train your first lettuce detector →](https://mvalancy.github.io/crop-trainer/trainer/)**
 
+Open **Docs** in the top navigation to explore the illustrated field guide. The **Theme** menu follows your device by default and remembers a light or dark preference.
+
 New to LiDAR? [Try spotting a plant in the browser](https://mvalancy.github.io/crop-trainer/#guide), then [follow one lettuce through five illustrated lessons](docs/first-steps/README.md).
 
 ## Earn your first harvest 🌱

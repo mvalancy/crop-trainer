@@ -19,6 +19,8 @@ npx --no-install playwright install --only-shell chromium
 npm run test:pages -- /tmp/crop-trainer-pages
 ```
 
+The build renders each public Markdown file into an HTML chapter under `guide/`. The local server uses the same Markdown renderer and chapter links. Edit the source Markdown and its SVGs to update the reader. Restart the local server to reload its chapter inventory.
+
 Choose an empty output directory for the build. On a Linux machine that needs Chromium’s system libraries, use `npx --no-install playwright install --with-deps --only-shell chromium`. To use an existing Chromium installation, set `CHROMIUM_PATH` to its executable when running the browser test.
 
 The test serves the built site at `/crop-trainer/`. It grows a field, downloads a recipe, teaches the height lesson and checks help, apple foliage, scrolling and fullscreen. In the Training shed it switches model families, checks the diagram at phone and laptop widths, traces layers with reduced motion enabled and fits a model on CPU. In Field test it downloads the example files and scores their scan with both reference formats. The two-seed benchmark also checks the exported scores at three cutoffs. A physical WebGPU timing requires a run on the target device.

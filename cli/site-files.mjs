@@ -14,6 +14,8 @@ const publicDirectories = new Map([
   ...['generator', 'models', 'field-test', 'study'].map(name => ['trainer/' + name, ['js', 'md']])
 ]);
 
+export const markdownDirectories = ['.', 'ci', 'cli', 'test', 'trainer/field-test/example', ...publicDirectories.keys()];
+
 export function isPublicPath(path) {
   if (entryFiles.has(path) || ['ci/README.md','cli/README.md','test/README.md'].includes(path)) return true;
   const slash = path.lastIndexOf('/');

@@ -1,0 +1,67 @@
+.siteBar .barInner { column-gap:clamp(.8rem,2.5vw,2.5rem); }
+.themeChoice { display:flex; align-items:center; gap:.45rem; font-size:.83rem; color:var(--muted); }
+.themeChoice select { width:auto; min-height:44px; font-size:.85rem; }
+@media(max-width:740px) {
+  .barInner { grid-template-columns:1fr auto auto; }
+  .themeChoice { grid-area:1 / 3; }
+  .siteBar nav { grid-template-columns:repeat(4,minmax(0,1fr)); }
+}
+@media(max-width:420px) {
+  .siteBar .barInner { column-gap:.55rem; }
+  .themeChoice { flex-direction:column; gap:0; font-size:.72rem; }
+  .themeChoice select { padding:.25rem; }
+  .siteBar .brand { font-size:1.08rem; }
+}
+
+:root[data-theme=dark] {
+  color-scheme:dark;
+  --ink:#e7ede4; --muted:#b2c3b5; --forest:#afe0b6; --dark:#10271e;
+  --lime:#d5ee82; --paper:#121d18; --surface:#1c2a23; --line:#4c6152; --wash:#27392d;
+  --plot-line:#61796a; --plot-return:#879d88; --plot-label:#a3e2af;
+  --plot-alert:#ff938c; --plot-selection:#b5caff;
+}
+:root:not([data-theme=dark]) {
+  --plot-line:#c5d0c0; --plot-return:#acbba8; --plot-label:#386b46;
+  --plot-alert:#b92e35; --plot-selection:#152c62;
+}
+
+[data-theme=dark] a:hover { color:#dbefab; }
+[data-theme=dark] :focus-visible { outline-color:#d7e783; }
+[data-theme=dark] :is(input:not([type=checkbox]),select,textarea,.skip) { background:var(--surface); border-color:#657e6b; }
+[data-theme=dark] :is(.primary,button.primary,.scanFiles .trainLink,.watchSteps [aria-current],.lessonTabs button[aria-selected=true]) { background:#b6dda4; color:#152b1d; border-color:#91b980; }
+[data-theme=dark] :is(.primary,button.primary,.scanFiles .trainLink):hover { background:#d7edaf; color:#122619; }
+[data-theme=dark] :is(.trainingFlow,.benchContext) { color:#edf2e4; }
+[data-theme=dark] :is(.lessons article,.stage,.cards > div,.modelCard,.scoreboard,.scorePick,.rayFigure,.weightFigure,.specimenCard,.featureScaleReading,.specimenComparison,.peakWindows .windowTrack,.missions li.earned) { background:var(--wash); }
+[data-theme=dark] :is(.specimenComparison,.specimenCard figcaption,.adapter,.benchStatus,th,.orchardTrace [data-state=matched]) { color:var(--ink); }
+[data-theme=dark] :is(#grow legend,.missions li strong,.specimenCard figcaption small,.studyPanel #studyField,#studyLegend,.featureScaleTicks,#specimenContext) { color:var(--muted); }
+[data-theme=dark] tbody tr:nth-child(even) { background:#233228; }
+[data-theme=dark] :is(.scorePick[aria-pressed=true],#missions .missions li.earned strong,#studyInspect .studyActions a) { color:#e0f0d1; background:#34523d; }
+[data-theme=dark] .helpGroup > button.helpTrigger { color:#cbe0cf; }
+[data-theme=dark] .helpTrigger::before,[data-theme=dark] .helpGroup > .helpTrigger:is(:hover,:focus-visible,[aria-expanded=true]) { background:var(--wash); }
+[data-theme=dark] :is(.studyCross,.featureScaleNumbers > :last-child,.orchardTrace [data-state],.field-lesson .fl-diamond) { color:#f4b68e; }
+[data-theme=dark] .field-lesson .fl-cross { color:#94dfe0; }
+[data-theme=dark] .field-lesson[data-phase=scored] .fl-status { background:#304b34; color:#d8eed6; }
+[data-theme=dark] .field-lesson[data-phase=scored][data-match=miss] .fl-status { background:#473b2b; color:#f3d4a8; }
+[data-theme=dark] .matchRadius { stroke:var(--muted); }
+[data-theme=dark] .plantCross { stroke:#bad0ff; }
+[data-theme=dark] #peakDot { fill:#d1e3ca; }
+[data-theme=dark] #passedSquare { stroke:#ffbb86; }
+[data-theme=dark] #pinRing { stroke:#9fe2cb; }
+
+:root { --plot-survey:#644883; }
+:root[data-theme=dark] { --plot-survey:#d3b6ee; }
+[data-theme=dark] #field .lab > #scan-settings,
+[data-theme=dark] #advanced-scan .specimenPair { background:var(--wash); }
+[data-theme=dark] #guide .clueFeedback { color:var(--ink); }
+[data-theme=dark] .pinKey { color:#eac37e; }
+[data-theme=dark] .hitKey { color:#ffac95; }
+[data-theme=dark] .mapKey :is(.matchedPin,.gainedCenter) { background:var(--plot-label); }
+[data-theme=dark] .mapKey :is(.extraPin,.lostCenter,.selectedExtraPin) { background:var(--plot-alert); }
+[data-theme=dark] .mapKey :is(.gainedCenter,.lostCenter) { color:var(--paper); }
+[data-theme=dark] .mapKey .matchedCenter { border-color:var(--plot-survey); }
+[data-theme=dark] .mapKey .missedCenter { color:var(--plot-survey); }
+[data-theme=dark] .mapKey .selectedExtraPin { border-color:var(--ink); }
+[data-theme=dark] .testView canvas { background:var(--paper); }
+.mapKey :is(.matchedPin,.gainedCenter) { background:var(--plot-label); }
+.mapKey :is(.extraPin,.lostCenter,.selectedExtraPin) { background:var(--plot-alert); }
+.mapKey .surveyPoint { background:var(--plot-return); }

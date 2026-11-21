@@ -1,3 +1,4 @@
+import {plotPalette} from '../app/plot-palette.js';
 import {scanSession} from './generator/scan-session.js?v=plants3';
 import {setupPlantControls, setupValidationPlantForm, plantSettings} from './generator/plant-version.js?v=orchard4';
 import {createLiveScene} from './ui/live-scene.js?v=context-help2';
@@ -378,11 +379,12 @@ function frame(id){
 function coords(x){if(Array.isArray(x)||ArrayBuffer.isView(x))return x;if(x?.center)return x.center;if(x&&Number.isFinite(x.x))return [x.x,x.y];return null}
 function draw(){
  const [g,w,h]=frame('preview');
+ const colors = plotPalette(g.canvas);
  const side=Math.max(1,Math.min(w-18,h-18)), left=(w-side)/2,top=(h-side)/2;
- g.strokeStyle='#c5d0c0';g.strokeRect(left,top,side,side);
+ g.strokeStyle=colors.grid;g.strokeRect(left,top,side,side);
  if(lastPreview){
  const plot=(list,color,r,ring=false)=>{g.fillStyle=g.strokeStyle=color;g.lineWidth=1.1;for(const v of list||[]){const c=coords(v);if(!c||!Number.isFinite(c[0])||!Number.isFinite(c[1]))continue;g.beginPath();g.arc(left+c[0]*side/10,top+side-c[1]*side/10,r,0,2*Math.PI);if(ring)g.stroke();else g.fill()}};
- plot(lastPreview.points,'#acbba8',.65);
+ plot(lastPreview.points,colors.returns,.65);
  const stage = $('overlayStage').value;
  if (stage === 'misses') {
   const selectedBox = $('missBox').value;
@@ -390,20 +392,21 @@ function draw(){
    const [x,y] = lastPreview.truth[box];
    const px = left+x*side/10, py = top+side-y*side/10;
    if (String(box) === selectedBox) {
-    g.strokeStyle = '#152c62'; g.lineWidth = 2; g.beginPath(); g.arc(px,py,8,0,2*Math.PI); g.stroke();
+    g.strokeStyle = colors.selection; g.lineWidth = 2; g.beginPath(); g.arc(px,py,8,0,2*Math.PI); g.stroke();
    }
    g.lineWidth = 1.2;
    if (lastPreview.plantReturns[box] > 0) {
-    g.strokeStyle = '#b92e35'; g.beginPath(); g.arc(px,py,3,0,2*Math.PI); g.stroke();
+    g.strokeStyle = colors.alert; g.beginPath(); g.arc(px,py,3,0,2*Math.PI); g.stroke();
    } else {
-    g.strokeStyle = '#26334e'; g.strokeRect(px-3,py-3,6,6);
+    g.strokeStyle = colors.ink; g.strokeRect(px-3,py-3,6,6);
    }
   }
  } else {
-  plot(lastPreview.truth,'#386b46',3,true);plot(lastPreview.stages[stage],'#b92e35',1.6);
+  plot(lastPreview.truth,colors.plant,3,true);plot(lastPreview.stages[stage],colors.alert,1.6);
  }
  }
 }
+window.addEventListener('crop-theme-change', draw);
 new ResizeObserver(draw).observe(document.querySelector('.viz'));draw();
 function displayBenchmark(t,backend,epochs,samples){
  const format=ms=>ms<1000?ms.toFixed(1)+' ms':(ms/1000).toFixed(2)+' s';

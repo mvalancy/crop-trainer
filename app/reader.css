@@ -1,0 +1,29 @@
+.guideLayout { display:grid; grid-template-columns:minmax(13rem,18rem) minmax(0,51rem); gap:clamp(2rem,5vw,5rem); justify-content:center; padding-block:clamp(1rem,4vw,3.5rem); }
+.guideShelf { position:sticky; top:1rem; max-height:calc(100dvh - 2rem); align-self:start; overflow:auto; padding:1rem; background:var(--surface); border:1px solid var(--line); border-radius:.7rem; }
+.shelfTitle { display:inline-block; margin-bottom:.6rem; font:1.65rem var(--serif); text-decoration:none; }
+.guideShelf details:not(.chapterMenu) { padding:.65rem 0; border:0; border-top:1px solid var(--line); border-radius:0; }
+.guideShelf .chapterMenu { border:0; padding:0; }
+.guideShelf .chapterMenu > summary { font-size:.9rem; }
+.guideShelf ul { display:grid; gap:.15rem; list-style:none; padding:0; margin:.4rem 0 0; }
+.guideShelf li a { display:block; padding:.4rem .65rem; font-size:.9rem; line-height:1.35; text-decoration:none; border-radius:.3rem; }
+.guideShelf li a:hover,.guideShelf [aria-current] { background:var(--wash); }
+.guideShelf [aria-current] { box-shadow:inset 3px 0 var(--forest); font-weight:650; }
+.guideChapter { min-width:0; overflow-wrap:anywhere; }
+.guideChapter h1 { font-size:clamp(2.4rem,5vw,4.4rem); margin:1.2rem 0; }
+.guideChapter h2 { margin:2.6rem 0 1rem; font:500 clamp(1.65rem,3.3vw,2.55rem)/1.14 var(--serif); }
+.guideChapter h3 { margin:1.9rem 0 .8rem; }
+.guideChapter p,.guideChapter li { line-height:1.7; }
+.guideChapter img { display:block; max-width:100%; height:auto; margin:1rem 0; border-radius:.55rem; }
+.guideChapter p:first-child img { margin-top:0; }
+.guideChapter pre,.guideTable { overflow-x:auto; max-width:100%; }
+.guideChapter pre { padding:1rem; background:var(--wash); border:1px solid var(--line); border-radius:.5rem; font:.88rem/1.5 var(--mono); }
+.guideChapter :not(pre)>code { font:.9em var(--mono); background:var(--wash); padding:.06em .24em; border-radius:.2rem; }
+.guideTable { margin-block:1rem; border:1px solid var(--line); border-radius:.45rem; }
+.guideChapter table { width:100%; border-collapse:collapse; }
+.guideChapter th,.guideChapter td { padding:.55rem .7rem; border:1px solid var(--line); vertical-align:top; }
+.guideChapter thead { background:var(--wash); }
+.guideChapter details { margin:1rem 0; }
+@media(max-width:760px) {
+  .guideLayout { display:flex; flex-direction:column; gap:1rem; }
+  .guideShelf { position:static; width:100%; max-height:55dvh; }
+}

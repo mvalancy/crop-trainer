@@ -16,10 +16,16 @@ if(command==='serve'){
  const types={html:'text/html',js:'text/javascript',mjs:'text/javascript',css:'text/css',svg:'image/svg+xml',png:'image/png',webp:'image/webp',md:'text/plain',json:'application/json',csv:'text/csv',ply:'application/octet-stream'};
  const port=Number(output||4173);
  if(!Number.isInteger(port)||port<1||port>65535)throw Error('Choose a port from 1 to 65535.');
+ const {loadGuide,renderGuide}=await import('./guide.mjs');
+ const guide=await loadGuide();
  const server=createServer(async(req,res)=>{
   try{
    let path=new URL(req.url,'http://localhost').pathname.slice(1);
    if(!path||path.endsWith('/'))path+='index.html';
+   if(guide.has(path)){
+    res.writeHead(200,{'Content-Type':'text/html; charset=utf-8'}).end(renderGuide(path,guide));
+    return;
+   }
    const forwarded=forwardAsset(path);
    if(!forwarded && !isPublicPath(path)){res.writeHead(404).end();return;}
    const data=forwarded ?? await readFile(new URL('../'+path,import.meta.url));
