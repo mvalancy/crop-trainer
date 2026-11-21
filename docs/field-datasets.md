@@ -19,7 +19,7 @@ Crop Trainer predicts one horizontal position per plant. To score a real plot, y
 
 ## How often do weeds share a photo with a young tomato?
 
-![Beside a seedling, dots trace the surfaces LiDAR samples. A little square color mosaic shows the shape a camera could record in pixels.](../art/two-views.svg)
+![Draw a box around each plant. The boxes share a strip of soil even where the two plants have separate leaves.](../art/plant-boxes.svg)
 
 Moreno, Rivera Cárdenas and Andújar photographed early-season tomato fields in Santa Amalia, Spain, from about 1–1.5 m overhead. Experts drew a rectangle around each recognized plant. We read the two COCO annotation files and checked their class names against the accompanying YOLO lists. The scans in Crop Trainer measure height. These field photos measure a plant’s **projected footprint in pixels**. [Dataset and authors](https://doi.org/10.20350/digitalCSIC/17475) · [Acquisition and annotation paper](https://doi.org/10.1016/j.dib.2025.112249)
 
@@ -42,7 +42,7 @@ node benchmark/studies/tomato-field-boxes.mjs /path/to/Annotations_extra/coco_An
 
 ## How much of a lettuce plant has measured depth?
 
-![Loose-leaf and butterhead heads seen from above, and a side view of upright romaine. Younger leaf whorls appear in order.](../art/plants/lettuce.svg)
+![The same leaf appears in color and in a schematic depth map. Hatching shows a cluster of pixels where the camera found no distance.](../art/depth-window.svg)
 
 A leaf visible in a color image can leave a hole in the depth map. Milella and colleagues photographed romaine lettuce outdoors in Bari, Italy, with a RealSense D435 about 0.9–1.3 m above the ground. We matched all 128 plant masks to their color-aligned 16-bit depth maps. Some frames show two separately masked plants. A white pixel selects the focal plant and a zero depth means the camera supplied no distance there. [Study, files and mask definitions](https://github.com/ispstiima/AgRibotLeafyVeg/tree/6a1b5e79ffef06bd7d9444280d2e4243d62d1500) · [RealSense depth encoding](https://dev.realsenseai.com/docs/projection-in-realsense-sdk-2-0/)
 
