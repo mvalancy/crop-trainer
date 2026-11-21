@@ -30,6 +30,7 @@ See what a laser measures, try a two-clue model by hand, and check whether a pin
 | Read the papers and check dataset licenses | [Datasets and research](research.md) |
 | Tell a small plant from a mound of soil | [Two height measurements on the same tomato scans](tomato-local-ground.md) |
 | See why a detector marks weeds | [Practice on difficult examples and inspect the extra pins](tomato-hard-negatives.md) |
+| Read the numbers that enter a model | [Follow one peak through feature scaling, then train four models](tomato-feature-scaling.md) |
 | Choose a score cutoff and test it on fresh fields | [Fit, calibrate, then test on separate tomato plantings](tomato-calibration.md) |
 | Decide how long to train | [Count the seedlings found and the extra pins on mature plants](tomato-training-duration.md) |
 | Give small plants a larger share of the training set | [Which tomato peaks enter training?](tomato-soil-sampling.md) |

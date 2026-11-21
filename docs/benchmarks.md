@@ -20,6 +20,10 @@ The crop-specific spacing filter was tested on seeds 61 and 62, with six trainin
 
 On the v3 branched-bud artichoke test (seed 817221, mixed plant condition), Chromium's CPU and software WebGPU backends used the same 632 training examples and identical tile IDs. After 40 epochs both scored **0.364 / 0.487 / 0.610** at 7.5 / 10 / 15 cm. CPU generation, fitting and validation took 4.39, 0.32 and 0.08 seconds. SwiftShader took 2.57, 23.80 and 0.02 seconds. Field generation runs separately from the optimizer. These single runs on shared compute measure this software configuration. [Run the v3 fit](https://mvalancy.github.io/crop-trainer/trainer/?plan=quick&seed=817221&crop=artichoke&plantForm=branched-buds&plantCondition=mixed&plantArchitecture=3&epochs=40&engine=cpu)
 
+## Can scaling change the result on its own?
+
+Choose **Does feature scaling matter?** Each row of cards uses a fixed set of training examples. The left and right cards use different training averages and spreads to express the same 13 measurements. Read across a row to see whether that change finds more centers on the three held-out soil-present scans. Change the seed and check again. **Save weights** downloads the full detector, including its scale. The final fits can run on CPU or WebGPU. Both choices use the CPU for the practice model that selects backgrounds. [Illustrated tomato experiment and preset](tomato-feature-scaling.md)
+
 ## Does a detector recognize other stages of growth?
 
 Choose **Does mixing plant forms during training help?** Pick one training form, then choose what grows in the validation fields. The named-form and mixed-form detectors get the same held-out scans. Read the number of centers found, extra pins and training examples for each fit. The 3D inspection opens the actual held-out plant shape. [Try seedlings versus mixed training on branching tomatoes](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=forms&crop=tomato&plantArchitecture=2&plantForm=seedling&validationPlantForm=branching&seed=82173&sensor=reference&trainingRayBudget=60000&validationRayBudget=60000) · [Compare the three growth stages](tomato-stage-training.md)

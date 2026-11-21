@@ -16,6 +16,7 @@ The little farm on the front page lives here. Open an SVG to see it move or open
 | [A longer fit on two tomato growth stages](tomato-epochs.svg) | [Training-duration experiment](../docs/tomato-training-duration.md) |
 | [Learn from difficult background examples](tomato-hard-negatives.svg) | [Tomato and weed study](../docs/tomato-hard-negatives.md) |
 | [One return from Box 77](tomato-one-return.svg) | [Why did the detector place this pin?](../docs/tomato-hard-negatives.md#why-did-box-77-get-a-pin) |
+| [One peak, two training scales](tomato-feature-scaling.svg) | [Read one measured height as a model input](../docs/tomato-feature-scaling.md) |
 | [Fit, calibrate and test](tomato-calibration.svg) · [Which fields chose which cutoff?](tomato-calibration-panels.svg) | [Three tomato detectors on separate calibration and test plantings](../docs/tomato-calibration.md) |
 | [Two fits score the same 405 peaks](tomato-score-cutoff.svg) | [How a fixed cutoff changes which plants get pins](../docs/tomato-training-duration.md#was-it-the-planting-or-the-trained-model) |
 | [Two training draws on one set of tomatoes](tomato-training-draw.svg) | [Soil-present seedling study](../docs/tomato-soil-sampling.md) |

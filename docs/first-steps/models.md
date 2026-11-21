@@ -8,6 +8,8 @@ A model here is a calculation with adjustable numbers. Give it the 13 measuremen
 
 Imagine using just two clues, height above the surrounding cells and the fraction of nearby cells filled with returns. Put each on a scale measured relative to the training examples. Now “1” means one typical unit of variation above the training average, and “0” means average. This lets the model combine measurements originally expressed in different units.
 
+You can inspect this calculation on a real model from the sandbox. A 9.50 cm tomato-scan peak is below the training average for both saved detectors. See how far below when you choose a different set of weights. [Try the illustrated feature-scaling lesson](../tomato-feature-scaling.md#try-it-with-one-peak)
+
 In this **invented two-clue example**, the first clue is 1 and its weight is 1.5. The second clue is 0 and its weight is 0.4. Add a starting offset, called the **bias**, of −0.5. The total is 1 × 1.5 + 0 × 0.4 − 0.5 = **1**. A smooth S-shaped function called the **sigmoid** converts that total into a score of about **0.73**. A total of zero would give 0.50.
 
 A **weight** determines how much its input pushes the total up or down. A positive weight increases the total as that clue grows, holding other clues fixed. A negative weight decreases it. Logistic regression, one of the two model families in the shed, does this with all 13 clues. Its 13 weights plus one bias give it 14 adjustable numbers.

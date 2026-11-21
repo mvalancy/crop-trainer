@@ -193,6 +193,12 @@ In Field Test, `?fieldExample=tomato-weed-random#field-test` and `?fieldExample=
 
 To examine why a training peak looked convincing, run `node benchmark/studies/tomato-hard-negatives.mjs surfaces fit.json > surfaces.json`. This checks the original feature hashes before looking up the simulated surface under each peak. The fitting and scoring paths use XYZ.
 
+### Hold the training examples or feature scale fixed
+
+Open Benchmark with `?comparison=scaling`. Each seed fits four networks at the same 0.65 cutoff. Filter the result JSON by `seed` and `negativeSampling` to keep the practice rows fixed while changing `scaleSource`. Both factors accept `ordinary` or `distance-matched`. Each card downloads its own weights and scaling. In Field Test, expand **How are scan measurements scaled?** after scoring any plot with those weights. Use `scaleEngine=webgpu` to request that backend for the four final fits. Both engines use the same CPU practice model to choose the difficult examples.
+
+To repeat the reserved tomato experiment, start with `node benchmark/studies/tomato-scaler-cross.mjs plan`. The fixed plan separates the three training seeds from the six clean and weedy test plantings. Compare misses alongside precision and retain the model’s saved scale when replaying weights. [Four-way study and commands](docs/tomato-feature-scaling.md)
+
 ### Choose a cutoff on separate plantings
 
 An override in Field Test or `cli/score-scan.mjs --score-cutoff` scores the saved cutoff and the trial from the same candidate scores. Compare `savedCutoff.evaluation.scores` against `evaluation.scores` at the chosen distance. In the unlabelled case both evaluations are null and both pin lists remain available.

@@ -85,6 +85,8 @@ For every training seed, the distance rule cut both extra pins and real seedling
 
 Neither form of hard sampling met the original 15 cm goal for any of the three training seeds. Keeping the same distance mix moved training examples off tomato tissue and onto weeds. That change alone did not reliably preserve seedling recall and branching precision at the fixed 0.65 cutoff.
 
+Changing the background examples also changed the training means and spreads used to scale all 13 inputs. A follow-up trains on the same examples with each scale in turn. [Read one measurement and compare the four fits](tomato-feature-scaling.md)
+
 From the repository root, reproduce this separate cohort with its own saved fits.
 
 ```sh

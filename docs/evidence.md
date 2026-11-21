@@ -39,6 +39,16 @@ Calibration recovered recall at the cost of precision. This used labeled example
 
 On six new synthetic plantings, the same four-unit network trained for 40, 160 or 640 passes over 600 examples. At 15 cm on ring scans it found **2, 62 and 260 of 657 seedlings** respectively. On branching plants, the corresponding runs placed 115, 167 and 263 extra pins. Grid seedlings remained harder even after 640 passes (58 of 657). A useful duration depends on the crop stage, scanner and acceptable cost of a wrong pin. [Study, settings and field replay](tomato-training-duration.md)
 
+## Did practicing on difficult backgrounds help?
+
+On six fresh weedy ring plantings, one fit removed 64 extra pins and missed 79 additional seedlings. Its practice model had selected many tomato leaf tips as background because they lay too far from a planted center. A second seed changed the tradeoff. Before choosing a training recipe, compare both the plants it finds and those it loses. The saved pair in Field Test lets you open either kind of change in 3D. [Background selection and plant-by-plant replay](tomato-hard-negatives.md)
+
+Changing the examples also changes the scale of the measurements going into the network. We trained four combinations to separate those effects. With the same difficult examples, switching the feature scale cost one fit 137 seedling matches and gained another fit 51 on the same 678 tomatoes. No combination met the recall, false-alarm and branching-precision goals on all three training seeds. [Try the four fits](tomato-feature-scaling.md)
+
+## What held up in a physical vineyard?
+
+On a Spanish vineyard block, the geometric column rule matched 32 of 138 surveyed trunk records within 15 cm. A model trained on simulated vines matched 11, at the same pin budget. On a second block the column rule matched two of 121 and the trained model matched 11. Only 64 survey records had a nearby laser return in the height band the rule searched. Both surveys covered selected rows, so an unmatched pin could fall on an unsurveyed vine. [Independent vineyard checks and alignment limits](field-datasets.md#does-the-b7-result-hold-in-the-neighboring-vineyard)
+
 ## Does a grid-trained artichoke detector transfer to rings?
 
 In a smaller browser test at **12,000 sampled rays per scan**, the CPU and WebGPU fits agreed on every tile’s match counts. Changing the held-out scan from a reference grid to simulated OS1-64 rings reduced pooled mean F1 from **.455 to .422**. At 15 cm the rings produced 43 fewer matches and nine fewer extra pins. The difference varied by fit. For seed `14512693`, mean F1 went from .490 to .424. For `14512694` it went from .417 to .420.
