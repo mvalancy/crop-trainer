@@ -271,3 +271,20 @@
   }
   .samplingBody { grid-template-columns: minmax(14rem, .75fr) minmax(0, 1.4fr); }
 }
+
+.surveyAlignment { margin-block: 1rem; }
+.surveyAlignmentGrid { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,24rem),1fr)); gap: .25rem 2rem; align-items: start; }
+.surveyAlignmentGrid > div { min-inline-size: 0; }
+.surveyAlignment p { max-inline-size: 54ch; }
+.alignmentScope { color: var(--ink); font-weight: 650; }
+.alignmentActions { display: flex; flex-wrap: wrap; gap: .55rem 1rem; align-items: end; }
+.alignmentActions :is(button,select) { min-height: 44px; }
+#testShift { width: 7rem; }
+#testAlignmentTable { table-layout: fixed; width: min(100%, 29rem); }
+#testAlignmentStatus { font-weight: 650; margin-bottom: .45rem; }
+#testAlignmentStatus:empty { margin: 0; }
+#testAlignmentTable :is(th,td) { padding: .45rem .3rem; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; text-align: right; }
+#testAlignmentTable th:first-child { width: 40%; text-align: left; }
+#testAlignmentTable th:nth-child(2) { width: 34%; }
+#testAlignmentTable th[scope=col] { overflow-wrap: normal; }
+#testAlignmentTable td:first-of-type { background-image: linear-gradient(to right,#629272 var(--matched),transparent var(--matched)); background-size: 100% 3px; background-repeat: no-repeat; background-position: left bottom; }

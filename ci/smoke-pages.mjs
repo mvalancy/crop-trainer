@@ -183,6 +183,16 @@ try {
     await page.setViewportSize(viewport);
     await open('?crop=apple&plantArchitecture=3&plantForm=open-vase&budget=12000&seed=8119411');
     await page.locator('#copyScan:enabled').waitFor();
+    const cameraTools=page.locator('#scan-view-controls');
+    assert.equal(await cameraTools.evaluate(el=>el.open),viewport.width===1366);
+    if (viewport.width===390) {
+      const toggle=cameraTools.locator(':scope > summary');
+      await toggle.press('Enter');
+      assert.ok(await page.locator('#view').isVisible());
+      await page.locator('#view').selectOption('side');
+      await toggle.press('Enter');
+      assert.ok(await page.locator('#view').isHidden());
+    }
     await page.locator('#scan-settings a[href="#advanced-scan"]').click();
     const anatomy=page.locator('#advanced-scan #anatomySettings');
     if (!(await anatomy.evaluate(el=>el.open))) await anatomy.locator('summary').click();
@@ -252,14 +262,15 @@ try {
         overflow:document.documentElement.scrollWidth>innerWidth,
         sideBySide:sideBySide && Math.max(viewer.top,settings.top)<Math.min(viewer.bottom,settings.bottom),
         viewerFirst:viewer.bottom<=settings.top+1,
-        toolsBelowBoth:rect('.viewTools').top+1>=Math.max(viewer.bottom,settings.bottom),
+        toolsTouchScan:Math.abs(rect('#scan-view-controls').top-viewer.bottom)<=2,
+        toolsAboveSettings:rect('#scan-view-controls').bottom<=settings.top+1,
         summaryAfterWorkspace:rect('.scanSummary').top+1>=Math.max(viewer.bottom,settings.bottom,camera.bottom),
         advancedAfterSummary:rect('#advanced-scan').top+1>=rect('.scanSummary').bottom
       };
     });
-    assert.ok(!layout.overflow && layout.toolsBelowBoth && layout.summaryAfterWorkspace && layout.advancedAfterSummary,
+    assert.ok(!layout.overflow && layout.toolsTouchScan && layout.summaryAfterWorkspace && layout.advancedAfterSummary,
       'The expanded generator must fit its viewport and keep its summary and settings reachable at '+viewport.width+'px');
-    assert.ok(viewport.width===1366 ? layout.sideBySide : layout.viewerFirst,
+    assert.ok(viewport.width===1366 ? layout.sideBySide : layout.viewerFirst && layout.toolsAboveSettings,
       'Keep the scan visible beside the laptop settings and first on narrower screens');
     await page.locator('#recipe').click({trial:true});
     await page.locator('#studySave').click({trial:true});
@@ -537,6 +548,7 @@ try {
   await page.locator('#testResults:visible').waitFor();
   assert.ok(await page.locator('#testMatchDistance').isHidden(),'scan-only predictions have no reference tolerance');
   assert.ok(await page.locator('#testExtraControl').isHidden(),'surveyed centers are required to call a pin extra');
+  assert.ok(await page.locator('#testAlignment').isHidden(),'alignment checks need a survey');
   const exampleCounts=[[7.5,88,100,129],[10,117,71,100],[15,137,51,80]];
   for (const [link,type,extension] of [['#exampleCentersCsv','text/csv','.csv'],['#exampleLabelsJson','application/json','.json']]) {
     const referenceName=await uploadExample(link,'#testLabels',type);
@@ -603,6 +615,16 @@ try {
         await page.locator('#testOverlay').selectOption('model');
         assert.ok((await page.locator('#testOutcome').textContent()).includes(after.tp+' of 110'));
       }
+      await page.locator('#testAlignment > summary').click();
+      await page.locator('#testCheckAlignment').click();
+      await page.locator('#testAlignmentTable:visible').waitFor();
+      const shiftMatches=await page.locator('#testAlignmentRows tr').evaluateAll(rows=>
+        rows.map(row=>Number(row.cells[1].textContent)));
+      assert.deepEqual(shiftMatches,[26,23,24,22,23],'recorded XY and four independent 10 cm survey shifts at 15 cm');
+      assert.equal(shiftMatches[0],trial.evaluation.scores.find(s=>s.cm===15).tp);
+      await page.locator('#testShift').selectOption('25');
+      assert.equal(await page.locator('#testAlignmentRows tr').count(),0,'changing shift clears the previous scores');
+      assert.deepEqual(await downloadJSON(page.locator('#testExport')),trial,'viewing survey shifts preserves the original report');
       await page.locator('#testExtraOnly').check();
       assert.equal(await page.locator('#testExtraCount').textContent(),'of 5');
       const detail=page.locator('#testExtraDetail');

@@ -43,6 +43,8 @@ const requested = new URLSearchParams(location.search);
 const scanStudy=initScanStudy(requested);
 // In the stacked workspace, bring the live scan back into view after applying a recipe.
 const narrowField = matchMedia('(width < 58rem)');
+// Keep the recipe close on a stacked screen. A rotation preserves the visitor's choice.
+$('scan-view-controls').open = !narrowField.matches;
 const growForm = $('grow');
 function revealSetting(control) {
   for (let parent = control; parent; parent = parent.parentElement) {
@@ -51,7 +53,7 @@ function revealSetting(control) {
 }
 function followSettingsLink() {
   const target = $(location.hash.slice(1));
-  if (!target?.closest('#advanced-scan')) return;
+  if (!target?.closest('#advanced-scan, #scan-view-controls')) return;
   revealSetting(target);
   requestAnimationFrame(() => target.scrollIntoView({block:'start',behavior:'instant'}));
 }

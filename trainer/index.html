@@ -8,7 +8,7 @@
 <link rel="apple-touch-icon" sizes="180x180" href="../art/crop-touch.png">
 <link rel="stylesheet" href="../app/farm.css?v=weed-replay1">
 <link rel="stylesheet" href="../app/help.css?v=context-help2">
-<link rel="stylesheet" href="./ui/training-layout.css?v=epoch2">
+<link rel="stylesheet" href="./ui/training-layout.css?v=alignment1">
 <link rel="stylesheet" href="./ui/network-diagram.css">
 <script type="module" src="../app/help.js?v=context-help2"></script>
 </head>
@@ -382,6 +382,17 @@
 <dl id="testStageRows" class="testStageRows"></dl></section>
 <div class="testResultActions"><button type="button" id="testAdjustCutoff" data-help="Open the score cutoff setting for these weights and this scan. Enter a new value and choose Find plants to compare the two cutoffs.">Adjust cutoff</button>
 <button type="button" id="testExport" data-help-label="Download field test JSON" data-help="Save predicted positions in local and file coordinates along with the scan frame and file fingerprints. Providing reference centers adds per-distance scores.">Download field test JSON</button></div></div></div>
+<details id="testAlignment" class="surveyAlignment" hidden>
+<summary data-help="Explore how sensitive the match count is to a small horizontal shift of every supplied survey center.">Survey alignment</summary>
+<div class="surveyAlignmentGrid"><div>
+<p id="testAlignmentScope" class="alignmentScope"></p>
+<p>Shift every survey center along X or Y to see how many still match. The map and exported report use the recorded centers.</p>
+<div class="alignmentActions"><label>Survey shift<select id="testShift" data-help="Choose 10 or 25 cm. Each hypothetical translation moves every surveyed center by this amount along positive or negative local X or Y."><option value="10">10 cm</option><option value="25">25 cm</option></select></label>
+<button id="testCheckAlignment" type="button" aria-controls="testAlignmentTable" data-help="Run four fixed shifts for the currently selected pin method and match distance. Changing the view or shift clears the comparison.">Check survey alignment</button></div>
+<p class="hint">If some plants were never surveyed, an unmatched pin may mark a real plant.</p>
+</div><div><p id="testAlignmentStatus" role="status"></p>
+<table id="testAlignmentTable" aria-label="Matches at each survey position" hidden><thead><tr><th scope="col" data-help="Recorded coordinates or a fixed shift of every reference center along one local scan axis.">Survey position</th><th scope="col" data-help="Number of supplied centers paired one-to-one with fixed pins at the map’s match distance.">Matched</th><th scope="col" data-help="Matches at this survey position minus matches at the recorded coordinates.">Change</th></tr></thead><tbody id="testAlignmentRows"></tbody></table>
+</div></div></details>
 <div id="testMetrics" class="tableScroll" hidden><table><caption>One-to-one matches against supplied centers</caption><thead><tr><th>Method</th><th>Distance</th><th>Matched</th><th>Extra</th><th>Missed</th><th>Precision</th><th>Recall</th><th>F1</th></tr></thead><tbody id="testRows"></tbody></table></div>
 
 </div>
@@ -399,6 +410,6 @@
 </main>
 <footer class="siteFoot"><span>Created by Matthew Valancy</span>
 <div><a data-help="Open commands and reproducibility instructions for an agent working with Crop Trainer." href="../AGENTS.md">Agent quickstart</a><a data-help="View the farming challenges and achievements stored on this device." href="../#missions">Farm journal</a><a data-help="Read the terms for using and sharing Crop Trainer’s source code." href="../LICENSE">MIT license</a></div><small class="contextHint"><span class="hoverHint">Hover or focus a button or score for help.</span><span class="touchHint">Tap a score or hold a button for help. A quick tap runs the action.</span></small></footer>
-<script type="module" src="./main.js?v=weed-replay1"></script>
+<script type="module" src="./main.js?v=alignment1"></script>
 </body>
 </html>

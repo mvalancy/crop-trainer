@@ -26,7 +26,9 @@ Run `node benchmark/studies/ground-reference.mjs` from the repository root to re
 
 A scanner locates the returns. A surveyor locates the plants. For a 15 cm match to mean what you intend, the two measurements must agree on where 15 cm is in the field. One way to check is to survey visible control markers independently, find those same markers in the scan and measure their horizontal separation before scoring plants.
 
-In one Spanish vineyard laser scan, a geometric rule matched 32 of 138 surveyed trunk records within 15 cm, versus 11 for the trained model. Both placed 1,006 pins. Moving just the survey 25 cm east changed the results to eight and 17. All four directions were tested in advance. This example shows how sensitive the comparison is to alignment. Choosing a correction requires separate control measurements. [Spanish vineyard results, data sources and replay commands](field-datasets.md#can-the-same-rule-find-trunks-at-a-second-vineyard)
+In one Spanish vineyard laser scan, a geometric rule matched 32 of 138 surveyed trunk records within 15 cm, versus 11 for the trained model. Both placed 1,006 pins. Moving just the survey 25 cm east changed the results to eight and 17. East was one of four directions specified before scoring. Choosing a correction requires separate control measurements. [Spanish vineyard results, data sources and replay commands](field-datasets.md#can-the-same-rule-find-trunks-at-a-second-vineyard)
+
+To try this yourself, open a saved tomato planting and choose **Run example**. Under the map, open **Survey alignment**, pick a shift and choose **Check survey alignment**. Read across the five rows to see how many matches the same pins make against each set of coordinates. For your own plot, upload an XYZ scan in PLY format and a center survey in the same frame. [Try Field Test](https://mvalancy.github.io/crop-trainer/trainer/?fieldExample=tomato-weed-random#field-test)
 
 ## Collect a test that can fail
 

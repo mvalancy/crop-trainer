@@ -1,3 +1,4 @@
+import {initSurveyAlignment} from './survey-alignment.js';
 import {drawExtraPins, initExtraPins, plotCoordinates} from './extra-pins.js';
 
 import {tomatoPractice} from './tomato-practice.js';
@@ -257,6 +258,7 @@ export function initFieldTest(downloadJSON) {
   let currentModelFile, runningModel, worker, sampled, loaded = false, running = false, report;
 
   const extraInspector = initExtraPins(renderOverlay);
+  const setSurvey = initSurveyAlignment();
 
   function updateControls() {
     const useFile = modelSource.value === 'file';
@@ -272,6 +274,7 @@ export function initFieldTest(downloadJSON) {
   }
   function clearReport() {
     report = null;
+    setSurvey(null);
     extraInspector.reset();
     results.hidden = true;
     byId('testExampleResult').hidden = true;
@@ -288,6 +291,7 @@ export function initFieldTest(downloadJSON) {
     byId('testRule').dataset.help = showChanges ? 'A plant gains or loses a match when one cutoff places a matching pin and the other does not.' : method.help;
     byId('testOrchardHelp').hidden = selected!=='orchard';
     const distance = Number(byId('testMatchDistance').value);
+    setSurvey(report,selected,showChanges ? null : method,distance);
     const assignment = evaluation?.pinByReferenceAtCm[distance];
     const extras = extraInspector.render(pins,showChanges ? null : assignment,report.references,distance);
     const stages = !extras && selected==='model' && report.stagesAtCm?.[distance];

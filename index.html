@@ -14,7 +14,7 @@
 <link rel="stylesheet" href="trainer/plants/portrait.css?v=scan-settings2">
 <link rel="stylesheet" href="app/advanced-scan.css?v=board-placement1">
 <link rel="stylesheet" href="app/help.css?v=context-help2">
-<link rel="stylesheet" href="app/scan-workspace.css?v=terrain1">
+<link rel="stylesheet" href="app/scan-workspace.css?v=viewer-tools1">
 <script type="module" src="app/help.js?v=context-help2"></script>
 </head>
 <body class="farm"><a class="skip" href="#main" data-help="Jump past site navigation to the field, lessons and farm journal.">Skip to content</a>
@@ -47,6 +47,24 @@
 <button id="fit" data-help="Return to the original angled view of the whole field after moving or zooming the camera.">Reset view</button>
 <button id="spin" data-help="Start or pause a slow turn around the current view. Watch which branches are visible as the field turns." aria-pressed="false">Auto spin</button></div></div>
 </article>
+<details id="scan-view-controls" class="viewOptions" open>
+<summary id="viewOptionsTitle" data-help="Change the camera angle, color the laser returns, or highlight an individual plant in the viewer.">View controls</summary>
+<div class="viewTools">
+<label>Drag mode<select id="mode" data-help="Orbit turns the field around its center. Pan slides the field across the screen."><option value="orbit">Orbit</option><option value="pan">Pan</option></select></label>
+<label>Camera<select id="view" data-help="Look down to see row spacing, or from the side to see height. Changing the camera rotates the same recorded points."><option value="oblique">Oblique</option><option value="top">Top down</option><option value="side">Side</option><option value="custom" disabled="">Free orbit</option></select></label>
+<label>Color by<select id="color" data-help="Return class shows what each ray hit, such as soil, crop or weed. Elevation shows height. Plant tissue separates visible wood, leaves and other plant parts."><option value="class">Return class</option><option value="height">Elevation</option><option value="tissue" disabled>Plant tissue</option></select></label>
+<label>Highlight plant<select id="highlight" data-help="Select a numbered plant from the planting map. The count beside its number tells you how many crop points survived in the scan."><option value="">None</option></select></label>
+<div class="scanLayers"><label class="check"><input id="pins" data-help="These marks show known plant locations. A ring means the scan captured part of that plant. A cross means it captured none of it." type="checkbox" checked=""> Label centers</label><label class="check"><input id="modelStems" data-help="See the stems the simulator grew, including wood hidden behind leaves. A detector working from XYZ sees only the sampled surfaces." type="checkbox" disabled> Model stem lines</label><button type="button" id="focusPlant" data-help="Center the camera on the highlighted plant. With no selection, the viewer picks the plant with the most crop returns." disabled>Explore a plant</button><button type="button" id="switchSoil" data-help="Switch between the two scans of this planting, with or without ground points. The known plant positions stay fixed." disabled>View without soil</button></div></div>
+<p class="hint" id="tissueLegend" hidden>Orange marks stem and wood returns, green marks leaf blades, violet marks crown clusters, buds or fruit, and gray marks other returns.</p>
+<p class="hint" id="modelLegend" hidden>Turquoise lines trace the modeled stems through the canopy, including sections hidden from the scanner.</p>
+<details class="cameraHelp">
+<summary data-help="Read the mouse, touch and keyboard gestures for the field viewer." data-help-label="Camera gestures">Mouse, touch and keyboard</summary>
+<div class="cameraInputs" id="cameraHelp">
+<p><strong>Mouse</strong> Drag left or right to turn the field. Drag up or down to tilt. Shift-drag or right-drag to pan. In fullscreen, use the wheel to zoom.</p>
+<p><strong>Touch</strong> Swipe sideways to turn and vertically to scroll. Tap + or − to zoom. In fullscreen, pinch to zoom or move two fingers to pan.</p>
+<p id="cameraKeys"><strong>Keyboard</strong> Focus the scan. Arrow keys rotate, Shift + arrows pan, and + or − zoom. F centers the highlighted plant. R resets the view.</p>
+</div></details>
+</details>
 <aside id="scan-settings" tabindex="-1">
 <h3>Scan settings</h3>
 <form id="grow">
@@ -65,24 +83,7 @@
 <a class="advancedJump" data-help="Jump below the scan summary to compare plant forms or change damage, noise and obstacles." href="#advanced-scan">Advanced scan settings ↓</a>
 <p id="generationStatus" role="status"></p>
 </form></aside>
-<section class="viewOptions" aria-labelledby="viewOptionsTitle">
-<h3 id="viewOptionsTitle">View controls</h3>
-<div class="viewTools">
-<label>Drag mode<select id="mode" data-help="Orbit turns the field around its center. Pan slides the field across the screen."><option value="orbit">Orbit</option><option value="pan">Pan</option></select></label>
-<label>Camera<select id="view" data-help="Look down to see row spacing, or from the side to see height. Changing the camera rotates the same recorded points."><option value="oblique">Oblique</option><option value="top">Top down</option><option value="side">Side</option><option value="custom" disabled="">Free orbit</option></select></label>
-<label>Color by<select id="color" data-help="Return class shows what each ray hit, such as soil, crop or weed. Elevation shows height. Plant tissue separates visible wood, leaves and other plant parts."><option value="class">Return class</option><option value="height">Elevation</option><option value="tissue" disabled>Plant tissue</option></select></label>
-<label>Highlight plant<select id="highlight" data-help="Select a numbered plant from the planting map. The count beside its number tells you how many crop points survived in the scan."><option value="">None</option></select></label>
-<div class="scanLayers"><label class="check"><input id="pins" data-help="These marks show known plant locations. A ring means the scan captured part of that plant. A cross means it captured none of it." type="checkbox" checked=""> Label centers</label><label class="check"><input id="modelStems" data-help="See the stems the simulator grew, including wood hidden behind leaves. A detector working from XYZ sees only the sampled surfaces." type="checkbox" disabled> Model stem lines</label><button type="button" id="focusPlant" data-help="Center the camera on the highlighted plant. With no selection, the viewer picks the plant with the most crop returns." disabled>Explore a plant</button><button type="button" id="switchSoil" data-help="Switch between the two scans of this planting, with or without ground points. The known plant positions stay fixed." disabled>View without soil</button></div></div>
-<p class="hint" id="tissueLegend" hidden>Orange marks stem and wood returns, green marks leaf blades, violet marks crown clusters, buds or fruit, and gray marks other returns.</p>
-<p class="hint" id="modelLegend" hidden>Turquoise lines trace the modeled stems through the canopy, including sections hidden from the scanner.</p>
-<details class="cameraHelp">
-<summary data-help="Read the mouse, touch and keyboard gestures for the field viewer." data-help-label="Camera gestures">Mouse, touch and keyboard</summary>
-<div class="cameraInputs" id="cameraHelp">
-<p><strong>Mouse</strong> Drag left or right to turn the field. Drag up or down to tilt. Shift-drag or right-drag to pan. In fullscreen, use the wheel to zoom.</p>
-<p><strong>Touch</strong> Swipe sideways to turn and vertically to scroll. Tap + or − to zoom. In fullscreen, pinch to zoom or move two fingers to pan.</p>
-<p id="cameraKeys"><strong>Keyboard</strong> Focus the scan. Arrow keys rotate, Shift + arrows pan, and + or − zoom. F centers the highlighted plant. R resets the view.</p>
-</div></details>
-</section></div>
+</div>
 <section class="scanSummary panel" aria-labelledby="summaryTitle"><div class="scanTotals"><h3 id="summaryTitle">Scan summary</h3>
 <p id="count" role="status">Growing the first field…</p>
 <dl class="readouts" id="readouts" aria-label="Returns by class"></dl>
@@ -280,6 +281,6 @@
 </main>
 <footer class="siteFoot"><span>Created by Matthew Valancy</span>
 <div><a href="AGENTS.md" data-help="Find instructions for running reproducible experiments from the browser or command line.">Agent quickstart</a><a href="#missions" data-help="Jump to the stamps earned in this browser and the experiments that unlock them.">Farm journal</a><a href="LICENSE" data-help="Read the MIT terms for reusing and modifying the app.">MIT license</a></div><small class="contextHint"><span class="hoverHint">Hover or focus a button or score for help.</span><span class="touchHint">Tap a score or hold a button for help. A quick tap runs the action.</span></small></footer>
-<script type="module" src="app/farm.js?v=sampling1"></script>
+<script type="module" src="app/farm.js?v=viewer-tools1"></script>
 </body>
 </html>
