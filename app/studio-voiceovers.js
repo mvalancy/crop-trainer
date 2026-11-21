@@ -1,0 +1,28 @@
+// Each key names a studio step, practice panel or settings panel and its matching recording.
+export const voiceovers = {
+  sampleRow: 'Can light pass right by a seedling? Try the wide spacing, then the narrow spacing. Watch which rays touch a leaf and which reach the soil.',
+  placePin: 'Look down on the field. Brighter dots are higher. Place a pin where you think a plant grows, then check it against the planting map.',
+  learnWeight: 'A lettuce and a weed reach the same height. Teach the model that the lettuce is a crop. Watch both scores. What else would the model need to tell them apart?',
+  journal: 'Your farm journal remembers experiments on this device. Choose a stamp, follow its experiment, and come back to see what you earned.',
+  generate: 'Drag the cloud to look between the rows. Each dot is a surface the scanner measured. Open Settings to choose a planting, then scan the field or take this setup to training.',
+  study: 'Keep one planting and change how you scan it. Look for plants that show up in one scan and disappear in the other. Compare the returns before drawing a conclusion.',
+  fit: 'A detector learns from practice fields, then tries fresh ones. Choose a setup and start training. Watch the fit, then open the scores to see which plants it found.',
+  results: 'Compare the predicted pins with the known plant centers. A match, a missed plant, and an extra pin tell different stories. Look at a field as well as its score.',
+  experiment: 'Give two detectors the same fields. Choose an experiment, start the comparison, and watch the scoreboard as each seed finishes.',
+  'compare-results': 'Read the two detectors side by side. Look for a seed where their scores differ, then inspect the pins. Which plant changed the result?',
+  test: 'Try the example planting or bring a scan of your own. A detector places pins on the plot. With surveyed centers, you can check how close those pins landed.',
+  'field-inspector-planting': 'Choose the crop, field seed, scanner layout, and number of rays. Keep the same seed when you want to change the scanner and compare the same plants.',
+  'field-inspector-3d-view': 'Change how you look at the points. Try a view from above to see the rows, then turn the field sideways to compare heights.',
+  'field-inspector-plant-scanner': 'Explore plant shape, damage, scan noise, and obstacles. Change one thing at a time. Apply and scan to see what it does to the points.',
+  'field-inspector-findings': 'Look at how many returns landed on crops and which plants the scanner missed. You can share the recipe or download the points and their labels.',
+  'trainer-inspector-setup': 'Choose a crop and a training budget. A quick run lets you see the whole process. Keep track of which fields are for practice and which are for the test.',
+  'trainer-inspector-model': 'Follow one measurement through the diagram. The detector combines clues about a possible plant and produces a score. Change the model to see which connections change.',
+  'trainer-inspector-training-plan': 'Choose the practice fields, the stopping rule, and how the model updates its weights. Separate the fields it learns from the ones you use to judge it.',
+  'trainer-inspector-run-notes': 'Read the estimate and messages from this run. They tell you which job the trainer is doing. When it finishes, open the scores.',
+  'benchmark-inspector-setup': 'Pick the detectors and the fields they will share. Holding the crop, scan layout, and seed fixed makes their predictions easier to compare.',
+  'benchmark-inspector-presets': 'Start with a question from the experiment list. Each preset fills in a comparison so you can run it and explore the evidence.',
+  'benchmark-inspector-scoreboard': 'Each finished seed adds evidence to the scoreboard. Compare matches, missed plants, and extra pins before you choose a detector.',
+  'test-inspector-example': 'Start with the measured tomato planting. Run the example to see where the detector puts its pins, then inspect the result.',
+  'test-inspector-your-plot': 'Choose your point cloud and detector. Add reference centers if you have them. The detection threshold controls which guesses become pins.',
+  'test-inspector-findings': 'Inspect the detections on the map. Compare them with reference centers when available, or export the predicted pins for a closer look.'
+};

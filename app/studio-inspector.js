@@ -25,6 +25,7 @@ export function createInspector(workbench, name, shell, onSelect) {
     back.hidden = !panel;
     heading.textContent = panel?.getAttribute('aria-label') || name + ' settings';
     if (panel) onSelect?.(panel);
+    if (active) shell.changed(api);
     if (focus) heading.focus({preventScroll:true});
   }
   function addPanel(label, description, ...content) {

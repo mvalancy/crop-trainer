@@ -17,7 +17,10 @@ export function createNarrationPlayer({onEnded, onAudioError}) {
     const response = await fetch(url, {signal});
     if (!response.ok) throw new Error('Audio request failed');
     const buffer = await context.decodeAudioData(await response.arrayBuffer());
-    if (!signal.aborted) buffers.set(url, buffer);
+    if (!signal.aborted) {
+      if (buffers.size >= 8) buffers.delete(buffers.keys().next().value);
+      buffers.set(url, buffer);
+    }
     return buffer;
   }
 
@@ -41,28 +44,30 @@ export function createNarrationPlayer({onEnded, onAudioError}) {
   async function play(cue, offset = 0) {
     pause();
     const ticket = generation;
-    const item = {offset, duration:cue.duration, sources:[], request:new AbortController()};
+    const item = {offset, duration:cue.duration ?? Infinity, sources:[], request:new AbortController()};
     current = item;
     function finish() {
       if (generation !== ticket) return;
       pause();
       onEnded();
     }
-    const timeout = setTimeout(() => item.request.abort(), 8000);
+    const timeout = setTimeout(() => item.request.abort(), cue.render ? 45000 : 15000);
     try {
       context ??= new AudioContext();
       // Resume from the Play gesture, before waiting for network or decoding.
-      const tracks = Object.keys(mix).filter(name => cue[name]);
+      const tracks = Object.keys(mix).filter(name => cue[name] || (name === 'narration' && cue.render));
       const {signal} = item.request;
       const abandoned = new Promise((_, reject) => signal.addEventListener('abort', () => reject(signal.reason), {once:true}));
+      const decode = name => name === 'narration' && cue.render
+        ? cue.render(context, signal) : load(cue[name], signal);
       const [, decoded] = await Promise.race([
-        Promise.all([context.resume(), Promise.all(tracks.map(name => load(cue[name], signal).catch(() => null)))]),
+        Promise.all([context.resume(), Promise.all(tracks.map(name => decode(name).catch(() => null)))]),
         abandoned
       ]);
       if (generation !== ticket) return;
       if (!decoded.some(Boolean)) throw new Error('No audio available');
       if (decoded.some(buffer => !buffer)) onAudioError();
-      item.duration = Math.max(cue.duration, ...decoded.map(buffer => buffer?.duration || 0));
+      item.duration = Math.max(cue.duration || 0, ...decoded.map(buffer => buffer?.duration || 0));
       item.now = () => context.currentTime;
       item.started = context.currentTime;
       tracks.forEach((track, i) => {
@@ -91,6 +96,7 @@ export function createNarrationPlayer({onEnded, onAudioError}) {
     } catch {
       if (generation !== ticket) return;
       onAudioError();
+      if (!cue.duration) { pause(); return; }
       item.now = () => performance.now() / 1000;
       item.started = item.now();
       item.timer = setTimeout(finish, Math.max(0, cue.duration - offset) * 1000);

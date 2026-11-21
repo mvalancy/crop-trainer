@@ -1,4 +1,5 @@
 // Serve only the built artifact at the same project path used by GitHub Pages.
+import {checkStudioNarration} from './studio-narration.mjs';
 import {checkFieldFilm} from './studio-film.mjs';
 import {checkStudioLayout,checkDrawer,openSection,closeOverlay} from './studio-layout.mjs';
 import assert from 'node:assert/strict';
@@ -13,7 +14,7 @@ const root=resolve(process.argv[2]);
 await stat(resolve(root,'index.html'));
 const prefix='/crop-trainer/';
 const types={'.html':'text/html','.css':'text/css','.js':'text/javascript','.mjs':'text/javascript',
-  '.svg':'image/svg+xml','.webp':'image/webp','.mp3':'audio/mpeg','.json':'application/json','.csv':'text/csv','.png':'image/png'};
+  '.svg':'image/svg+xml','.webp':'image/webp','.mp3':'audio/mpeg','.wasm':'application/wasm','.json':'application/json','.csv':'text/csv','.png':'image/png'};
 const server=createServer(async(req,res)=>{
   try {
     const path=decodeURIComponent(new URL(req.url,'http://localhost').pathname);
@@ -144,6 +145,7 @@ try {
   }
 
   await checkFieldFilm(browser,base);
+  await checkStudioNarration(browser,base);
 
   // The studio owns navigation and preserves each active instrument across task switches.
   await page.goto(new URL('studio/',base).href);

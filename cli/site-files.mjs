@@ -6,7 +6,7 @@ for (const name of ['c0545a3786c57a89.ply', 'weights.json', 'centers.csv', 'labe
 }
 const publicDirectories = new Map([
   ['app', ['js', 'css', 'md']],
-  ['art', ['svg', 'webp', 'md']], ['art/audio', ['mp3']], ['art/plants', ['svg', 'md']],
+  ['art', ['svg', 'webp', 'md']], ['art/audio', ['mp3']], ['art/audio/reader', ['wasm','txt']], ['art/plants', ['svg', 'md']],
   ['benchmark', ['html', 'js', 'css', 'md']], ['benchmark/studies', ['mjs', 'md']],
   ['docs', ['md']], ['docs/first-steps', ['md']],
   ['trainer', ['html', 'js', 'md']], ['trainer/plants', ['js', 'css', 'md']],

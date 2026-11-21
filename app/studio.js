@@ -1,4 +1,6 @@
 import {installInstrument} from './studio-instrument.js';
+import {createStudioNarration} from './studio-narration.js';
+import {studioReading} from './studio-reading-context.js';
 import {initFieldFilm} from './field-film.js';
 // Keep each instrument's DOM, files, canvas and running worker alive while readers switch activities.
 const root = new URL('../', import.meta.url);
@@ -97,7 +99,15 @@ const benchViews = {scan:'generate', train:'fit', compare:'experiment', test:'te
 const compact = matchMedia('(max-width:1000px), (max-height:500px) and (max-width:1150px)');
 const settingsButton = document.getElementById('openSettings');
 const shade = document.getElementById('drawerShade');
+const narration = createStudioNarration(document.getElementById('listenSlot'));
 let currentInspector;
+function refreshReading() {
+  if (!active || active.step === 'film') return;
+  const pane = panes.get(tasks[active.view].tool);
+  if (pane?.ready && !pane.frame.hidden) {
+    narration.set(studioReading(active,pane.frame.contentDocument,currentInspector,tasks[active.view].steps[active.step][0]));
+  }
+}
 function reflectInspector() {
   const modal = Boolean(currentInspector?.modal);
   settingsButton.setAttribute('aria-expanded', String(Boolean(currentInspector?.expanded)));
@@ -106,13 +116,14 @@ function reflectInspector() {
 }
 const inspectorShell = {
   compact,
-  changed(source) { if (source === currentInspector) reflectInspector(); },
+  changed(source) { if (source === currentInspector) { reflectInspector(); refreshReading(); } },
   remember() {
     if (!history.state?.studioDrawer) history.pushState({studioDrawer:true}, '', location.href);
   },
   dismissed(source, wasModal) {
     if (source !== currentInspector) return;
     reflectInspector();
+    refreshReading();
     settingsButton.focus({preventScroll:true});
     if (wasModal && history.state?.studioDrawer) history.back();
     else if (Object.hasOwn(panelSteps,active.step)) navigate(address(active.view),'replace');
@@ -154,6 +165,7 @@ function showFrame(pane) {
     for (let el=target;el;el=el.parentElement) if (el.tagName==='DETAILS') el.open=true;
     target.scrollIntoView({behavior:'instant',block:'start'});
   } else win.scrollTo({top:0,behavior:'instant'});
+  refreshReading();
 }
 
 function mount(tool) {
@@ -168,6 +180,16 @@ function mount(tool) {
     css.rel='stylesheet'; css.href=new URL('app/studio-frame.css',root);
     css.addEventListener('load', () => {frame.dataset.styled='true';});
     doc.head.append(css);
+    const voiceStyle = doc.createElement('link');
+    voiceStyle.rel = 'stylesheet';
+    voiceStyle.href = new URL('app/studio-narration.css',root);
+    doc.head.append(voiceStyle);
+    if (tool === 'field') {
+      const tabs = doc.querySelector('#guide [role="tablist"]');
+      new MutationObserver(() => {
+        if (active?.step === 'lessons' && pane.frame.contentDocument === doc) refreshReading();
+      }).observe(tabs,{subtree:true,attributes:true,attributeFilter:['aria-selected']});
+    }
     if (tool!=='docs') {
       const view = {field:'scan', trainer:'train', benchmark:'compare'}[tool];
       pane.inspectors = {[view]:installInstrument(doc,tool,referenceScan,inspectorShell)};
@@ -243,6 +265,7 @@ function mount(tool) {
 }
 
 function navigate(route,historyMode='push') {
+  narration.loading();
   currentInspector?.activate(false);
   currentInspector = null;
   reflectInspector();
@@ -279,7 +302,7 @@ function navigate(route,historyMode='push') {
     if (workStep===key) link.setAttribute('aria-current','location');
     steps.append(link);
   }
-  if (isFilm) return;
+  if (isFilm) { narration.set(null); return; }
   const reload=!pane.url || pane.url.pathname!==url.pathname || pane.url.search!==url.search;
   pane.url=new URL(url);
   if (reload) {delete pane.frame.dataset.styled;pane.ready=false;pane.frame.contentWindow.location.replace(url.href);}

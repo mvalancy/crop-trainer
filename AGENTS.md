@@ -16,7 +16,7 @@ Start a documentation change with the `illustrate-field-guide` skill. Use `run-c
 
 ![Laser rays strike different parts of a row and leave a dotted record of the leaf surfaces.](art/lesson-returns.svg)
 
-The public app serves the illustrated reader under `guide/`. The small **WIP** link beside GitHub opens `next/studio/`, built from the last verified push to `dev`. Work on the full-window learning studio on `dev`. Its entry is `studio/index.html`. Its opening story lives in `app/field-film.js`. A learner can follow one lettuce from a laser return to a prediction, then open the matching experiment and try it.
+The public app serves the illustrated reader under `guide/`. The small **WIP** link beside GitHub opens `next/studio/`, built from the last verified push to `dev`. Work on the full-window learning studio on `dev`. Its entry is `studio/index.html`. Its opening story lives in `app/field-film.js`. A learner can follow one lettuce from a laser return to a prediction, then open the matching experiment and try it. The studio’s **Listen** control pairs the scripts in `app/studio-voiceovers.js` with recordings and reads current settings, results and guide chapters on the device. Keep each new activity’s reading context in `app/studio-reading-context.js`.
 
 For a new scene, give the learner something specific to notice in the picture, one plain-language question and one action that changes the experiment. Let the learner pause, replay or move one scene at a time. Check the illustration, controls and captions on a phone and on a desktop, with both themes and reduced motion. Keep each tool’s work in progress when a learner visits another activity.
 
