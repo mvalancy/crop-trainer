@@ -22,6 +22,11 @@ export function initScanStudy(params) {
     const requested=Number(params.get(key));
     select.value=String(RAY_BUDGETS.includes(requested)?requested:initial);
   }
+  const scoreDistance=el('studyScoreDistance'), requestedTolerance=params.get('studyTolerance');
+  if ([...scoreDistance.options].some(option=>option.value===requestedTolerance)) {
+    scoreDistance.value=requestedTolerance;
+    el('studyScores').open=true;
+  }
   const requestedMode=params.get('studyMode');
   if(['layouts','damage','scaffolds'].includes(requestedMode))comparison.value=requestedMode;
   showSettings();
@@ -59,7 +64,7 @@ export function initScanStudy(params) {
     else url.searchParams.set('budget',results[arm].recipe.points);
     url.searchParams.set('tile',results[arm].tileId);
     url.searchParams.set('sensor',results[arm].recipe.sampling.key);
-    for(const key of ['studyMode','studyCloud','studyLow','studyHigh','studyMetric','studyBox','box'])url.searchParams.delete(key);
+    for(const key of ['studyMode','studyCloud','studyLow','studyHigh','studyMetric','studyTolerance','studyBox','box'])url.searchParams.delete(key);
     if(target.value!=='')url.searchParams.set('box',target.value);
     url.hash='scan-viewer';return url.href;
   }
@@ -72,7 +77,7 @@ export function initScanStudy(params) {
       distance.hidden=!(complete&&plant&&r.orchardPins&&(comparison.value==='damage'||comparison.value==='scaffolds'||mode==='orchard'));
       if(!distance.hidden){
         const nearest=plant.nearestOrchardPinM===null?'no orchard pins':'nearest orchard pin '+(plant.nearestOrchardPinM*100).toFixed(1)+' cm';
-        distance.textContent='Tree '+selected+' · '+nearest+' · '+(plant.orchard?'matched':'missed')+' at 15 cm';
+        distance.textContent=(i?'Second':'First')+' scan · '+nearest+' · '+(plant.orchard?'matched':'missed')+' at 15 cm';
       }
       if(r){
         const marked=r.plants.filter(p=>reached(p,mode)).length;
@@ -105,36 +110,48 @@ export function initScanStudy(params) {
     }
     share.searchParams.set('studyCloud',cloud.checked?'on':'off');
     share.searchParams.set('studyMetric',mode);
+    if (scoreDistance.value!=='15') share.searchParams.set('studyTolerance',scoreDistance.value);
+    else share.searchParams.delete('studyTolerance');
     share.searchParams.delete('box');share.searchParams.delete('studyBox');
     if(p)share.searchParams.set('studyBox',selected);
     el('studyShare').href=share.href;
   }
   function showScores() {
-    const body=el('studyScoreBody');body.replaceChildren();
-    for(const r of results){
-      const layout=sensorName(r.recipe.sampling);
-      let arm=layout;
-      if(comparison.value==='damage')arm=(r.recipe.plantCondition==='healthy'?'Intact':'Damaged')+' · '+layout;
-      if(comparison.value==='scaffolds')arm='v'+r.recipe.plantArchitecture+' · '+layout;
-      const methods=[
-        ['Height only',r.heightScores,'Each empty grid cell counts as zero when averaging nearby heights. The detector keeps tall peaks that are far enough apart.'],
-        ['Sampled cells',r.sampledHeightScores,'The height average uses only cells where a ray recorded a point. This can expose short plants and can also give raised soil an extra pin.']
-      ];
-      if(r.orchardScores)methods.push(['Orchard base',r.orchardScores,'This rule looks for points at several heights around a tree base. It estimates the base from scan coordinates alone.']);
-      for(const [name,scores,help] of methods)for(const s of scores){
-        const row=body.insertRow();
-        const methodCell=row.insertCell();
-        methodCell.textContent=name;
-        methodCell.dataset.help=help;
-        const cells=[arm,format(r.sampledRays),s.cm+' cm',s.tp,s.fp,s.fn];
-        for(const value of cells)row.insertCell().textContent=value;
+    const table=el('studyScoreBody'), arms=el('studyScoreArms');
+    const cm=Number(scoreDistance.value);
+    for (const body of [...table.tBodies]) body.remove();
+    arms.replaceChildren();
+    for (const [i,result] of results.entries()) {
+      const line=document.createElement('p'), name=document.createElement('strong');
+      name.textContent=(i?'Second':'First')+' scan';
+      const title=el(i?'studyTitleB':'studyTitleA').textContent;
+      const layout=sensorName(result.recipe.sampling);
+      const description=comparison.value==='layouts' ? title : title+' · '+layout;
+      line.append(name,' · '+description+' · '+format(result.sampledRays)+' sampled rays');
+      arms.append(line);
+    }
+    const methods=[
+      ['Height only','heightScores','Each empty grid cell counts as zero when averaging nearby heights. The detector keeps tall peaks that are far enough apart.'],
+      ['Sampled cells','sampledHeightScores','The average uses cells where a ray recorded a point. This can expose short plants and can also give raised soil an extra pin.'],
+      ['Orchard base','orchardScores','This rule estimates each tree base from XYZ points at several heights.']
+    ];
+    for (const [name,key,help] of methods) {
+      if (!results[0][key]) continue;
+      const body=table.createTBody(), title=document.createElement('th');
+      title.scope='rowgroup'; title.colSpan=5; title.textContent=name; title.dataset.help=help;
+      body.insertRow().append(title);
+      results.forEach((result,i)=>{
+        const score=result[key].find(s=>s.cm===cm);
+        const row=body.insertRow(), arm=document.createElement('th');
+        arm.scope='row'; arm.textContent=i?'Second':'First'; row.append(arm);
+        for (const value of [score.tp,score.fp,score.fn]) row.insertCell().textContent=String(value);
         const f1=row.insertCell();
-        f1.textContent=s.f1===null?'—':s.f1.toFixed(3);
-        f1.dataset.helpLabel=name+' · F1 at '+s.cm+' cm';
-        f1.dataset.help=s.f1===null
+        f1.textContent=score.f1===null?'—':score.f1.toFixed(3);
+        f1.dataset.helpLabel=name+' · F1 at '+cm+' cm';
+        f1.dataset.help=score.f1===null
           ? 'The detector placed no pins and the field contains no plants, so this score is undefined.'
-          : 'F1 balances extra pins and missed plants on a scale from 0 to 1. This row has '+s.tp+' matches, '+s.fp+' extra pins and '+s.fn+' missed plants.';
-      }
+          : 'F1 balances extra pins and missed plants on a scale from 0 to 1. This scan has '+score.tp+' matches, '+score.fp+' extra pins and '+score.fn+' missed plants.';
+      });
     }
     el('studyScores').hidden=false;
   }
@@ -192,13 +209,21 @@ export function initScanStudy(params) {
   cancel.onclick=()=>{reset();status.textContent='Comparison canceled.';};
   for(const select of [low,high])select.addEventListener('change',reset);
   comparison.addEventListener('change',()=>{reset();showSettings();});
+  for (const choice of details.querySelectorAll('input[name="studyMapView"]')) {
+    choice.addEventListener('change',()=>{
+      el('studyMaps').dataset.view=choice.value;
+      render();
+    });
+  }
+  scoreDistance.addEventListener('change',()=>{ if(complete) {showScores();render();} });
   cloud.addEventListener('change',render);
   metric.addEventListener('change',render);target.addEventListener('change',render);
   canvases.forEach((canvas,i)=>canvas.addEventListener('click',event=>{
     if(!complete)return;
     const id=maps[i].pick(event,results[i].plants);if(id>=0){target.value=String(id);render();}
   }));
-  new ResizeObserver(()=>{if(!el('studyResults').hidden)render();}).observe(canvases[0]);
+  const resizeMaps=new ResizeObserver(()=>{if(!el('studyResults').hidden)render();});
+  for (const canvas of canvases) resizeMaps.observe(canvas);
   details.addEventListener('toggle',()=>{if(details.open&&!el('studyResults').hidden)render();});
   el('studySave').onclick=()=>{
     if(!complete)return;

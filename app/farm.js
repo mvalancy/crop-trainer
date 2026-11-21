@@ -1,7 +1,7 @@
 import {encodePly} from '../trainer/field-test/ply.js?v=export1';
 import {setupFirstSteps} from './first-steps.js?v=context-help2';
-import {initScanStudy} from '../trainer/study/scan-study-ui.js?v=context-help2';
-import {createFieldLesson} from './field-lesson.js?v=context-help2';
+import {initScanStudy} from '../trainer/study/scan-study-ui.js?v=compare-layout1';
+import {createFieldLesson} from './field-lesson.js?v=generator-guide3';
 import {cropProfile} from '../trainer/generator/crops.js?v=systems1';
 import {scanSession} from '../trainer/generator/scan-session.js?v=plants3';
 import {makeRecipe} from '../trainer/models/data.js?v=plants3';
@@ -40,7 +40,8 @@ function showSystemControls() {
 sensorOptions($('scan'));
 const requested = new URLSearchParams(location.search);
 const scanStudy=initScanStudy(requested);
-const narrowField = matchMedia('(max-width: 740px)');
+// In the stacked workspace, bring the live scan back into view after applying a recipe.
+const narrowField = matchMedia('(width < 58rem)');
 const growForm = $('grow');
 function revealSetting(control) {
   for (let parent = control; parent; parent = parent.parentElement) {

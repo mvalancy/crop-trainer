@@ -1,0 +1,98 @@
+/* The reference and the experiment can be read independently. */
+.samplingColumns { display: grid; gap: 1rem; margin-top: 1rem; }
+.samplingColumns h3 { font-size: 1rem; }
+.samplingColumns p { max-width: 68ch; margin: .35rem 0 0; }
+.samplingLinks { display: flex; flex-wrap: wrap; gap: 0 .85rem; }
+.samplingLinks a { display: inline-flex; align-items: center; min-height: 44px; }
+.samplingColumns > div + div { border-top: 1px solid var(--line); padding-top: 1rem; }
+
+#guide .lessonPanel { padding: clamp(.85rem,2.3vw,1.85rem); }
+#guide .lessonCopy { align-self: start; }
+#guide .lessonCopy p:last-child { margin-bottom: 0; }
+#guide .lessonTools { min-width: 0; }
+#guide .rayControls,
+#guide .clueFeedback {
+  padding: .75rem .9rem; border-inline-start: 3px solid #a4bd90;
+  border-radius: .3rem; background: var(--wash);
+}
+#guide .rayChoice { gap: .35rem 1rem; }
+#guide .rayChoice label { margin: 0; }
+#guide .rayControls p { margin: .35rem 0 0; }
+#guide .clueFeedback #weightFinding { min-height: 0; }
+#guide .fl-tools details { margin: .5rem 0 0; }
+#guide .fl-tools summary { min-height: 1.75rem; }
+#guide .fl-tools .fl-actions { margin: 0; }
+#guide .fl-tools ol { columns: 10rem; column-gap: 1.5rem; }
+#guide .fl-tools li { break-inside: avoid; }
+#guide .lessonNext :is(a,button) { display: inline-flex; align-items: center; }
+
+#missions .missions { gap: .65rem; margin-block: .9rem; }
+#missions .missions li {
+  display: grid; grid-template-columns: minmax(0,1fr) auto; align-content: start;
+  align-items: start; gap: .3rem .7rem; padding: .8rem .95rem;
+}
+#missions .missions li b { grid-column: 1; grid-row: 1; }
+#missions .missions li strong {
+  grid-column: 2; grid-row: 1; margin: 0; padding: .12rem .4rem;
+  align-self: start; border-radius: .3rem; background: var(--wash);
+  font-size: .73rem; line-height: 1.45;
+}
+#missions .missions li.earned strong { background: #d3e6ba; color: #254a31; }
+#missions .missions li > span,
+#missions .missions li > .missionLinks { grid-column: 1 / -1; }
+#missions .missionLinks { display: flex; flex-wrap: wrap; gap: 0 .85rem; }
+#missions .missionLinks a { display: inline-flex; align-items: center; min-height: 44px; }
+#missions .journalHead + p { margin-block: .35rem; }
+
+@media (min-width: 45rem) {
+  .samplingColumns { grid-template-columns: minmax(0,1.25fr) minmax(0,1fr); gap: clamp(1rem,3vw,2.25rem); }
+  .samplingColumns > div + div { border-top: 0; border-inline-start: 1px solid var(--line); padding: 0 0 0 clamp(1rem,2vw,1.6rem); }
+
+  #guide .lessonPanel {
+    display: grid; align-items: start; align-content: center;
+    grid-template-columns: minmax(0,.85fr) minmax(0,1.15fr);
+    grid-template-rows: min-content min-content 1fr;
+    grid-template-areas: 'copy graphic' 'tools graphic' 'next graphic';
+    gap: .95rem clamp(1rem,3vw,2.4rem);
+  }
+  #guide .lessonCopy { grid-area: copy; }
+  #guide .lessonNext { grid-area: next; }
+  #guide :is(.lessonTools,.fl-tools) { grid-area: tools; }
+  #guide .lessonPanel > figure, #guide .fl-figure { grid-area: graphic; min-width: 0; align-self: center; }
+  #guide #pinPractice { display: contents; }
+}
+
+@media (min-width: 45rem) and (max-width: 56rem) {
+  #guide .lessonPanel {
+    grid-template-areas: 'copy copy' 'tools graphic' 'next graphic';
+    grid-template-rows: auto auto 1fr;
+  }
+  #guide .lessonPanel > figure, #guide .fl-figure { align-self: start; }
+}
+
+@media (max-width: 44.99rem) {
+  #guide .sectionHead { display: grid; gap: .4rem; }
+  #guide .sectionHead p { margin: 0; max-width: 62ch; }
+  #guide .lessonPanel { display: flex; flex-direction: column; align-items: stretch; gap: .85rem; }
+  #guide .lessonPanel > * { align-self: stretch; }
+  #guide .lessonPanel > figure, #guide #pinPractice { width: 100%; align-self: stretch; }
+  #guide .fl-tools { margin-top: .65rem; }
+}
+@media (min-width: 60rem) {
+  #missions .missions { grid-template-columns: repeat(12,minmax(0,1fr)); }
+  #missions .missions li { grid-column: span 3; }
+  #missions .missions li:nth-child(-n+3) { grid-column: span 4; }
+}
+@media (min-width: 36rem) and (max-width: 59.99rem) {
+  #missions .missions { grid-template-columns: 1fr; }
+  #missions .missions li { grid-template-columns: minmax(8rem,.6fr) minmax(0,1.4fr) auto; gap: .1rem 1rem; align-items: baseline; }
+  #missions .missions li > span { grid-column: 2; grid-row: 1; }
+  #missions .missions li > .missionLinks { grid-column: 2 / -1; }
+  #missions .missions li > strong { grid-column: 3; grid-row: 1; }
+}
+@media (max-width: 35.99rem) {
+  #missions .missions { grid-template-columns: 1fr; }
+  #guide .lessonTabs button { white-space: normal; line-height: 1.3; }
+  #guide .rayControls, #guide .clueFeedback { padding-inline: .65rem; }
+  #guide .lessonTabs button, #guide .weightActions button { min-height: 44px; }
+}

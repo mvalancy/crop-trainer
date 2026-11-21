@@ -1,0 +1,160 @@
+/* The live field, recipe and camera tools are a single instrument. Only the
+   canvas shares a row with the recipe. Opening help grows the row below both. */
+#field .lab {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "scan" "recipe" "tools";
+  align-items: stretch;
+  gap: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: .9rem;
+}
+#field .lab > .plot {
+  grid-area: scan;
+  border: 0;
+  border-radius: .85rem .85rem 0 0;
+}
+#field .lab > #scan-settings {
+  grid-area: recipe;
+  container: scan-recipe / inline-size;
+  padding: clamp(.85rem, 1.7vw, 1.45rem);
+  border: 0;
+  border-radius: 0;
+  background: #f1f5ec;
+}
+#scan-settings h3 { margin-bottom: .7rem; }
+#grow { grid-template-columns: minmax(0, 1fr); gap: .75rem; }
+#grow fieldset:first-child, #grow .quickScanner {
+  grid-template-columns: minmax(0, 1.45fr) minmax(6rem, 1fr);
+  align-items: end;
+  gap: .35rem .65rem;
+  padding-top: 0;
+  border: 0;
+}
+#grow fieldset legend { grid-column: 1 / -1; }
+#grow .growActions { display: flex; }
+#grow .advancedJump { margin-block: -.35rem; }
+#generationStatus { margin: 0; font-size: .88rem; }
+#field .viewOptions {
+  grid-area: tools;
+  min-width: 0;
+  padding: 1rem clamp(.85rem, 1.7vw, 1.45rem) .45rem;
+  border-top: 1px solid var(--line);
+}
+.viewOptions h3, .scanSummary h4 { font-size: 1.04rem; }
+.viewOptions .viewTools { gap: .55rem .8rem; padding: .45rem 0 .65rem; }
+.viewOptions .scanLayers { gap: .35rem .8rem; }
+.viewOptions .scanLayers label { min-height: 44px; }
+.viewOptions .cameraHelp {
+  padding: 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+}
+.viewOptions .cameraHelp > summary {
+  align-content: center;
+  min-height: 44px;
+  margin: 0;
+}
+.cameraInputs { display: grid; gap: .6rem 1.25rem; padding: 0 0 .7rem; }
+.cameraInputs p { margin: 0; color: var(--muted); font-size: .87rem; line-height: 1.45; }
+.cameraInputs strong { color: var(--ink); margin-right: .25em; }
+#field .scanSummary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 1rem clamp(1rem, 2.5vw, 2rem);
+}
+.scanSummary :is(.scanTotals, .scanCoverage) { min-width: 0; }
+.scanTotals .readouts {
+  grid-template-columns: repeat(auto-fit, minmax(min(4.4rem, 100%), 1fr));
+  margin: .75rem 0 0;
+}
+.scanSummary .scanCoverage p { margin-block: .38rem; }
+.coverageKey { color: var(--muted); font-size: .83rem; }
+.pinKey { color: #985e12; font: bold 1.08rem/1 var(--mono); }
+.hitKey { color: #a44930; margin-inline-start: .5rem; }
+.scanSummary .scanFiles { grid-column: 1 / -1; align-items: start; }
+
+@media (min-width: 44rem) {
+  #grow {
+    grid-template-columns: 1fr 1fr;
+    gap: .6rem 1.2rem;
+  }
+  #grow .advancedJump { align-self: center; }
+  #grow .quickScanner { grid-template-columns: minmax(0, 1.4fr) minmax(6rem, 1fr); }
+  #generationStatus { grid-column: 1 / -1; }
+  .viewOptions .viewTools { grid-template-columns: repeat(3, minmax(6rem, 1fr)) minmax(10rem, 1.5fr); }
+  .cameraInputs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .cameraInputs strong { display: block; }
+  .scanSummary .scanFiles {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: .65rem 1.5rem;
+    padding: 1rem;
+  }
+  .scanFiles h3 { grid-column: 1; }
+  .scanFiles .scanDownloads { grid-column: 1; grid-row: 2; }
+  .scanFiles .scanSharing { grid-column: 2; grid-row: 1 / 3; border: 0; padding: 0; }
+  .scanFiles .trainLink { grid-column: 1 / -1; justify-self: start; padding-inline: .9rem; }
+}
+@media (min-width: 58rem) {
+  #field .lab {
+    grid-template-areas: "scan recipe" "tools tools";
+    grid-template-columns: minmax(0, 2fr) minmax(19rem, .95fr);
+  }
+  #field .lab > .plot {
+    display: flex;
+    flex-direction: column;
+    border-radius: .85rem 0 0 0;
+  }
+  #field .lab > #scan-settings { border-left: 1px solid var(--line); border-radius: 0 .85rem 0 0; }
+  .lab .viewer:not(.viewExpanded) { flex: 1; min-height: clamp(19rem, 43vh, 31rem); }
+  .lab .viewer:not(.viewExpanded) #map { position: absolute; inset: 0; height: 100%; }
+  #grow { grid-template-columns: 1fr; }
+  #field .scanSummary { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); }
+  .scanCoverage { padding-inline-start: 1.1rem; border-inline-start: 1px solid var(--line); }
+  .scanSummary .scanFiles {
+    grid-template-columns: minmax(13rem, 1fr) minmax(15rem, 1.1fr) minmax(11rem, .65fr);
+    align-items: center;
+    gap: .65rem 1.2rem;
+  }
+  .scanFiles h3 { grid-column: 1 / -1; }
+  .scanFiles .scanSharing, .scanFiles .trainLink { grid-row: 2; }
+  .scanFiles .trainLink { grid-column: 3; justify-self: stretch; }
+}
+/* A seed can have ten digits. On a narrow rail, use one labeled control
+   per row so the chosen crop, hardware preset and requested budget stay visible. */
+@container scan-recipe (max-width: 20rem) {
+  #grow fieldset:first-child, #grow .quickScanner { grid-template-columns: minmax(0, 1fr); }
+  #grow .helpField {
+    grid-template-columns: 5.25rem minmax(0, 1fr);
+    column-gap: .4rem;
+    align-items: center;
+  }
+  #grow .helpField > label {
+    grid-area: 1 / 1 / 2 / 3;
+    grid-template-columns: subgrid;
+    align-items: center;
+  }
+  #grow .helpField > .helpTrigger { grid-area: 1 / 1; align-self: center; }
+  #grow .helpField .helpCaption { padding-inline-end: var(--help-size); line-height: 1.25; }
+  #grow :is(select, input) { padding-inline: .4rem .2rem; }
+}
+
+@media (min-width: 68rem) {
+  .viewOptions .viewTools {
+    grid-template-columns: minmax(6.8rem, .8fr) minmax(6.8rem, .8fr) minmax(8rem, 1fr)
+                           minmax(10rem, 1.45fr) minmax(17rem, 2fr);
+    align-items: center;
+    gap: .6rem clamp(.65rem, 1.2vw, 1.2rem);
+  }
+  .viewOptions .scanLayers {
+    grid-column: auto;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    gap: .25rem .5rem;
+    padding-left: clamp(.65rem, 1.2vw, 1.2rem);
+    border-left: 1px solid var(--line);
+  }
+}

@@ -56,7 +56,7 @@ export function createFieldLesson(root) {
         <span data-lesson="sample" data-help-label="Points shown" data-help="A dense patch displays a sample of its points. The comparison still uses the known plant positions in the patch." hidden></span>
       </div>
     </figure>
-    <div class="fl-actions">
+    <div class="fl-tools"><div class="fl-actions">
       <button type="button" data-lesson="reveal" aria-pressed="false" data-help="Show or hide the known plant centers as crosses. Use them to check what you saw in the laser dots." disabled>Show labels</button>
       <button type="button" data-lesson="next" data-help="Move to another patch of the same generated scan and try finding a center there." disabled>New patch</button>
       <button type="button" data-lesson="clear" data-help="Remove your guess from this patch so you can aim again." hidden>Clear pin</button>
@@ -64,7 +64,7 @@ export function createFieldLesson(root) {
     <details class="fl-list" data-lesson="locations" hidden><summary data-help="Read the horizontal positions of the known plant centers as numbers measured from this patch’s lower-left corner.">Read label positions</summary>
       <p>Distances from the lower-left corner of this patch.</p><ol></ol></details>
     <details class="fl-help"><summary data-help="Read how to aim by small or large steps and place a pin with the keyboard.">Keyboard controls</summary>
-      <p id="${helpId}">Focus the scan and use the arrows to explore in 5 cm steps. Hold Shift for 25 cm steps. Press Enter or Space to place a pin.</p></details>`;
+      <p id="${helpId}">Focus the scan and use the arrows to explore in 5 cm steps. Hold Shift for 25 cm steps. Press Enter or Space to place a pin.</p></details></div>`;
   const el = name => root.querySelector('[data-lesson="'+name+'"]');
   const board = el('board'), svg = board.querySelector('svg'), status = el('status');
   const reveal = el('reveal'), next = el('next'), clear = el('clear');

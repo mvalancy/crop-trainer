@@ -1,0 +1,107 @@
+/* The advanced controls and specimen share the width of the field notebook. */
+#advanced-scan details {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+}
+#advanced-scan h3 { margin-bottom: .65rem; }
+#advanced-scan summary { min-height: 44px; padding-block: .7rem; }
+#advanced-scan details[open] > summary { margin-bottom: .2rem; }
+#advanced-scan .anatomyFields {
+  grid-template-columns: minmax(0,1fr);
+  gap: .5rem;
+  padding-bottom: 1rem;
+}
+#anatomySettings .detailFields {
+  grid-template-columns: repeat(auto-fit,minmax(min(100%,13rem),1fr));
+  margin: 0;
+}
+#anatomySettings .detailFields:has(#plantForm:disabled) {
+  grid-template-columns: minmax(0,24rem);
+}
+.plantNotes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: .15rem 1rem;
+}
+#advanced-scan .plantNotes .hint { margin: 0; }
+.plantNotes .anatomyGuide { display: inline-flex; align-items: center; min-height: 44px; }
+
+#advanced-scan .specimenComparison {
+  width: 100%;
+  max-width: none;
+  padding: clamp(.75rem,1.5vw,1.25rem);
+}
+.specimenStudyControls { display: grid; align-content: start; gap: .65rem; }
+#advanced-scan .specimenPair {
+  min-width: 0;
+  align-self: center;
+  padding-block: .25rem;
+  background: #f3f4e5;
+}
+#advanced-scan .specimenPair figcaption { padding-block: .35rem; }
+
+.scanEnvironment { display: grid; gap: 0 2rem; }
+.scanEnvironment > details { min-width: 0; align-self: start; }
+.scanEnvironment .sensorFacts { display: grid; gap: .35rem; }
+#advanced-scan .sensorFacts > p { margin: 0; }
+#advanced-scan .scannerSetup .detailFields {
+  grid-template-columns: repeat(auto-fit,minmax(min(100%,12rem),1fr));
+  align-items: end;
+  margin: .65rem 0 1rem;
+}
+.scanEnvironment .check { min-height: 44px; }
+#advanced-scan .clutter {
+  grid-template-columns: repeat(auto-fit,minmax(min(100%,6.4rem),1fr));
+  gap: .35rem .6rem;
+  margin: .4rem 0 1rem;
+}
+#advanced-scan .advancedActions {
+  border-top: 1px solid var(--line);
+  padding-top: .8rem;
+  margin: 0;
+}
+
+@media (min-width: 45rem) {
+  .plantNotes .hint { flex: 1 1 18rem; }
+  #advanced-scan .specimenComparison {
+    grid-template-columns: minmax(0,1.65fr) minmax(15rem,1fr);
+    grid-template-rows: auto auto;
+    gap: .65rem clamp(1.1rem,3vw,3rem);
+    align-content: center;
+  }
+  #advanced-scan .specimenPair { grid-area: 1 / 1 / 3 / 2; }
+  #advanced-scan .specimenComparison h4 { grid-area: 1 / 2; align-self: end; }
+  #advanced-scan .specimenStudyControls { grid-area: 2 / 2; }
+}
+@media (min-width: 34rem) and (max-width: 61rem) {
+  #anatomySettings .detailFields:has(#appleCanopy:enabled) {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+}
+@media (min-width: 55rem) {
+  .scanEnvironment { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+@media (max-width: 40rem) {
+  #advanced-scan { padding-inline: .8rem; }
+  #advanced-scan .specimenComparison {
+    padding: .65rem 0 0;
+    border: 0;
+    border-radius: 0;
+    border-top: 1px solid var(--line);
+    background: transparent;
+  }
+  #advanced-scan .specimenPair {
+    border-radius: .4rem;
+    overflow: hidden;
+  }
+}
+@media (max-width: 23rem) {
+  #advanced-scan .advancedActions { gap: .4rem; }
+  #applyScanSettings { padding-inline: .48rem; }
+}

@@ -1,0 +1,76 @@
+/* Pair the same planting at the same scale, including on a small screen. */
+#studyForm .helpField:has(#studyMode) { grid-column: 1 / -1; }
+.studyMapPane, .studyMapPane > *, .studyFocus { min-width: 0; }
+.studyPanel .studyMaps {
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: clamp(.35rem, 1.3vw, .9rem);
+}
+.studyPanel .studyMaps figure {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  align-items: start;
+}
+.studyPanel .studyMaps figcaption { display: grid; padding: .6rem .65rem .15rem; }
+.studyPanel .studyMaps canvas { width: 100%; max-width: none; }
+.studyMapView { display: none; }
+#scan-study #studyInspect:not([hidden]) { display: contents; }
+.studyFocus { display: grid; align-content: start; gap: .3rem; }
+.studyFocus > p, .studyDistances { margin: 0; font-size: .88rem; }
+.studyDistances { display: grid; gap: .15rem; }
+#scan-study .studyChoices { align-content: start; }
+#scan-study .studyChoices #studyMetricHelp { padding: 0; }
+#scan-study .studyActions { align-self: end; }
+#studyScores .scoreSettings {
+  display: flex; flex-wrap: wrap; align-items: end;
+  gap: .5rem 1.2rem; margin: .6rem 0;
+}
+.scoreSettings .helpField { max-inline-size: 15rem; }
+.scoreSettings select { inline-size: 6.6rem; }
+#studyScoreArms p { margin: .25rem 0; color: var(--muted); font-size: .85rem; }
+.studyPanel .studyScoreTable { width:100%; max-width: 47rem; margin: .55rem 0 0; font-variant-numeric: tabular-nums; }
+.studyScoreTable th, .studyScoreTable td { padding: .4rem .55rem; text-align: right; }
+.studyScoreTable th:first-child { text-align: left; }
+.studyScoreTable tbody th[scope=rowgroup] { padding-top: .65rem; color: var(--forest); background: var(--wash); }
+.studyScoreTable tbody th[scope=row] { background: transparent; font-weight: 500; }
+
+@media (min-width: 580px) {
+  #studyForm:has(#studyLow:disabled) .helpField:has(#studyMode) { grid-column: auto; }
+}
+@media (min-width: 1024px) {
+  #scan-study .studyLayout {
+    grid-template-columns: minmax(0, 1.85fr) minmax(19rem, 1fr);
+    align-items: start;
+    gap: .8rem 1.25rem;
+  }
+  #scan-study .studyChoices { padding-left: 1rem; border-left: 1px solid var(--line); }
+  #scan-study .studyFocus { grid-column: 1; }
+  #scan-study .studyFocus > .helpField { max-width: 19rem; }
+  #scan-study #studyInspect .studyActions { grid-column: 2; align-self: start; }
+}
+@media (max-width: 535px) {
+  .studyMapView { display: block; margin: .3rem 0 .55rem; }
+  .studyMapView legend { font-size: .9rem; font-weight: 650; }
+  .studyMapView > div { display: flex; flex-wrap: wrap; gap: .25rem; margin-top: .25rem; }
+  .studyMapView label {
+    display: inline-flex; align-items: center; justify-content: center; gap: .35rem;
+    min-height: 44px; padding: .25rem .5rem; border: 1px solid var(--line);
+    border-radius: .45rem; font-size: .85rem; cursor: pointer;
+  }
+  .studyMapView label:has(:checked) { background: var(--wash); border-color: var(--forest); }
+  .studyMapView input[type=radio] { width: 1rem; min-height: 1rem; height: 1rem; padding: 0; margin: 0; accent-color: var(--forest); }
+  .studyPanel .studyMaps:not([data-view=both]) { grid-template-columns: minmax(0, 1fr); }
+  .studyMaps[data-view=first] figure:last-child, .studyMaps[data-view=second] figure:first-child { display: none; }
+  .studyPanel .studyMaps figcaption { padding-inline: .45rem; font-size: .9rem; }
+  .studyPanel .studyMaps figcaption span { font-size: .8rem; }
+  #studyScores { padding-inline: .55rem; }
+  .studyScoreTable th, .studyScoreTable td { padding: .4rem .15rem; font-size: .8rem; }
+}
+
+@media (min-width: 900px) {
+  #studyScores .studyScoreLayout {
+    display: grid; grid-template-columns: minmax(12rem,.85fr) minmax(0,1.65fr);
+    align-items: start; gap: 1.4rem;
+  }
+  #studyScores .scoreSettings { display: grid; align-content: start; gap: .6rem; }
+  #studyScores .studyScoreTable { max-width: none; }
+}

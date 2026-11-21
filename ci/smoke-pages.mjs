@@ -206,6 +206,93 @@ try {
   }
   console.log('Apple viewer applied a foliage change, kept the summary clickable, scrolled the page and entered/exited fullscreen at desktop and mobile sizes.');
 
+  // A populated scaffold study opens the longest controls and results on the generator.
+  const orchardQuery=new URLSearchParams({crop:'apple',plantArchitecture:2,plantForm:'open-vase',
+    plantCondition:'healthy',appleCanopy:'leafy',seed:7412177,sensor:'reference',budget:60000,
+    ground:true,noise:'clean',weeds:'off',sticks:'off',boards:'off',studyMode:'damage',studyBox:0});
+  await open('?'+orchardQuery);
+  await page.locator('#field details').evaluateAll(groups=>groups.forEach(group=>{group.open=true;}));
+  await page.locator('#damageZoom').click();
+  assert.equal(await page.locator('#damageZoom').getAttribute('aria-pressed'),'true');
+  await page.locator('#studyRun').click();
+  await page.locator('#studyInspect:visible').waitFor();
+  await page.locator('#studyScores').evaluate(group=>{group.open=true;});
+  const study=await downloadJSON(page.locator('#studySave'),'tap');
+  assert.equal(study.format,'crop-trainer-damage-study-v1');
+  assert.deepEqual(study.arms.map(arm=>arm.recipe.plantCondition),['healthy','damaged']);
+  assert.equal(await page.locator('#studyTarget').inputValue(),'0');
+  for (const [i,link] of ['#studyLinkA','#studyLinkB'].entries()) {
+    const url=new URL(await page.locator(link).getAttribute('href'));
+    assert.equal(url.searchParams.get('tile'),study.arms[i].tileId);
+    assert.equal(url.searchParams.get('box'),'0');
+  }
+  const methods=[['Height only','heightScores'],['Sampled cells','sampledHeightScores'],['Orchard base','orchardScores']];
+  for (const viewport of [{width:320,height:700},{width:768,height:1024},{width:1366,height:768}]) {
+    await page.setViewportSize(viewport);
+    const layout=await page.evaluate(()=>{
+      const rect=selector=>document.querySelector(selector).getBoundingClientRect();
+      const viewer=rect('#field .viewer'),settings=rect('#scan-settings'),camera=rect('.cameraHelp');
+      const sideBySide=viewer.right<=settings.left+1 || settings.right<=viewer.left+1;
+      return {
+        overflow:document.documentElement.scrollWidth>innerWidth,
+        sideBySide:sideBySide && Math.max(viewer.top,settings.top)<Math.min(viewer.bottom,settings.bottom),
+        viewerFirst:viewer.bottom<=settings.top+1,
+        toolsBelowBoth:rect('.viewTools').top+1>=Math.max(viewer.bottom,settings.bottom),
+        summaryAfterWorkspace:rect('.scanSummary').top+1>=Math.max(viewer.bottom,settings.bottom,camera.bottom),
+        advancedAfterSummary:rect('#advanced-scan').top+1>=rect('.scanSummary').bottom
+      };
+    });
+    assert.ok(!layout.overflow && layout.toolsBelowBoth && layout.summaryAfterWorkspace && layout.advancedAfterSummary,
+      'The expanded generator must fit its viewport and keep its summary and settings reachable at '+viewport.width+'px');
+    assert.ok(viewport.width===1366 ? layout.sideBySide : layout.viewerFirst,
+      'Keep the scan visible beside the laptop settings and first on narrower screens');
+    await page.locator('#recipe').click({trial:true});
+    await page.locator('#studySave').click({trial:true});
+    if (viewport.width===320) {
+      for (const view of ['first','second','both']) {
+        await page.locator('input[name=studyMapView][value='+view+']').check();
+        assert.equal(await page.locator('#studyFirst').isVisible(),view!=='second');
+        assert.equal(await page.locator('#studySecond').isVisible(),view!=='first');
+      }
+    }
+    for (const cm of [7.5,10,15]) {
+      await page.locator('#studyScoreDistance').selectOption(String(cm));
+      const groups=await page.locator('#studyScoreBody tbody').evaluateAll(bodies=>bodies.map(body=>({
+        method:body.querySelector('[scope=rowgroup]').textContent,
+        values:Array.from(body.rows).slice(1).map(row=>Array.from(row.querySelectorAll('td'),cell=>cell.textContent))
+      })));
+      assert.deepEqual(groups,methods.map(([method,key])=>({method,values:study.arms.map(arm=>{
+        const s=arm[key].find(score=>score.cm===cm);
+        return [String(s.tp),String(s.fp),String(s.fn),s.f1.toFixed(3)];
+      })})));
+    }
+    const unreachable=await page.locator('#studyScoreBody th,#studyScoreBody td').evaluateAll(cells=>cells.filter(cell=>{
+      cell.scrollIntoView({block:'center',inline:'nearest',behavior:'instant'});
+      const b=cell.getBoundingClientRect();
+      return !cell.contains(document.elementFromPoint(b.x+b.width/2,b.y+b.height/2));
+    }).map(cell=>cell.textContent));
+    assert.deepEqual(unreachable,[],'Every score column must be reachable at '+viewport.width+'px');
+  }
+  console.log('Expanded orchard controls, exports, paired scans and every matching distance worked at phone, tablet and laptop sizes.');
+
+  await page.setViewportSize({width:320,height:700});
+  await page.locator('#crop').selectOption('high-wire-tomato');
+  await page.locator('#seed').fill('4294967295');
+  await page.locator('#scan').selectOption('os1-128');
+  await page.locator('#budget').selectOption('1000000');
+  const clipped=await page.locator('#grow select, #grow input[type=number]').evaluateAll(controls=>{
+    const textMeasure=document.createElement('canvas').getContext('2d');
+    return controls.filter(control=>{
+      const style=getComputedStyle(control);
+      textMeasure.font=style.font;
+      const text=control.selectedOptions?.[0]?.text ?? control.value;
+      const innerWidth=control.clientWidth-parseFloat(style.paddingLeft)-parseFloat(style.paddingRight);
+      // Reserve space for a native select arrow or number spinner.
+      return textMeasure.measureText(text).width+16>innerWidth;
+    }).map(control=>control.id);
+  });
+  assert.deepEqual(clipped,[],'All four selected recipe values should be readable on a narrow phone');
+
   await open('trainer/?plan=quick&engine=cpu&crop=lettuce&seed=27&sensor=reference&epochs=3');
   {
     const diagram=page.locator('#detectorDiagram'), family=page.locator('#architecture');
