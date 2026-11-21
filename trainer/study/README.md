@@ -1,8 +1,8 @@
-# Compare two scans of one planting
+# Compare scans and detectors on one planting
 
 ![Two sets of predicted pins are matched to the same reference centers.](../../art/paired-field.svg)
 
-Grow a field, expand **Compare two scans**, then choose what to vary. You can adjust ray budgets, change the scan layout, or compare intact and damaged apple scaffolds. The scaffold-width comparison uses v3 and v4 of the same apple planting. These comparisons give each scan its own ID and link to the 3D viewer. [Open the comparison](https://mvalancy.github.io/crop-trainer/#scan-study)
+Grow a field, expand **Compare scans and detectors**, then choose what to vary. You can adjust ray budgets, change the scan layout, or compare intact and damaged apple scaffolds. The scaffold-width comparison uses v3 and v4 of the same apple planting. These comparisons give each scan its own ID and link to the 3D viewer. [Open the comparison](https://mvalancy.github.io/crop-trainer/#scan-study)
 
 Choose **Tree-base pin spacing** on an apple scan to compare two detector settings on exactly the same points. Pick a tree and zoom both maps to see the 15 cm match circle and its nearest pin. The inspector shows how many nearby cells qualified and how many survived spacing. The results download includes those counts, each match and the time spent generating and scoring each arm. [Try two measured examples](../../docs/orchard-bases.md#does-shorter-pin-spacing-recover-the-missed-bases)
 
