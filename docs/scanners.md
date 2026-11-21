@@ -20,6 +20,8 @@ For the orchard, vineyard, bench and high-wire systems, each label includes the 
 
 Try the [vineyard](https://mvalancy.github.io/crop-trainer/?crop=grapevine&seed=32137#field) or [high-wire greenhouse](https://mvalancy.github.io/crop-trainer/?crop=high-wire-tomato&seed=32137#field). Each projected ray samples the highest surface at its XY location. Orbiting the viewer rotates those returns. Physical side views, glass reflections, fruit counts and yield require additional measurements. See the [field dataset guide](field-datasets.md) for sources to compare against.
 
+![Sample positions intersect two leaves and the soil. Dots show where a surface was measured.](../art/lesson-returns.svg)
+
 During generation, each completed canopy row appears in the viewer. The preview samples up to 9,000 current returns. The completed scan includes the selected clutter, noise and soil settings. You can orbit it and download every surviving return.
 
 In the **Field generator**, choose a scanner, ray budget, soil, noise and obstacles. Export the XYZ scan, bounding boxes and exact recipe. **Train this crop and layout** carries the crop and scanner into the training shed. Training generates separate fields with seeded noise and clutter. A fixed generator budget carries into validation, and the training budget defaults to seeded variation. The OS1 layouts reproduce selected channel and angular-column counts using a projected ring lattice. Real scanners also have beam angles, intensity response, timing and return-selection behavior. [Ouster sensor data reference](https://static.ouster.dev/sensor-docs/image_route1/image_route2/sensor_data/sensor-data.html)
@@ -50,6 +52,8 @@ Pitch is the width of one grid cell. Each selected cell gets a jittered ray, so 
 Check **rays requested**, **sampled**, and **returns** under the viewer. The OS1-32, OS1-64 and OS1-128 presets can sample at most 16,384, 65,536 and 262,144 positions per scan, respectively. Requesting more leaves the same projected ring lattice. The detector still measures peaks in 5 cm cells. Denser input supplies more observations inside those cells.
 
 On two fresh lettuce plantings (seeds 43571 and 43572), the clean reference grid produced 9,563 and 17,017 crop returns at 100,000 rays. At one million it produced 95,772 and 170,378. Plant labels stayed identical within each pair. On the same fields the OS1-128 preset gave exactly the same crop-return counts at 262,144, 500,000 and one million requested rays.
+
+![In two top views the leaf stays still. Widely spaced rays fall on either side. A finer grid adds a sample on the leaf. This drawing illustrates sampling, without predicting the yield of a particular scan.](../art/ray-budget.svg)
 
 **Does more detail improve this detector?** We held the CPU neural weights fixed within each seed and rescanned the same two validation plantings at two budgets. Training used four mixed-layout fields at their seeded budgets, 40 epochs, the lettuce peak floor of 3.5 cm and the 0.50 score cutoff. Validation used the reference grid with seeded noise and both soil settings.
 

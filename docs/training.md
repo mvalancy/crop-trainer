@@ -86,6 +86,8 @@ In a mixed-layout v1 lettuce run (seed 20261121, 3.5 cm peak floor), the four tr
 
 After two epochs with batches of 32, learning rate 0.125 and initialization seed 178, the four-unit tanh model's training loss changed from **0.4723 to 0.6171**. Its largest absolute weight change was **0.4914**. Logistic regression's loss changed from **0.4554 to 0.6051**. CPU and Chromium's software WebGPU adapter (SwiftShader) agreed to within 1.2 × 10⁻⁷ on every fitted weight. This measures whether training responded to the labels. Accuracy on new fields needs a separate held-out score.
 
+![Thirteen inputs feed four hidden units. Each hidden unit contributes to the single output.](../art/lesson-network.svg)
+
 <details>
 <summary>Check the final example on your own WebGPU adapter</summary>
 
@@ -158,6 +160,8 @@ We grew seed-27 lettuce with each generator and trained the four-unit network tw
 On the connected v3 lettuce fields, a Chromium CPU run at seed 27 drew 16 training plantings and eight validation plantings, each with both soil variants. The fit used 7,832 balanced examples. At 40 epochs F1 was **0.678 / 0.725 / 0.737** at 7.5 / 10 / 15 cm. The 30-second fit completed 4,432 epochs on the same examples and reached **0.776 / 0.824 / 0.839**. Its total runtime was 32.9 seconds. A time budget can complete a different epoch count on another device. [Replay v3 Field practice](https://mvalancy.github.io/crop-trainer/trainer/?plan=practice&plantArchitecture=3&engine=cpu&seed=27)
 
 On the v2 fields, the longer fit raised F1 from **0.670 to 0.758** at 7.5 cm, **0.722 to 0.816** at 10 cm and **0.734 to 0.830** at 15 cm. It revisited the same 7,842 labeled examples. The v1 pool had 7,904 examples and different scan geometry, so compare schedules *within* each generator. Each pair covers one synthetic seed. [Try v2 Field practice](https://mvalancy.github.io/crop-trainer/trainer/?plan=practice&plantArchitecture=2&engine=cpu&seed=27) · [Replay with v1 canopies](https://mvalancy.github.io/crop-trainer/trainer/?plan=practice&plantArchitecture=1&engine=cpu&seed=27)
+
+![A scan samples surfaces. A model combines clues around a peak and gives the candidate a score.](../art/learn-from-a-plot.svg)
 
 Larger crop models can operate on whole clouds. Zhou and colleagues trained a PointNet++ variant to segment maize stems point by point. Using 50 training clouds with roughly 20 million labeled photogrammetry points, they reported **5–6 hours** for 32 epochs on one RTX 4070 Ti SUPER. The task, input representation and hardware all change how much work one epoch takes. [Zhou et al., §§2.3 and 4.4](https://doi.org/10.3389/fpls.2025.1724096) · [How agricultural teams train and test detectors](industry-practice.md)
 

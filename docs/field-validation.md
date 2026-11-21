@@ -22,6 +22,8 @@ Raising the same synthetic lettuce returns by 15 cm changed both the detections 
 
 Mean F1 averages the pooled scores at 7.5, 10 and 15 cm. Count MAE is mean absolute count error in plants per scan. Each seed trained one default four-unit network for 40 CPU epochs on six mixed-layout fields per crop. The five conditions reused its weights and the same three held-out fields with both soil variants. On the slope experiment the ground plane rose from −0.25 m at X = 0 to +0.25 m at X = 10. Entering −0.25 m for Ground Z and grades of +5% in X and 0% in Y restored every original pin and model score across all 36 synthetic scans. This test used the exact imposed plane. Unknown terrain still needs independent measurements.
 
+![Both views share plant locations. Removing soil returns changes the clues in a peak’s neighborhood.](../art/soil-twins.svg)
+
 Run `node benchmark/studies/ground-reference.mjs` from the repository root to reproduce all rows for lettuce, globe artichoke and young tomato. It prints counts at each tolerance, field seeds, the number of scans with exact pin and score recovery, and times for generation, training and validation. Validation time includes regenerating the held-out XYZ scans. [Ground-reference experiment](../benchmark/studies/ground-reference.mjs)
 
 ## How close are the scan and the survey?

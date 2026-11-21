@@ -57,6 +57,8 @@ The matching distance also changes the precision tradeoff. At 7.5 cm the first a
 
 ## How much does the choice of four fields matter?
 
+![Grow practice fields, fit weights, then measure on separate plantings. Keep both scans of each planting in one split.](../art/field-split.svg)
+
 Using the second group of four fields changed **all three decisions**. Its choices were 0.70, 0.80 and 0.70, all with the 640-epoch fit. On the reserved plantings only the first found additional seedlings and met the branching precision requirement on both layouts. For the second fit, grid seedling matches stayed at one. For the third they fell from three to one.
 
 Why did the second group recommend the third fit? At 0.70, its grid seedling matches on those four calibration fields stayed at one, but extra pins fell from 13 to zero. That improved F1 just enough to qualify. On the first four calibration grids, neither model found a seedling, so their F1 scores tied at zero. Counting the plants recovered on the reserved fields exposed the difference.

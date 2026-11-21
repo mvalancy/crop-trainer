@@ -112,6 +112,8 @@ Each confirmation row covers 663 plants. The cells show **matched plants / extra
 
 The frozen pair met the requirement again. At 15 cm it found **five of 663 grid seedlings and four of 663 ring seedlings**, with zero extra seedling pins. The height rule found 435 and 345, alongside 1,430 and 818 extras. The longer fit raised branching precision from 87.3% to 94.4% on grids and from 86.4% to 92.0% on rings. It also missed 21 more branching plants on grids and 33 more on rings. A rule that protects precision can still lose plants the starter found.
 
+![Use the same recipe and seed to grow the same planting and repeat the scan.](../art/seed-to-field.svg)
+
 In one CPU run, confirmation data preparation took 2.06 s. Training took 0.06 s and 0.32 s for the selected schedules. Generating 24 test scans took 0.72 s and replaying their weights through Field Test took 1.04 s. To repeat the selection, create `duration-dev.json` with the command below, then run these two commands.
 
 ```sh
@@ -122,6 +124,8 @@ node benchmark/studies/tomato-duration-cutoffs.mjs confirmation cutoffs-dev.json
 Both commands record the same decision hash, `97cdc42c77f0199325db8c22e6d00faed3ec062452d455dfe026ca5b2f023963`. The output includes trained-weight hashes, scan IDs, per-field counts at each distance and hardware-specific timings. [Duration and cutoff study](../benchmark/studies/tomato-duration-cutoffs.mjs)
 
 ## Was it the planting or the trained model?
+
+![A schematic comparison on identical plant centers, shown as green rings. The first detector misses one center. The second finds all six but places an extra red pin between the rows.](../art/paired-field.svg)
 
 We replayed the two confirmation fits on **both** sets of six previously scored plantings. Each model saw the same scan IDs and candidate peaks at both cutoffs. This retrospective comparison changes one factor at a time. The duration cohort has 657 plants per stage, the cutoff cohort 663.
 

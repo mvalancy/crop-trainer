@@ -76,6 +76,8 @@ We froze the four reference-trained seedling detectors from the training-density
 | OS1-inspired rings | 65,536 | 110 | 107 | 0.038–0.152 | 0.214–0.215 | 0.217 |
 | Reference grid | 1,000,000 | 0 | 799 | 0.485–0.833 | 0.898–0.904 | 0.846 |
 
+![In two top views the leaf stays still. Widely spaced rays fall on either side. A finer grid adds a sample on the leaf. This drawing illustrates sampling, without predicting the yield of a particular scan.](../art/ray-budget.svg)
+
 For a single-plant replay, open box 6 of field `1370561` and switch between its two 60,000-ray scans. [Inspect the matched scans](https://mvalancy.github.io/crop-trainer/?crop=tomato&plantArchitecture=2&plantForm=seedling&plantCondition=healthy&sensor=reference&budget=60000&seed=1370561&noise=clean&weeds=off&sticks=off&boards=off&studyMode=layouts&studyBox=6#scan-study) · [Compare the recorded returns in this patch](../art/seedling-layouts.svg)
 
 The table pools counts at 15 cm across the eight fields. Each range covers the two independent training seeds. At 60,000 rays the first dense-trained model’s F1 at **7.5, 10 and 15 cm** was **0.280, 0.299 and 0.307** on the grid and **0.171, 0.187 and 0.193** on rings. The ring scan had only 99 candidate peaks across all eight fields. The model placed 95 pins, of which 94 matched a plant at 15 cm. It missed 783 seedlings. Per-field F1 at 15 cm ranged from 0.194 to 0.451 on the grid and 0.057 to 0.340 on the rings, with lower ring F1 on every paired field for both dense-trained fits.

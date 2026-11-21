@@ -27,6 +27,8 @@ The six plantings contained 60 distinct trees. We scanned each on a reference gr
 
 Boards centered on the trees gained two matches on field `22153127`, one on `22375361` and two on `22597597` at 15 cm compared with clear plots. Independent boards gained one match on `22597597`. All other tree assignments kept their matched or missed status. Both layouts observe the same planting, so the six fields are the independent replicates.
 
+![Two overhead sketches show the same eight trees. In the first, four sample boards are centred on selected tree bases. In the second, the same shapes land at independently sampled positions. One still lands close to a tree by chance. The detector sees laser returns without labels for tree or board.](../art/plants/apple-board-placement.svg)
+
 **Did board returns drive the change?** After the blind predictions, we counted low returns tagged as boards by the generator. Centered boards put **1,072 of 4,807** within 15 cm of a tree, reaching 74 of 120 tree appearances. Independent boards put **36 of 12,607** there, reaching eight appearances. Removing just those boards’ low returns from the ranking input across the entire scan cost six matches on the centered layout and one on the independent layout. The masked results were 77 and 78 matches. A mask cannot restore surfaces hidden by a board. The number of low crop returns fell from 48 in the clear scans to 23 with centered boards and 46 with independent boards.
 
 ## What happened on four more plantings?
@@ -62,6 +64,8 @@ On field `23484467`, independent boards moved the closest pin to the second heal
 | 1,000,000 | Height peaks, independent | 36 / 107 / 31 | 51 / 92 / 16 | 52 / 91 / 15 |
 
 Cells give **matched pins / extra pins / missed trees**. With centered boards, masking the board returns removed three matches at 60,000 rays and restored one at a million. On field `24264701` at a million rays, the low-return pin for Tree 2 lay 3.1 cm from the base on clear and independently scattered plots. Centered boards produced 298 low board returns within 15 cm of that base. The closest pin moved to 37.8 cm. [Inspect Tree 2 at one million rays](https://mvalancy.github.io/crop-trainer/?crop=apple&plantArchitecture=4&plantForm=central-leader&plantCondition=healthy&appleCanopy=leafy&seed=24264701&sensor=reference&budget=1000000&ground=true&noise=clean&weeds=off&sticks=off&boards=off&tile=49029a391415170e&studyMode=boards&studyMetric=orchard&studyCloud=on&studyBox=2&studyZoom=tree#scan-study)
+
+![A seed packet marked 27 branches into two plots. Four seedlings appear at the same positions in both rows.](../art/seed-replay.svg)
 
 The detector settings and six field seeds were fixed before scoring. Both budgets used identical healthy, leafy trees and board geometry. The overhead reference grid sampled fresh XY positions at each budget and kept those positions fixed across the three placements. The OS1-64 layout tops out at 65,536 rays, so this comparison covers the reference grid only. On the same Node CPU host, generating the 18 scans took 0.70 s at 60,000 rays and 9.40 s at one million. Height, usual support and low-return inference respectively took 0.11, 0.30 and 0.19 s at the lower budget and 0.55, 0.40 and 0.46 s at the higher budget. These are synthetic single-host wall times. Run `node benchmark/studies/orchard-board-placement.mjs density > orchard-density.json` to reproduce the paired fields, pins and counts.
 

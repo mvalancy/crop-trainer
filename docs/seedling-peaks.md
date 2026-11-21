@@ -63,6 +63,8 @@ F1 uses one-to-one matches within 15 cm. Paired numbers follow the training seed
 
 On clean rings the sampled-cell height rule matched 301 plants, including 192 that standard height missed. The two sampled-cell nets matched 226 and 175 plants overall, keeping 174 and 150 of those 192 extra matches. They placed 114 and 77 false pins on the full scans, down from 196 for sampled-cell height. Against their respective standard nets, their 15 cm F1 improved on seven and six of the eight clean ring plantings. Neither fit surpassed sampled-cell height on any of the eight. On the clean grid, the same reduction in soil pins came with a loss of 238 true matches relative to sampled-cell height.
 
+![In this schematic the 0.30 score drops below cutoff. The nearby 0.64 candidate loses to the 0.77 candidate.](../art/lesson-pins.svg)
+
 Raising the neural cutoff to 0.75 removed every true detection from the 6.5 cm sampled-cell fits. Lowering the gate to 3.5 cm and refitting gave a different result for standard averaging. On clean rings, both standard nets beat standard height at that gate (F1 .428 and .516 versus .383). These measurements cover one simulator, one growth stage and one network shape. Physical seedling accuracy remains an open question. [Try a paired training benchmark](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=averaging&crop=tomato&plantArchitecture=2&plantForm=seedling&plantCondition=healthy&sensor=os1-64&trainingRayBudget=60000&validationRayBudget=60000&seed=82173)
 
 ## Reproduce the comparison

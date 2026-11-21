@@ -6,6 +6,11 @@ The little farm on the front page lives here. Open an SVG to see it move or open
 
 | Illustration | Where you’ll see it |
 | --- | --- |
+| [One plant seen in dots and pixels](two-views.svg) | [Sensing methods](../docs/README.md#choose-a-sensing-method) |
+| [Six pins and a missed lettuce](count-and-locate.svg) | [Inspecting detections](../docs/field-inspection.md) |
+| [A little leaf between rays](ray-budget.svg) | [Scan density](../docs/scanners.md) |
+| [Stacked dots along a vine stem](vine-column.svg) | [Physical vineyard studies](../docs/field-datasets.md) |
+| [Opening the tested farm](check-the-build.svg) | [Release checks](../ci/README.md) |
 | [Crop Trainer leaf and LiDAR returns](crop-mark.svg) | Browser tab, mobile home screen and app navigation |
 | [Lettuce and weed at the same height](height-clues.svg) | [Watch one model update](https://mvalancy.github.io/crop-trainer/#learnWeight) |
 | [Lettuce under a scanning beam](title.svg) | [Repository welcome](../README.md) |

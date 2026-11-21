@@ -14,6 +14,8 @@ The model makes a score using its current weights. **Loss** measures how much th
 
 To update a weight, the trainer works out which direction would reduce the loss nearby. In a neural network it traces the influence of the output backward through the layers, a calculation called **backpropagation**. The **learning rate** controls the size of the step. A very small step can be slow. A very large one can overshoot. The next set of predictions uses the updated weights.
 
+![One times 1.5, plus zero times 0.4, plus a bias of minus 0.5 equals one. Its sigmoid is about 0.73.](../../art/lesson-weights.svg)
+
 <details>
 <summary>Work through one weight update with a pencil</summary>
 
