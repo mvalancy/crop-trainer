@@ -1,4 +1,4 @@
-import {backgroundLabels, backgroundFit, backgroundCutoff, backgroundWeights, prepareBackgroundPair, showBackgroundModels} from './background.js';
+import {backgroundLabels, backgroundFit, backgroundCutoff, backgroundWeights, prepareBackgroundPair, showBackgroundModels} from './background.js?v=cost1';
 import {setupCutoffControls, displayCutoffChanges} from './cutoffs.js';
 import {formsFor} from '../trainer/plants/forms.js';
 import {samplingLabels, setupSamplingControls, checkSamplingPair, displaySamplingMix} from './sampling.js?v=negative1';

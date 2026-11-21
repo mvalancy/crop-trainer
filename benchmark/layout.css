@@ -208,6 +208,8 @@
 .negativeActions .helpField, #negativeModel { max-inline-size: 100%; }
 
 .negativeGrid { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,26rem),1fr)); gap: 1rem 2rem; align-items: start; }
+.selectionTiming dl { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: .45rem 1rem; margin: .6rem 0; }
+.selectionTiming dd { margin: 0; text-align: end; font-variant-numeric: tabular-nums; }
 .backgroundHistogram { margin: 0; max-width: 31rem; }
 .backgroundHistogram figcaption { font-weight: 650; }
 .backgroundHistogram p { margin: .4em 0 .65em; font-size: .92rem; }

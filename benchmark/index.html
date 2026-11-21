@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="../app/farm.css?v=context-help2">
 
 <link rel="stylesheet" href="../app/help.css?v=context-help2">
-<link rel="stylesheet" href="layout.css?v=hard-background1">
+<link rel="stylesheet" href="layout.css?v=background-cost1">
 <script type="module" src="../app/help.js?v=context-help2"></script>
 </head>
 <body class="benchmark"><a class="skip" href="#main" data-help="Jump past the navigation to the benchmark controls.">Skip to content</a>
@@ -116,6 +116,12 @@
 <button type="button" id="downloadNegative" data-help="Save the selected network, feature scaling and 0.65 cutoff in a weight file you can load in Field Test.">Download weights</button>
 <a href="../trainer/#field-test" data-help="Open Field Test to try these weights on a saved scan and compare pins with plant labels.">Open Field Test →</a>
 </div><p id="negativeReceipt" aria-live="polite"></p>
+<details class="selectionTiming"><summary data-help="See how long this device spent finding difficult background examples for the selected training seed.">Time to choose difficult examples</summary>
+<dl><dt>Fit practice model</dt><dd id="pilotFitTime" data-help="Elapsed time for the 40-pass practice fit on the original shuffled training set."></dd>
+<dt>Score background peaks</dt><dd id="poolScoreTime" data-help="Time to use the practice model on every eligible background peak in its training fields."></dd>
+<dt>Rank and choose peaks</dt><dd id="rankTime" data-help="Time to rank the scores, reserve half of the slots and fill the other half from the shuffled pool."></dd>
+<dt>Rebuild the difficult training set</dt><dd id="rebuildTime" data-help="This whole-dataset time includes generating scans again, scoring the background pool, selecting examples and scaling the chosen rows."></dd></dl>
+<p class="hint">The rebuild includes scoring and ranking. The ordinary draw can train directly from shuffled examples.</p></details>
 <p class="hint">Training plots included weeds. The fresh scoring plots use the generator’s usual mix of weeds, debris and scan noise. <a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/tomato-hard-negatives.md" data-help="See how these training methods performed on clean and weedy tomato fields reserved for a separate experiment.">Read the tomato study →</a></p></div>
 <figure class="backgroundHistogram"><figcaption>Which background peaks looked like crops?</figcaption>
 <p>The practice model scored these peaks before either final fit. A score near 1 means the model strongly favored a crop.</p>
@@ -209,6 +215,6 @@
 </main>
 <footer class="siteFoot"><span>Created by Matthew Valancy</span>
 <div><a href="../AGENTS.md" data-help="Read how to reproduce browser experiments and run the project from the command line.">Agent quickstart</a><a href="../#missions" data-help="Open the farm challenges and check your progress.">Farm journal</a><a href="../LICENSE" data-help="Read the permission and attribution terms for the Crop Trainer source code.">MIT license</a></div><small class="contextHint"><span class="hoverHint">Hover or focus a button or score for help.</span><span class="touchHint">Tap a score or hold a button for help. A quick tap runs the action.</span></small></footer>
-<script type="module" src="main.js?v=hard-background1"></script>
+<script type="module" src="main.js?v=background-cost1"></script>
 </body>
 </html>

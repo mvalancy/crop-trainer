@@ -74,7 +74,14 @@ export function showBackgroundModels(report, download) {
       : 'The control took its background peaks in shuffled order.';
     document.getElementById('negativeReceipt').textContent = 'This fit used '+count(selected)+' crop peaks and '+count(selected)
       +' of '+count(eligible)+' eligible background peaks. '+kept;
-    drawBackgroundBins(report.rows.filter(other=>other.seed === row.seed));
+    const pair = report.rows.filter(other=>other.seed === row.seed);
+    const timing = pair.find(other=>other.negativeSampling === 'half-hard').backgroundSelection;
+    const duration = ms => ms < 1000 ? ms.toFixed(1)+' ms' : (ms/1000).toFixed(2)+' s';
+    document.getElementById('pilotFitTime').textContent = duration(timing.pilotMs);
+    document.getElementById('poolScoreTime').textContent = duration(timing.pilotScoringMs);
+    document.getElementById('rankTime').textContent = duration(timing.rankingMs);
+    document.getElementById('rebuildTime').textContent = duration(timing.rebuildMs);
+    drawBackgroundBins(pair);
     button.onclick = () => download(row.weightArtifact, 'crop-weights-'+report.settings.crop+'-'+row.negativeSampling+'-'+row.seed+'.json');
   }
   choice.onchange = showSelection;
