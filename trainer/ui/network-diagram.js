@@ -158,13 +158,18 @@ export function createNetworkDiagram({svg, layers, summary, description, replayB
     sync();
   });
   observer.observe(svg);
+  let resizeFrame;
   new ResizeObserver(() => {
-    if (!svg.clientWidth) return;
-    const next = svg.clientWidth < 430;
-    if (compact !== next) {
-      compact = next;
+    if (resizeFrame) return;
+    // The viewBox also sets the SVG's intrinsic height. Update it after
+    // the current resize delivery so WebKit can finish laying out the page.
+    resizeFrame = requestAnimationFrame(() => {
+      resizeFrame = 0;
+      const width = svg.clientWidth;
+      if (!width || compact === (width < 430)) return;
+      compact = width < 430;
       if (drawing) redraw(pending || playback.length > 0);
-    }
+    });
   }).observe(svg);
   setPlaybackLabels();
   motion.addEventListener('change', () => {

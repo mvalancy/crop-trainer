@@ -1,10 +1,11 @@
+import {setupCutoffControls, displayCutoffChanges} from './cutoffs.js';
 import {formsFor} from '../trainer/plants/forms.js';
 import {samplingLabels, setupSamplingControls, checkSamplingPair, displaySamplingMix} from './sampling.js';
 import {benchmarkView} from './watch.js?v=context-help2';
 import {scanSession} from '../trainer/generator/scan-session.js?v=plants3';
 import {setupPlantControls, setupValidationPlantForm, plantSettings} from '../trainer/generator/plant-version.js?v=orchard4';
 import {CLASSIC_TRAINING_PAIR, TRAINING_RAY_PAIRS, DENSITY_HISTORY_KEY, HEIGHT_HISTORY_KEY, densitySnapshot, pairDensityScores} from './density.js?v=sampling1';
-import {buildDataset, rescanValidation, validateModel, compareMatchedBoxes, coverageAtDistance, PEAK_HEIGHTS} from '../trainer/models/data.js?v=sampling1';
+import {buildDataset, rescanValidation, validateModel, compareMatchedBoxes, PEAK_HEIGHTS} from '../trainer/models/data.js?v=sampling1';
 import {trainNetworkCPU, trainNetworkGPU, predictNetwork} from '../trainer/models/neural.js';
 import {trainCPU, MAX_EPOCHS} from '../trainer/models/model.js';
 import {cropProfile} from '../trainer/generator/crops.js?v=systems1';
@@ -22,6 +23,7 @@ sensorOptions($('sensor'), true);
 validationSensorOptions($('validationSensor'));
 const requested = new URLSearchParams(location.search);
 const samplingControls = setupSamplingControls(requested);
+const cutoffControls = setupCutoffControls(requested);
 const proposedLengths = requested.has('shortEpochs') || requested.has('longEpochs');
 $('benchOptions').open = ['plantArchitecture','plantForm','validationPlantForm','plantCondition','seed','sensor','validationSensor','trainingRayBudget','validationRayBudget','epochs','minimumHeight','peakAveraging','featureMode','sampleLimit','positiveSampling','trainingPair','includeMixed'].some(key=>requested.has(key));
 // Earlier shared comparisons omit a geometry version. Keep their plantings
@@ -59,7 +61,9 @@ for (const id of ['comparison', 'crop', 'sensor', 'validationSensor', 'minimumHe
   if ([...$(id).options].some(option => option.value === value)) $(id).value = value;
 }
 const readPlantControls = setupPlantControls($('crop'), $('plantArchitecture'), $('plantForm'), $('plantCondition'),
-  requested, replayKeys.some(key => requested.has(key)) && !proposedLengths && !['forms','features','sampling'].includes(requested.get('comparison')) ? 1 : 3);
+  requested, replayKeys.some(key => requested.has(key)) && !proposedLengths &&
+  !(requested.get('comparison') === 'cutoffs' && requested.has('trialCutoff')) &&
+  !['forms','features','sampling'].includes(requested.get('comparison')) ? 1 : 3);
 const readValidationForm = setupValidationPlantForm($('validationPlantForm'), $('crop'), $('plantArchitecture'), $('plantForm'), requested);
 trainingRayOptions($('trainingRayBudget'), requested.get('trainingRayBudget'));
 rayBudgetOptions($('validationRayBudget'), requested.get('validationRayBudget'));
@@ -127,6 +131,7 @@ function epochCounts() {
 }
 function explainComparison() {
   samplingControls.show($('comparison').value === 'sampling');
+  cutoffControls.show($('comparison').value === 'cutoffs');
   const compareForms = $('comparison').value === 'forms';
   const structured = Number($('plantArchitecture').value) >= 2;
   const form = $('plantForm'), heldOut = $('validationPlantForm');
@@ -178,7 +183,7 @@ function explainComparison() {
       : 'Choose two training ray budgets in the scan settings to begin.',
     epochs: 'An epoch is one pass over the training examples. Each CPU fit starts from the same weights, sees the same examples and uses the same 0.50 cutoff. Check whether extra practice finds more plants on fresh fields.',
     layouts: 'Fit one CPU neural network per seed. Scan each fresh planting in a grid and again with simulated OS1-64 rings. Both layouts sample the same number of rays. See how the pattern changes the pins.',
-    cutoffs: 'Train one neural network per seed. Set the minimum score for placing a pin to 0.35, 0.50 or 0.65. Check how many extra plants and stray pins each cutoff picks up.',
+    cutoffs: 'A cutoff is the score a peak needs to earn a pin. Choose the trial value before running. Each seed fits one model, then tests every cutoff on the same fresh fields.',
     models: 'A logistic model weights each scan feature directly. A neural network learns combinations of features. Both train on your CPU. Compare their pins on the same fresh scans.',
     backend: 'Train the same neural network on CPU and WebGPU. Compare fitting times alongside scores. Both runs generate fields and score plant centers on the CPU.'
   };
@@ -355,6 +360,10 @@ function appendDistanceScores(row, modelLabel) {
     });
   }
 }
+function updateReplay(url) {
+  report.replayUrl = $('replay').href = url.href;
+  if (!$('modelBoxes').hidden) updateBoxLinks();
+}
 function changeScoreView() {
   $('scoreRows').replaceChildren();
   for (const {row, modelLabel} of completedScores) appendDistanceScores(row, modelLabel);
@@ -363,8 +372,7 @@ function changeScoreView() {
     replay.searchParams.set('scoreDistance', scoreDistance.value);
     if (scoreGround.value === 'all') replay.searchParams.delete('scoreGround');
     else replay.searchParams.set('scoreGround',scoreGround.value);
-    report.replayUrl = replay.href;
-    $('replay').href = replay.href;
+    updateReplay(replay);
   }
 }
 scoreDistance.addEventListener('change', changeScoreView);
@@ -553,79 +561,12 @@ function displayHeightStudy() {
   displayValidationBudgets($('heightRepeats'));
   $('heightStudy').hidden = false;
 }
-function displayCutoffCoverage(cm) {
-  const summaries = report.thresholds.map(threshold => {
-    const tiles = report.rows.filter(row => row.threshold === threshold)
-      .flatMap(row => row.tiles.filter(tile => tile.ground));
-    return coverageAtDistance(tiles, cm);
-  });
-  const body = $('coverageRows');
-  body.replaceChildren();
-  for (const [band, label] of [['zero','0 returns'], ['oneToFour','1–4 returns'], ['fiveOrMore','5 or more returns']]) {
-    const tr = body.insertRow();
-    const th = document.createElement('th');
-    th.scope = 'row';
-    th.textContent = label;
-    th.dataset.help = 'Groups labeled plants by how many laser points hit them in the soil-present test scans.';
-    tr.append(th);
-    const total = summaries[0].groups[band].plants;
-    tr.insertCell().textContent = total;
-    for (const [index, result] of summaries.entries()) {
-      const cell = tr.insertCell();
-      const matched = result.groups[band].matched;
-      cell.textContent = total ? matched : '—';
-      if (total) {
-        const meter = document.createElement('meter');
-        meter.max = total;
-        meter.value = matched;
-        meter.setAttribute('aria-label', label + ' matched');
-        meter.setAttribute('aria-valuetext', matched + ' of ' + total + ' plants');
-        cell.dataset.helpLabel = 'Matches at cutoff '+report.thresholds[index];
-        cell.dataset.help = matched+' of '+total+' plants in this group had a pin within '+cm+' cm ('+(100 * matched / total).toFixed(1)+'%).';
-        cell.append(meter);
-      }
-    }
-  }
-  $('coverageFoot').replaceChildren();
-  const tr = $('coverageFoot').insertRow();
-  const th = document.createElement('th');
-  th.scope = 'row';
-  th.colSpan = 2;
-  th.textContent = 'Extra pins';
-  tr.append(th);
-  th.dataset.help = 'Total unmatched final pins across the same soil-present scans, counted once per cutoff.';
-  for (const [index, result] of summaries.entries()) {
-    const cell = tr.insertCell();
-    cell.textContent = result.extraPins;
-    cell.dataset.helpLabel = 'Extra pins at cutoff '+report.thresholds[index];
-    cell.dataset.help = 'Pins at this cutoff that did not match a labeled plant within '+cm+' cm.';
-  }
-}
-function displayCutoffChanges() {
-  const cm = Number($('cutoffDistance').value);
-  const signed = count => count > 0 ? '+'+count : String(count);
-  const scoreAtDistance = row => row.scores.find(score => score.cm === cm);
-  displayCutoffCoverage(cm);
-  $('cutoffRows').replaceChildren();
-  for (const dataset of report.datasets) {
-    const rows = report.rows.filter(row => row.seed === dataset.seed);
-    const baseline = scoreAtDistance(rows.find(row => row.threshold === 0.5));
-    for (const row of rows.sort((a, b) => a.threshold - b.threshold)) {
-      if (row.threshold === 0.5) continue;
-      const score = scoreAtDistance(row);
-      const tr = $('cutoffRows').insertRow();
-      for (const value of [row.seed, row.threshold, signed(score.tp - baseline.tp), signed(score.fp - baseline.fp)]) {
-        tr.insertCell().textContent = value;
-      }
-    }
-  }
-}
 $('cutoffDistance').addEventListener('change', () => {
   if (report?.comparison !== 'cutoffs') return;
-  displayCutoffChanges();
+  displayCutoffChanges(report);
   const url = new URL(report.replayUrl);
   url.searchParams.set('cutoffDistance', $('cutoffDistance').value);
-  report.replayUrl = $('replay').href = url.href;
+  updateReplay(url);
 });
 function fieldViewerUrl(settings, {seed, sensor, ground, tile}) {
   const query = new URLSearchParams({crop:settings.crop, ...plantSettings(settings), seed, sensor, ground, tile});
@@ -728,8 +669,7 @@ $('fieldMetric').addEventListener('change', () => {
   const url = new URL(report.replayUrl);
   if ($('fieldMetric').value === 'mean') url.searchParams.delete('fieldMetric');
   else url.searchParams.set('fieldMetric', $('fieldMetric').value);
-  report.replayUrl = url.href;
-  $('replay').href = url.href;
+  updateReplay(url);
   for (const link of document.querySelectorAll('#densityRepeats a, #heightRepeats a')) {
     const repeat = new URL(url);
     repeat.searchParams.set('validationRayBudget', new URL(link.href).searchParams.get('validationRayBudget'));
@@ -739,6 +679,7 @@ $('fieldMetric').addEventListener('change', () => {
 // Give each fit a stable column even when execution order reverses on seed two.
 function boxFits(seed) {
   const rows = report.rows.filter(row => row.seed === seed);
+  if (report.comparison === 'cutoffs') return report.thresholds.map(value => rows.find(row => row.threshold === value));
   if (report.comparison === 'epochs') {
     const lengths = report.settings.epochCounts;
     return [lengths[0],lengths.at(-1)].map(epochs => rows.find(row => row.epochs === epochs));
@@ -868,7 +809,8 @@ $('benchForm').onsubmit = async event => {
       ?? (geometry.plantArchitecture >= 2 ? 'Seeded mix' : 'Original canopy');
   $('scoreScope').textContent = 'Held-out plants · '+cropProfile(crop).name+' · '+stage;
   if (compareLayouts) settings.validationSensorModes = [...layoutNames.keys()];
-  const thresholds = comparison === 'cutoffs' ? [.35, .5, .65] : [.5];
+  const thresholds = comparison === 'cutoffs' ? cutoffControls.thresholds() : [.5];
+  const customCutoff = comparison === 'cutoffs' && thresholds.length === 2;
   const rows=[],datasets=[];
   const livePreview=$('livePreview').checked;
   const view=livePreview ? watch : null;
@@ -952,6 +894,7 @@ $('benchForm').onsubmit = async event => {
             ...(featureMode ? {featureMode} : {}),
             ...(peakAveraging ? {peakAveraging} : {}),
             ...(compareLayouts?{validationSensorMode:validationLayout,sharedFitSeed:runSeed,reusedFit:reuseFit}:{}),
+            ...(customCutoff ? {sharedFitSeed:runSeed, reusedFit:threshold !== cuts[0]} : {}),
             model, backend:fit.backend, datasetIndex, minimumHeight, trainingRayBudget, epochs, trainingLoss:fit.loss.at(-1), threshold, seed:runSeed, generationMs, trainingMs,
             scoringMs:performance.now()-scoringStart, adapter:fit.adapter,
             meanF1:result.meanF1, scores:result.scores, countError:result.countError, byGround:result.byGround, byField:result.byField, tiles:result.tiles
@@ -985,6 +928,7 @@ $('benchForm').onsubmit = async event => {
     if (scoreGround.value !== 'all') replay.searchParams.set('scoreGround',scoreGround.value);
     if (scoreDistance.value !== '15' || sharedDistance === '15') replay.searchParams.set('scoreDistance', scoreDistance.value);
     if (settings.epochs !== undefined && settings.epochs !== 40) replay.searchParams.set('epochs', settings.epochs);
+    if (customCutoff) replay.searchParams.set('trialCutoff', thresholds[1]);
     if (comparison === 'cutoffs') replay.searchParams.set('cutoffDistance', $('cutoffDistance').value);
     $('replay').href = replay.href;
     $('replay').hidden = false;
@@ -996,10 +940,11 @@ $('benchForm').onsubmit = async event => {
     if (comparison === 'heights') displayHeightStudy();
     if (comparison === 'density') displayDensityStudy();
     if (comparison === 'heights' || comparison === 'density') displayValidationComparison();
-    if (comparison === 'models' || comparison === 'heights' || comparison === 'features' || comparison === 'epochs' || compareSampling || compareForms) {
+    if (comparison === 'models' || comparison === 'heights' || comparison === 'features' || comparison === 'epochs' || customCutoff || compareSampling || compareForms) {
       const heights = comparison === 'heights';
       $('pairTitle').textContent = heights ? 'Which plants changed match when the peak height dropped?' :
         comparison === 'epochs' ? 'Which plants changed between the shortest and longest fits?' :
+        customCutoff ? 'Which plants changed match at the trial cutoff?' :
         compareSampling ? 'Which plants did each training sample find?' :
         comparison === 'features' ? 'Which plants changed match with local ground?' :
         compareForms ? 'Which plants did each training mix find?' : 'Which plants did each model find?';
@@ -1035,9 +980,9 @@ $('benchForm').onsubmit = async event => {
     $('export').disabled=false;
     let stamp = '';
     if (comparison === 'cutoffs') {
-      displayCutoffChanges();
+      displayCutoffChanges(report);
       $('cutoffChanges').hidden = false;
-      $('cutoffChanges').open = requested.has('cutoffDistance');
+      $('cutoffChanges').open = customCutoff || requested.has('cutoffDistance');
       try {
         localStorage.setItem('crop-trainer-cutoff-scout', 'earned');
         stamp = ' Cutoff scout stamp earned.';

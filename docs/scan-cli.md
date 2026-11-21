@@ -22,7 +22,7 @@ node cli/score-scan.mjs weights.json plot.ply trial-055.json --labels centers.cs
 node cli/score-scan.mjs weights.json plot.ply trial-020.json --labels centers.csv --score-cutoff 0.20
 ```
 
-Compare `evaluation.scores` at the same distance. Each trial reports its effective cutoff in `detector.threshold` and the original in `detector.savedThreshold`. The input hashes identify the files used by both runs. Omit `--score-cutoff` to use the value stored in the weights.
+A single trial JSON contains both answers. Read `savedCutoff.evaluation.scores` for the stored cutoff and `evaluation.scores` for the trial. Compare matches, extra pins and misses at the same distance. With a scan alone, compare `savedCutoff.pins` and `pins` for their locations and scores. With an empty survey, every predicted pin counts as extra. Each trial reports its effective cutoff in `detector.threshold` and the original in `detector.savedThreshold`. The input hashes identify the files used by both runs. Omit `--score-cutoff` to use the value stored in the weights.
 
 ## Align a surveyed plot
 

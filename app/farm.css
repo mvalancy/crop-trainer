@@ -392,11 +392,16 @@ tbody tr:nth-child(even) { background: #f6f8f0; }
 .testSlope .testInputs { grid-template-columns: repeat(2,minmax(0,1fr)); max-width: 28rem; }
 .testFrame legend { font-weight: 650; padding-right: .5rem; }
 #testTomatoExample .action { align-items: flex-end; }
+.testExampleReceipt { margin-top: .85rem; padding: .75rem .9rem; border-inline-start: 3px solid #86a285; background: var(--wash); }
+.testExampleReceipt p { margin: 0 0 .35rem; }
+#testTomatoExample .testExampleReceipt .action { align-items: center; gap: .45rem 1rem; }
+.testExampleReceipt a { display: inline-flex; align-items: center; min-height: 2.75rem; }
 .testFrame .testInputs { grid-template-columns: repeat(4,minmax(0,1fr)); }
 #testStatus { margin: 1rem 0; color: var(--muted); }
 .testView { display: grid; grid-template-areas: "plot controls" "plot readout"; grid-template-rows: auto 1fr; grid-template-columns: minmax(0,1.1fr) minmax(0,1fr); gap: 1rem 2rem; align-items: start; margin-block: 1rem; }
 .testView figure { grid-area: plot; min-width: 0; }
 .testMapControls { grid-area: controls; display: flex; flex-wrap: wrap; align-items: end; gap: .65rem 1rem; }
+.testMapControls > * { max-width: 100%; }
 .testMapControls label { min-width: 0; max-width: 100%; }
 .testReadout { grid-area: readout; }
 .testReadout > :first-child { margin-top: 0; }
@@ -407,6 +412,20 @@ tbody tr:nth-child(even) { background: #f6f8f0; }
 .mapKey .extraPin { background: #a1381e; }
 .mapKey .matchedCenter { border: 2px solid #644883; border-radius: 50%; }
 .mapKey .missedCenter { color: #644883; font: bold 1rem/.65rem system-ui; }
+.mapKey .gainedCenter, .mapKey .lostCenter { width: .9rem; height: .9rem; border-radius: 50%; color: white; background: #00664e; text-align: center; font: bold .83rem/.9rem system-ui; }
+.mapKey .lostCenter { background: #a1381e; }
+.mapKey .steadyCenter { width: .55rem; height: .55rem; border: 1px solid #798577; border-radius: 50%; }
+.testCutoffCard { margin-top: 1rem; padding: .85rem; border: 1px solid var(--line); border-radius: .5rem; }
+.testCutoffCard h4 { margin: 0 0 .5rem; }
+.testCutoffCard table { table-layout: fixed; }
+.testCutoffCard :is(th,td) { padding: .4rem .2rem; overflow-wrap: anywhere; text-align: right; }
+.testCutoffCard th:first-child { width: 38%; text-align: left; }
+.testCutoffCard thead th { background: transparent; vertical-align: bottom; font-weight: 500; }
+.testCutoffCard thead th span { display: block; font-size: .9rem; font-weight: 700; }
+.testCutoffCard tbody th { background: transparent; font-size: inherit; font-weight: 550; }
+.testCutoffCard td:last-child { font-weight: 700; }
+.testCutoffCard tbody tr:last-child > * { border-bottom: none; }
+.testResultActions { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-block: .75rem; }
 .testStageCard { margin-block: 1rem; padding: .9rem 1rem; background: var(--wash); border-radius: .5rem; }
 .testStageCard h4 { margin: 0; }
 .testStageCard .hint { margin: .2rem 0 .7rem; }
@@ -420,6 +439,8 @@ tbody tr:nth-child(even) { background: #f6f8f0; }
 #testMetrics caption { text-align: left; font-weight: 650; }
 @media (max-width: 650px) {
   .testView { grid-template-areas: "controls" "plot" "readout"; grid-template-columns: 1fr; grid-template-rows: auto; }
+  .testMapControls { column-gap: .4rem; }
+  .testMapControls select { padding-inline: .4rem; }
   .testFrame .testInputs { grid-template-columns: repeat(2,minmax(0,1fr)); }
 }
 

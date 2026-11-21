@@ -6,7 +6,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="../art/crop-mark-32.png">
 <link rel="icon" type="image/svg+xml" sizes="any" href="../art/crop-mark.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="../art/crop-touch.png">
-<link rel="stylesheet" href="../app/farm.css?v=map-distance1">
+<link rel="stylesheet" href="../app/farm.css?v=saved-cutoff1">
 <link rel="stylesheet" href="../app/help.css?v=context-help2">
 <link rel="stylesheet" href="./ui/training-layout.css?v=epoch2">
 <link rel="stylesheet" href="./ui/network-diagram.css">
@@ -302,7 +302,9 @@
 <p class="hint">Can a longer-trained detector find more seedlings in the same ring scan? Load 110 labeled plants and a saved model. This fills the inputs below and runs Field Test.</p>
 <div class="action"><label>Saved tomato fit<select id="testExample" data-help="Both networks learned on the same six synthetic training fields. Only their number of training epochs differs."><option value="tomato-40">40 epochs</option><option value="tomato-640">640 epochs</option></select></label>
 <button type="button" id="testRunExample" disabled data-help="Replace the selected files with this synthetic scan, its labels and the chosen tomato weights. Use the saved cutoff and level ground in metres, then find plants.">Run example</button></div>
-<p class="hint" id="testExampleResult" hidden><span role="status"></span> <a href="#testResults" data-help="Jump to the map, missed seedlings and per-distance scores from this run.">Inspect map and scores</a></p>
+<div id="testExampleResult" class="testExampleReceipt" hidden><p role="status"></p>
+<div class="action"><a href="#testResults" data-help="Jump to the map, missed seedlings and per-distance scores from this run.">Inspect map and scores</a>
+<button type="button" id="testExampleCutoff" hidden data-help="Keep this planting and the same weights. Compare the saved 0.50 cutoff with a 0.70 trial to see which seedlings change.">Try 0.70 on this planting</button></div></div>
 </fieldset>
 <div class="testSource">
 <label>Detector<select id="testModelSource" data-help-label="Field test detector" data-help="Choose the completed fit in this tab, or load a weights JSON from an earlier run. The same detector can be used on multiple plot scans."><option value="file">Saved weights JSON</option><option value="current" disabled>Most recent completed fit</option></select></label>
@@ -337,7 +339,7 @@
 <p class="hint">On a bed with a uniform slope, enter the measured rise in each direction. A grade of 5 means the ground rises 5 cm per metre. Negative values slope downhill.</p>
 <div class="testInputs"><label>Grade along X (%)<input type="number" id="testGradeX" data-help-label="Grade along X" data-help="A value of 5 means the ground at the same Y rises by 5 cm for each metre toward positive X. Use a negative number for downhill and zero for level ground." step="any" value="0" required></label><label>Grade along Y (%)<input type="number" id="testGradeY" data-help-label="Grade along Y" data-help="A value of −2 means the ground at the same X falls by 2 cm for each metre toward positive Y. Enter a measured grade when the plot is approximately planar." step="any" value="0" required></label></div></details></fieldset>
 <details id="testCutoffSettings" class="testFrame"><summary data-help="Try a different minimum model score on the loaded scan using the same weights.">Try a different model cutoff</summary>
-<div class="trialCutoff"><p class="hint" id="testCutoffHelp">Leave the cutoff blank to use the saved value. A lower cutoff lets more candidates through to spacing. Select Find plants to see which pins change.</p>
+<div class="trialCutoff"><p class="hint" id="testCutoffHelp">The cutoff is the minimum score a peak needs to earn a pin. Enter a value and choose <strong>Find plants</strong> to compare with the saved cutoff on the same scan. Adding reference centers shows which plants gain or lose a match.</p>
 <div class="cutoffControls"><label>Score cutoff<input type="number" id="testCutoff" min="0" max="1" step="any" inputmode="decimal" placeholder="Saved" aria-describedby="testCutoffHelp" data-help="Enter a number from 0 to 1. This changes the trained model’s minimum score for this field test."></label>
 <button type="button" id="testResetCutoff" data-help="Clear the trial value. The next field test uses the cutoff stored with these weights.">Use saved cutoff</button></div></div></details>
 <div class="action"><button id="testDetect" class="primary" disabled>Find plants</button><button id="testCancel" type="button" hidden>Cancel field test</button></div>
@@ -346,17 +348,22 @@
 <div id="testResults" hidden>
 <h3 id="testSummary">Detections</h3>
 <div class="testView">
-<div class="testMapControls"><label>Show pins from<select id="testOverlay" data-help-label="Field test pin method" data-help="Compare trained model pins with peaks chosen by height. Apple scans also offer a geometric locator that looks for a tree base across several height bands."><option value="model">Trained model</option><option value="baseline">Height-only baseline</option></select></label>
+<div class="testMapControls"><label>Map view<select id="testOverlay" data-help-label="Field test map view" data-help="Show the trained model or a simpler pin-placement rule. Trying a cutoff also lets you view the original model pins and see which surveyed plants gained or lost a match."><option value="model">Trained model</option><option value="baseline">Height-only baseline</option></select></label>
 <label id="testDistanceControl" hidden>Match distance<select id="testMatchDistance" data-help-label="Map matching distance" data-help="Choose how close a pin must land to a reference center to count as a match. The pins stay in place as the map updates."><option value="7.5">7.5 cm</option><option value="10">10 cm</option><option value="15" selected>15 cm</option></select></label></div>
 <figure><canvas id="testMap" width="500" height="500" aria-label="Top view of the imported scan and plant detections" role="img"></canvas>
-<figcaption id="testLegend"><span class="mapKey" id="testMatchedKey" hidden><span><i class="matchedPin"></i>Matched pin</span><span><i class="extraPin"></i>Extra pin</span><span><i class="matchedCenter"></i>Matched center</span><span><i class="missedCenter" aria-hidden="true">×</i>Missed center</span></span><span id="testUnscoredKey">Green dots mark predicted centers. Grey dots are laser returns.</span></figcaption></figure>
+<figcaption id="testLegend"><span class="mapKey" id="testMatchedKey" hidden><span><i class="matchedPin"></i>Matched pin</span><span><i class="extraPin"></i>Extra pin</span><span><i class="matchedCenter"></i>Matched center</span><span><i class="missedCenter" aria-hidden="true">×</i>Missed center</span></span><span class="mapKey" id="testChangedKey" hidden><span><i class="gainedCenter" aria-hidden="true">+</i>Gained match</span><span><i class="lostCenter" aria-hidden="true">−</i>Lost match</span><span><i class="steadyCenter" aria-hidden="true"></i>Same status</span></span><span id="testUnscoredKey">Green dots mark predicted centers. Grey dots are laser returns.</span></figcaption></figure>
 <div class="testReadout"><p id="testOutcome" aria-live="polite"></p><p class="hint" id="testRule"></p>
 <p id="testOrchardHelp" hidden>The orchard locator looks for returns at several heights around a tree base. Its support score measures this geometric evidence. <a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/orchard-bases.md">Read the orchard study</a></p>
+<section id="testCutoffComparison" class="testCutoffCard" aria-labelledby="testCutoffTitle" hidden>
+<h4 id="testCutoffTitle">What changed with this cutoff?</h4>
+<table aria-labelledby="testCutoffTitle"><thead><tr><th scope="col" id="testCutoffScope" data-help="Match each planted center once within the selected distance. A scan without reference centers can show the total predicted pins.">Outcome</th><th scope="col" data-help="The model uses the score cutoff stored in its weights file.">Saved <span id="testSavedValue"></span></th><th scope="col" data-help="The same model scores the same scan at the cutoff you entered.">Trial <span id="testTrialValue"></span></th><th scope="col" data-help="Trial count minus saved count. A plus means more and a minus means fewer.">Change</th></tr></thead><tbody id="testCutoffRows"></tbody></table>
+</section>
 <section id="testStages" class="testStageCard" aria-labelledby="testStagesTitle" hidden>
 <h4 id="testStagesTitle">Where did the model lose plants?</h4>
 <p id="testStageSummary" class="hint"></p>
 <dl id="testStageRows" class="testStageRows"></dl></section>
-<button type="button" id="testExport" data-help-label="Download field test JSON" data-help="Save predicted positions in local and file coordinates along with the scan frame and file fingerprints. Providing reference centers adds per-distance scores.">Download field test JSON</button></div></div>
+<div class="testResultActions"><button type="button" id="testAdjustCutoff" data-help="Open the score cutoff setting for these weights and this scan. Enter a new value and choose Find plants to compare the two cutoffs.">Adjust cutoff</button>
+<button type="button" id="testExport" data-help-label="Download field test JSON" data-help="Save predicted positions in local and file coordinates along with the scan frame and file fingerprints. Providing reference centers adds per-distance scores.">Download field test JSON</button></div></div></div>
 <div id="testMetrics" class="tableScroll" hidden><table><caption>One-to-one matches against supplied centers</caption><thead><tr><th>Method</th><th>Distance</th><th>Matched</th><th>Extra</th><th>Missed</th><th>Precision</th><th>Recall</th><th>F1</th></tr></thead><tbody id="testRows"></tbody></table></div>
 
 </div>
@@ -374,6 +381,6 @@
 </main>
 <footer class="siteFoot"><span>Created by Matthew Valancy</span>
 <div><a data-help="Open commands and reproducibility instructions for an agent working with Crop Trainer." href="../AGENTS.md">Agent quickstart</a><a data-help="View the farming challenges and achievements stored on this device." href="../#missions">Farm journal</a><a data-help="Read the terms for using and sharing Crop Trainer’s source code." href="../LICENSE">MIT license</a></div><small class="contextHint"><span class="hoverHint">Hover or focus a button or score for help.</span><span class="touchHint">Tap a score or hold a button for help. A quick tap runs the action.</span></small></footer>
-<script type="module" src="./main.js?v=epoch2"></script>
+<script type="module" src="./main.js?v=saved-cutoff1"></script>
 </body>
 </html>

@@ -8,6 +8,8 @@ For a first try, download the examples next to the file pickers. Select the weig
 
 With **Trained model** selected, the three bars follow the map’s match distance. In the practice plot, tightening it from 15 to 7.5 cm reduces the number of plants within reach of a peak from 185 to 125. After the cutoff and spacing, the corresponding counts are 137 and 88. The same 188 final pins were scored at both distances.
 
+To test a new cutoff, start with a saved tomato fit, run the example, then choose **Try 0.70 on this planting**. At 15 cm the 640-epoch fit goes from 53 matches and 23 extra pins to 26 matches and five extras. In **Map view**, compare the saved cutoff with the trial and inspect which plants changed. On your own plot, enter a trial value in the cutoff control and run **Find plants**. A trial scores both cutoffs on the same returns with the same weights and spacing. [Try the two-click example](https://mvalancy.github.io/crop-trainer/trainer/?fieldExample=tomato-640#field-test)
+
 The export stores the map assignments in `evaluation.pinByReferenceAtCm` and the stage counts in `stagesAtCm`, keyed by centimeters. The 15 cm results are also available under the older `evaluation.pinByReference15` and `stages15cm` keys.
 
 | To inspect | Open |

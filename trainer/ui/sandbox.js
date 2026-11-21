@@ -1,5 +1,5 @@
 import {networkShape,featureNames,featureNamesFor} from '../models/network.js?v=terrain1';
-import {createNetworkDiagram} from './network-diagram.js?v=detector-flow1';
+import {createNetworkDiagram} from './network-diagram.js?v=resize2';
 export {featureNames};
 
 export const runPresets = {

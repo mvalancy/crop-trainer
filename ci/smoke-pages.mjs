@@ -579,6 +579,32 @@ try {
     assert.equal(example.references.length,110);
     const at15 = example.evaluation.scores.find(score=>score.cm===15);
     assert.deepEqual([at15.tp,at15.fp],[matches,extras]);
+    if (fit === 'tomato-640') {
+      await page.locator('#testExampleCutoff').click();
+      const trial = await downloadJSON(page.locator('#testExport'));
+      assert.deepEqual(trial.files,example.files);
+      assert.deepEqual(trial.savedCutoff.pins,example.pins);
+      assert.deepEqual(trial.savedCutoff.evaluation,example.evaluation);
+      for (const distance of [7.5,15]) {
+        await page.locator('#testMatchDistance').selectOption(String(distance));
+        const before = example.evaluation.scores.find(s=>s.cm===distance);
+        const after = trial.evaluation.scores.find(s=>s.cm===distance);
+        assert.deepEqual([after.tp,after.fp,after.fn],distance===15?[26,5,84]:[23,8,87]);
+        const deltas = await page.locator('#testCutoffRows tr').evaluateAll(rows=>rows.map(tr=>
+          Array.from(tr.cells).slice(1).map(td=>Number(td.textContent.replace('−','-')))));
+        assert.deepEqual(deltas,['tp','fp','fn'].map(key=>[before[key],after[key],after[key]-before[key]]));
+        await page.locator('#testOverlay').selectOption('changes');
+        const lost = distance===15 ? 27 : 21;
+        assert.equal(await page.locator('#testOutcome').textContent(),
+          'At '+distance+' cm, 0 gained a match and '+lost+' lost a match. '+(110-lost)+' kept the same status.');
+        await page.locator('#testOverlay').selectOption('saved');
+        assert.ok((await page.locator('#testOutcome').textContent()).includes(before.tp+' of 110'));
+        await page.locator('#testOverlay').selectOption('model');
+        assert.ok((await page.locator('#testOutcome').textContent()).includes(after.tp+' of 110'));
+      }
+      await page.locator('#testAdjustCutoff').click();
+      assert.equal(await page.locator('#testCutoff').evaluate(input=>input===document.activeElement && input.closest('details').open),true);
+    }
   }
   console.log('Both saved tomato fits placed the documented pins on the same regenerated seedling scan.');
 
@@ -699,6 +725,26 @@ try {
       return rect.width>0 && rect.left>=0 && rect.right<=innerWidth;
     })), 'Each phone score and label must fit without sideways scrolling');
   console.log('Paired benchmark exported both seeds, three cutoffs and three matching distances.');
+
+  await open('benchmark/?comparison=cutoffs&trialCutoff=.70&crop=tomato&seed=1603129&epochs=3&live=off');
+  assert.equal(await page.locator('#cutoffSchedule').inputValue(),'pair');
+  await page.locator('#run').click();
+  const cutoffPair=await downloadJSON(page.locator('#export'));
+  assert.deepEqual(cutoffPair.thresholds,[.5,.7]);
+  assert.deepEqual(cutoffPair.rows.map(r=>[r.seed,r.threshold]),[[1603129,.5],[1603129,.7],[1603130,.7],[1603130,.5]]);
+  const heading=await page.locator('#coverageHead [data-cutoff]').allTextContents();
+  assert.deepEqual(heading,['At 0.50','At 0.70']);
+  const cm=Number(await page.locator('#cutoffDistance').inputValue());
+  const totals=cutoffPair.thresholds.map(threshold=>cutoffPair.rows.filter(row=>row.threshold===threshold)
+    .reduce((sum,row)=>sum+row.byGround.find(g=>g.ground).scores.find(s=>s.cm===cm).tp,0));
+  const displayed=await page.locator('#coverageRows tr').evaluateAll(rows=>
+    [2,3].map(column=>rows.reduce((sum,row)=>sum+Number(row.cells[column].textContent.replace('—','0')),0)));
+  assert.deepEqual(displayed,totals,'cutoff columns should account for all matched plants with ground present');
+  const trialLink=await page.locator('#results a').nth(1).evaluate(a=>a.href);
+  assert.equal(new URL(trialLink).searchParams.get('threshold'),'0.7');
+  await page.goto(trialLink);await page.locator('#run:enabled').waitFor();
+  assert.equal(Number(await page.locator('#threshold').inputValue()),.7);
+  console.log('Custom cutoff columns matched the soil-present results and linked to the selected Training Shed threshold.');
 
   await open('benchmark/?comparison=features&crop=tomato&plantArchitecture=2&plantForm=mixed&validationPlantForm=seedling&seed=23671943&sensor=reference&validationSensor=os1-64&epochs=3&peakAveraging=occupied&live=off');
   assert.ok(await page.locator('#featureMode').isDisabled(),'the feature comparison fixes both contenders');

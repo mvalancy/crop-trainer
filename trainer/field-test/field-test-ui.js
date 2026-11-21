@@ -1,5 +1,6 @@
 const byId = id => document.getElementById(id);
 const rate = v => v === null ? '—' : (100*v).toFixed(1)+'%';
+const cutoffText = value => Number.isInteger(value*100) ? value.toFixed(2) : String(value);
 
 // Header descriptions also explain the values in their column.
 const scoreHelp = {
@@ -23,7 +24,7 @@ function explainFieldTest() {
     ['#testStatus','Field test status','Shows which input the field test needs, what it is processing, or which file and method produced the visible plot.'],
     ['#testSummary','Predicted plant count','The selected method placed this many pins. Multiple pins can land near one plant, and a plant can receive no pin.'],
     ['#testMap','Field test map','Top view of a 10 m square. Moving right increases plot X and moving up increases plot Y. The grey dots show a sample of the scan.'],
-    ['#testLegend','Map symbols','The symbols distinguish matched plants, missed centers and extra pins at the distance selected above the map. Grey dots are sampled laser returns.'],
+    ['#testLegend','Map symbols','The key follows the selected map view. Compare pin locations or switch to Changed matches to see which reference centers gained or lost a match. Grey dots are sampled laser returns.'],
     ['#testOutcome','Field test outcome','Compare the selected method’s pins with the reference centers. Every plant and pin can match once. With only a scan and weights, the map shows the predicted locations.'],
     ['#testRule','Pin placement rule','The height floor controls which peaks qualify. The saved model then uses a score cutoff. Spacing controls how close two surviving pins can be.'],
     ['#testMatchDistance','Map and stage matching distance','Choose how close an estimated pin must land to a surveyed center. Changing the distance pairs pins and centers again and updates the model’s stage bars.'],
@@ -58,12 +59,18 @@ function methodsFor(report) {
     : 'trial score cutoff '+detector.threshold+' (saved '+detector.savedThreshold+')';
   const ground = detector.featureMode==='local-ground' ? ' · height above nearby low returns and the spread of surrounding heights' : '';
   const methods={
-    model:{label:'Trained model',pins:report.pins,evaluation:report.evaluation,
+    model:{label:report.savedCutoff ? 'Trial cutoff · '+cutoffText(detector.threshold) : 'Trained model',pins:report.pins,evaluation:report.evaluation,
       help:'The saved detector scores each candidate using the shape of nearby scan points. The model cutoff and minimum spacing determine which pins remain.',
       rule:peaks+ground+' · '+cutoff+' · '+spacing+'.'},
-    baseline:{label:'Height only',pins:report.baselinePins,evaluation:report.baselineEvaluation,
+  };
+  if (report.savedCutoff) methods.saved = {
+    label:'Saved cutoff · '+cutoffText(detector.savedThreshold),...report.savedCutoff,
+    help:'These pins use the score cutoff stored with the model. Compare them with the trial pins on this same scan.',
+    rule:peaks+ground+' · saved score cutoff '+detector.savedThreshold+' · '+spacing+'.'
+  };
+  methods.baseline={label:'Height only',pins:report.baselinePins,evaluation:report.baselineEvaluation,
       help:'This rule keeps the tallest candidate peaks first and removes neighboring peaks that fall inside the crop’s spacing.',
-      rule:peaks+' · peaks ranked by smoothed height · '+spacing+'.'}
+      rule:peaks+' · peaks ranked by smoothed height · '+spacing+'.'
   };
   if (report.orchard) methods.orchard={
     label:'Orchard base locator',pins:report.orchard.pins,evaluation:report.orchardEvaluation,
@@ -73,7 +80,7 @@ function methodsFor(report) {
   return methods;
 }
 
-function drawPlot(report, sampled, pins, assignment) {
+function drawPlot(report, sampled, pins, assignment, changes) {
   const canvas = byId('testMap'), ctx = canvas.getContext('2d');
   const inset = 26, side = canvas.width-2*inset;
   const px = x => inset+x*side/10, py = y => inset+(10-y)*side/10;
@@ -95,6 +102,21 @@ function drawPlot(report, sampled, pins, assignment) {
   ctx.fillStyle = '#acb79f';
   for (let i = 0; i < sampled.length; i += 2) {
     ctx.fillRect(px((sampled[i]-origin[0])*scale),py((sampled[i+1]-origin[1])*scale),1.6,1.6);
+  }
+  if (changes) {
+    report.references.forEach(({localX,localY},i) => {
+      const x = px(localX), y = py(localY), change = changes[i];
+      ctx.beginPath();
+      ctx.arc(x,y,change ? 5.5 : 2.6,0,2*Math.PI);
+      if (!change) {
+        ctx.strokeStyle = '#798577'; ctx.lineWidth = 1.3; ctx.stroke(); return;
+      }
+      ctx.fillStyle = change > 0 ? '#00664e' : '#a1381e'; ctx.fill();
+      ctx.beginPath(); ctx.moveTo(x-3,y); ctx.lineTo(x+3,y);
+      if (change > 0) {ctx.moveTo(x,y-3); ctx.lineTo(x,y+3);}
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.6; ctx.stroke();
+    });
+    return;
   }
   const assigned = new Set(assignment);
   if (report.references) {
@@ -129,6 +151,32 @@ function drawPlot(report, sampled, pins, assignment) {
       ctx.fillStyle = '#00664e'; ctx.beginPath(); ctx.arc(x,y,2.6,0,2*Math.PI); ctx.fill();
     }
   });
+}
+
+function renderCutoffComparison(report, distance) {
+  const saved = report.savedCutoff;
+  const rows = byId('testCutoffRows');
+  const savedScore = saved.evaluation?.scores.find(score => score.cm===distance);
+  const trialScore = report.evaluation?.scores.find(score => score.cm===distance);
+  byId('testCutoffScope').textContent = trialScore ? 'At '+distance+' cm' : 'On this scan';
+  byId('testSavedValue').textContent = cutoffText(report.detector.savedThreshold);
+  byId('testTrialValue').textContent = cutoffText(report.detector.threshold);
+  rows.replaceChildren();
+  const items = trialScore ? [
+    ['Matched plants', savedScore.tp, trialScore.tp, scoreHelp.Matched],
+    ['Extra pins', savedScore.fp, trialScore.fp, scoreHelp.Extra],
+    ['Missed plants', savedScore.fn, trialScore.fn, scoreHelp.Missed]
+  ] : [['Predicted pins', saved.pins.length, report.pins.length, 'The number of pins placed on this scan. Add reference centers to check individual matches.']];
+  for (const [label, before, after, help] of items) {
+    const row = rows.insertRow();
+    const header = document.createElement('th');
+    header.scope = 'row'; header.textContent = label; header.dataset.help = help; row.append(header);
+    const delta = after-before;
+    for (const count of [before, after]) row.insertCell().textContent = count.toLocaleString();
+    const cell = row.insertCell();
+    cell.textContent = (delta>0 ? '+' : delta<0 ? '−' : '')+Math.abs(delta).toLocaleString();
+    cell.dataset.help = label+' with the trial cutoff ('+after+') minus the saved cutoff ('+before+').';
+  }
 }
 
 function renderStages(stages, centers, distance) {
@@ -193,6 +241,7 @@ export function initFieldTest(downloadJSON) {
   const cutoff = byId('testCutoff'), resetCutoff = byId('testResetCutoff');
   const status = byId('testStatus'), results = byId('testResults'), cancel = byId('testCancel');
   const example = byId('testExample'), tryExample = byId('testRunExample');
+  const exampleCutoff = byId('testExampleCutoff');
   const sharedExample = new URLSearchParams(location.search).get('fieldExample');
   if ([...example.options].some(option => option.value === sharedExample)) example.value = sharedExample;
   const fields = [...form.querySelectorAll('input,select')];
@@ -219,29 +268,43 @@ export function initFieldTest(downloadJSON) {
   function renderOverlay() {
     if (!report) return;
     const selected = byId('testOverlay').value;
-    const method = methodsFor(report)[selected];
+    const showChanges = selected==='changes';
+    const method = methodsFor(report)[showChanges ? 'model' : selected];
     const {pins,evaluation} = method;
     const target = selected==='orchard' ? 'base' : 'center';
-    byId('testSummary').textContent = method.label+' · '+pins.length+' predicted '+report.crop+' '+target+(pins.length===1?'':'s');
-    byId('testRule').textContent = method.rule;
-    byId('testRule').dataset.help = method.help;
+    byId('testSummary').textContent = showChanges ? 'Which plants changed?' : method.label+' · '+pins.length+' predicted '+report.crop+' '+target+(pins.length===1?'':'s');
+    byId('testRule').textContent = showChanges ? 'Each symbol marks a surveyed plant. A plus means the trial found it, a minus means it lost its match.' : method.rule;
+    byId('testRule').dataset.help = showChanges ? 'A plant gains or loses a match when one cutoff places a matching pin and the other does not.' : method.help;
     byId('testOrchardHelp').hidden = selected!=='orchard';
     const distance = Number(byId('testMatchDistance').value);
     const stages = selected==='model' && report.stagesAtCm?.[distance];
     byId('testStages').hidden = !stages;
     if (stages) renderStages(stages, report.references.length, distance);
     byId('testDistanceControl').hidden = !evaluation;
-    byId('testMatchedKey').hidden = !evaluation;
+    byId('testMatchedKey').hidden = !evaluation || showChanges;
     byId('testUnscoredKey').hidden = Boolean(evaluation);
+    byId('testChangedKey').hidden = !showChanges;
+    const modelView = selected==='model' || selected==='saved' || showChanges;
+    const comparison = byId('testCutoffComparison');
+    comparison.hidden = !modelView || !report.savedCutoff;
+    if (!comparison.hidden) renderCutoffComparison(report,distance);
+    byId('testAdjustCutoff').hidden = !modelView;
+    const assignment = evaluation?.pinByReferenceAtCm[distance];
+    let changes;
     let message = 'Add reference centers to score these predictions.';
-    if (evaluation) {
+    if (showChanges) {
+      const previous = report.savedCutoff.evaluation.pinByReferenceAtCm[distance];
+      changes = assignment.map((pin,i) => Number(pin>=0)-Number(previous[i]>=0));
+      const gained = changes.filter(change=>change>0).length, lost = changes.filter(change=>change<0).length;
+      message = 'At '+distance+' cm, '+gained+' gained a match and '+lost+' lost a match. '+(changes.length-gained-lost)+' kept the same status.';
+    } else if (evaluation) {
       const score = evaluation.scores.find(row=>row.cm===distance);
       message = score.tp+' of '+report.references.length+' reference centers matched within '+distance+' cm. '+
         score.fp+' extra '+(score.fp===1?'pin':'pins')+' · '+score.fn+' missed '+(score.fn===1?'center':'centers')+'.';
     }
     byId('testOutcome').textContent = message;
-    status.textContent = 'Showing '+method.label.toLowerCase()+' pins on '+report.files.scan.name+'.';
-    drawPlot(report,sampled,pins,evaluation?.pinByReferenceAtCm[distance]);
+    status.textContent = showChanges ? 'Comparing both cutoffs on '+report.files.scan.name+'.' : 'Showing '+method.label.toLowerCase()+' pins on '+report.files.scan.name+'.';
+    drawPlot(report,sampled,pins,assignment,changes);
   }
   function loadScan() {
     worker?.terminate(); worker = null;
@@ -254,7 +317,7 @@ export function initFieldTest(downloadJSON) {
       updateControls(); return;
     }
     status.textContent = 'Reading '+file.name+'…';
-    const active = worker = new Worker(new URL('./field-test-worker.js?v=stage-distance1',import.meta.url),{type:'module'});
+    const active = worker = new Worker(new URL('./field-test-worker.js?v=saved-cutoff1',import.meta.url),{type:'module'});
     updateControls();
     function fail(message) {
       if (active !== worker) return;
@@ -283,11 +346,15 @@ export function initFieldTest(downloadJSON) {
           updateControls(); return;
         }
         report = data.report;
-        byId('testOverlay').replaceChildren(...Object.entries(methodsFor(report)).map(([id,m])=>new Option(m.label,id)));
+        const overlayOptions = Object.entries(methodsFor(report)).map(([id,m])=>new Option(m.label,id));
+        if (report.savedCutoff && report.references?.length) overlayOptions.splice(2,0,new Option('Changed matches','changes'));
+        byId('testOverlay').replaceChildren(...overlayOptions);
         results.hidden = false; renderOverlay(); renderScores(report);
         if (exampleResultLabel) {
           const receipt = byId('testExampleResult');
-          receipt.querySelector('span').textContent = exampleResultLabel+' · '+byId('testOutcome').textContent;
+          const threshold = report.detector.threshold;
+          receipt.querySelector('[role="status"]').textContent = exampleResultLabel+' · cutoff '+cutoffText(threshold)+' · '+byId('testOutcome').textContent;
+          exampleCutoff.hidden = Boolean(report.savedCutoff) || threshold!==.50;
           receipt.hidden = false;
         }
       }
@@ -304,7 +371,18 @@ export function initFieldTest(downloadJSON) {
     exampleLoad = null;
     autoRunFile = null;
     exampleResultLabel = null;
+    exampleCutoff.hidden = true;
   }
+  exampleCutoff.addEventListener('click',() => {
+    if (!exampleResultLabel || !report || report.savedCutoff || running) return;
+    cutoff.value = '0.70';
+    exampleCutoff.hidden = true;
+    form.requestSubmit(byId('testDetect'));
+  });
+  byId('testAdjustCutoff').addEventListener('click',() => {
+    byId('testCutoffSettings').open = true;
+    cutoff.focus();
+  });
   tryExample.addEventListener('click',async () => {
     stopExampleLoad();
     clearReport();

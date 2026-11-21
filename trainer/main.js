@@ -1,8 +1,8 @@
 import {scanSession} from './generator/scan-session.js?v=plants3';
 import {setupPlantControls, setupValidationPlantForm, plantSettings} from './generator/plant-version.js?v=orchard4';
 import {createLiveScene} from './ui/live-scene.js?v=context-help2';
-import {initFieldTest} from './field-test/field-test-ui.js?v=tomato-example1';
-import {initSandbox, modelSettings, duration, trainInWorker, inspectWeights, runPresets, startingPreset} from './ui/sandbox.js?v=sampling1';
+import {initFieldTest} from './field-test/field-test-ui.js?v=saved-cutoff1';
+import {initSandbox, modelSettings, duration, trainInWorker, inspectWeights, runPresets, startingPreset} from './ui/sandbox.js?v=resize2';
 import {showSamplingReceipt} from './ui/sampling-receipt.js';
 import {createLossCurve} from './ui/loss-curve.js';
 import {MAX_SANDBOX_EPOCHS, trainerId, weightArtifact} from './models/network.js?v=terrain1';

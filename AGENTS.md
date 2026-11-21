@@ -59,7 +59,7 @@ Valid settings include 2–256 training fields, 1–128 validation fields, 1–1
 
 For a browser benchmark, open `/benchmark/`, select the crop, scanner and first seed, and run the comparison. Model, backend, epoch and cutoff comparisons share one dataset per seed. Training density builds a separate dataset for each training budget and pairs the held-out tiles. Expand **Scores at each matching distance** to see which pins matched, which were extra, and which plants were missed. Use **Link to these settings** after a run to open the same setup on another browser. The JSON includes this URL, timings and tile IDs. A localhost link uses the local server address. GPU rows include available adapter metadata. A software adapter exercises WebGPU kernels on the CPU. Record the device separately when reporting a physical GPU timing.
 
-To isolate the score cutoff, select **Detection score cutoffs**. This fits one CPU neural network per seed and scores the same weights and fields three times. Group the JSON rows by seed and threshold. Each group of three shares the generation and training costs. For a follow-up, pass the desired threshold in CLI settings and check the precision and recall change on fresh fields.
+To isolate the score cutoff, select **How does the cutoff change detections?** The benchmark fits one CPU neural network per seed. Use `/benchmark/?comparison=cutoffs&trialCutoff=0.70` to score its weights at 0.50 and 0.70 on the same fields. Omitting the trial cutoff in a replay link restores the original three values (0.35, 0.50 and 0.65). Group the JSON rows by seed and threshold. Each seed shares the generation and training costs across its rows. For a follow-up, pass the desired threshold in CLI settings and check the precision and recall change on fresh fields.
 
 For the cutoff, model and backend comparisons, **Epochs per fit** sets the training budget for every contender. Links without an epoch setting use 40. For example, open `/benchmark/?comparison=cutoffs&crop=artichoke&seed=621&epochs=100`. Under **What changes from the 0.50 cutoff?**, change the match distance to see the differences in matched plants and extra pins. Click a cutoff in Results to replay that CPU fit in the Training Shed. The replay preserves the cutoff, epoch count, crop, seed and scan layouts.
 
@@ -182,6 +182,12 @@ Training URLs accept `trainFields` and `valFields` to replay exact split sizes. 
 Use Training Shed URLs or settings JSON with `positiveSampling=form-soil` and `sampleLimit=600` to allocate a capped draw across growth forms and ground settings. In JSON, supply the limit as an even number from 24 to 48,000. Repeat with `positiveSampling=ordinary` for a simple shuffled control. Fix the seed, fields, cap, feature mode and optimizer. Both draws keep equal numbers of positive and background examples. The available class counts can limit the actual total. Inspect `stats.positiveExamplesByFormSoil` and `stats.samples` before interpreting the scores.
 
 Use `/benchmark/?comparison=sampling&sampleLimit=600` for two matched CPU runs. Replay individual rows in Training Shed. The fixed-field study also includes a growth-form-only control and a separate sample-budget experiment. [Tomato study, code and browser presets](docs/tomato-soil-sampling.md)
+
+### Choose a cutoff on separate plantings
+
+An override in Field Test or `cli/score-scan.mjs --score-cutoff` scores the saved cutoff and the trial from the same candidate scores. Compare `savedCutoff.evaluation.scores` against `evaluation.scores` at the chosen distance. In the unlabelled case both evaluations are null and both pin lists remain available.
+
+To reproduce per-fit selection, run `node benchmark/studies/tomato-fit-calibration.mjs calibrate > calibration.json` and then `node benchmark/studies/tomato-fit-calibration.mjs confirm calibration.json > confirmation.json`. The first phase fits three independent model pairs and freezes their thresholds before the second phase reads any test scans. To check how much the selection depends on four calibration plantings, run `node benchmark/studies/tomato-calibration-panels.mjs calibration.json`. [Criteria, seeds and results](docs/tomato-calibration.md)
 
 ### Compare training duration
 

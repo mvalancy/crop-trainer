@@ -1,20 +1,13 @@
-import {detectScan} from './inference.js?v=terrain1';
-import {checkScoreThreshold,measureStages} from '../models/data.js?v=stage-distance1';
+import {detectScan} from './inference.js?v=saved-cutoff1';
+import {measureStages} from '../models/data.js?v=stage-distance1';
 import {parseReferences,evaluatePins} from './references.js?v=map-distance1';
 import {MAX_PLY_POINTS} from './ply.js';
 
 export function runFieldTest({model,xyz,alignment,labels=null,tileId,thresholdOverride}) {
   if (!xyz || xyz.length/3 > MAX_PLY_POINTS) throw Error('Choose a scan with up to 1,000,000 points.');
-  let detector = model;
-  if (thresholdOverride !== undefined) {
-    checkScoreThreshold(model?.threshold);
-    checkScoreThreshold(thresholdOverride);
-    detector = {...model,threshold:thresholdOverride};
-  }
   let learnedStages;
   const captureStages = stages => { learnedStages = stages; };
-  const result = detectScan(xyz,detector,alignment,labels === null ? undefined : captureStages);
-  if (thresholdOverride !== undefined) result.detector.savedThreshold = model.threshold;
+  const result = detectScan(xyz,model,alignment,labels === null ? undefined : captureStages,thresholdOverride);
   if (labels === null) return {...result,references:null,evaluation:null,baselineEvaluation:null,stagesAtCm:null,stages15cm:null,
     ...(result.orchard ? {orchardEvaluation:null} : {})};
   if (typeof labels?.text !== 'string' || typeof labels.filename !== 'string')
@@ -23,6 +16,10 @@ export function runFieldTest({model,xyz,alignment,labels=null,tileId,thresholdOv
     crop:result.crop,pointCount:result.pointCount,tileId
   });
   const evaluation = evaluatePins(result.pins,references);
+  if (result.savedCutoff) {
+    result.savedCutoff.evaluation = result.savedCutoff.pins === result.pins ? evaluation :
+      evaluatePins(result.savedCutoff.pins,references);
+  }
   const baselineEvaluation = evaluatePins(result.baselinePins,references);
   const truth = references.map(p => [p.localX,p.localY]);
   const stagesAtCm = {};

@@ -119,7 +119,8 @@ test('field test trials change only the model cutoff and restore the saved score
   const saved=run();
   assert.equal(saved.pins.length,2);
   assert.ok(!Object.hasOwn(saved.detector,'savedThreshold'));
-  for (const [cutoff,count] of [[.55,0],[.20,2],[0,2],[1,0]]) {
+  assert.ok(!Object.hasOwn(saved,'savedCutoff'));
+  for (const [cutoff,count] of [[.55,0],[.20,2],[0,2],[1,0],[.5,2]]) {
     const result=run(cutoff);
     assert.equal(result.detector.threshold,cutoff);
     assert.equal(result.detector.savedThreshold,.5);
@@ -129,7 +130,13 @@ test('field test trials change only the model cutoff and restore the saved score
     assert.equal(result.proposalCount,saved.proposalCount);
     assert.deepEqual(result.baselinePins,saved.baselinePins);
     assert.deepEqual(result.baselineEvaluation,saved.baselineEvaluation);
+    assert.deepEqual(result.savedCutoff,{pins:saved.pins,evaluation:saved.evaluation});
   }
+  const noSurvey=runFieldTest({model,xyz,thresholdOverride:1});
+  assert.equal(noSurvey.pins.length,0);
+  assert.deepEqual(noSurvey.savedCutoff,{pins:saved.pins,evaluation:null});
+  const emptySurvey=runFieldTest({model,xyz,labels:{...labels,text:'x,y'},thresholdOverride:1});
+  assert.equal(emptySurvey.savedCutoff.evaluation.scores.at(-1).fp,2);
   assert.deepEqual(run(),saved);
   for (const invalid of [-.1,1.1,'0.20',null,NaN]) assert.throws(()=>run(invalid),/cutoff/);
   assert.throws(()=>runFieldTest({model:{...model,threshold:2},xyz,thresholdOverride:.2}),/cutoff/);

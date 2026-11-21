@@ -47,7 +47,7 @@ function toPlot(xyz, unit, origin, gradePercent) {
  * units. Optional measured X/Y grades are signed percent rise. Pins carry both
  * source XY and local XY in metres.
  */
-export function detectScan(xyz, model, {unit='m', origin=[0,0,0], gradePercent=[0,0]}={}, onStages) {
+export function detectScan(xyz, model, {unit='m', origin=[0,0,0], gradePercent=[0,0]}={}, onStages, thresholdOverride) {
   if (model?.format !== 'crop-trainer-weights-v1') throw Error('Choose a model from Download model weights in the Training shed.');
   if (typeof model.crop !== 'string') throw Error('The saved model is missing its crop.');
   cropProfile(model.crop);
@@ -58,6 +58,9 @@ export function detectScan(xyz, model, {unit='m', origin=[0,0,0], gradePercent=[
     throw Error('The saved model has an unsupported network configuration.');
   }
   checkScoreThreshold(model.threshold);
+  const trial = thresholdOverride !== undefined;
+  if (trial) checkScoreThreshold(thresholdOverride);
+  const threshold = trial ? thresholdOverride : model.threshold;
   const {peakAveraging,featureMode} = savedFeatureSettings(model);
   const local = toPlot(xyz,unit,origin,gradePercent);
   const candidates = features({xyz:local},model.minimumHeight,peakAveraging,featureMode);
@@ -66,7 +69,7 @@ export function detectScan(xyz, model, {unit='m', origin=[0,0,0], gradePercent=[
 
   // Run both methods on exactly the same proposals, before applying spacing.
   const heights = candidates.pos.map((_,i) => candidates.X[13*i]);
-  const learned = detectionStages(candidates,scores,model.threshold,model.pinSeparation);
+  const learned = detectionStages(candidates,scores,threshold,model.pinSeparation);
   onStages?.(learned);
   const baseline = detectionStages(candidates,heights,0,model.pinSeparation);
   const indices = new Map(candidates.pos.map((point,i) => [point,i]));
@@ -74,6 +77,15 @@ export function detectScan(xyz, model, {unit='m', origin=[0,0,0], gradePercent=[
     const [localX,localY] = point;
     return {x:origin[0]+localX/metersPerUnit[unit],y:origin[1]+localY/metersPerUnit[unit],localX,localY};
   };
+  const scoredPin = point => ({...pin(point),score:scores[indices.get(point)]});
+  const pins = learned.selected.map(scoredPin);
+  // Reuse the same scored peaks for the saved operating point, including its spacing rule.
+  let savedCutoff;
+  if (trial) {
+    const savedPins = threshold === model.threshold ? pins :
+      detectionStages(candidates,scores,model.threshold,model.pinSeparation).selected.map(scoredPin);
+    savedCutoff = {pins:savedPins,evaluation:null};
+  }
   let orchard;
   if(model.crop==='apple'){
     const result=detectOrchardBases(local);
@@ -83,14 +95,15 @@ export function detectScan(xyz, model, {unit='m', origin=[0,0,0], gradePercent=[
   const frame = {unit,origin:[...origin]};
   if (gradePercent[0] || gradePercent[1]) frame.gradePercent = [...gradePercent];
   return {
+    ...(trial ? {savedCutoff} : {}),
     ...(orchard ? {orchard} : {}),
     crop:model.crop,frame,pointCount:local.length/3,
     detector:{featureSchema:model.featureSchema,...(peakAveraging==='occupied'?{peakAveraging}:{}),
       ...(featureMode==='local-ground'?{featureMode}:{}),
       hiddenLayers:[...model.hiddenLayers],activation:model.activation,
-      minimumHeight:model.minimumHeight,threshold:model.threshold,pinSeparation:model.pinSeparation},
+      minimumHeight:model.minimumHeight,threshold,...(trial ? {savedThreshold:model.threshold} : {}),pinSeparation:model.pinSeparation},
     proposalCount:candidates.pos.length,acceptedCount:learned.accepted.length,
-    pins:learned.selected.map(point => ({...pin(point),score:scores[indices.get(point)]})),
+    pins,
     baselinePins:baseline.selected.map(point => ({...pin(point),heightMeters:heights[indices.get(point)]}))
   };
 }
