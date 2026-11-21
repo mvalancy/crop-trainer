@@ -5,6 +5,10 @@ on:
     branches: [main]
   push:
     branches: [main]
+  workflow_run:
+    workflows: [Verify development workspace]
+    types: [completed]
+    branches: [dev]
   workflow_dispatch:
 
 permissions: {}
@@ -15,11 +19,13 @@ concurrency:
 
 jobs:
   verify:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     name: Test CPU and browser
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     permissions:
       contents: read
+      actions: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -34,6 +40,23 @@ jobs:
       - run: npm run build:pages -- "$RUNNER_TEMP/crop-trainer-pages"
       - run: npx --no-install playwright install --with-deps --only-shell chromium
       - run: npm run test:pages -- "$RUNNER_TEMP/crop-trainer-pages"
+      - name: Find verified dev revision
+        id: preview
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sha=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs?branch=dev&status=success&event=push&per_page=50" --jq '[.workflow_runs[] | select(.name=="Verify development workspace")][0].head_sha')
+          [[ "$sha" =~ ^[0-9a-f]{40}$ ]]
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+      - name: Check out the verified preview separately
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ steps.preview.outputs.sha }}
+          path: preview-source
+          persist-credentials: false
+      - name: Stage the development workspace at /next/
+        working-directory: preview-source
+        run: node ci/build-pages.mjs "$RUNNER_TEMP/crop-trainer-pages/next"
       - name: Upload verified Pages artifact
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
