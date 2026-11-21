@@ -1,7 +1,7 @@
 import {initSurveyAlignment} from './survey-alignment.js';
-import {drawExtraPins, initExtraPins, plotCoordinates} from './extra-pins.js';
+import {drawExtraPins, initExtraPins, plotCoordinates} from './extra-pins.js?v=paired-map1';
 
-import {tomatoPractice} from './tomato-practice.js';
+import {initChangedSeedlings, tomatoPractice} from './tomato-practice.js?v=paired-map1';
 
 const byId = id => document.getElementById(id);
 const rate = v => v === null ? '—' : (100*v).toFixed(1)+'%';
@@ -85,7 +85,7 @@ function methodsFor(report) {
   return methods;
 }
 
-function drawPlot(report, sampled, pins, assignment, changes, extras) {
+function drawPlot(report, sampled, pins, assignment, changes, extras, focusedCenter) {
   const canvas = byId('testMap'), ctx = canvas.getContext('2d');
   const {px,py} = plotCoordinates(canvas);
   ctx.fillStyle = '#f2f3e9';
@@ -124,6 +124,12 @@ function drawPlot(report, sampled, pins, assignment, changes, extras) {
       if (change > 0) {ctx.moveTo(x,y-3); ctx.lineTo(x,y+3);}
       ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.6; ctx.stroke();
     });
+    if (focusedCenter) {
+      const x = px(focusedCenter.localX), y = py(focusedCenter.localY);
+      ctx.beginPath(); ctx.arc(x,y,10,0,2*Math.PI);
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 4; ctx.stroke();
+      ctx.strokeStyle = '#14291e'; ctx.lineWidth = 2; ctx.stroke();
+    }
     return;
   }
   const assigned = new Set(assignment);
@@ -253,8 +259,10 @@ export function initFieldTest(downloadJSON) {
   const sharedExample = new URLSearchParams(location.search).get('fieldExample');
   if ([...example.options].some(option => option.value === sharedExample)) example.value = sharedExample;
   const fields = [...form.querySelectorAll('input,select')];
-  let exampleLoad, autoRunFile, exampleResultLabel;
-  const showPractice = tomatoPractice(example,tryExample);
+  let exampleLoad, autoRunFile, exampleResultLabel, exampleScanQuery;
+  const practice = tomatoPractice(example,tryExample), inspectSeedlings = initChangedSeedlings();
+  const overlay = byId('testOverlay'), compareWeeds = byId('testCompareWeedMap');
+  let weedPair;
   let currentModelFile, runningModel, worker, sampled, loaded = false, running = false, report;
 
   const extraInspector = initExtraPins(renderOverlay);
@@ -272,8 +280,15 @@ export function initFieldTest(downloadJSON) {
     byId('testDetect').disabled = running || Boolean(exampleLoad) || !loaded || !(useFile ? weights.files[0] : currentModelFile);
     cancel.hidden = !exampleLoad && (!worker || (loaded && !running));
   }
+  function clearWeedMap() {
+    weedPair = null;
+    compareWeeds.hidden = true;
+    overlay.querySelector('option[value="weedChanges"]')?.remove();
+    inspectSeedlings(null);
+  }
   function clearReport() {
     report = null;
+    clearWeedMap();
     setSurvey(null);
     extraInspector.reset();
     results.hidden = true;
@@ -281,19 +296,33 @@ export function initFieldTest(downloadJSON) {
   }
   function renderOverlay() {
     if (!report) return;
-    const selected = byId('testOverlay').value;
-    const showChanges = selected==='changes';
+    const selected = overlay.value;
+    const weedChanges = selected==='weedChanges', cutoffChanges = selected==='changes';
+    const showChanges = weedChanges || cutoffChanges;
     const method = methodsFor(report)[showChanges ? 'model' : selected];
     const {pins,evaluation} = method;
     const target = selected==='orchard' ? 'base' : 'center';
-    byId('testSummary').textContent = showChanges ? 'Which plants changed?' : method.label+' · '+pins.length+' predicted '+report.crop+' '+target+(pins.length===1?'':'s');
-    byId('testRule').textContent = showChanges ? 'Each symbol marks a surveyed plant. A plus means the trial found it, a minus means it lost its match.' : method.rule;
-    byId('testRule').dataset.help = showChanges ? 'A plant gains or loses a match when one cutoff places a matching pin and the other does not.' : method.help;
+    const heading = byId('testSummary'), rule = byId('testRule');
+    if (weedChanges) {
+      heading.textContent = 'Seedling matches · random → half difficult';
+      rule.textContent = 'A plus marks a seedling found only by the half-difficult fit. A minus marks one found only by the random fit.';
+      rule.dataset.help = 'Each model placed its own pins on the same scan. Both used the saved cutoff. Each surveyed tomato can match once.';
+    } else if (cutoffChanges) {
+      heading.textContent = 'Which plants changed?';
+      rule.textContent = 'Each symbol marks a surveyed plant. A plus means the trial found it, a minus means it lost its match.';
+      rule.dataset.help = 'A plant gains or loses a match when one cutoff places a matching pin and the other does not.';
+    } else {
+      heading.textContent = method.label+' · '+pins.length+' predicted '+report.crop+' '+target+(pins.length===1?'':'s');
+      rule.textContent = method.rule;
+      rule.dataset.help = method.help;
+    }
     byId('testOrchardHelp').hidden = selected!=='orchard';
     const distance = Number(byId('testMatchDistance').value);
     setSurvey(report,selected,showChanges ? null : method,distance);
     const assignment = evaluation?.pinByReferenceAtCm[distance];
     const extras = extraInspector.render(pins,showChanges ? null : assignment,report.references,distance);
+    byId('testMap').toggleAttribute('data-help-action',Boolean(extras) || weedChanges);
+    byId('testExport').textContent = weedChanges ? 'Download '+(report===weedPair.hard ? 'half-difficult' : 'random')+' fit JSON' : 'Download field test JSON';
     const stages = !extras && selected==='model' && report.stagesAtCm?.[distance];
     byId('testStages').hidden = !stages;
     if (stages) renderStages(stages, report.references.length, distance);
@@ -302,7 +331,7 @@ export function initFieldTest(downloadJSON) {
     byId('testExtraKey').hidden = !extras;
     byId('testUnscoredKey').hidden = Boolean(evaluation);
     byId('testChangedKey').hidden = !showChanges;
-    const modelView = selected==='model' || selected==='saved' || showChanges;
+    const modelView = selected==='model' || selected==='saved' || cutoffChanges;
     const comparison = byId('testCutoffComparison');
     comparison.hidden = !modelView || !report.savedCutoff;
     if (!comparison.hidden) renderCutoffComparison(report,distance);
@@ -310,8 +339,9 @@ export function initFieldTest(downloadJSON) {
     let changes;
     let message = 'Add reference centers to score these predictions.';
     if (showChanges) {
-      const previous = report.savedCutoff.evaluation.pinByReferenceAtCm[distance];
-      changes = assignment.map((pin,i) => Number(pin>=0)-Number(previous[i]>=0));
+      const previous = (weedChanges ? weedPair.random : report.savedCutoff).evaluation.pinByReferenceAtCm[distance];
+      const current = weedChanges ? weedPair.hard.evaluation.pinByReferenceAtCm[distance] : assignment;
+      changes = current.map((pin,i) => Number(pin>=0)-Number(previous[i]>=0));
       const gained = changes.filter(change=>change>0).length, lost = changes.filter(change=>change<0).length;
       message = 'At '+distance+' cm, '+gained+' gained a match and '+lost+' lost a match. '+(changes.length-gained-lost)+' kept the same status.';
     } else if (evaluation) {
@@ -320,8 +350,12 @@ export function initFieldTest(downloadJSON) {
         score.fp+' extra '+(score.fp===1?'pin':'pins')+' · '+score.fn+' missed '+(score.fn===1?'center':'centers')+'.';
     }
     byId('testOutcome').textContent = message;
-    status.textContent = showChanges ? 'Comparing both cutoffs on '+report.files.scan.name+'.' : 'Showing '+method.label.toLowerCase()+' pins on '+report.files.scan.name+'.';
-    drawPlot(report,sampled,pins,assignment,changes,extras);
+    const description = weedChanges ? 'Comparing random and half-difficult fits' : cutoffChanges ? 'Comparing both cutoffs' :
+      'Showing '+method.label.toLowerCase()+' pins';
+    status.textContent = description+' on '+report.files.scan.name+'.';
+    if (weedPair) practice.showScores(distance);
+    const focusedCenter = inspectSeedlings(weedChanges ? weedPair : null,distance,changes);
+    drawPlot(report,sampled,pins,assignment,changes,extras,focusedCenter);
   }
   function loadScan() {
     worker?.terminate(); worker = null;
@@ -365,14 +399,16 @@ export function initFieldTest(downloadJSON) {
         report = data.report;
         const overlayOptions = Object.entries(methodsFor(report)).map(([id,m])=>new Option(m.label,id));
         if (report.savedCutoff && report.references?.length) overlayOptions.splice(2,0,new Option('Changed matches','changes'));
-        byId('testOverlay').replaceChildren(...overlayOptions);
+        weedPair = exampleResultLabel ? practice.record(example.value,report,exampleScanQuery) : null;
+        if (weedPair) overlayOptions.push(new Option('Changed seedlings','weedChanges'));
+        compareWeeds.hidden = !weedPair;
+        overlay.replaceChildren(...overlayOptions);
         results.hidden = false; renderOverlay(); renderScores(report);
         if (exampleResultLabel) {
           const receipt = byId('testExampleResult');
           const threshold = report.detector.threshold;
           receipt.querySelector('[role="status"]').textContent = exampleResultLabel+' · cutoff '+cutoffText(threshold)+' · '+byId('testOutcome').textContent;
           exampleCutoff.hidden = Boolean(report.savedCutoff) || threshold!==.50;
-          showPractice(example.value,report);
           receipt.hidden = false;
         }
       }
@@ -389,6 +425,7 @@ export function initFieldTest(downloadJSON) {
     exampleLoad = null;
     autoRunFile = null;
     exampleResultLabel = null;
+    exampleScanQuery = null;
     exampleCutoff.hidden = true;
   }
   exampleCutoff.addEventListener('click',() => {
@@ -409,7 +446,7 @@ export function initFieldTest(downloadJSON) {
     updateControls();
     status.textContent = 'Growing the example planting and loading its saved weights…';
     try {
-      const {tomatoExampleFiles,selectFile} = await import('./tomato-example.js?v=weed-replay1');
+      const {tomatoExampleFiles,selectFile} = await import('./tomato-example.js?v=paired-map1');
       const files = await tomatoExampleFiles(choice,pending.signal);
       pending.signal.throwIfAborted();
       selectFile(weights,files.model);
@@ -419,9 +456,10 @@ export function initFieldTest(downloadJSON) {
       byId('testUnits').value = 'm';
       for (const id of ['testX','testY','testZ','testGradeX','testGradeY']) byId(id).value = '0';
       cutoff.value = '';
-      byId('testMatchDistance').value = '15';
+      if (!practice.keepDistance(choice)) byId('testMatchDistance').value = '15';
       autoRunFile = ply.files[0];
       exampleResultLabel = example.selectedOptions[0].textContent;
+      exampleScanQuery = files.scanQuery;
       exampleLoad = null;
       loadScan();
     } catch (error) {
@@ -431,7 +469,7 @@ export function initFieldTest(downloadJSON) {
       updateControls();
     }
   });
-  ply.addEventListener('change',() => {stopExampleLoad(); loadScan();});
+  ply.addEventListener('change',() => {practice.forget(); stopExampleLoad(); loadScan();});
   resetCutoff.addEventListener('click',()=>{
     cutoff.value='';
     cutoff.dispatchEvent(new Event('input',{bubbles:true}));
@@ -441,7 +479,11 @@ export function initFieldTest(downloadJSON) {
     if (running) return;
     const hadPendingExample = Boolean(exampleLoad);
     stopExampleLoad();
+    if (event.target !== example || !practice.keepDistance(example.value)) practice.forget();
     if (event.target === example || event.target === ply) {
+      const replaceMap = overlay.value==='weedChanges';
+      clearWeedMap();
+      if (replaceMap && report) {overlay.value = 'model'; renderOverlay();}
       byId('testExampleResult').hidden = true;
       updateControls();
       if (hadPendingExample) status.textContent = 'Example canceled. The selected files were kept.';
@@ -475,7 +517,16 @@ export function initFieldTest(downloadJSON) {
     loadScan();
   });
   byId('testMatchDistance').addEventListener('change',renderOverlay);
-  byId('testOverlay').addEventListener('change',renderOverlay);
+  overlay.addEventListener('change',renderOverlay);
+  byId('testWeedPlant').addEventListener('change',renderOverlay);
+  compareWeeds.addEventListener('click',() => {
+    if (!weedPair || !report) return;
+    overlay.value = 'weedChanges';
+    renderOverlay();
+    const heading = byId('testSummary');
+    heading.focus({preventScroll:true});
+    heading.scrollIntoView({block:'start'});
+  });
   byId('testExport').addEventListener('click',() => {
     if (!report) return;
     const trial = report.detector.savedThreshold === undefined ? '' : '-cutoff-'+report.detector.threshold;

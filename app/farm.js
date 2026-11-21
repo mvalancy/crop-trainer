@@ -259,7 +259,8 @@ function showReadings(container, readings) {
 
 function applyScan(value, recipe, url, selectedBox, expectedTile) {
   scan = value;
-  const choices = scan.plantReturns.map((returns, box) => new Option('Box '+box+' · '+returns.toLocaleString()+' returns', String(box)));
+  const choices = scan.plantReturns.map((returns, box) =>
+    new Option('Box '+box+' · '+returns.toLocaleString()+(returns === 1 ? ' return' : ' returns'), String(box)));
   $('highlight').replaceChildren(new Option('None', ''), ...choices);
   if ((!expectedTile || expectedTile === scan.labels.tile_id) && /^\d+$/.test(selectedBox) && Number(selectedBox) < choices.length) {
     $('highlight').value = String(Number(selectedBox));

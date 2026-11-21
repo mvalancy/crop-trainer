@@ -405,6 +405,10 @@ tbody tr:nth-child(even) { background: #f6f8f0; }
 .testExampleReceipt { margin-top: .85rem; padding: .75rem .9rem; border-inline-start: 3px solid #86a285; background: var(--wash); }
 .weedFitResults { margin-top: .8rem; }
 .weedFitResults table { table-layout: auto; width: 100%; max-width: 29rem; font-variant-numeric: tabular-nums; }
+.weedFitResults > button { margin-top: .55rem; }
+#testWeedPlants .helpField { max-width: 17rem; }
+#testWeedDetail { margin-block: .4rem; }
+#testWeed3D { display: inline-flex; align-items: center; min-height: 2.75rem; }
 .weedFitResults caption { text-align: start; font-weight: 650; padding-bottom: .35rem; }
 .weedFitResults th, .weedFitResults td { padding: .35rem .22rem; text-align: end; }
 .weedFitResults th:first-child { text-align: start; }
@@ -437,7 +441,7 @@ tbody tr:nth-child(even) { background: #f6f8f0; }
 .testExtraInspector #testExtraDetail { font-variant-numeric: tabular-nums; }
 #testExtraDetail span { display: block; }
 #testExtraDetail span:first-child { font-weight: 620; }
-.testView .pickExtraPin { cursor: crosshair; }
+.testView canvas[data-help-action] { cursor: crosshair; }
 .mapKey .matchedCenter { border: 2px solid #644883; border-radius: 50%; }
 .mapKey .missedCenter { color: #644883; font: bold 1rem/.65rem system-ui; }
 .mapKey .gainedCenter, .mapKey .lostCenter { width: .9rem; height: .9rem; border-radius: 50%; color: white; background: #00664e; text-align: center; font: bold .83rem/.9rem system-ui; }

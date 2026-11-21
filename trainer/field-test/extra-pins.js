@@ -14,6 +14,21 @@ export function plotCoordinates(canvas) {
   return {px:x => inset+x*side/10, py:y => inset+(10-y)*side/10};
 }
 
+// Hit-test in CSS pixels so a tap has the same reach at each display size.
+export function nearbyMapPoint(canvas,event,ids,points) {
+  const rect = canvas.getBoundingClientRect(), {px,py} = plotCoordinates(canvas);
+  const clickX = event.clientX-rect.left, clickY = event.clientY-rect.top;
+  let hit, radius = 20;
+  for (const id of ids) {
+    const point = points[id];
+    const dx = px(point.localX)*rect.width/canvas.width-clickX;
+    const dy = py(point.localY)*rect.height/canvas.height-clickY;
+    const delta = Math.hypot(dx,dy);
+    if (delta < radius) {hit = id; radius = delta;}
+  }
+  return hit;
+}
+
 export function drawExtraPins(ctx, px, py, pins, references, view) {
   ctx.fillStyle = '#88808e';
   for (const center of references) {
@@ -51,7 +66,6 @@ export function initExtraPins(redraw) {
     toggle.checked = false;
     previousPins = previousAssignment = selectedId = undefined;
     ids = [];
-    canvas.classList.remove('pickExtraPin');
     panel.hidden = true;
   }
   function render(pins, assignment, references, distance) {
@@ -59,7 +73,6 @@ export function initExtraPins(redraw) {
     if (!assignment) toggle.checked = false;
     const active = toggle.checked;
     panel.hidden = !active;
-    canvas.classList.toggle('pickExtraPin',active);
     if (!active) return null;
     if (previousPins !== pins || previousAssignment !== assignment) {
       const matched = new Set(assignment);
@@ -115,15 +128,8 @@ export function initExtraPins(redraw) {
   }
   canvas.addEventListener('click',event => {
     if (!toggle.checked || !ids.length) return;
-    const rect = canvas.getBoundingClientRect(), {px,py} = plotCoordinates(canvas);
-    const clickX = event.clientX-rect.left, clickY = event.clientY-rect.top;
-    let hit, radius = 20; // CSS pixels, independent of the canvas display size.
-    ids.forEach((id, position) => {
-      const pin = previousPins[id];
-      const delta = Math.hypot(px(pin.localX)*rect.width/canvas.width-clickX,py(pin.localY)*rect.height/canvas.height-clickY);
-      if (delta < radius) {hit = position; radius = delta;}
-    });
-    if (hit !== undefined) selectAt(hit);
+    const id = nearbyMapPoint(canvas,event,ids,previousPins);
+    if (id !== undefined) selectAt(ids.indexOf(id));
   });
   return {render,reset};
 }

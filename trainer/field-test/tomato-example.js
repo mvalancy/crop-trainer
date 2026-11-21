@@ -33,7 +33,12 @@ export async function tomatoExampleFiles(fit, signal) {
     const ply = new File([encodePly(scan.xyz)],id+'.ply',{type:'application/octet-stream'});
     const labels = new File([JSON.stringify({...scan.labels,crop_returns_per_box:scan.plantReturns},null,2)],
       id+'.labels.json',{type:'application/json'});
-    return {model,ply,labels};
+    const scanQuery = plot === weedPlot ? new URLSearchParams({
+      crop:recipe.crop,plantArchitecture:recipe.plantArchitecture,plantForm:recipe.plantForm,plantCondition:recipe.plantCondition,
+      sensor:recipe.sampling.key,budget:recipe.points,seed:recipe.seed,ground:recipe.ground,
+      weeds:'on',sticks:'off',boards:'off',noise:'clean',tile:id
+    }).toString() : null;
+    return {model,ply,labels,scanQuery};
   } finally {
     session.close();
   }

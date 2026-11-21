@@ -660,7 +660,26 @@ try {
   }
   assert.deepEqual(await page.locator('#testWeedComparison tbody tr').evaluateAll(rows=>
     rows.map(row=>Array.from(row.cells).slice(1).map(cell=>Number(cell.textContent)))),[[44,33,70],[30,22,84]]);
-  console.log('Both background-sampling examples reproduced their frozen scores on the same weedy planting.');
+  await page.locator('#testCompareWeedMap').click();
+  assert.equal(await page.locator('#testOverlay').inputValue(),'weedChanges');
+  for (const cm of [7.5,10,15]) {
+    await page.locator('#testMatchDistance').selectOption(String(cm));
+    const random=randomFit.evaluation.pinByReferenceAtCm[cm], hard=hardFit.evaluation.pinByReferenceAtCm[cm];
+    const changes=random.map((pin,i)=>Number(hard[i]>=0)-Number(pin>=0));
+    for (const [group, change] of [['Gained',1],['Lost',-1]]) {
+      const expected=changes.flatMap((value,i)=>value===change ? [i] : []);
+      const listed=await page.locator('#testWeed'+group+' [data-reference]').evaluateAll(options=>
+        options.map(option=>Number(option.dataset.reference)));
+      assert.deepEqual(listed,expected,'Changed seedlings should match both exported reports at '+cm+' cm');
+    }
+  }
+  await page.locator('#testWeedPlant').selectOption('77');
+  assert.match(await page.locator('#testWeedDetail').innerText(),/11\.2\s*cm/);
+  const seedlingLink=new URL(await page.locator('#testWeed3D').getAttribute('href'));
+  assert.equal(seedlingLink.searchParams.get('box'),'77');
+  assert.equal(seedlingLink.searchParams.get('tile'),randomFit.files.scan.name.replace(/\.ply$/,''));
+  assert.ok(await page.locator('#testAlignment').isHidden());
+  console.log('Both background-sampling fits reproduced their scores and located the gained seedling on the same planting.');
 
   // Re-run one of the shed's own held-out scans from its saved scan and weights.
   // This catches a mismatch between training, the downloadable model and Field Test extraction.

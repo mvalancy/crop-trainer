@@ -4,7 +4,7 @@ const fieldButtons = new WeakMap();
 const disabledButtons = new WeakMap();
 const descriptions = new Map();
 const tabStops = new WeakMap();
-const actionSelector = 'a,button,input,select,textarea,summary,label,[role="button"],[role="tab"]';
+const actionSelector = 'a,button,input,select,textarea,summary,label,[role="button"],[role="tab"],[data-help-action]';
 const bank = document.createElement('div');
 bank.hidden = true;
 const popup = document.createElement('div');

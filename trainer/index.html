@@ -6,11 +6,11 @@
 <link rel="icon" type="image/png" sizes="32x32" href="../art/crop-mark-32.png">
 <link rel="icon" type="image/svg+xml" sizes="any" href="../art/crop-mark.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="../art/crop-touch.png">
-<link rel="stylesheet" href="../app/farm.css?v=weed-replay1">
+<link rel="stylesheet" href="../app/farm.css?v=paired-map1">
 <link rel="stylesheet" href="../app/help.css?v=context-help2">
 <link rel="stylesheet" href="./ui/training-layout.css?v=alignment1">
 <link rel="stylesheet" href="./ui/network-diagram.css">
-<script type="module" src="../app/help.js?v=context-help2"></script>
+<script type="module" src="../app/help.js?v=map-picking1"></script>
 </head>
 <body class="shed"><a data-help="Move keyboard focus past navigation to the Training Shed." class="skip" href="#main">Skip to content</a>
 <header class="siteBar">
@@ -309,7 +309,8 @@
 <div class="action"><a href="#testResults" data-help="Jump to the map, missed seedlings and per-distance scores from this run.">Inspect map and scores</a>
 <button type="button" id="testExampleCutoff" hidden data-help="Keep this planting and the same weights. Compare the saved 0.50 cutoff with a 0.70 trial to see which seedlings change.">Try 0.70 on this planting</button>
 <button type="button" id="testOtherFit" hidden data-help="Keep this weedy planting and compare both models at the same 0.65 cutoff. The only training change was how the background examples were selected.">Try the other fit</button></div>
-<div id="testWeedComparison" class="weedFitResults" hidden><table><caption>Both fits on this planting within 15 cm</caption><thead><tr><th scope="col" data-help="How the model’s background training peaks were chosen. Both fits received the same number of examples.">Training mix</th><th scope="col" data-help="Tomatoes paired with a model pin within 15 cm.">Found</th><th scope="col" data-help="Model pins left over after pairing each tomato with at most one pin.">Extra</th><th scope="col" data-help="Labeled tomatoes that received no matching pin.">Missed</th></tr></thead><tbody></tbody></table></div></div></div>
+<div id="testWeedComparison" class="weedFitResults" hidden><table><caption>Both fits on this planting within 15 cm</caption><thead><tr><th scope="col" data-help="How the model’s background training peaks were chosen. Both fits received the same number of examples.">Training mix</th><th scope="col" data-help="Tomatoes paired with a model pin within the selected matching distance.">Found</th><th scope="col" data-help="Model pins left over after pairing each tomato with at most one pin.">Extra</th><th scope="col" data-help="Labeled tomatoes that received no matching pin.">Missed</th></tr></thead><tbody></tbody></table>
+<button type="button" id="testCompareWeedMap" aria-controls="testResults" data-help="Compare both scored fits at the selected matching distance. See which seedlings gained or lost a match when half the random background samples were replaced.">Compare on the map</button></div></div></div>
 </fieldset>
 <div class="testSource">
 <label>Detector<select id="testModelSource" data-help-label="Field test detector" data-help="Choose the completed fit in this tab, or load a weights JSON from an earlier run. The same detector can be used on multiple plot scans."><option value="file">Saved weights JSON</option><option value="current" disabled>Most recent completed fit</option></select></label>
@@ -351,14 +352,18 @@
 </form>
 <p id="testStatus" role="status">Choose a scan and a model to begin.</p>
 <div id="testResults" hidden>
-<h3 id="testSummary">Detections</h3>
+<h3 id="testSummary" tabindex="-1">Detections</h3>
 <div class="testView">
-<div class="testMapControls"><label>Map view<select id="testOverlay" data-help-label="Field test map view" data-help="Show the trained model or a simpler pin-placement rule. Trying a cutoff also lets you view the original model pins and see which surveyed plants gained or lost a match."><option value="model">Trained model</option><option value="baseline">Height-only baseline</option></select></label>
+<div class="testMapControls"><label>Map view<select id="testOverlay" data-help-label="Field test map view" data-help="Show the trained model or a simpler pin-placement rule. A cutoff trial can show which centers changed. Scoring both weedy tomato examples adds a map of changed seedlings."><option value="model">Trained model</option><option value="baseline">Height-only baseline</option></select></label>
 <label id="testDistanceControl" hidden>Match distance<select id="testMatchDistance" data-help-label="Map matching distance" data-help="Choose how close a pin must land to a reference center to count as a match. The pins stay in place as the map updates."><option value="7.5">7.5 cm</option><option value="10">10 cm</option><option value="15" selected>15 cm</option></select></label>
 <div id="testExtraControl" hidden><label class="check"><input id="testExtraOnly" aria-controls="testExtraInspector" type="checkbox" data-help-label="Inspect extra pins" data-help="Show predictions left over after pairing pins with surveyed plants. Tap a square on the map or use the pin navigator.">Inspect extra pins</label></div></div>
 <figure><canvas id="testMap" width="500" height="500" aria-label="Top view of the imported scan and plant detections" aria-describedby="testLegend testOutcome" role="img"></canvas>
 <figcaption id="testLegend"><span class="mapKey" id="testMatchedKey" hidden><span><i class="matchedPin"></i>Matched pin</span><span><i class="extraPin"></i>Extra pin</span><span><i class="matchedCenter"></i>Matched center</span><span><i class="missedCenter" aria-hidden="true">×</i>Missed center</span></span><span class="mapKey" id="testChangedKey" hidden><span><i class="gainedCenter" aria-hidden="true">+</i>Gained match</span><span><i class="lostCenter" aria-hidden="true">−</i>Lost match</span><span><i class="steadyCenter" aria-hidden="true"></i>Same status</span></span><span class="mapKey" id="testExtraKey" hidden><span><i class="extraPin"></i>Extra pin</span><span id="testSelectedExtraKey"><i class="selectedExtraPin"></i>Selected pin</span><span id="testSurveyKey"><i class="surveyPoint"></i>Surveyed center</span><span id="testNearestKey"><i class="matchedCenter"></i>Nearest surveyed center</span></span><span id="testUnscoredKey">Green dots mark predicted centers. Grey dots are laser returns.</span></figcaption></figure>
 <div class="testReadout"><p id="testOutcome" aria-live="polite"></p>
+<div id="testWeedPlants" hidden>
+<label>Highlight a changed seedling<select id="testWeedPlant" aria-describedby="testWeedDetail" data-help="Choose a planting label. The outline marks its surveyed position. Gained and lost always describe the change from the random fit to the half-difficult fit."><option value="">All seedlings</option><optgroup id="testWeedGained" label="Gained"></optgroup><optgroup id="testWeedLost" label="Lost"></optgroup></select></label>
+<p class="hint" id="testWeedDetail" aria-live="polite"></p>
+<a id="testWeed3D" hidden target="_blank" rel="noopener" data-help-label="Inspect this seedling in 3D" data-help="Open this synthetic scan in a new tab with the selected planting box highlighted. Use Focus plant to look closely at its laser returns."></a></div>
 <section class="testExtraInspector" id="testExtraInspector" aria-labelledby="testExtraTitle" hidden>
 <h4 id="testExtraTitle">Why is this pin extra?</h4>
 <div id="testExtraNavigation"><p class="hint">Tap a square on the map or choose a pin below.</p>
@@ -410,6 +415,6 @@
 </main>
 <footer class="siteFoot"><span>Created by Matthew Valancy</span>
 <div><a data-help="Open commands and reproducibility instructions for an agent working with Crop Trainer." href="../AGENTS.md">Agent quickstart</a><a data-help="View the farming challenges and achievements stored on this device." href="../#missions">Farm journal</a><a data-help="Read the terms for using and sharing Crop Trainer’s source code." href="../LICENSE">MIT license</a></div><small class="contextHint"><span class="hoverHint">Hover or focus a button or score for help.</span><span class="touchHint">Tap a score or hold a button for help. A quick tap runs the action.</span></small></footer>
-<script type="module" src="./main.js?v=alignment1"></script>
+<script type="module" src="./main.js?v=paired-map1"></script>
 </body>
 </html>
