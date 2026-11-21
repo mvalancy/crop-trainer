@@ -42,6 +42,38 @@ Four new plantings contained 408 plants at each stage. The table gives each stag
 
 The ordinary fits found zero seedlings on either layout. Height alone found 83 on the grid and 43 on rings. Changing the positive mix recovered only a handful for one training seed. Its clearest benefit was on larger plants. Grid branching F1 rose from .954 / .956 to .970 / .975, ring branching F1 from .902 / .897 to .916 / .922. Transplant F1 also rose for both training seeds on both layouts. These findings use the existing fixed score cutoff and a small network. They leave open whether other learned representations can separate a faint seedling from the terrain.
 
+## Does lowering the peak floor keep seedlings and branching plants?
+
+A peak has to clear a height floor before the network can score it. Lowering that floor from 6.5 to 3.5 cm during both training and detection found a few more seedlings. It also cost branching-plant precision. At a 15 cm matching distance, branching precision fell from **92.9% to 81.8% on grids** and from **93.0% to 79.1% on rings**. Seedling recall at the lower floor reached **3.7%** on each layout. Soil made a large difference. On scans with soil present, the lower-floor model found only four of 615 seedlings on grids and three on rings. It found 41 and 43 respectively in their soil-removed twins.
+
+| Test plants | Peak floor | Network F1 at 7.5 / 10 / 15 cm | Height-only F1 at 7.5 / 10 / 15 cm | Network matched / extra at 15 cm |
+| --- | ---: | --- | --- | ---: |
+| Seedlings, grid | 6.5 cm | .005 / .005 / .006 | .133 / .142 / .164 | 4 / 58 |
+| Seedlings, grid | 3.5 cm | .052 / .053 / .063 | .265 / .286 / .314 | 45 / 160 |
+| Seedlings, rings | 6.5 cm | .000 / .000 / .000 | .138 / .148 / .161 | 0 / 42 |
+| Seedlings, rings | 3.5 cm | .052 / .058 / .065 | .279 / .316 / .346 | 46 / 146 |
+| Branching, grid | 6.5 cm | .779 / .893 / .931 | .685 / .785 / .823 | 1,146 / 87 |
+| Branching, grid | 3.5 cm | .748 / .857 / .894 | .484 / .554 / .582 | 1,213 / 270 |
+| Branching, rings | 6.5 cm | .690 / .798 / .860 | .628 / .752 / .821 | 984 / 74 |
+| Branching, rings | 3.5 cm | .664 / .792 / .863 | .480 / .575 / .629 | 1,169 / 309 |
+
+**Where did the extra seedling matches come from?** The lower floor put a candidate within 15 cm of 595 seedling appearances on grids and 541 on rings, up from 153 and 133. Holding the original weights and their feature scaling fixed, we scored those extra candidates. The original fits rejected every new peak at the 0.50 cutoff. All 48 scans retained exactly the same accepted candidates and final pins. In the reverse check, the lower-floor fits scored the original, smaller candidate lists. These fits already matched 30 seedlings on grids and 31 on rings. Allowing them to see the shorter peaks brought the totals to 45 and 46. The difference came from both the examples used for fitting and the points admitted at detection time.
+
+**Repeat it in the browser.** The height comparison runs both floors on the same synthetic scans. Choose **Run benchmark**, then open **Scores at each matching distance**. The four links restore the exact settings. [Seedlings on grids](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=heights&crop=tomato&plantArchitecture=2&plantForm=mixed&plantCondition=healthy&seed=19871317&sensor=reference&validationPlantForm=seedling&validationSensor=reference&trainingRayBudget=60000&validationRayBudget=60000&epochs=40&live=off) · [Seedlings on rings](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=heights&crop=tomato&plantArchitecture=2&plantForm=mixed&plantCondition=healthy&seed=19871317&sensor=reference&validationPlantForm=seedling&validationSensor=os1-64&trainingRayBudget=60000&validationRayBudget=60000&epochs=40&live=off) · [Branching on grids](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=heights&crop=tomato&plantArchitecture=2&plantForm=mixed&plantCondition=healthy&seed=19871317&sensor=reference&validationPlantForm=branching&validationSensor=reference&trainingRayBudget=60000&validationRayBudget=60000&epochs=40&live=off) · [Branching on rings](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=heights&crop=tomato&plantArchitecture=2&plantForm=mixed&plantCondition=healthy&seed=19871317&sensor=reference&validationPlantForm=branching&validationSensor=os1-64&trainingRayBudget=60000&validationRayBudget=60000&epochs=40&live=off)
+
+<details>
+<summary>Field counts, training settings and timing</summary>
+
+We fixed the two heights and fresh dataset seeds `19871317` and `19871318` before scoring. Each fit saw six mixed-stage reference-grid plantings and held out three other plantings. The six independent held-out plantings contained 615 tomatoes. Both soil variants gave 1,230 center appearances per stage and layout. Each v2 scan requested 60,000 rays with seeded clutter and noise. Changing plant stage preserved counts, but changed the modeled bounding-box midpoint by a median 2.24 cm. Each comparison between heights used identical scans and labels within stage.
+
+Run `node benchmark/studies/tomato-peak-floor.mjs > tomato-peak-floor.json` from the repository root to repeat the four combinations of training and detection floor. The report includes IDs for all 48 scans, the height control, per-tolerance scores and a count of scans where the standard fit changed its accepted candidates or pins. [Crossed-floor study](../benchmark/studies/tomato-peak-floor.mjs)
+
+Both neural nets used 13 inputs, four tanh hidden units, initialization seed 12345 and full-batch SGD for 40 epochs at learning rate 0.25. The 6.5 cm fits retained 1,960 and 2,252 class-balanced examples. At 3.5 cm they retained 2,286 and 2,594. The height-only control ranked the same candidate peaks by smoothed height. Both methods spaced final pins by 22 cm.
+
+With live preview off in Chromium, the 16 CPU Benchmark fits took 0.84–2.73 s each for data preparation, 0.076–0.190 s for fitting and 0.030–0.155 s for validation. For the first seed at the lower floor on held-out seedling rings, Training shed reproduced every per-tile score on CPU and software WebGPU. Fitting took 0.184 s and 11.016 s respectively. The WebGPU adapter was Google SwiftShader. Physical GPU speed and field performance on real tomatoes remain unmeasured.
+
+</details>
+
 ## Reproduce the measurements
 
 ```sh
