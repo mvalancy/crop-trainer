@@ -118,14 +118,14 @@
 <div class="studySetup">
 <div class="studyIntro"><p id="studyField">Grow a field to compare its scans.</p>
 <p id="studyQuestion">Do more laser rays help you find more plants?</p></div>
-<form id="studyForm" aria-label="Paired scan settings"><label class="studyMode">What changes?<select id="studyMode"><option value="budgets">Ray budget</option><option value="layouts">Scan layout · 60,000 rays each</option></select></label>
+<form id="studyForm" aria-label="Paired scan settings"><label class="studyMode">What changes?<select id="studyMode"><option value="budgets">Ray budget</option><option value="layouts">Scan layout · 60,000 rays each</option><option value="damage" hidden disabled>Scaffold damage</option></select></label>
 <label>First budget<select id="studyLow"></select></label><label>Second budget<select id="studyHigh"></select></label>
 <div class="studyActions"><button class="primary" id="studyRun" disabled>Compare scans</button><button type="button" id="studyCancel" hidden>Cancel</button></div></form></div>
 <p id="studyStatus" role="status"></p>
 <div id="studyResults" hidden>
 <div class="studyLayout"><div class="studyMaps">
-<figure><figcaption><strong id="studyTitleA"></strong><span id="studyCountA"></span></figcaption><canvas id="studyFirst" role="img" aria-labelledby="studyTitleA studyCountA" aria-describedby="studyLegend"></canvas></figure>
-<figure><figcaption><strong id="studyTitleB"></strong><span id="studyCountB"></span></figcaption><canvas id="studySecond" role="img" aria-labelledby="studyTitleB studyCountB" aria-describedby="studyLegend"></canvas></figure></div>
+<figure><figcaption><strong id="studyTitleA"></strong><span id="studyCountA"></span><span id="studyDistanceA" hidden></span></figcaption><canvas id="studyFirst" role="img" aria-labelledby="studyTitleA studyCountA" aria-describedby="studyLegend studyDistanceA"></canvas></figure>
+<figure><figcaption><strong id="studyTitleB"></strong><span id="studyCountB"></span><span id="studyDistanceB" hidden></span></figcaption><canvas id="studySecond" role="img" aria-labelledby="studyTitleB studyCountB" aria-describedby="studyLegend studyDistanceB"></canvas></figure></div>
 <div id="studyInspect" hidden>
 <div class="studyChoices"><label>Mark plants by<select id="studyMetric" aria-describedby="studyMetricHelp studyChange"><option value="returns">At least one crop return</option><option value="peaks">Matched height peak · 15 cm</option><option value="pins">Height-only pin · 15 cm</option><option value="sampledPins">Height pin · sampled cells only · 15 cm</option><option value="orchard">Orchard base pin · 15 cm</option></select></label>
 <label class="studyOverlay"><input id="studyCloud" type="checkbox"> Show up to 9,000 scan points</label>
@@ -191,6 +191,6 @@
 </main>
 <footer class="siteFoot"><span>Created by Matthew Valancy</span>
 <div><a href="AGENTS.md">Agent quickstart</a><a href="#missions">Farm journal</a><a href="LICENSE">MIT license</a></div></footer>
-<script type="module" src="farm.js?v=peak-study1"></script>
+<script type="module" src="farm.js?v=damage-study1"></script>
 </body>
 </html>

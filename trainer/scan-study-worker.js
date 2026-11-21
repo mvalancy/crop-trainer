@@ -1,5 +1,5 @@
 import {field,sampleCloud} from './field.js?v=paired-study1';
-import {analyzeStudyScan,checkStudyPair,studyRecipes} from './scan-study.js?v=peak-study1';
+import {analyzeStudyScan,checkStudyPair,studyRecipes} from './scan-study.js?v=damage-study1';
 
 self.onmessage = ({data:{recipe,budgets,mode='budgets'}}) => {
   try {

@@ -69,3 +69,31 @@ test('generator observation labels have no influence on either orchard detector'
   assert.deepEqual(changed.heightPins,original.heightPins);
   assert.equal(changed.observedPlants,0);
 });
+
+test('scaffold damage compares the same structured orchard at its applied ray budget',()=>{
+  const orchard=makeRecipe(7412177,true,getSensor('reference'),'apple',2,'open-vase','mixed');
+  const source={...orchard,appleCanopy:'dormant',points:34000};
+  for(const [index,arm] of studyRecipes(source,'damage').entries()){
+    assert.deepEqual(arm,{...source,plantCondition:['healthy','damaged'][index]});
+  }
+  assert.equal(source.plantCondition,'mixed');
+  assert.throws(()=>studyRecipes(seedlingRecipe('reference'),'damage'),/structured apple/);
+  assert.throws(()=>studyRecipes({...source,plantArchitecture:1},'damage'),/structured apple/);
+  assert.throws(()=>studyRecipes(source,'unknown'),/supported scan comparison/);
+});
+
+test('orchard damage gives a nearest distance even when the pin misses the 15 cm match',()=>{
+  const source={...makeRecipe(7412177,true,getSensor('reference'),'apple',2,'open-vase'),
+    appleCanopy:'leafy', points:60000, weeds:false, sticks:false, boards:false, scanNoise:null};
+  const [a,b]=studyRecipes(source,'damage').map(recipe=>analyzeStudyScan(field(recipe)));
+  checkStudyPair(a,b);
+  assert.equal(a.tileId,'2ebd71591d8c0c2e');
+  assert.equal(b.tileId,'8771d49dce3ecaac');
+  for(const [scan,expectedCm,matched,matches] of [[a,'6.7',true,9],[b,'37.9',false,4]]){
+    assert.equal((scan.plants[0].nearestOrchardPinM*100).toFixed(1),expectedCm);
+    assert.equal(scan.plants[0].orchard,matched);
+    assert.equal(scan.orchardScores.at(-1).tp,matches);
+  }
+  const soil={...field(source),xyz:new Float32Array([0,0,0])};
+  assert.ok(analyzeStudyScan(soil).plants.every(p=>!p.orchard&&p.nearestOrchardPinM===null));
+});

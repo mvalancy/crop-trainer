@@ -1,6 +1,6 @@
 import {encodePly} from './trainer/ply.js?v=export1';
 import {setupFirstSteps} from './first-steps.js';
-import {initScanStudy} from './trainer/scan-study-ui.js?v=peak-study1';
+import {initScanStudy} from './trainer/scan-study-ui.js?v=damage-study1';
 import {createFieldLesson} from './field-lesson.js';
 import {cropProfile} from './trainer/crops.js?v=systems1';
 import {scanSession} from './trainer/scan-session.js?v=plants3';
@@ -236,6 +236,7 @@ function applyScan(value, recipe, url, selectedBox, expectedTile) {
   const training = new URLSearchParams({plan:'practice',crop:recipe.crop,sensor:recipe.sampling.key});
   const budget = url.searchParams.get('budget');
   training.set('plantArchitecture',recipe.plantArchitecture??1);
+  if(requested.get('peakAveraging')==='occupied')training.set('peakAveraging','occupied');
   if(recipe.plantArchitecture>=2){
     training.set('plantForm',recipe.plantForm);training.set('plantCondition',recipe.plantCondition);
   }

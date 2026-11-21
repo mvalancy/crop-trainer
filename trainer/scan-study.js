@@ -13,10 +13,15 @@ function heightResult(peaks, separation, references) {
 }
 
 export function studyRecipes(recipe, mode, budgets) {
+  if (mode === 'damage') {
+    if (recipe.crop !== 'apple' || !(recipe.plantArchitecture >= 2)) throw Error('Choose structured apple trees to compare scaffold damage.');
+    return ['healthy','damaged'].map(plantCondition => ({...recipe, plantCondition}));
+  }
   if (mode === 'layouts') {
     return ['reference','os1-64'].map(key => ({...recipe, sampling:getSensor(key), points:60000}));
   }
-  if (mode !== 'budgets' || budgets?.length !== 2 ||
+  if (mode !== 'budgets') throw Error('Choose a supported scan comparison.');
+  if (budgets?.length !== 2 ||
       !budgets.every(n => RAY_BUDGETS.includes(n)) || budgets[0] >= budgets[1]) {
     throw Error('Choose a second budget higher than the first.');
   }
@@ -42,7 +47,8 @@ export function analyzeStudyScan(scan) {
     peak:proposals.pinByBox[i] !== -1,
     height:height.pinByReference15[i] !== -1,
     sampledHeight:sampled.pinByReference15[i] !== -1,
-    ...(orchard ? {orchard:orchard.pinByReference15[i] !== -1} : {})
+    ...(orchard ? {orchard:orchard.pinByReference15[i] !== -1,
+      nearestOrchardPinM:orchardPins.length ? Math.min(...orchardPins.map(([px,py]) => Math.hypot(px-x,py-y))) : null} : {})
   }));
   return {
     tileId:scan.labels.tile_id,recipe:scan.p,sampledRays:scan.sampledRays,
