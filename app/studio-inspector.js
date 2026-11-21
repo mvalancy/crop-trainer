@@ -29,7 +29,7 @@ export function createInspector(workbench, name, shell, onSelect) {
   }
   function addPanel(label, description, ...content) {
     const panel = doc.createElement('section');
-    panel.id = workbench.dataset.instrument + '-inspector-' + label.toLowerCase().replaceAll(' ', '-');
+    panel.id = workbench.dataset.instrument + '-inspector-' + label.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     panel.className = 'instrumentPanel';
     panel.setAttribute('aria-label', label);
     panel.tabIndex = 0;
@@ -98,6 +98,19 @@ export function createInspector(workbench, name, shell, onSelect) {
     const previous = panels.get(selected);
     display(null);
     previous?.focus();
+  });
+  // The browser's sequential navigation can leave an iframe at its last control,
+  // even when that frame owns a modal. Keep both ends inside the open sheet.
+  drawer.addEventListener('keydown', event => {
+    if (event.key !== 'Tab' || !drawer.matches(':modal')) return;
+    const stops = [...drawer.querySelectorAll('button, a[href], input, select, textarea, summary, [tabindex]')]
+      .filter(el => el.tabIndex >= 0 && !el.matches(':disabled') && el.checkVisibility());
+    const first = stops[0], last = stops.at(-1);
+    const atStart = event.target === first || (event.target === heading && back.hidden);
+    if (event.shiftKey ? atStart : event.target === last) {
+      event.preventDefault();
+      (event.shiftKey ? last : first)?.focus();
+    }
   });
   close.addEventListener('click', dismiss);
   drawer.addEventListener('cancel', event => {event.preventDefault(); dismiss();});

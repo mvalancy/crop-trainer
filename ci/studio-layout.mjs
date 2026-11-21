@@ -144,6 +144,13 @@ export async function checkDrawer(page, base) {
       await drawer.waitFor({state:'hidden'});
       await page.waitForFunction(()=>document.activeElement.id==='openSettings' && !history.state?.studioDrawer);
       await page.locator('#openSettings').click();
+      await drawer.getByRole('button',{name:'All settings sections'}).click();
+      const last = drawer.getByRole('button',{name:'Findings',exact:true});
+      await last.focus();
+      await page.keyboard.press('Tab');
+      assert.equal(await frame.locator(':focus').getAttribute('aria-label'),'Close settings');
+      await page.keyboard.press('Shift+Tab');
+      assert.equal(await frame.locator(':focus').getAttribute('aria-label'),'Findings');
       await page.goBack();
       await drawer.waitFor({state:'hidden'});
       await page.goForward();
