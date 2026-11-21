@@ -7,6 +7,7 @@ Grow a field, zoom in on a single plant and see which leaves the laser reached. 
 | To change… | Start here |
 | --- | --- |
 | Field controls, scan downloads and share links | [Generator page](../index.html) and [field controls](farm.js) |
+| Paired scans, tree pins and board placement | [Scan comparison code and controls](../trainer/study/README.md) · [Illustrated orchard experiment](../docs/orchard-boards.md) |
 | Orbit, pan, zoom and point colors | [3D viewer](viewer.js) |
 | The interactive first lesson | [Beginner exercises](first-steps.js), [scan patch exercise](field-lesson.js) and [animated weight update](weight-lesson.js) |
 | Generator layout with every section open | [Viewer, recipe and scan summary](scan-workspace.css) · [Plant controls and portraits](advanced-scan.css) · [Comparison maps and scores](scan-comparison.css) · [Field lessons and journal](field-guide.css) |

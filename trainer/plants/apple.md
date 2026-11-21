@@ -51,6 +51,14 @@ Start with the cells that already qualify on their usual support score. Around e
 
 **Try the same tree on two scanners.** On development field `18101637`, select **Compare ranking rules** and inspect tree 0. On simulated rings, one occupied low cell raised a candidate’s score from 5.45 to 6.45. The nearest pin moved from **48.8 cm to 5.6 cm** from the planted base. On the reference grid, a nearby candidate also gained one point. Its score reached 6.63 and a competitor scored 6.71, so the nearest pin stayed **44.8 cm** away. Both layouts sampled 60,000 rays over the same healthy, leafy planting. [Try the ring scan](https://mvalancy.github.io/crop-trainer/?crop=apple&plantArchitecture=4&plantForm=central-leader&plantCondition=healthy&appleCanopy=leafy&seed=18101637&budget=60000&ground=true&noise=clean&weeds=off&sticks=off&boards=off&studyMode=ranking&studyMetric=orchard&studyZoom=tree&studyCloud=on&studyBox=0&sensor=os1-64&tile=f89d8eafa9371fd6#scan-study) · [Try the reference grid](https://mvalancy.github.io/crop-trainer/?crop=apple&plantArchitecture=4&plantForm=central-leader&plantCondition=healthy&appleCanopy=leafy&seed=18101637&budget=60000&ground=true&noise=clean&weeds=off&sticks=off&boards=off&studyMode=ranking&studyMetric=orchard&studyZoom=tree&studyCloud=on&studyBox=0&sensor=reference&tile=edfc7257e8fa2674#scan-study)
 
+## Could a board look like part of a tree?
+
+A raised board can reflect the laser at a height the locator also sees around a trunk. What happens if the generator always puts boards at trees? Compare the same orchard twice. Keep the trees and the boards’ sizes and angles fixed, then change where the boards land.
+
+![Two overhead sketches of the same orchard. Four example boards start on tree bases, then scatter across the plot. One still lies near a tree.](../../art/plants/apple-board-placement.svg)
+
+The generator places nine boards when boards are enabled on a planted plot. In the first layout it picks a tree base for each board, so a tree may be picked twice. In the second it draws each board’s position independently across the plot. The tree bases stay fixed for scoring in both layouts. [See how board placement affects the locator](../../docs/orchard-boards.md)
+
 ## Break a branch or take away its leaves
 
 Choose **All plants damaged** to shorten one scaffold into a woody stub. Its distal shoots and their clusters disappear. The other scaffolds use the same random draws as in the intact tree. On a vase, losing one of three main limbs can open a large gap. On a central leader the same type of break can be much less conspicuous. **About one in four damaged** selects a reproducible subset by planting ID. [Inspect a broken vase orchard](https://mvalancy.github.io/crop-trainer/?crop=apple&plantArchitecture=3&plantForm=open-vase&plantCondition=damaged&seed=39061&sensor=reference&budget=100000&noise=clean#field)

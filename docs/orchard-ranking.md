@@ -52,7 +52,7 @@ We held out another four plantings with 42 distinct healthy, leafy central-leade
 | Weeds | 48 / 1,460 | 51 / 43 | 51 / 44 | 52 / 42 |
 | Boards | 22 / 3,701 | 51 / 43 | 55 / 37 | 52 / 42 |
 
-The counts are at 15 cm. For the final column only, we used the simulator’s return classes **after blind scoring**. We moved low weed or board returns below the bonus band and verified that every usual-rule pin stayed in place. Masking low board returns lost five matched tree appearances and regained two, leaving 52 matches. The generator centers its boards on selected planting positions. That makes a board a clue to the label in this particular scene. A detector in a real orchard only has the XYZ. The field generator keeps the low-return rule available as an experiment.
+The counts are at 15 cm. For the final column only, we used the simulator’s return classes **after blind scoring**. We moved low weed or board returns below the bonus band and verified that every usual-rule pin stayed in place. Masking low board returns lost five matched tree appearances and regained two, leaving 52 matches. These recipes center their boards on selected planting positions. That makes a board a clue to the label in this particular scene. A detector in a real orchard only has the XYZ. A follow-up moved the same boards across the plot and checked how many of those matches survived. [Board placement experiment](orchard-boards.md)
 
 ## Repeat the comparisons
 

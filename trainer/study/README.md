@@ -8,6 +8,8 @@ Choose **Tree-base pin spacing** on an apple scan to compare two detector settin
 
 **Tree-base ranking** tries two ways of ordering possible tree bases on one point cloud. Cyan squares mark low returns. Pick a tree to see which squares earned a bonus and how far the nearest pin moved. [Replay a recovered tree and a tree beside a board](../../docs/orchard-ranking.md#try-it-on-one-tree)
 
+**Board placement** asks whether a detector uses boards as clues to tree positions. Scan an apple orchard with boards centered on trees, then move the same boards to positions drawn independently of the trees. Both scans use the selected ray budget, layout and low-return orchard rule. Turn on scan points to see sampled board hits in orange. The maps show at most 9,000 points each. Their captions count board hits across each full scan, including hits omitted from the preview. The color comes from the simulator after scoring. The detector receives XYZ alone. Pick a tree to count all board hits within 15 cm of its planted base in each scan. Each 3D link opens its own board arrangement. The JSON download includes the two recipes, scan IDs, preview and full board counts, timings and all three detector scores. [Explore the board experiment](../../docs/orchard-boards.md)
+
 | To change | Open |
 | --- | --- |
 | The paired recipes, candidate peaks, returned points and detector scores | [Study analysis](scan-study.js) |

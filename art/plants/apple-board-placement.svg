@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="364" height="419" viewBox="0 0 364 419" role="img" aria-labelledby="title desc">
+  <title id="title">Where did the boards land?</title>
+  <desc id="desc">Two overhead sketches show the same eight trees. In the first, four sample boards are centred on selected tree bases. In the second, the same shapes land at independently sampled positions. One still lands close to a tree by chance. The detector sees laser returns without labels for tree or board.</desc>
+  <style>
+    text { font-family: system-ui, sans-serif; fill: #173d30 }
+    .heading { font-size: 23px; font-weight: 720 }
+    .label { font-size: 18px; font-weight: 660 }
+    .note { font-size: 16px; fill: #395449 }
+    @media (prefers-reduced-motion: no-preference) {
+      .move { animation: scatter 1.8s cubic-bezier(.3,.12,.29,1) .45s backwards }
+      @keyframes scatter {
+        from { transform: translate(var(--dx), var(--dy)) }
+        to { transform: translate(0, 0) }
+      }
+    }
+  </style>
+  <defs>
+    <g id="tree">
+      <path d="M-10 3C-18 0-13-10-6-10C-3-16 5-15 8-9C17-10 19 0 13 5C14 13 6 17 0 12C-6 16-13 10-10 3Z" fill="#dbead4" stroke="#58795a" stroke-width="1.4"/>
+      <path d="M-8-4L0 1L4-6M0 1L5 8" fill="none" stroke="#91ab86" stroke-width="1.6" stroke-linecap="round"/>
+      <circle r="2.8" fill="#274937"/>
+    </g>
+    <g id="board">
+      <rect x="-15" y="-5" width="30" height="10" rx="1.2" fill="#edb565" stroke="#684521" stroke-width="1.6"/>
+      <path d="M-11-1.8H-1M3 1.9H11" fill="none" stroke="#925a28" stroke-width="1.4" stroke-linecap="round"/>
+    </g>
+    <g id="plot">
+      <rect x="0.75" y="0.75" width="322.5" height="106.5" rx="9" fill="#f4f6e9" stroke="#b7c8ae" stroke-width="1.5"/>
+      <path d="M8 27H316M8 80H316" fill="none" stroke="#becbb3" stroke-width="2" stroke-dasharray="3 4"/>
+      <use xlink:href="#tree" transform="translate(43 27) rotate(8)"/>
+      <use xlink:href="#tree" transform="translate(117 26) rotate(69)"/>
+      <use xlink:href="#tree" transform="translate(198 28) rotate(-15)"/>
+      <use xlink:href="#tree" transform="translate(278 25) rotate(89)"/>
+      <use xlink:href="#tree" transform="translate(39 79) rotate(-46)"/>
+      <use xlink:href="#tree" transform="translate(121 78) rotate(108)"/>
+      <use xlink:href="#tree" transform="translate(194 81) rotate(12)"/>
+      <use xlink:href="#tree" transform="translate(282 78) rotate(-76)"/>
+    </g>
+  </defs>
+  <rect x=".75" y=".75" width="362.5" height="417.5" rx="17" fill="#fffcf4" stroke="#ced6c3" stroke-width="1.5"/>
+  <text x="20" y="36" class="heading">Where did the boards land?</text>
+  <use xlink:href="#tree" transform="translate(32 63) scale(.75)"/>
+  <text x="51" y="69" class="note">Apple tree</text>
+  <use xlink:href="#board" transform="translate(192 63) rotate(-12)"/>
+  <text x="216" y="69" class="note">Raised board</text>
+  <text x="20" y="106" class="label">Centred on tree bases</text>
+  <g transform="translate(20 117)">
+    <use xlink:href="#plot"/>
+    <use xlink:href="#board" transform="translate(43 27) rotate(-30)"/>
+    <use xlink:href="#board" transform="translate(117 26) rotate(15) scale(.88 1)"/>
+    <use xlink:href="#board" transform="translate(194 81) rotate(49) scale(1 .87)"/>
+    <use xlink:href="#board" transform="translate(282 78) rotate(-7) scale(1.13 1)"/>
+  </g>
+  <text x="20" y="260" class="label">Scattered independently</text>
+  <g transform="translate(20 271)">
+    <use xlink:href="#plot"/>
+    <g transform="translate(66 64)"><g class="move" style="--dx:-23px;--dy:-37px"><use xlink:href="#board" transform="rotate(-30)"/></g></g>
+    <g transform="translate(127 20)"><g class="move" style="--dx:-10px;--dy:6px"><use xlink:href="#board" transform="rotate(15) scale(.88 1)"/></g></g>
+    <g transform="translate(213 49)"><g class="move" style="--dx:-19px;--dy:32px"><use xlink:href="#board" transform="rotate(49) scale(1 .87)"/></g></g>
+    <g transform="translate(249 92)"><g class="move" style="--dx:33px;--dy:-14px"><use xlink:href="#board" transform="rotate(-7) scale(1.13 1)"/></g></g>
+  </g>
+  <text x="20" y="401" class="note">A board can still land near a tree by chance.</text>
+</svg>

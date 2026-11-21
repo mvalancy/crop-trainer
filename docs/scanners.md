@@ -83,6 +83,12 @@ These paired mean F1 scores use six mixed training fields, three held-out fields
 
 For tomato at seed 212, the ring scan had a candidate peak within 15 cm of 578 of 620 labeled plant instances across six tiles. The score cutoff retained matches for 311 and the spacing filter left 310. A second test trained exclusively on that same ring layout, holding validation scans fixed. Tomato mean F1 rose from 0.604 to 0.627 on seed 212 and fell from 0.758 to 0.726 on seed 211. These measurements describe the projected synthetic layouts. [Open the tomato ring test](https://mvalancy.github.io/crop-trainer/trainer/?crop=tomato&seed=212&sensor=mixed&validationSensor=os1-64) · [Open its grid control](https://mvalancy.github.io/crop-trainer/trainer/?crop=tomato&seed=212&sensor=mixed&validationSensor=reference)
 
+## Where can boards land?
+
+Open **Advanced scan settings → Weeds, obstacles and fixtures**. Choose **Include** under Boards. **At plants** places nine boards at planted crop centers. **Anywhere** samples nine positions across the 10 m square using the field seed. Choose **Apply and scan**, then read **Boards** in the scan summary to see how many laser rays actually returned from those surfaces. The recipe download and share link preserve your choice.
+
+On an apple planting, choose **Board placement** in **Compare scans and detectors**. Both maps use the same tree-base rule. Turn on **Show scan points** to see board returns in orange and select a tree to inspect its closest pin. [Replay a tree whose pin moved](https://mvalancy.github.io/crop-trainer/?crop=apple&plantArchitecture=4&plantForm=central-leader&plantCondition=healthy&appleCanopy=leafy&seed=22153127&sensor=reference&budget=60000&ground=true&noise=clean&weeds=off&sticks=off&boards=on&studyMode=boards&studyMetric=orchard&studyCloud=on&studyZoom=tree&studyBox=0#scan-study) · [Read the measured comparison](orchard-boards.md)
+
 ## How many rays reach the field?
 
 Set **Validation ray budget** in the Training Shed to vary scan density on held-out fields. Training uses the budget selected for its own split, which defaults to seeded variation. Open a scored tile to see how many rays its layout sampled and how many returns survived noise and soil removal. The **Ray scout** farm challenge uses the same distinction. Two requests above the layout's capacity produce the same number of sampled rays.
