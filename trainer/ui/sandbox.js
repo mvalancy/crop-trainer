@@ -1,4 +1,4 @@
-import {networkShape,featureNames} from '../models/network.js?v=field-test1';
+import {networkShape,featureNames,featureNamesFor} from '../models/network.js?v=terrain1';
 import {createNetworkDiagram} from './network-diagram.js?v=detector-flow1';
 export {featureNames};
 
@@ -12,7 +12,7 @@ export function startingPreset(params) {
   if (params.has('epochs') || params.get('plan') === 'quick') return 'quick';
   if (params.get('plan') === 'practice') return 'practice';
   const experimentKeys = ['embed', 'engine', 'seed', 'model', 'crop', 'sensor', 'validationSensor',
-    'trainingRayBudget', 'validationRayBudget', 'threshold', 'minimumHeight', 'soilMetric', 'missBand'];
+    'trainingRayBudget', 'validationRayBudget', 'threshold', 'minimumHeight', 'soilMetric', 'missBand', 'featureMode', 'trainFields', 'valFields'];
   return experimentKeys.some(key => params.has(key)) ? 'quick' : 'practice';
 }
 
@@ -84,6 +84,8 @@ export function trainInWorker(x,y,options,signal,onEpoch,onReady,onCheckpoint) {
 
 const inputHelp = {
   'Smoothed peak height':'A weighted average of cell heights in a three-by-three window. The center has the most influence.',
+  'Peak above local ground':'Tallest return in the central three-by-three patch minus the local low surface. The surface comes from the lowest returns in nearby sampled cells.',
+  'Surrounding height spread':'Spread between the 20th and 80th percentiles of the nearby cell lows. Both local-ground measurements are zero when fewer than three ring cells received returns.',
   'Center cell height':'The highest return in the 5 cm cell containing the peak before smoothing.',
   'Mean inner height':'Average of the cell heights in the central three-by-three patch.',
   'Mean middle height':'Average cell height in the next band around the central patch.',
@@ -98,8 +100,9 @@ const inputHelp = {
   'Peak above background':'The tallest nearby return minus a background estimate from the outer band. Background cell heights are capped at 8 cm for this estimate.'
 };
 
-export function inspectWeights(weights, hiddenLayers) {
-  const {layers} = networkShape(featureNames.length,hiddenLayers);
+export function inspectWeights(weights, hiddenLayers, featureMode) {
+  const names = featureNamesFor(featureMode);
+  const {layers} = networkShape(names.length,hiddenLayers);
   const select = $('weightLayer'), unit = $('weightUnit');
   select.replaceChildren(...layers.map((_,i)=>new Option(
     i===layers.length-1?'Output score':'Hidden layer '+(i+1),String(i))));
@@ -111,9 +114,9 @@ export function inspectWeights(weights, hiddenLayers) {
     const rows=values.map((value,i)=>{
       const row=document.createElement('tr'), name=document.createElement('th');
       name.scope='row';
-      name.textContent=i===layer.inputs?'Bias':index===0?featureNames[i]:'Unit '+(i+1);
+      name.textContent=i===layer.inputs?'Bias':index===0?names[i]:'Unit '+(i+1);
       if(i===layer.inputs) name.dataset.help='The learned offset added to this unit’s weighted sum, even when its other inputs are zero.';
-      else if(index===0) name.dataset.help=inputHelp[featureNames[i]];
+      else if(index===0) name.dataset.help=inputHelp[names[i]];
       else name.dataset.help='The output from this numbered unit of the previous hidden layer feeds the unit you are inspecting.';
       row.append(name);
       const cell=row.insertCell(), bar=document.createElement('span');

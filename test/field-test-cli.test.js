@@ -71,6 +71,24 @@ test('unlabeled scans preserve predictions, surveyed empty plots record false po
   assert.equal(empty.evaluation.scores[2].f1,null);
 });
 
+test('CLI cutoff trials preserve input hashes and reproduce browser scoring',async t=>{
+  const {cwd,run}=await fixture(t);
+  await run('saved.json','--labels','survey.csv');
+  const saved=JSON.parse(await readFile(join(cwd,'saved.json')));
+  const {stdout}=await run('trial.json','--labels','survey.csv','--score-cutoff','0.20');
+  assert.match(stdout,/Trial score cutoff 0.2 · saved 0.9/);
+  const {format,files,...trial}=JSON.parse(await readFile(join(cwd,'trial.json')));
+  assert.equal(format,saved.format);
+  assert.deepEqual(files,saved.files);
+  assert.deepEqual(trial,runFieldTest({model,xyz,alignment,labels:{filename:'survey.csv',text:centers},thresholdOverride:.2}));
+  assert.equal(trial.evaluation.scores.at(-1).tp,2);
+  assert.equal(saved.evaluation.scores.at(-1).tp,0);
+  assert.ok(!Object.hasOwn(saved.detector,'savedThreshold'));
+  for(const invalid of ['1.1','x',' ']) await assert.rejects(run('bad.json','--score-cutoff',invalid),/cutoff/);
+  await assert.rejects(run('bad.json','--score-cutoff','.2','--score-cutoff','.5'),/repeated/);
+  assert.ok(!(await readdir(cwd)).includes('bad.json'));
+});
+
 test('simultaneous runs keep exactly one complete report, and invalid inputs never produce reports', async t=>{
   const {cwd,run} = await fixture(t);
   const attempts = await Promise.allSettled([run('race.json'),run('race.json')]);

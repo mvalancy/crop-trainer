@@ -5,8 +5,9 @@ import {checkOutputPaths,writeNewJson} from './output.mjs';
 import {parsePly,MAX_PLY_BYTES} from '../trainer/field-test/ply.js';
 import {MAX_REFERENCE_BYTES} from '../trainer/field-test/references.js';
 import {runFieldTest} from '../trainer/field-test/score-scan.js';
+import {checkScoreThreshold} from '../trainer/models/data.js';
 
-const usage = 'node cli/score-scan.mjs model.json scan.ply new-report.json [--labels centers.csv] [--unit m|cm|mm] [--origin X,Y,GROUND_Z] [--grade-percent X,Y]';
+const usage = 'node cli/score-scan.mjs model.json scan.ply new-report.json [--labels centers.csv] [--unit m|cm|mm] [--origin X,Y,GROUND_Z] [--grade-percent X,Y] [--score-cutoff 0..1]';
 const MAX_MODEL_BYTES = 1024*1024;
 
 function options(args) {
@@ -15,7 +16,7 @@ function options(args) {
   const flags = new Map();
   for (let i = 0; i < rest.length; i += 2) {
     const name = rest[i], value = rest[i+1];
-    if (!['--labels','--unit','--origin','--grade-percent'].includes(name) || !value || value.startsWith('--') || flags.has(name))
+    if (!['--labels','--unit','--origin','--grade-percent','--score-cutoff'].includes(name) || !value || value.startsWith('--') || flags.has(name))
       throw Error('Invalid or repeated option '+name+'\n'+usage);
     flags.set(name,value);
   }
@@ -24,7 +25,12 @@ function options(args) {
   const origin = numericList(flags.get('--origin') ?? '0,0,0',3,'--origin X,Y,GROUND_Z');
   const alignment = {unit,origin};
   if (flags.has('--grade-percent')) alignment.gradePercent = numericList(flags.get('--grade-percent'),2,'--grade-percent X,Y');
-  return {model,scan,out,labels:flags.get('--labels'),alignment};
+  let thresholdOverride;
+  if (flags.has('--score-cutoff')) {
+    thresholdOverride = Number(flags.get('--score-cutoff').trim() || NaN);
+    checkScoreThreshold(thresholdOverride);
+  }
+  return {model,scan,out,labels:flags.get('--labels'),alignment,thresholdOverride};
 }
 
 function numericList(value,size,option) {
@@ -59,11 +65,12 @@ async function main(args) {
   const xyz=parsePly(scanFile.data);
   const labels=labelFile ? {text:labelFile.data.toString('utf8'),filename:labelFile.name} : null;
   const tileId=/^([0-9a-f]{16})\.ply$/i.exec(scanFile.name)?.[1].toLowerCase();
-  const result=runFieldTest({model,xyz,alignment:opts.alignment,labels,tileId});
+  const result=runFieldTest({model,xyz,alignment:opts.alignment,labels,tileId,thresholdOverride:opts.thresholdOverride});
   const identity=file=>file ? {name:file.name,sha256:file.sha256} : null;
   const files={model:identity(modelFile),scan:identity(scanFile),labels:identity(labelFile)};
   await writeNewJson([[opts.out,{format:'crop-trainer-field-test-v1',files,...result}]]);
   console.log(result.pointCount+' scan points · '+result.pins.length+' model pins · '+result.baselinePins.length+' height-only pins'+(result.orchard?' · '+result.orchard.pins.length+' orchard-base pins':''));
+  if (opts.thresholdOverride!==undefined) console.log('Trial score cutoff '+result.detector.threshold+' · saved '+result.detector.savedThreshold);
   if (result.evaluation) {
     const show=score=>score.f1===null?'undefined':score.f1.toFixed(4);
     for (const [i,score] of result.evaluation.scores.entries()) {

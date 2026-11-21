@@ -1,6 +1,6 @@
 import {parsePly, MAX_PLY_BYTES} from './ply.js';
 import {MAX_REFERENCE_BYTES} from './references.js?v=systems1';
-import {runFieldTest} from './score-scan.js?v=peak1';
+import {runFieldTest} from './score-scan.js?v=cutoff1';
 
 let xyz, scan;
 async function read(file, limit) {
@@ -32,7 +32,7 @@ async function loadScan(file) {
   self.postMessage({type:'loaded',min,max,count,sampled},[sampled.buffer]);
 }
 
-async function detect({modelFile,labelFile,alignment}) {
+async function detect({modelFile,labelFile,alignment,thresholdOverride}) {
   if (!xyz) throw Error('Choose a scan before running the detector.');
   const [weights,annotations] = await Promise.all([
     read(modelFile, 1024*1024), labelFile ? read(labelFile,MAX_REFERENCE_BYTES) : null
@@ -43,7 +43,7 @@ async function detect({modelFile,labelFile,alignment}) {
   catch {throw Error('Choose a valid JSON weights export from the Training shed.');}
   const labels = annotations ? {text:decode(annotations.bytes),filename:labelFile.name} : null;
   const tileId = /^([0-9a-f]{16})\.ply$/i.exec(scan.name)?.[1].toLowerCase();
-  const result = runFieldTest({model,xyz,alignment,labels,tileId});
+  const result = runFieldTest({model,xyz,alignment,labels,tileId,thresholdOverride});
   const files = {model:weights.identity,scan,labels:annotations?.identity ?? null};
   self.postMessage({type:'done',report:{format:'crop-trainer-field-test-v1',files,...result}});
 }

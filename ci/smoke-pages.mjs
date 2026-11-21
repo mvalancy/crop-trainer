@@ -551,9 +551,70 @@ try {
   }
   console.log('Downloaded example weights, scan and both reference formats; the Field Test scored all 217 held-out lettuce plants.');
 
+  // Re-run one of the shed's own held-out scans from its saved scan and weights.
+  // This catches a mismatch between training, the downloadable model and Field Test extraction.
+  await open('trainer/?plan=quick&engine=cpu&crop=tomato&plantArchitecture=2&plantForm=mixed&validationPlantForm=seedling&seed=23671943&sensor=reference&validationSensor=os1-64&epochs=3&featureMode=local-ground');
+  const mode=page.locator('#featureMode');
+  assert.equal(await mode.inputValue(),'local-ground');
+  const guide=page.locator('#localGroundGuide');
+  await guide.locator('summary').click();
+  for (const width of [1366,390,320]) {
+    await page.setViewportSize({width,height:768});
+    const graphic=guide.locator('img');
+    await graphic.scrollIntoViewIfNeeded();
+    await graphic.evaluate(img=>img.decode());
+    const bounds=await graphic.boundingBox();
+    assert.ok(bounds.width>=220 && bounds.x>=0 && bounds.x+bounds.width<=width+1,'the illustration must remain readable inside the viewport');
+    if (width===1366) {
+      const columns=await mode.evaluate(select=>{
+        const group=select.closest('#detectorOptions'), panel=group.getBoundingClientRect();
+        return [panel.width,group.parentElement.clientWidth,document.querySelector('#localGroundGuide').getBoundingClientRect().width];
+      });
+      assert.ok(columns[0]>=.9*columns[1] && columns[2]>=.9*columns[0],
+        'the expanded detector controls and their illustrated guide should fill the settings panel on a laptop');
+    }
+  }
+  assert.equal(new URL(await page.locator('#featuresBench').evaluate(link=>link.href)).searchParams.get('comparison'),'features');
+  await page.locator('#run').click();
+  const heldOutRun=await downloadJSON(page.locator('#downloadRun'));
+  const modelFile=await downloadFile(page.locator('#downloadWeights'),'click');
+  const savedModel=JSON.parse(modelFile.buffer.toString('utf8'));
+  assert.equal(savedModel.featureSchema,'crop-peak-13-local-ground-v1');
+  assert.equal(savedModel.featureMode,'local-ground');
+  assert.equal((await downloadJSON(page.locator('#downloadSettings'))).featureMode,'local-ground');
+  const tileLink=new URL(await page.locator('#inspectScan').evaluate(link=>link.href));
+  const replayTile=heldOutRun.tiles.find(tile=>tile.tile_id===tileLink.searchParams.get('tile'));
+  assert.ok(replayTile,'the inspection link should point to a scored holdout tile');
+  await page.goto(tileLink.href);
+  await page.locator('#ply:enabled').waitFor();
+  assert.equal(await page.locator('#scanId').textContent(),replayTile.tile_id);
+  const scanFile=await downloadFile(page.locator('#ply'),'click');
+  const labelFile=await downloadFile(page.locator('#labels'),'click');
+  await open('trainer/#field-test');
+  await page.locator('#testWeights').setInputFiles({...modelFile,mimeType:'application/json'});
+  await page.locator('#testPly').setInputFiles({...scanFile,mimeType:'application/octet-stream'});
+  await page.locator('#testLabels').setInputFiles({...labelFile,mimeType:'application/json'});
+  await page.locator('#testDetect').click();
+  const replayReport=await downloadJSON(page.locator('#testExport'));
+  assert.equal(replayReport.detector.featureSchema,savedModel.featureSchema);
+  const matchCounts=rows=>rows.map(({cm,tp,fp,fn})=>[cm,tp,fp,fn]);
+  assert.deepEqual(matchCounts(replayReport.evaluation.scores),matchCounts(replayTile.byTolerance));
+  await page.locator('#testCutoffSettings > summary').click();
+  await page.locator('#testCutoff').fill('0.20');
+  await page.locator('#testDetect').click();
+  const trial=await downloadJSON(page.locator('#testExport'));
+  assert.deepEqual(trial.files,replayReport.files);
+  assert.deepEqual(trial.baselineEvaluation,replayReport.baselineEvaluation);
+  assert.equal(trial.detector.savedThreshold,savedModel.threshold);
+  assert.equal(trial.detector.threshold,.20);
+  await page.locator('#testResetCutoff').click();
+  await page.locator('#testDetect').click();
+  assert.deepEqual(await downloadJSON(page.locator('#testExport')),replayReport,'reset reproduces the saved detector');
+  console.log('Saved local-ground tomato weights reproduced the held-out counts at every tolerance and restored the original report after a cutoff trial.');
+
   await open('benchmark/');
   await page.locator('#benchOptions > summary').click();
-  for (const [crop,comparison] of [['lettuce','models'],['apple','forms'],['high-wire-tomato','density']]) {
+  for (const [crop,comparison] of [['lettuce','models'],['apple','forms'],['high-wire-tomato','density'],['tomato','features']]) {
     await page.locator('#crop').selectOption(crop);
     await page.locator('#comparison').selectOption(comparison);
     for (const width of [320,390,608,844,1024,1440]) {
@@ -597,8 +658,35 @@ try {
       const rect=cell.getBoundingClientRect();
       return rect.width>0 && rect.left>=0 && rect.right<=innerWidth;
     })), 'Each phone score and label must fit without sideways scrolling');
-  assert.deepEqual(errors,[]);
   console.log('Paired benchmark exported both seeds, three cutoffs and three matching distances.');
+
+  await open('benchmark/?comparison=features&crop=tomato&plantArchitecture=2&plantForm=mixed&validationPlantForm=seedling&seed=23671943&sensor=reference&validationSensor=os1-64&epochs=3&peakAveraging=occupied&live=off');
+  assert.ok(await page.locator('#featureMode').isDisabled(),'the feature comparison fixes both contenders');
+  await page.locator('#run').click();
+  const paired=await downloadJSON(page.locator('#export'));
+  assert.equal(paired.comparison,'features');
+  const sharedScanLinks=await page.locator('#fieldRows a, #pairViewer').evaluateAll(anchors=>anchors.map(anchor=>anchor.href));
+  assert.ok(sharedScanLinks.length>1);
+  for (const href of sharedScanLinks) {
+    const q=new URL(href).searchParams;
+    assert.equal(q.get('peakAveraging'),'occupied');
+    assert.equal(q.has('featureMode'),false,'a shared scan should carry only settings common to both feature contenders');
+  }
+  const links=await page.locator('#results a').evaluateAll(anchors=>anchors.map(anchor=>anchor.href));
+  for (const seed of [23671943,23671944]) {
+    const twins=paired.rows.filter(row=>row.seed===seed);
+    assert.deepEqual(twins.map(row=>row.featureMode).sort(),['absolute','local-ground']);
+    const manifests=twins.map(row=>paired.datasets[row.datasetIndex].recipeManifest);
+    assert.deepEqual(manifests[0],manifests[1],'both feature sets need the same training and validation scans');
+    for (const row of twins) {
+      assert.ok(links.some(href=>{
+        const query=new URL(href).searchParams;
+        return Number(query.get('seed'))===seed && query.get('featureMode')===row.featureMode;
+      }),'the contender should replay in the Training shed with its original seed and features');
+    }
+  }
+  assert.deepEqual(errors,[]);
+  console.log('Both tomato feature sets shared every scan and replayed from their benchmark rows.');
   console.log('Direct file and result help worked with hover, touch and keyboard; the first export tap downloaded its file.');
 } finally {
   try {await browser?.close();} finally {await new Promise(done=>server.close(done));}

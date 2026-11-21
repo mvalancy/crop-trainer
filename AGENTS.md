@@ -171,6 +171,12 @@ For apple **Board placement**, the same low-return rule sees two separately gene
 
 Open `/benchmark/?comparison=averaging` to refit on the same scans using both rules. Each fit gets its own candidate examples, normalization and weights. In Training Shed, the advanced peak-averaging control applies to training, validation and downloaded weights. Preserve `peakAveraging: "occupied"` in custom settings when replaying the sampled-cell rule. The standard weight schema is `crop-peak-13-v1`. Sampled-cell weights use `crop-peak-13-occupied-v1`. The Field Test import reads the schema before extracting peaks. [Seedling classifier results and soil controls](docs/seedling-peaks.md#can-training-reject-the-extra-soil-peaks)
 
+### Compare the height measurements
+
+Open `/benchmark/?comparison=features` to fit the starter network twice on identical scans and candidate locations. Each run learns its own input scaling and weights. Choose **Local ground** in the Training Shed or set `"featureMode": "local-ground"` in a training settings file. The two new inputs use low returns around the peak to estimate its height above its surroundings and the spread of those surrounding heights. Dense foliage can hide the soil.
+
+Training URLs accept `trainFields` and `valFields` to replay exact split sizes. Each field supplies a soil-present and a soil-removed scan. The weights identify both the averaging rule and the features. Local-ground models use `crop-peak-13-local-ground-v1` or `crop-peak-13-occupied-local-ground-v1` with sampled-cell averaging. Field Test reads those choices from the weights. To check an offline round trip, run `node cli/run.mjs preflight --feature-mode local-ground`. To reproduce the held-out tomato comparisons, run `node benchmark/studies/tomato-local-ground.mjs confirmation`. [Study, seeds and controls](docs/tomato-local-ground.md)
+
 ### Compare training duration
 
 Open `/benchmark/?comparison=epochs&crop=artichoke&seed=551`. Each seed generates one dataset. Three neural fits start from the same initial weights with the same examples, scaling, learning rate (0.25) and score cutoff (0.50). Each fit runs from scratch so its training time covers its entire duration. The second seed runs the budgets in reverse order.

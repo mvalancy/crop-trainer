@@ -53,10 +53,13 @@ function methodsFor(report) {
   const cm = meters => (meters*100).toFixed(1)+' cm';
   const peaks = 'Peak floor '+cm(detector.minimumHeight)+(detector.peakAveraging==='occupied'?' · average over sampled cells':'');
   const spacing = 'minimum spacing '+cm(detector.pinSeparation);
+  const cutoff = detector.savedThreshold === undefined ? 'saved score cutoff '+detector.threshold
+    : 'trial score cutoff '+detector.threshold+' (saved '+detector.savedThreshold+')';
+  const ground = detector.featureMode==='local-ground' ? ' · height above nearby low returns and the spread of surrounding heights' : '';
   const methods={
     model:{label:'Trained model',pins:report.pins,evaluation:report.evaluation,
-      help:'The saved detector scores each candidate plant using the shape of nearby scan points. Pins must pass its saved cutoff and be far enough apart.',
-      rule:peaks+' · saved score cutoff '+detector.threshold+' · '+spacing+'.'},
+      help:'The saved detector scores each candidate using the shape of nearby scan points. The model cutoff and minimum spacing determine which pins remain.',
+      rule:peaks+ground+' · '+cutoff+' · '+spacing+'.'},
     baseline:{label:'Height only',pins:report.baselinePins,evaluation:report.baselineEvaluation,
       help:'This rule keeps the tallest candidate peaks first and removes neighboring peaks that fall inside the crop’s spacing.',
       rule:peaks+' · peaks ranked by smoothed height · '+spacing+'.'}
@@ -153,6 +156,7 @@ export function initFieldTest(downloadJSON) {
   explainFieldTest();
   const form = byId('fieldTestForm'), modelSource = byId('testModelSource');
   const weights = byId('testWeights'), ply = byId('testPly'), labels = byId('testLabels');
+  const cutoff = byId('testCutoff'), resetCutoff = byId('testResetCutoff');
   const status = byId('testStatus'), results = byId('testResults'), cancel = byId('testCancel');
   const fields = [...form.querySelectorAll('input,select')];
   let currentModelFile, runningModel, worker, sampled, loaded = false, running = false, report;
@@ -163,6 +167,7 @@ export function initFieldTest(downloadJSON) {
     byId('testWeightsLabel').hidden = !useFile;
     for (const field of fields) field.disabled = running;
     weights.disabled = running || !useFile;
+    resetCutoff.disabled = running || (cutoff.value === '' && !cutoff.validity.badInput);
     byId('testDetect').disabled = running || !loaded || !(useFile ? weights.files[0] : currentModelFile);
     cancel.hidden = !worker || (loaded && !running);
   }
@@ -202,7 +207,7 @@ export function initFieldTest(downloadJSON) {
       updateControls(); return;
     }
     status.textContent = 'Reading '+file.name+'…';
-    const active = worker = new Worker(new URL('./field-test-worker.js?v=peak1',import.meta.url),{type:'module'});
+    const active = worker = new Worker(new URL('./field-test-worker.js?v=cutoff1',import.meta.url),{type:'module'});
     updateControls();
     function fail(message) {
       if (active !== worker) return;
@@ -245,6 +250,11 @@ export function initFieldTest(downloadJSON) {
     active.postMessage({type:'load',file});
   }
   ply.addEventListener('change',loadScan);
+  resetCutoff.addEventListener('click',()=>{
+    cutoff.value='';
+    cutoff.dispatchEvent(new Event('input',{bubbles:true}));
+    cutoff.focus();
+  });
   form.addEventListener('input',event => {
     if (event.target === ply || running) return;
     clearReport(); updateControls();
@@ -260,7 +270,8 @@ export function initFieldTest(downloadJSON) {
       gradePercent:numbers(['testGradeX','testGradeY'])};
     runningModel = modelFile; clearReport(); running = true; status.textContent = 'Finding plant centers in the scan…';
     updateControls();
-    worker.postMessage({type:'detect',alignment,modelFile,labelFile:labels.files[0]});
+    worker.postMessage({type:'detect',alignment,modelFile,labelFile:labels.files[0],
+      thresholdOverride:cutoff.value==='' ? undefined : cutoff.valueAsNumber});
   });
   cancel.addEventListener('click',() => {
     if (!loaded) {ply.value = ''; loadScan(); return;}
@@ -268,7 +279,9 @@ export function initFieldTest(downloadJSON) {
   });
   byId('testOverlay').addEventListener('change',renderOverlay);
   byId('testExport').addEventListener('click',() => {
-    if (report) downloadJSON(report,'field-test-'+report.crop+'-'+report.files.scan.sha256.slice(0,10)+'.json');
+    if (!report) return;
+    const trial = report.detector.savedThreshold === undefined ? '' : '-cutoff-'+report.detector.threshold;
+    downloadJSON(report,'field-test-'+report.crop+'-'+report.files.scan.sha256.slice(0,10)+trial+'.json');
   });
   // A visitor can pick a file before this module finishes loading.
   if (ply.files.length) loadScan();

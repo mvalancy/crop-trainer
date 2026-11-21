@@ -35,6 +35,10 @@ Keep the dataset seed, sensor, ray budget and epoch count fixed when comparing t
 
 Under **Peak detection and scoring → Average height across**, the default counts empty cells as zero when smoothing local heights. The experimental **Sampled cells only** rule averages only neighboring cells with returns and proposes pins only at sampled cells. Measured ground still contributes. This can reveal a seedling that only caught one ray or raise a clump of soil above the peak threshold. The rule changes the examples before either model learns, so train and score with the same setting. **Compare both peak rules** fits the benchmark’s starter network separately with each rule on identical scans at a 0.5 detection cutoff. To check export and scoring on your computer, `node cli/run.mjs preflight --peak-averaging occupied` fits a fresh model and replays six generated scans. [Try the height rule on a seedling and bare soil](https://mvalancy.github.io/crop-trainer/trainer/?crop=tomato&minimumHeight=0.065#averagingStudy) · [Synthetic seedling experiments](seedling-peaks.md#can-training-reject-the-extra-soil-peaks)
 
+### How tall is a peak above its surroundings?
+
+A tomato seedling and a bump of soil can both make a 5 cm peak. Under **Peak detection and scoring → Height features**, choose **Local ground** and open the illustration. In the pictured scan the seedling rises 7.7 cm above the low returns around it, and the bump rises 2.4 cm. Leaves can hide the soil, so the model also sees how much the surrounding heights vary. **Compare both feature sets on matched scans** lets you see how often that distinction actually helps. [Open the illustrated setting](https://mvalancy.github.io/crop-trainer/trainer/?crop=tomato&minimumHeight=0.035&featureMode=local-ground#localGroundGuide) · [See the held-out tomato results](tomato-local-ground.md)
+
 ## Design a detector
 
 In **Your detector**, choose **Replay signal** to see how a prediction moves from left to right. Every candidate peak supplies 13 measurements. Each hidden unit combines values from the previous layer. The final unit turns its result into a score between 0 and 1. Wide layers show a few representative dots, with their full counts underneath. With reduced motion enabled, use **Next layer** to highlight a stage and read what it does. [Explore the diagram in the Training shed](https://mvalancy.github.io/crop-trainer/trainer/#detector)
@@ -143,19 +147,20 @@ After validation, expand **Explore learned weights** and choose any layer and un
 
 **Download model weights** saves a small JSON file with the learned weights, hidden widths, activation, feature scaling, crop and detection thresholds. **Download run settings** reproduces the fit from scratch. **Download benchmark JSON** adds times, scores and loss history. Long fits keep a bounded history with its actual epoch numbers in `lossEpochs`.
 
-For inference in a local checkout, `features` converts a generator tile into candidate positions and raw feature rows. The helper applies the saved scaling and returns one score per position.
+For inference in a local checkout, read the weights file’s feature settings before extracting the 13 measurements for each candidate. A local-ground fit uses peak height above the surrounding low surface and the spread of surrounding heights in two columns. The saved schema also identifies how the fit averaged heights when finding peaks.
 
 ```js
-import {features} from './trainer/models/data.js';
-import {savedPeakAveraging, scoreSavedWeights} from './trainer/models/network.js';
+import {features, detectionStages} from './trainer/models/data.js';
+import {savedFeatureSettings, scoreSavedWeights} from './trainer/models/network.js';
 
 // model is the parsed weights JSON. tile is a field from the generator.
-const averaging = savedPeakAveraging(model);
-const {X, pos} = features(tile, model.minimumHeight, averaging);
-const scores = scoreSavedWeights(X, model, averaging);
+const {peakAveraging, featureMode} = savedFeatureSettings(model);
+const candidates = features(tile, model.minimumHeight, peakAveraging, featureMode);
+const scores = scoreSavedWeights(candidates.X, model, peakAveraging, featureMode);
+const pins = detectionStages(candidates, scores, model.threshold, model.pinSeparation).selected;
 ```
 
-The detector keeps candidates at or above `model.threshold` and filters nearby pins using `model.pinSeparation` in metres. For a custom implementation, read layers from input to output. Each neuron stores all its incoming weights followed by its bias. The saved input means and standard deviations come from the training split.
+Each pin is an `[x, y]` position in plot metres. The detector keeps candidates at or above `model.threshold` and filters nearby pins using `model.pinSeparation` in metres. For a custom implementation, read layers from input to output. Each neuron stores all its incoming weights followed by its bias. The saved input means and standard deviations come from the training split.
 
 ## Test a plot of your own
 

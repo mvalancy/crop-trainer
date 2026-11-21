@@ -13,6 +13,17 @@ The field-test output contains predicted center coordinates, their model scores,
 
 For board setup, a practice run, and the steps from scanner to pins, see [Take a detector to the field](edge-deployment.md).
 
+## Try another cutoff with the same weights
+
+Use `--score-cutoff` with a value from 0 through 1 to change which scored candidates reach the spacing step. Run the comparison on the same weights, scan, centers and coordinate settings. A lower cutoff can recover plants and add extra pins.
+
+```sh
+node cli/score-scan.mjs weights.json plot.ply trial-055.json --labels centers.csv --score-cutoff 0.55
+node cli/score-scan.mjs weights.json plot.ply trial-020.json --labels centers.csv --score-cutoff 0.20
+```
+
+Compare `evaluation.scores` at the same distance. Each trial reports its effective cutoff in `detector.threshold` and the original in `detector.savedThreshold`. The input hashes identify the files used by both runs. Omit `--score-cutoff` to use the value stored in the weights.
+
 ## Align a surveyed plot
 
 Use one Z-up, 10 × 10 metre plot. Express its lower-left XY corner and the ground elevation at that corner in the original scan coordinates. The default is metres with origin `0,0,0`. This example uses centimetres, a lower-left corner at (5000, 2000) and ground at Z = 18.

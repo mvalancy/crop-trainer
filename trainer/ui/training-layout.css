@@ -107,6 +107,22 @@
 }
 .shed .testFrame .testInputs select { inline-size: min(100%, 10rem); }
 
+.trialCutoff {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .5rem clamp(1rem, 4vw, 3rem);
+}
+.trialCutoff .hint { flex: 0 1 48ch; margin: 0; }
+.cutoffControls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: .5rem .8rem;
+}
+.cutoffControls > .helpField { width: 7.75rem; }
+.cutoffControls button { min-height: 2.75rem; }
+
 .testSource {
   display: flex;
   flex-wrap: wrap;
@@ -165,3 +181,35 @@
   .shed #controls select { padding-inline: .35rem; }
   .shed #controls .settingsGrid select { letter-spacing: -.021em; }
 }
+
+#controls .settingsGrid > details[open] { grid-column: 1 / -1; }
+.detectorControls, .detectorStudies, .detectorStudies > div {
+  display: grid;
+  align-items: start;
+  gap: .8rem;
+  min-width: 0;
+}
+.detectorStudies a { justify-self: start; }
+@media (min-width: 55rem) {
+  #controls .settingsGrid > details[open]:not(#detectorOptions) > .detailFields {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+    align-items: start;
+  }
+  #controls .detailFields > :is(a,button) { grid-column: 1 / -1; }
+  .detectorControls { grid-template-columns: minmax(0,1.2fr) minmax(0,1.1fr) minmax(0,.7fr); }
+  .detectorStudies { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  #localGroundGuide figure {
+    display: grid;
+    grid-template-columns: minmax(0,24rem) minmax(0,34rem);
+    align-items: center;
+    gap: 1.5rem;
+  }
+  #controls .detectorControls > .settingGroup { padding-top: 0; }
+}
+@media (max-width: 740px) {
+  .detectorStudies > div > a { display: inline-flex; align-items: center; min-height: 44px; }
+  #controls #localGroundGuide { padding-inline: .5rem; }
+}
+#localGroundGuide figure { margin: .75rem 0; }
+#localGroundGuide img { display: block; width: min(100%, 24rem); height: auto; }
+#localGroundGuide figcaption { margin-top: .5rem; }

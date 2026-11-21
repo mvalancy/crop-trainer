@@ -8,7 +8,7 @@
 <link rel="apple-touch-icon" sizes="180x180" href="../art/crop-touch.png">
 <link rel="stylesheet" href="../app/farm.css?v=context-help2">
 <link rel="stylesheet" href="../app/help.css?v=context-help2">
-<link rel="stylesheet" href="./ui/training-layout.css?v=shed-layout1">
+<link rel="stylesheet" href="./ui/training-layout.css?v=terrain1">
 <link rel="stylesheet" href="./ui/network-diagram.css">
 <script type="module" src="../app/help.js?v=context-help2"></script>
 </head>
@@ -84,6 +84,7 @@
 <label id="epochsLabel" hidden>Epochs<input id="epochs" inputmode="numeric" data-help-label="Epochs" data-help="One epoch shows the model every retained training example once. Increasing this value practices longer on the same fields. To see new plantings, increase Training fields." type="number" min="1" max="100000000" step="1" value="40" required disabled><span>One epoch uses every training example once.</span></label>
 <label id="minutesLabel">Training minutes<input id="minutes" inputmode="decimal" data-help-label="Training minutes" data-help="For a two-hour fit, enter 120. Keep this tab open and the device awake. The timer covers fitting and stops at a completed training step. Allow extra time for generation and scoring." type="number" min="0.5" max="1440" step="0.5" value="0.5" required><span>0.5–1,440 minutes. Keep the tab open and the device awake.</span></label>
 </div>
+<a data-help="Train for three fixed durations on the same dataset to measure whether additional passes improve validation scores." id="epochBench" href="../benchmark/?comparison=epochs">Compare 10, 40 and 100 training epochs</a>
 </fieldset>
 <fieldset class="settingGroup"><legend>Weight updates</legend>
 <div class="selectPair">
@@ -140,6 +141,7 @@
 <details id="detectorOptions">
 <summary data-help="Set which height peaks reach the model and which scored candidates can become final pins.">Peak detection and scoring</summary>
 <div class="detailFields">
+<div class="detectorControls">
 <fieldset class="settingGroup"><legend>Candidate peaks</legend>
 <div class="selectPair">
 <label>Minimum peak height<select id="peakHeight" data-help-label="Minimum peak height" data-help="A local height peak must reach this floor before the detector can score it. A lower floor can admit short seedlings along with raised soil and clutter."><option value="0.065">6.5 cm · standard</option><option value="0.035" selected="">3.5 cm · include lower peaks</option></select><span>The 3.5 cm floor admits shorter peaks.</span></label>
@@ -148,9 +150,18 @@
 <span id="averagingHint">All cells counts gaps as zero, which can hide short seedlings. The sampled-cell rule is experimental. Ignoring gaps can also add pins on bare soil.</span></label>
 </div>
 </fieldset>
+<fieldset class="settingGroup"><legend>Model inputs</legend>
+<label>Height features<select id="featureMode" required data-help="Each candidate gets 13 measurements. Local ground replaces two of them with the height above nearby low returns and the variation in those returns. Both choices score the same candidate locations."><option value="absolute">Absolute height</option><option value="local-ground">Local ground</option></select></label>
+<a id="featuresBench" href="../benchmark/?comparison=features" data-help="Train two CPU networks with the same candidate locations and seeds, then compare what changed when they learned different height measurements.">Compare both feature sets on matched scans</a>
+</fieldset>
 <fieldset class="settingGroup"><legend>Final pins</legend>
 <label>Detection score cutoff<input id="threshold" inputmode="decimal" data-help-label="Detection score cutoff" data-help="A peak needs at least this model score to reach the spacing filter. Lowering the cutoff can recover missed plants and can also add extra pins." type="number" min="0" max="1" step="any" value="0.5" required=""><span>A lower score keeps more candidates for spacing.</span></label>
+<a data-help="Score one fit at three confidence cutoffs to see how the balance of extras and misses changes." id="cutoffBench" href="../benchmark/?comparison=cutoffs">Compare three cutoffs at this training duration</a>
 </fieldset>
+</div>
+<details class="peakHelp" id="localGroundGuide" hidden><summary data-help="See two measured scan patches and why a seedling can stand higher above its surroundings than a soil bump.">How does local ground work?</summary>
+<figure><img src="../art/tomato-local-ground.svg" width="384" height="306" alt="A synthetic seedling and a soil bump have similar peak heights. Their tallest central returns rise 7.7 cm and 2.4 cm above the surrounding low surface." loading="lazy"><figcaption>These peaks have similar heights. The seedling rises 7.7 cm above its local surface and the soil bump rises 2.4 cm. The detector estimates that surface from low returns 15–30 cm away. Leaves can hide the soil. With fewer than three sampled cells in that ring, both new measurements are zero.<p><a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/tomato-local-ground.md" data-help="Read the paired tomato study and see how these two measurements affect fitted models on held-out synthetic plantings.">Read the tomato experiment</a></p></figcaption></figure></details>
+<div class="detectorStudies"><div>
 <details class="peakHelp" id="averagingStudy"><summary data-help="See how your chosen averaging rule and height floor affect one measured seedling patch and one bare-soil patch.">Try the height rule on two scan patches</summary>
 <figure class="peakWindows" id="peakWindows" hidden>
 <figcaption>Two 3 × 3 patches from one synthetic ring scan. Filled cells caught a laser return.</figcaption>
@@ -166,10 +177,13 @@
 <p class="fine">A patch above the line can become a peak. The model scores those peaks before nearby pins are thinned out. <a data-help="Open the diagram with the measured heights around a seedling and a soil bump." href="../art/seedling-peak-window.svg">See the measured cell heights</a></p>
 <p class="fine">On eight clean grid scans, the sampled-cell height rule found 257 of 821 seedlings within 15 cm. Two networks trained with that rule each found 19. <a data-help="Read the measured outcomes, including extra pins on bare soil, from the seedling height-rule experiment." href="https://github.com/mvalancy/crop-trainer/blob/main/docs/seedling-peaks.md#can-training-reject-the-extra-soil-peaks">Compare grid and ring results</a></p></details>
 <a data-help="Open the benchmark to train and score the two peak-averaging rules on the same field seeds." id="averagingBench" href="../benchmark/?comparison=averaging">Compare both peak rules on matched scans</a>
+</div><div>
 <details class="peakHelp">
 <summary data-help="Read the results of a matched lettuce experiment at the two minimum peak heights.">Which height should I try?</summary>
 <p>Lower peaks can recover plants with sparse returns. For the original lettuce geometry (v1) with the starter neural model and mixed scans, lowering the cutoff from 6.5 to 3.5 cm raised mean F1 from 0.650 to 0.749 on seed 27 and from 0.575 to 0.704 on seed 28.</p>
-<p>Both cutoffs used six training fields, three unseen fields and 40 epochs per seed. Try a fresh seed to see whether the gain holds.</p></details><a data-help="Run both candidate height floors on matched fields and compare missed plants with extra pins." id="heightBench" href="../benchmark/?comparison=heights">Compare 6.5 and 3.5 cm peak heights</a><a data-help="Train for three fixed durations on the same dataset to measure whether additional passes improve validation scores." id="epochBench" href="../benchmark/?comparison=epochs">Compare 10, 40 and 100 training epochs</a><a data-help="Score one fit at three confidence cutoffs to see how the balance of extras and misses changes." id="cutoffBench" href="../benchmark/?comparison=cutoffs">Compare three cutoffs at this training duration</a></div></details>
+<p>Both cutoffs used six training fields, three unseen fields and 40 epochs per seed. Try a fresh seed to see whether the gain holds.</p></details><a data-help="Run both candidate height floors on matched fields and compare missed plants with extra pins." id="heightBench" href="../benchmark/?comparison=heights">Compare 6.5 and 3.5 cm peak heights</a>
+</div></div>
+</div></details>
 </div></section>
 </form>
 <section id="runReview" class="panel runReview" aria-labelledby="resultsTitle" hidden>
@@ -299,6 +313,10 @@
 <details class="testSlope"><summary>Surveyed sloping ground</summary>
 <p class="hint">On a bed with a uniform slope, enter the measured rise in each direction. A grade of 5 means the ground rises 5 cm per metre. Negative values slope downhill.</p>
 <div class="testInputs"><label>Grade along X (%)<input type="number" id="testGradeX" data-help-label="Grade along X" data-help="A value of 5 means the ground at the same Y rises by 5 cm for each metre toward positive X. Use a negative number for downhill and zero for level ground." step="any" value="0" required></label><label>Grade along Y (%)<input type="number" id="testGradeY" data-help-label="Grade along Y" data-help="A value of −2 means the ground at the same X falls by 2 cm for each metre toward positive Y. Enter a measured grade when the plot is approximately planar." step="any" value="0" required></label></div></details></fieldset>
+<details id="testCutoffSettings" class="testFrame"><summary data-help="Try a different minimum model score on the loaded scan using the same weights.">Try a different model cutoff</summary>
+<div class="trialCutoff"><p class="hint" id="testCutoffHelp">Leave the cutoff blank to use the saved value. A lower cutoff lets more candidates through to spacing. Select Find plants to see which pins change.</p>
+<div class="cutoffControls"><label>Score cutoff<input type="number" id="testCutoff" min="0" max="1" step="any" inputmode="decimal" placeholder="Saved" aria-describedby="testCutoffHelp" data-help="Enter a number from 0 to 1. This changes the trained model’s minimum score for this field test."></label>
+<button type="button" id="testResetCutoff" data-help="Clear the trial value. The next field test uses the cutoff stored with these weights.">Use saved cutoff</button></div></div></details>
 <div class="action"><button id="testDetect" class="primary" disabled>Find plants</button><button id="testCancel" type="button" hidden>Cancel field test</button></div>
 </form>
 <p id="testStatus" role="status">Choose a scan and a model to begin.</p>
@@ -328,6 +346,6 @@
 </main>
 <footer class="siteFoot"><span>Created by Matthew Valancy</span>
 <div><a data-help="Open commands and reproducibility instructions for an agent working with Crop Trainer." href="../AGENTS.md">Agent quickstart</a><a data-help="View the farming challenges and achievements stored on this device." href="../#missions">Farm journal</a><a data-help="Read the terms for using and sharing Crop Trainer’s source code." href="../LICENSE">MIT license</a></div><small class="contextHint"><span class="hoverHint">Hover or focus a button or score for help.</span><span class="touchHint">Tap a score or hold a button for help. A quick tap runs the action.</span></small></footer>
-<script type="module" src="./main.js?v=context-help2"></script>
+<script type="module" src="./main.js?v=terrain-cutoff1"></script>
 </body>
 </html>

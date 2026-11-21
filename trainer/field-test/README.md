@@ -14,4 +14,6 @@ For a first try, download the examples next to the file pickers. Select the weig
 | The shared browser and command-line scoring pipeline | [Score a scan](score-scan.js) |
 | File inputs, map overlays and the processing worker | [Field test controls](field-test-ui.js) · [Worker](field-test-worker.js) |
 
+The weights file records how to extract the detector’s inputs. The trained-model readout identifies fits that measure height above nearby low returns and the spread of surrounding heights, or average over sampled cells. Field test applies those settings automatically. The height-only baseline uses the same candidate locations and ranks them by smoothed height.
+
 For a physical plot, measure reference centers independently of the detector. To reproduce a score outside the browser, use the same inputs and coordinate frame. [Field-test CLI](../../docs/scan-cli.md)

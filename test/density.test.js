@@ -33,6 +33,7 @@ test('pair only the same training scans, held-out plantings and fit settings', (
     r => r.datasets[0].recipeManifest[1].recipe.sampling.key = 'reference',
     r => r.rows[0].epochs++,
     r => r.settings.peakAveraging = 'occupied',
+    r => r.settings.featureMode = 'local-ground',
     r => r.datasets[0].stats.generator = 'v2'
   ]) {
     const other = experiment(60000);

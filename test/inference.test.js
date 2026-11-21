@@ -112,6 +112,29 @@ test('rejects unsupported models, invalid frames or out-of-plot returns before r
   assert.deepEqual(detectScan([5,5,-.1],model).pins,[]);
 });
 
+test('field test trials change only the model cutoff and restore the saved scores',()=>{
+  const model=Object.freeze(weights({threshold:.5}));
+  const xyz=[1,1,.5,4,6,.25],labels={filename:'centers.csv',text:'x,y\n1.025,1.025\n4.025,6.025'};
+  const run=thresholdOverride=>runFieldTest({model,xyz,labels,thresholdOverride});
+  const saved=run();
+  assert.equal(saved.pins.length,2);
+  assert.ok(!Object.hasOwn(saved.detector,'savedThreshold'));
+  for (const [cutoff,count] of [[.55,0],[.20,2],[0,2],[1,0]]) {
+    const result=run(cutoff);
+    assert.equal(result.detector.threshold,cutoff);
+    assert.equal(result.detector.savedThreshold,.5);
+    assert.equal(result.pins.length,count);
+    assert.equal(result.evaluation.scores.at(-1).tp,count);
+    assert.equal(result.stages15cm[1].count,count);
+    assert.equal(result.proposalCount,saved.proposalCount);
+    assert.deepEqual(result.baselinePins,saved.baselinePins);
+    assert.deepEqual(result.baselineEvaluation,saved.baselineEvaluation);
+  }
+  assert.deepEqual(run(),saved);
+  for (const invalid of [-.1,1.1,'0.20',null,NaN]) assert.throws(()=>run(invalid),/cutoff/);
+  assert.throws(()=>runFieldTest({model:{...model,threshold:2},xyz,thresholdOverride:.2}),/cutoff/);
+});
+
 test('dense scans preserve the full candidate return count beyond 16-bit capacity', () => {
   const n = 65_536;
   const xyz = new Float32Array(3*n);

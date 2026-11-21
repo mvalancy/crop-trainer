@@ -1,6 +1,6 @@
-import {features, detectionStages, checkScoreThreshold, PEAK_HEIGHTS} from '../models/data.js?v=peak1';
+import {features, detectionStages, checkScoreThreshold, PEAK_HEIGHTS} from '../models/data.js?v=terrain1';
 import {cropProfile} from '../generator/crops.js?v=systems1';
-import {savedPeakAveraging,scoreSavedWeights} from '../models/network.js?v=peak1';
+import {savedFeatureSettings,scoreSavedWeights} from '../models/network.js?v=terrain1';
 
 import {detectOrchardBases} from '../models/orchard.js';
 
@@ -58,10 +58,10 @@ export function detectScan(xyz, model, {unit='m', origin=[0,0,0], gradePercent=[
     throw Error('The saved model has an unsupported network configuration.');
   }
   checkScoreThreshold(model.threshold);
-  const averaging = savedPeakAveraging(model);
+  const {peakAveraging,featureMode} = savedFeatureSettings(model);
   const local = toPlot(xyz,unit,origin,gradePercent);
-  const candidates = features({xyz:local},model.minimumHeight,averaging);
-  const scores = scoreSavedWeights(candidates.X,model,averaging);
+  const candidates = features({xyz:local},model.minimumHeight,peakAveraging,featureMode);
+  const scores = scoreSavedWeights(candidates.X,model,peakAveraging,featureMode);
   if (!scores.every(Number.isFinite)) throw Error('Nonfinite model scores. Check the weights and input coordinates.');
 
   // Run both methods on exactly the same proposals, before applying spacing.
@@ -85,7 +85,8 @@ export function detectScan(xyz, model, {unit='m', origin=[0,0,0], gradePercent=[
   return {
     ...(orchard ? {orchard} : {}),
     crop:model.crop,frame,pointCount:local.length/3,
-    detector:{featureSchema:model.featureSchema,...(averaging==='occupied'?{peakAveraging:averaging}:{}),
+    detector:{featureSchema:model.featureSchema,...(peakAveraging==='occupied'?{peakAveraging}:{}),
+      ...(featureMode==='local-ground'?{featureMode}:{}),
       hiddenLayers:[...model.hiddenLayers],activation:model.activation,
       minimumHeight:model.minimumHeight,threshold:model.threshold,pinSeparation:model.pinSeparation},
     proposalCount:candidates.pos.length,acceptedCount:learned.accepted.length,
