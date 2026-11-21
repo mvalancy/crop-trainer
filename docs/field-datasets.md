@@ -91,6 +91,8 @@ For a new survey, record the center of each trunk where it enters the soil, incl
 
 **Another orchard reference for the low-trunk band.** TreeScope’s Merced County pistachio plot pairs aerial OS1-64 and ground-based OS0-128 scans with measurements from 70 trees. The field crew measured diameter at 30 cm above ground, inside the height range used by Crop Trainer’s experimental ranker. We inspected both `UCM-0523` measurement JSONs. Each has 70 tree IDs with a single `DBH` field. These measurements can check the width of visible stems. Scoring a pin’s horizontal error requires separate base coordinates. TreeScope specifies CC BY-NC-SA 4.0. [Measurements](https://tnl.treescope.org/Treescope/Treescope_v1.0_DIST/UCM-0523/ground_truth/measurements/) · [Field methods and Table II](https://arxiv.org/pdf/2310.02162) · [License and project](https://treescope.org/)
 
+**For scanner calibration in a citrus orchard.** UC Riverside’s CitrusFarm release pairs Velodyne scans with a robot-mounted GPS-RTK receiver. The first `gt.csv` contains time-stamped receiver positions. The supplied CAD calibration places its center 0.220 m behind and 0.153 m above the LiDAR origin. Applying that offset matters when registering repeated passes. Scoring tree locations would also require a separate survey of trunk centers. The authors release this dataset under CC BY-SA 4.0. [Dataset and license](https://registry.opendata.aws/citrus-farm/) · [First trajectory CSV](https://ucr-robotics.s3.amazonaws.com/citrus-farm-dataset/ground_truth/01_13B_Jackal/gt.csv) · [Sensor frame and translation](https://ucr-robotics.s3.amazonaws.com/citrus-farm-dataset/Calibration/results/04-lidar-gps-result.txt)
+
 ### How often does a low return actually hit wood?
 
 Westling’s Queensland avocado dataset includes handheld scans with human labels for woody and leafy material. The 1,135 rows in `trunks.csv` look promising for scoring base locations. The field methods explain that a person selected a scanned point on one side of each real trunk. A tree 20–50 cm across can put that surface point roughly 10–25 cm from its center. Use the labels to study visibility. A 15 cm trunk-center accuracy test would need a separate survey. The scans use north–east–down coordinates and were aligned to earlier GPS-equipped mobile LiDAR scans. [Dataset and CC BY 4.0 license](https://doi.org/10.17632/h49fpprg6c.1) · [Annotation and matching methods, §§2.3 and 4.1](https://arxiv.org/pdf/2009.13727)
@@ -185,3 +187,31 @@ node cli/score-scan.mjs vine-weights.json vine-strip/plot.ply vine-score.json --
 **How the strip was prepared.** The archive contains 33,512,063 returns in the processed LAS. A 10 × 10 m square centered on the trunk survey extent (snapped to whole metres) contained 12,058,322 returns. The adapter retained the highest measured point in each occupied 5 cm cell, giving 16,685 points. It estimated a ground plane from the low returns of 45 occupied square-metre patches. The reference CSV uses the deposited PointZ geometry in EPSG:3763. The height-only and learned detectors both see the same overhead representation. This preprocessing can discard trunk returns visible from the side.
 
 **What the result supports.** This synthetic-only model failed to localize most trunks on one physical strip at one date. Its mean F1 across the three tolerances on its synthetic holdout was 0.150. The physical test gives us a place to inspect proposal coverage, canopy displacement and survey alignment. For future comparisons, reserve another row or site before tuning. The nine dates revisit the same vines and measure seasonal change on that planting. [Source archive and attribution](https://doi.org/10.5281/zenodo.18259014)
+
+### Did the vineyard scanner miss the lower part of the plant?
+
+We checked the raw April 9 returns around the published trunk coordinates. We counted each 5 cm XY cell containing a return **within 15 cm horizontally of the coordinate and 15–50 cm above the fitted ground plane**. That band can contain grass, supports or wood. A count there measures sampled space. Identifying the trunk surface requires a material label.
+
+Across all 52 vines, the original laser scan had at least one such return in every neighborhood. Keeping the highest point per cell retained 543 of 1,251 near-trunk cells with a return still in the band, covering 48 of the 52 vines. Among those 48, the frozen model placed four pins within 15 cm. It also matched two of the four vines without a retained low return. Four vines are too few to estimate a difference between these groups.
+
+Could exposing those low returns help the detector? We made a second input by keeping only the highest measured point **inside the band** in every plot cell. Both inputs used the same saved weights, height-only baseline, survey and ground plane. After checking the original center strip, we froze the rule and tested the disjoint strips immediately north and south. Each held 17 other surveyed vines.
+
+| Strip | Surveyed vines | Vines with a proposal within 15 cm | Learned matches within 15 cm | Height-only matches within 15 cm |
+| --- | ---: | ---: | ---: | ---: |
+| Center | 18 | 8 → 10 | 1 → 0 | 2 → 4 |
+| North | 17 | 14 → 8 | 2 → 0 | 3 → 2 |
+| South | 17 | 11 → 11 | 3 → 0 | 2 → 3 |
+
+Each arrow runs from the original highest-point input to the band-only input. On the 34 held-out vines, the frozen network lost all five of its 15 cm matches. The height baseline matched five under either preparation, with 107 extra pins on the original input and 99 on the band-only input. More visible low surfaces alone did not rescue localization. These strips share one site, date and scanner registration. They support a within-site comparison. [Dataset paper and acquisition methods](https://doi.org/10.1016/j.dib.2026.112614) · [Versioned dataset and license](https://doi.org/10.5281/zenodo.18259014)
+
+We also checked whether removing the upper canopy had concealed a benefit. On the same three strips, we kept every original point and added the highest distinct in-band point in each cell. Adding 2,301 measured points left the proposal counts and both detectors’ scores unchanged at all three tolerances. The current proposal rule uses a grid of maximum heights. A detector that explicitly scores **vertical support below the canopy** would test a different use of the raw measurements. This follow-up used the same 52 vines after the strip results were known.
+
+**Replay with the April archive and the saved weights from the instructions above.** The preparation commands create new directories. The study prints counts for both coverage groups, per-tolerance scores for both detectors on all three inputs, and separate preparation and scoring times. The optional strip argument defaults to the original center plot.
+
+```sh
+node benchmark/studies/vineyard-low-band.mjs /path/to/extracted-dataset vine-strip vine-weights.json
+node benchmark/studies/prepare-vineyard.mjs /path/to/extracted-dataset vine-north north
+node benchmark/studies/vineyard-low-band.mjs /path/to/extracted-dataset vine-north vine-weights.json
+node benchmark/studies/prepare-vineyard.mjs /path/to/extracted-dataset vine-south south
+node benchmark/studies/vineyard-low-band.mjs /path/to/extracted-dataset vine-south vine-weights.json
+```

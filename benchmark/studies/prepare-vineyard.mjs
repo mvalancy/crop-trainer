@@ -2,9 +2,12 @@
 // Run after extracting the archive. Inputs remain on the user's computer.
 import {open,readFile,mkdir,rmdir,unlink} from 'node:fs/promises';
 import {join} from 'node:path';
+import {readPlotColumns} from './vineyard-las.mjs';
 
-const [root,output]=process.argv.slice(2);
-if(!root || !output) throw Error('node benchmark/studies/prepare-vineyard.mjs extracted-dataset new-plot-directory');
+const [root,output,strip='center']=process.argv.slice(2);
+if (!root || !output || process.argv.length > 5 || !['center','north','south'].includes(strip)) {
+  throw Error('Usage: node benchmark/studies/prepare-vineyard.mjs extracted-dataset new-plot-directory [center|north|south]');
+}
 const scanPath='1_Leaf_Development/BBCH_13/TLS_PointClouds/Processed/BBCH13_20240409_TLS.las';
 const shape=await readFile(join(root,'Vectors/Grapevine_trunks.shp'));
 if(shape.readInt32LE(32)!==11) throw Error('Expected the published PointZ trunk shapefile.');
@@ -21,36 +24,16 @@ const originXY=[0,1].map(axis=>{
   const values=trunks.map(p=>p[axis]);
   return Math.floor((Math.min(...values)+Math.max(...values))/2)-5;
 });
+// The two adjacent strips use the same easting and disjoint northing intervals.
+originXY[1] += {center:0,north:10,south:-10}[strip];
 const references=trunks.filter(p=>p.every((v,i)=>v>=originXY[i] && v<originXY[i]+10));
 const cells=200, low=new Float64Array(cells*cells).fill(Infinity);
 const high=new Float64Array(cells*cells).fill(-Infinity);
 const xAt=new Float64Array(high.length), yAt=new Float64Array(high.length);
-let sourcePoints, inPlot=0;
-const handle=await open(join(root,scanPath),'r');
-try {
-  const header=Buffer.alloc(227);
-  await handle.read(header,0,header.length,0);
-  if(header.toString('ascii',0,4)!=='LASF' || header[104]>5) throw Error('Expected the original uncompressed LAS with legacy point records.');
-  const start=header.readUInt32LE(96), stride=header.readUInt16LE(105);
-  sourcePoints=header.readUInt32LE(107);
-  if(stride<20 || !sourcePoints || start+stride*sourcePoints>(await handle.stat()).size) throw Error('Invalid LAS record lengths.');
-  const scale=[131,139,147].map(i=>header.readDoubleLE(i));
-  const offset=[155,163,171].map(i=>header.readDoubleLE(i));
-  const blockPoints=65536, buffer=Buffer.alloc(stride*blockPoints);
-  for(let n=0;n<sourcePoints;n+=blockPoints) {
-    const bytes=stride*Math.min(blockPoints,sourcePoints-n);
-    const {bytesRead}=await handle.read(buffer,0,bytes,start+stride*n);
-    if(bytesRead!==bytes) throw Error('Incomplete scan.');
-    for(let i=0;i<bytes;i+=stride) {
-      const x=buffer.readInt32LE(i)*scale[0]+offset[0], y=buffer.readInt32LE(i+4)*scale[1]+offset[1];
-      const ix=Math.floor((x-originXY[0])*20), iy=Math.floor((y-originXY[1])*20);
-      if(ix<0 || ix>=cells || iy<0 || iy>=cells) continue;
-      const z=buffer.readInt32LE(i+8)*scale[2]+offset[2], bin=iy*cells+ix;
-      inPlot++; low[bin]=Math.min(low[bin],z);
-      if(z>high[bin]) { high[bin]=z; xAt[bin]=x; yAt[bin]=y; }
-    }
-  }
-} finally { await handle.close(); }
+const {sourcePoints,inPlot} = await readPlotColumns(join(root,scanPath),originXY,(x,y,z,bin) => {
+  low[bin] = Math.min(low[bin],z);
+  if (z > high[bin]) { high[bin]=z; xAt[bin]=x; yAt[bin]=y; }
+});
 
 // Estimate the plane independently of the labels and predictions. Equal weight
 // per occupied square metre limits the influence of dense scanner positions.
