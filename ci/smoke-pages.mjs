@@ -576,6 +576,23 @@ try {
     assert.match(await page.locator('#testOutcome').textContent(),/137 of 217 reference centers matched within 15 cm/);
     assert.deepEqual(await page.locator('#testStageRows dd').allTextContents(),fieldReport.stages15cm.map(s=>String(s.matched)));
   }
+  {
+    const metrics=page.locator('#testMetrics'), wide=metrics.locator(':scope > table');
+    const compact=metrics.getByRole('table',{name:'Trained model',exact:true});
+    for (const width of [320,390]) {
+      await page.setViewportSize({width,height:740});
+      await compact.waitFor();
+      assert.ok(await wide.isHidden());
+      assert.deepEqual(await compact.getByRole('columnheader').allTextContents(),['Measure','7.5 cm','10 cm','15 cm']);
+      assert.deepEqual(await compact.getByRole('row',{name:/^Matched /}).getByRole('cell').allTextContents(),['88','117','137']);
+      assert.ok(await metrics.evaluate(el=>el.scrollWidth<=el.clientWidth+1),'all field scores must fit without a sideways swipe');
+    }
+    await checkDirectHelp(compact.getByRole('row',{name:/^Recall /}).getByRole('cell').last(),'focus',/137 of 217 labeled plants matched/);
+    await page.setViewportSize({width:1366,height:768});
+    assert.ok(await wide.isVisible());
+    assert.equal(await metrics.getByRole('table').count(),1,'wide screens expose a single comparison table');
+    await page.setViewportSize({width:390,height:844});
+  }
   console.log('Downloaded example weights, scan and both reference formats; the Field Test scored all 217 held-out lettuce plants.');
 
   await open('trainer/?fieldExample=tomato-640#field-test');
@@ -918,6 +935,28 @@ try {
   const backgroundReplay=await downloadJSON(page.locator('#testExport'));
   assert.deepEqual(matchCounts(backgroundReplay.evaluation.scores),matchCounts(negativeTile.byTolerance));
   console.log('A canceled background benchmark restarted, exported its selected model and reproduced a held-out scan in Field Test.');
+
+  await open('benchmark/?comparison=scaling&crop=tomato&plantArchitecture=2&seed=3301907&sensor=reference&epochs=3&sampleLimit=240&live=off');
+  await page.locator('#run').click();
+  const cross=await downloadJSON(page.locator('#export'));
+  assert.equal(cross.rows.length,8);
+  for (const seed of [3301907,3301908]) {
+    await page.locator('#scalingSeed').selectOption(String(seed));
+    const group=cross.rows.filter(r=>r.seed===seed);
+    const [ordinary,mined]=['ordinary','distance-matched'].map(draw=>group.find(r=>r.negativeSampling===draw && r.scaleSource===draw));
+    assert.notDeepEqual(ordinary.weightArtifact.scaling,mined.weightArtifact.scaling);
+    for (const row of group) {
+      const source=row.scaleSource==='ordinary'?ordinary:mined;
+      assert.deepEqual(row.weightArtifact.scaling,source.weightArtifact.scaling);
+      assert.deepEqual(row.tiles.map(t=>t.tile_id),ordinary.tiles.map(t=>t.tile_id));
+      assert.equal(row.epochs,3);
+      assert.equal(row.threshold,.65);
+    }
+    const shuffledMined=group.find(r=>r.negativeSampling==='ordinary' && r.scaleSource==='distance-matched');
+    const save=page.getByRole('button',{name:'Save weights for Shuffled rows · difficult scale on seed '+seed,exact:true});
+    assert.deepEqual(await downloadJSON(save),shuffledMined.weightArtifact);
+  }
+  console.log('All four scaling fits kept the shared test scans and exported their actual training scale on both seeds.');
 
   await open('benchmark/?comparison=epochs');
   assert.equal(await page.locator('#epochSchedule').inputValue(),'classic','older links should keep their 10/40/100 comparison');

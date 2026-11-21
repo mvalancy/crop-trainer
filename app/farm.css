@@ -468,7 +468,21 @@ tbody tr:nth-child(even) { background: #f6f8f0; }
 .testStageRows dd { margin: 0; font-variant-numeric: tabular-nums; font-weight: 650; }
 .testView canvas { display: block; width: 100%; height: auto; background: #f1f4ea; border-radius: .6rem; }
 .testView figcaption { font-size: .85rem; color: var(--muted); margin-top: .5rem; }
+#testMetrics { container: field-scores / inline-size; overflow-x: auto; margin-block: .75rem; }
 #testMetrics caption { text-align: left; font-weight: 650; }
+.testMethodScores { display: none; }
+@container field-scores (max-width: 36rem) {
+  #testMetrics > table { display: none; }
+  .testMethodScores { display: block; }
+  .testMethodScores h4 { margin: 0 0 .7rem; font-size: 1rem; }
+  #testMethodScores { display: grid; gap: 1rem; }
+  #testMethodScores table { width: 100%; table-layout: fixed; }
+  #testMethodScores caption { padding: .43rem .5rem; background: var(--wash); color: var(--ink); }
+  #testMethodScores :is(th,td) { padding: .35rem .25rem; text-align: right; white-space: nowrap; }
+  #testMethodScores :is(th,td):first-child { width: 30%; text-align: left; }
+  #testMethodScores th { background: transparent; }
+  #testMethodScores tbody th { font-size: inherit; font-weight: 550; }
+}
 @media (max-width: 650px) {
   .testView { grid-template-areas: "controls" "plot" "readout"; grid-template-columns: 1fr; grid-template-rows: auto; }
   .testMapControls { column-gap: .4rem; }

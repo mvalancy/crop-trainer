@@ -12,6 +12,8 @@ To test a new cutoff, start with a saved tomato fit, run the example, then choos
 
 Choose **Inspect extra pins** to see which predictions were left without a match. Tap a rust-colored square, use the arrows, or enter its position in the list. The outlined pin gets a distance to the nearest surveyed center and, for learned detectors, a model score. Two predictions close to the same plant can leave one extra. An empty survey counts every pin as extra. A plot without a reference file has no extra-pin score.
 
+Open **How are scan measurements scaled?** after a run to inspect a peak from the actual scan. A diamond on the trained-model map marks the candidate nearest the middle of the plot. Pick any of its 13 measurements to see the raw value, the mean and divisor saved with the weights, and the number the network received. In the two weedy tomato fits, the same 0.09497 m peak enters the random fit at −0.4406 and the half-difficult fit at −0.7627. Both numbers fall below their fit’s training mean. Try both fits on the same scan to see why the ruler changes. [Open the weedy tomato example](https://mvalancy.github.io/crop-trainer/trainer/?fieldExample=tomato-weed-random#field-test)
+
 Open **Survey alignment** below the map to check how sensitive a count is to the coordinate frame. Select a pin method and match distance above the map, choose a **10 cm** or **25 cm** shift, then click **Check survey alignment**. The first row uses the recorded XY coordinates. Four more rows move all survey centers along positive and negative local X and Y while keeping every pin fixed. Each row uses the same one-to-one matcher as the field score. A jump in matches is a reason to check independent survey control points. The original coordinates supply the exported result. If the survey covers only some plants, unmatched pins alone cannot tell which are false alarms.
 
 The export stores the map assignments in `evaluation.pinByReferenceAtCm` and the stage counts in `stagesAtCm`, keyed by centimeters. The 15 cm results are also available under the older `evaluation.pinByReference15` and `stages15cm` keys.
@@ -20,7 +22,9 @@ The export stores the map assignments in `evaluation.pinByReferenceAtCm` and the
 | --- | --- |
 | PLY decoding and input limits | [Point-cloud reader](ply.js) |
 | Coordinate conversion, saved detector and baseline predictions | [Inference](inference.js) |
+| Trace a measured peak through its saved scale | [Peak selection](feature-probe.js) · [Scaling inspector](feature-scale.js) |
 | Optional survey loading and one-to-one matches | [Reference centers](references.js) |
+| Compare the scores at 7.5, 10 and 15 cm in the wide table or the phone tables grouped by detector | [Score tables](score-tables.js) |
 | Measure sensitivity to four fixed horizontal shifts | [Survey alignment](survey-alignment.js) |
 | The shared browser and command-line scoring pipeline | [Score a scan](score-scan.js) |
 | File inputs, map overlays and the processing worker | [Field test controls](field-test-ui.js) · [Extra pin inspector](extra-pins.js) · [Worker](field-test-worker.js) |

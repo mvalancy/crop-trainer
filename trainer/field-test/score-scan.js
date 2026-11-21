@@ -1,13 +1,13 @@
-import {detectScan} from './inference.js?v=saved-cutoff1';
+import {detectScan} from './inference.js?v=scale-probe1';
 import {measureStages} from '../models/data.js?v=stage-distance1';
 import {parseReferences,evaluatePins} from './references.js?v=map-distance1';
 import {MAX_PLY_POINTS} from './ply.js';
 
-export function runFieldTest({model,xyz,alignment,labels=null,tileId,thresholdOverride}) {
+export function runFieldTest({model,xyz,alignment,labels=null,tileId,thresholdOverride,onFeatureProbe}) {
   if (!xyz || xyz.length/3 > MAX_PLY_POINTS) throw Error('Choose a scan with up to 1,000,000 points.');
   let learnedStages;
   const captureStages = stages => { learnedStages = stages; };
-  const result = detectScan(xyz,model,alignment,labels === null ? undefined : captureStages,thresholdOverride);
+  const result = detectScan(xyz,model,alignment,labels === null ? undefined : captureStages,thresholdOverride,onFeatureProbe);
   if (labels === null) return {...result,references:null,evaluation:null,baselineEvaluation:null,stagesAtCm:null,stages15cm:null,
     ...(result.orchard ? {orchardEvaluation:null} : {})};
   if (typeof labels?.text !== 'string' || typeof labels.filename !== 'string')

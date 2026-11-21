@@ -32,7 +32,13 @@ export function initializeFit(x, y, options) {
       !Number.isInteger(initSeed) || initSeed < 0 || initSeed > 0xffffffff) throw Error('Invalid training data or fit settings.');
   const weights = new Float32Array(shape.count);
   let seed = initSeed;
-  if (shape.layers.length > 1) {
+  if (options.initialWeights !== undefined) {
+    const supplied = options.initialWeights;
+    if (!(supplied instanceof Float32Array) || supplied.length !== shape.count || !supplied.every(Number.isFinite)) {
+      throw Error('Initial weights must be a finite Float32Array matching the network shape.');
+    }
+    weights.set(supplied);
+  } else if (shape.layers.length > 1) {
     for (const layer of shape.layers) {
       const end = layer.weight + layer.width * (layer.inputs + 1);
       for (let k = layer.weight; k < Math.min(end, weights.length - 1); k++) {
@@ -165,7 +171,7 @@ export function weightArtifact({settings,scaling,weights,trainer,epochs,stats}) 
 }
 
 // The original two-argument call declares absolute, zero-filled feature rows.
-export function scoreSavedWeights(rawFeatures, model, peakAveraging='zero-filled', featureMode='absolute') {
+export function scoreSavedWeights(rawFeatures, model, peakAveraging='zero-filled', featureMode='absolute', inspectInputs) {
   const saved=savedFeatureSettings(model);
   if (saved.peakAveraging !== peakAveraging) throw Error('Extract the candidate rows with the saved peak averaging rule.');
   if (saved.featureMode !== featureMode) throw Error('Extract the candidate rows with the saved feature mode.');
@@ -174,5 +180,7 @@ export function scoreSavedWeights(rawFeatures, model, peakAveraging='zero-filled
       !model.scaling.means.every(Number.isFinite) || !model.scaling.std.every(v => Number.isFinite(v) && v > 0) ||
       !Array.isArray(model.weights) || !model.weights.every(Number.isFinite)) throw Error('Expected an exported Crop Trainer weight file.');
   const normalized = Float32Array.from(rawFeatures,(v,i)=>(v-model.scaling.means[i%13])/model.scaling.std[i%13]);
-  return predictNetwork(normalized,model.weights,13,model.hiddenLayers,model.activation);
+  const scores = predictNetwork(normalized,model.weights,13,model.hiddenLayers,model.activation);
+  inspectInputs?.(normalized,scores);
+  return scores;
 }

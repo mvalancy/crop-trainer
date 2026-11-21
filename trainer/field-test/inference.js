@@ -1,7 +1,8 @@
 import {features, detectionStages, checkScoreThreshold, PEAK_HEIGHTS} from '../models/data.js?v=terrain1';
 import {cropProfile} from '../generator/crops.js?v=systems1';
-import {savedFeatureSettings,scoreSavedWeights} from '../models/network.js?v=terrain1';
+import {savedFeatureSettings,scoreSavedWeights} from '../models/network.js?v=scale-probe1';
 
+import {featureProbe} from './feature-probe.js';
 import {detectOrchardBases} from '../models/orchard.js';
 
 const metersPerUnit = {m:1, cm:.01, mm:.001};
@@ -47,7 +48,7 @@ function toPlot(xyz, unit, origin, gradePercent) {
  * units. Optional measured X/Y grades are signed percent rise. Pins carry both
  * source XY and local XY in metres.
  */
-export function detectScan(xyz, model, {unit='m', origin=[0,0,0], gradePercent=[0,0]}={}, onStages, thresholdOverride) {
+export function detectScan(xyz, model, {unit='m', origin=[0,0,0], gradePercent=[0,0]}={}, onStages, thresholdOverride, onFeatureProbe) {
   if (model?.format !== 'crop-trainer-weights-v1') throw Error('Choose a model from Download model weights in the Training shed.');
   if (typeof model.crop !== 'string') throw Error('The saved model is missing its crop.');
   cropProfile(model.crop);
@@ -64,7 +65,10 @@ export function detectScan(xyz, model, {unit='m', origin=[0,0,0], gradePercent=[
   const {peakAveraging,featureMode} = savedFeatureSettings(model);
   const local = toPlot(xyz,unit,origin,gradePercent);
   const candidates = features({xyz:local},model.minimumHeight,peakAveraging,featureMode);
-  const scores = scoreSavedWeights(candidates.X,model,peakAveraging,featureMode);
+  const inspectInputs = onFeatureProbe && ((inputs,scores) => {
+    onFeatureProbe(featureProbe(candidates,inputs,scores,model,featureMode));
+  });
+  const scores = scoreSavedWeights(candidates.X,model,peakAveraging,featureMode,inspectInputs);
   if (!scores.every(Number.isFinite)) throw Error('Nonfinite model scores. Check the weights and input coordinates.');
 
   // Run both methods on exactly the same proposals, before applying spacing.

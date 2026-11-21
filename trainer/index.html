@@ -6,9 +6,9 @@
 <link rel="icon" type="image/png" sizes="32x32" href="../art/crop-mark-32.png">
 <link rel="icon" type="image/svg+xml" sizes="any" href="../art/crop-mark.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="../art/crop-touch.png">
-<link rel="stylesheet" href="../app/farm.css?v=paired-map1">
+<link rel="stylesheet" href="../app/farm.css?v=mobile-scores1">
 <link rel="stylesheet" href="../app/help.css?v=context-help2">
-<link rel="stylesheet" href="./ui/training-layout.css?v=alignment1">
+<link rel="stylesheet" href="./ui/training-layout.css?v=scale-probe1">
 <link rel="stylesheet" href="./ui/network-diagram.css">
 <script type="module" src="../app/help.js?v=map-picking1"></script>
 </head>
@@ -358,7 +358,7 @@
 <label id="testDistanceControl" hidden>Match distance<select id="testMatchDistance" data-help-label="Map matching distance" data-help="Choose how close a pin must land to a reference center to count as a match. The pins stay in place as the map updates."><option value="7.5">7.5 cm</option><option value="10">10 cm</option><option value="15" selected>15 cm</option></select></label>
 <div id="testExtraControl" hidden><label class="check"><input id="testExtraOnly" aria-controls="testExtraInspector" type="checkbox" data-help-label="Inspect extra pins" data-help="Show predictions left over after pairing pins with surveyed plants. Tap a square on the map or use the pin navigator.">Inspect extra pins</label></div></div>
 <figure><canvas id="testMap" width="500" height="500" aria-label="Top view of the imported scan and plant detections" aria-describedby="testLegend testOutcome" role="img"></canvas>
-<figcaption id="testLegend"><span class="mapKey" id="testMatchedKey" hidden><span><i class="matchedPin"></i>Matched pin</span><span><i class="extraPin"></i>Extra pin</span><span><i class="matchedCenter"></i>Matched center</span><span><i class="missedCenter" aria-hidden="true">×</i>Missed center</span></span><span class="mapKey" id="testChangedKey" hidden><span><i class="gainedCenter" aria-hidden="true">+</i>Gained match</span><span><i class="lostCenter" aria-hidden="true">−</i>Lost match</span><span><i class="steadyCenter" aria-hidden="true"></i>Same status</span></span><span class="mapKey" id="testExtraKey" hidden><span><i class="extraPin"></i>Extra pin</span><span id="testSelectedExtraKey"><i class="selectedExtraPin"></i>Selected pin</span><span id="testSurveyKey"><i class="surveyPoint"></i>Surveyed center</span><span id="testNearestKey"><i class="matchedCenter"></i>Nearest surveyed center</span></span><span id="testUnscoredKey">Green dots mark predicted centers. Grey dots are laser returns.</span></figcaption></figure>
+<figcaption id="testLegend"><span class="mapKey" id="testMatchedKey" hidden><span><i class="matchedPin"></i>Matched pin</span><span><i class="extraPin"></i>Extra pin</span><span><i class="matchedCenter"></i>Matched center</span><span><i class="missedCenter" aria-hidden="true">×</i>Missed center</span></span><span class="mapKey" id="testChangedKey" hidden><span><i class="gainedCenter" aria-hidden="true">+</i>Gained match</span><span><i class="lostCenter" aria-hidden="true">−</i>Lost match</span><span><i class="steadyCenter" aria-hidden="true"></i>Same status</span></span><span class="mapKey" id="testExtraKey" hidden><span><i class="extraPin"></i>Extra pin</span><span id="testSelectedExtraKey"><i class="selectedExtraPin"></i>Selected pin</span><span id="testSurveyKey"><i class="surveyPoint"></i>Surveyed center</span><span id="testNearestKey"><i class="matchedCenter"></i>Nearest surveyed center</span></span><span class="mapKey" id="testScaleKey" hidden><span><i class="inspectedPeak"></i>Peak in scaling example</span></span><span id="testUnscoredKey">Green dots mark predicted centers. Grey dots are laser returns.</span></figcaption></figure>
 <div class="testReadout"><p id="testOutcome" aria-live="polite"></p>
 <div id="testWeedPlants" hidden>
 <label>Highlight a changed seedling<select id="testWeedPlant" aria-describedby="testWeedDetail" data-help="Choose a planting label. The outline marks its surveyed position. Gained and lost always describe the change from the random fit to the half-difficult fit."><option value="">All seedlings</option><optgroup id="testWeedGained" label="Gained"></optgroup><optgroup id="testWeedLost" label="Lost"></optgroup></select></label>
@@ -387,6 +387,30 @@
 <dl id="testStageRows" class="testStageRows"></dl></section>
 <div class="testResultActions"><button type="button" id="testAdjustCutoff" data-help="Open the score cutoff setting for these weights and this scan. Enter a new value and choose Find plants to compare the two cutoffs.">Adjust cutoff</button>
 <button type="button" id="testExport" data-help-label="Download field test JSON" data-help="Save predicted positions in local and file coordinates along with the scan frame and file fingerprints. Providing reference centers adds per-distance scores.">Download field test JSON</button></div></div></div>
+<details id="testFeatureScale" class="testFeatureScale" hidden>
+<summary data-help="Inspect the actual measurements the trained model received for a peak in this scan.">How are scan measurements scaled?</summary>
+<div class="featureScaleLayout">
+<div class="featureScalePicker">
+<p id="testScalePeak"></p>
+<label>Scan measurement<select id="testFeatureIndex" data-help-label="Choose a scan measurement" data-help="Follow one of the 13 measurements for this peak from the point cloud to the model's input."></select></label>
+<p id="testScaleMeasure"></p>
+<p id="testScaleSource"></p>
+</div>
+<div class="featureScaleReading">
+<p class="featureScaleFormula">Model input = (measurement − mean) ÷ divisor</p>
+<dl class="featureScaleNumbers">
+<div data-help="The value measured at this scan peak before scaling."><dt>Measured</dt><dd id="testScaleRaw"></dd></div>
+<div data-help="The average for this measurement saved with the model during training."><dt>Training mean</dt><dd id="testScaleMean"></dd></div>
+<div data-help="The size of one step on this scale. The model saves a divisor based on the spread of its training measurements."><dt>Saved divisor</dt><dd id="testScaleDivisor"></dd></div>
+<div data-help="The network receives the measured value minus the training mean, divided by the saved divisor."><dt>Model input</dt><dd id="testScaleInput"></dd></div>
+</dl>
+<div class="featureScaleRuler" aria-hidden="true">
+<div class="featureScaleTrack"><i class="featureScaleRange"></i><i class="featureScaleMean"></i><i class="featureScaleMarker"></i></div>
+<div class="featureScaleTicks"><span></span><span>0 · mean</span><span></span></div>
+</div>
+<p id="testScaleMeaning" aria-live="polite"></p>
+</div></div>
+</details>
 <details id="testAlignment" class="surveyAlignment" hidden>
 <summary data-help="Explore how sensitive the match count is to a small horizontal shift of every supplied survey center.">Survey alignment</summary>
 <div class="surveyAlignmentGrid"><div>
@@ -398,7 +422,7 @@
 </div><div><p id="testAlignmentStatus" role="status"></p>
 <table id="testAlignmentTable" aria-label="Matches at each survey position" hidden><thead><tr><th scope="col" data-help="Recorded coordinates or a fixed shift of every reference center along one local scan axis.">Survey position</th><th scope="col" data-help="Number of supplied centers paired one-to-one with fixed pins at the map’s match distance.">Matched</th><th scope="col" data-help="Matches at this survey position minus matches at the recorded coordinates.">Change</th></tr></thead><tbody id="testAlignmentRows"></tbody></table>
 </div></div></details>
-<div id="testMetrics" class="tableScroll" hidden><table><caption>One-to-one matches against supplied centers</caption><thead><tr><th>Method</th><th>Distance</th><th>Matched</th><th>Extra</th><th>Missed</th><th>Precision</th><th>Recall</th><th>F1</th></tr></thead><tbody id="testRows"></tbody></table></div>
+<div id="testMetrics" hidden><table><caption>One-to-one matches against supplied centers</caption><thead><tr><th>Method</th><th>Distance</th><th>Matched</th><th>Extra</th><th>Missed</th><th>Precision</th><th>Recall</th><th>F1</th></tr></thead><tbody id="testRows"></tbody></table><div class="testMethodScores"><h4>One-to-one matches against supplied centers</h4><div id="testMethodScores"></div></div></div>
 
 </div>
 <details class="fieldEvidence">
@@ -415,6 +439,6 @@
 </main>
 <footer class="siteFoot"><span>Created by Matthew Valancy</span>
 <div><a data-help="Open commands and reproducibility instructions for an agent working with Crop Trainer." href="../AGENTS.md">Agent quickstart</a><a data-help="View the farming challenges and achievements stored on this device." href="../#missions">Farm journal</a><a data-help="Read the terms for using and sharing Crop Trainer’s source code." href="../LICENSE">MIT license</a></div><small class="contextHint"><span class="hoverHint">Hover or focus a button or score for help.</span><span class="touchHint">Tap a score or hold a button for help. A quick tap runs the action.</span></small></footer>
-<script type="module" src="./main.js?v=paired-map1"></script>
+<script type="module" src="./main.js?v=scale-probe1"></script>
 </body>
 </html>

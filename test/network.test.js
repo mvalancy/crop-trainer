@@ -75,3 +75,16 @@ test('live checkpoint pins use weights after the reported training update', asyn
  assert.deepEqual(live.weights,control.weights);
  assert.deepEqual(live.loss,control.loss);
 });
+
+test('an explicit starting vector resumes plain SGD without mutating the caller’s weights', async () => {
+  const options = {dims:2, hiddenLayers:[4], epochs:1, lr:.25};
+  const first = await trainNetworkCPU(x,y,options);
+  const saved = first.weights.slice();
+  const second = await trainNetworkCPU(x,y,{...options,initialWeights:first.weights});
+  const both = await trainNetworkCPU(x,y,{...options,epochs:2});
+  assert.deepEqual(second.weights,both.weights);
+  assert.deepEqual(first.weights,saved);
+  for (const invalid of [saved.subarray(1),saved.slice().fill(NaN)]) {
+    assert.throws(()=>initializeFit(x,y,{...options,initialWeights:invalid}),/Initial weights/);
+  }
+});

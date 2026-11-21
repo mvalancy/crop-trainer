@@ -1,6 +1,6 @@
 import {parsePly, MAX_PLY_BYTES} from './ply.js';
 import {MAX_REFERENCE_BYTES} from './references.js?v=systems1';
-import {runFieldTest} from './score-scan.js?v=saved-cutoff1';
+import {runFieldTest} from './score-scan.js?v=scale-probe1';
 
 let xyz, scan;
 async function read(file, limit) {
@@ -43,9 +43,12 @@ async function detect({modelFile,labelFile,alignment,thresholdOverride}) {
   catch {throw Error('Choose a valid JSON weights export from the Training shed.');}
   const labels = annotations ? {text:decode(annotations.bytes),filename:labelFile.name} : null;
   const tileId = /^([0-9a-f]{16})\.ply$/i.exec(scan.name)?.[1].toLowerCase();
-  const result = runFieldTest({model,xyz,alignment,labels,tileId,thresholdOverride});
+  let featureProbe;
+  const result = runFieldTest({model,xyz,alignment,labels,tileId,thresholdOverride,
+    onFeatureProbe: sample => { featureProbe = sample; }
+  });
   const files = {model:weights.identity,scan,labels:annotations?.identity ?? null};
-  self.postMessage({type:'done',report:{format:'crop-trainer-field-test-v1',files,...result}});
+  self.postMessage({type:'done',featureProbe,report:{format:'crop-trainer-field-test-v1',files,...result}});
 }
 
 self.onmessage = async ({data}) => {

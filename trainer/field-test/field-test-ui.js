@@ -1,23 +1,13 @@
+import {scoreHelp, renderScoreTables} from './score-tables.js';
+import {initFeatureScale} from './feature-scale.js';
 import {initSurveyAlignment} from './survey-alignment.js';
 import {drawExtraPins, initExtraPins, plotCoordinates} from './extra-pins.js?v=paired-map1';
 
 import {initChangedSeedlings, tomatoPractice} from './tomato-practice.js?v=paired-map1';
 
 const byId = id => document.getElementById(id);
-const rate = v => v === null ? '—' : (100*v).toFixed(1)+'%';
 const cutoffText = value => Number.isInteger(value*100) ? value.toFixed(2) : String(value);
 
-// Header descriptions also explain the values in their column.
-const scoreHelp = {
-  Method:'The rule used to place pins. Each method sees the same scan and is checked against the same reference centers.',
-  Distance:'The largest horizontal distance allowed between a pin and a reference center for this row. Changing the distance changes which pins count as matches.',
-  Matched:'Labeled plants paired with a pin within this distance. Each pin and each plant can count once.',
-  Extra:'Predicted pins left over after matching. Two pins near one plant can give one match and one extra.',
-  Missed:'Labeled plants left without a matching pin at this distance.',
-  Precision:'Share of predicted pins that match a labeled plant at this distance. A dash means the method placed no pins.',
-  Recall:'Share of labeled plants that have a matching pin at this distance. A dash means the reference file lists no plants.',
-  F1:'A score balancing extra pins and missed plants. It reaches 100% when every pin matches a plant and every plant has a pin. A dash means the reference file and the detector both counted zero plants.'
-};
 
 function explainFieldTest() {
   const panel = byId('field-test');
@@ -85,7 +75,7 @@ function methodsFor(report) {
   return methods;
 }
 
-function drawPlot(report, sampled, pins, assignment, changes, extras, focusedCenter) {
+function drawPlot(report, sampled, pins, assignment, changes, extras, focusedCenter, inspectedPeak) {
   const canvas = byId('testMap'), ctx = canvas.getContext('2d');
   const {px,py} = plotCoordinates(canvas);
   ctx.fillStyle = '#f2f3e9';
@@ -165,6 +155,13 @@ function drawPlot(report, sampled, pins, assignment, changes, extras, focusedCen
       ctx.fillStyle = '#00664e'; ctx.beginPath(); ctx.arc(x,y,2.6,0,2*Math.PI); ctx.fill();
     }
   });
+  if (inspectedPeak) {
+    const x = px(inspectedPeak[0]), y = py(inspectedPeak[1]), size = 8;
+    ctx.beginPath();
+    ctx.moveTo(x,y-size); ctx.lineTo(x+size,y); ctx.lineTo(x,y+size); ctx.lineTo(x-size,y); ctx.closePath();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 4; ctx.stroke();
+    ctx.strokeStyle = '#943e1e'; ctx.lineWidth = 2; ctx.stroke();
+  }
 }
 
 function renderCutoffComparison(report, distance) {
@@ -218,35 +215,6 @@ function renderStages(stages, centers, distance) {
   }));
 }
 
-function renderScores(report) {
-  const body = byId('testRows');
-  body.replaceChildren();
-  byId('testMetrics').hidden = !report.evaluation;
-  if (!report.evaluation) return;
-  for (const {label:method,help,evaluation} of Object.values(methodsFor(report))) {
-    for (const s of evaluation.scores) {
-      const tr = body.insertRow();
-      const methodCell = tr.insertCell();
-      methodCell.textContent = method;
-      methodCell.dataset.help = help;
-      for (const v of [s.cm+' cm',s.tp,s.fp,s.fn]) {
-        tr.insertCell().textContent = String(v);
-      }
-      const predicted = s.tp+s.fp, labeled = s.tp+s.fn;
-      const ratios = [
-        ['Precision',s.precision,predicted ? 'Share of predicted pins that match a labeled plant. Here '+s.tp+' of '+predicted+' pins matched.' : scoreHelp.Precision],
-        ['Recall',s.recall,labeled ? 'Share of labeled plants that have a matching pin. Here '+s.tp+' of '+labeled+' labeled plants matched.' : scoreHelp.Recall],
-        ['F1',s.f1,s.f1 === null ? scoreHelp.F1 : 'F1 balances extra pins and missed plants. Here '+s.tp+' matches, '+s.fp+' extra pins and '+s.fn+' missed plants give '+rate(s.f1)+'.']
-      ];
-      for (const [name,value,help] of ratios) {
-        const cell = tr.insertCell();
-        cell.textContent = rate(value);
-        cell.dataset.helpLabel = method+' · '+name+' at '+s.cm+' cm';
-        cell.dataset.help = help;
-      }
-    }
-  }
-}
 
 export function initFieldTest(downloadJSON) {
   explainFieldTest();
@@ -267,6 +235,7 @@ export function initFieldTest(downloadJSON) {
 
   const extraInspector = initExtraPins(renderOverlay);
   const setSurvey = initSurveyAlignment();
+  const featureScale = initFeatureScale(renderOverlay);
 
   function updateControls() {
     const useFile = modelSource.value === 'file';
@@ -290,6 +259,7 @@ export function initFieldTest(downloadJSON) {
     report = null;
     clearWeedMap();
     setSurvey(null);
+    featureScale.setSample(null);
     extraInspector.reset();
     results.hidden = true;
     byId('testExampleResult').hidden = true;
@@ -355,7 +325,9 @@ export function initFieldTest(downloadJSON) {
     status.textContent = description+' on '+report.files.scan.name+'.';
     if (weedPair) practice.showScores(distance);
     const focusedCenter = inspectSeedlings(weedChanges ? weedPair : null,distance,changes);
-    drawPlot(report,sampled,pins,assignment,changes,extras,focusedCenter);
+    const inspectedPeak = !extras && (selected === 'model' || selected === 'saved') ? featureScale.visiblePeak() : null;
+    byId('testScaleKey').hidden = !inspectedPeak;
+    drawPlot(report,sampled,pins,assignment,changes,extras,focusedCenter,inspectedPeak);
   }
   function loadScan() {
     worker?.terminate(); worker = null;
@@ -368,7 +340,7 @@ export function initFieldTest(downloadJSON) {
       updateControls(); return;
     }
     status.textContent = 'Reading '+file.name+'…';
-    const active = worker = new Worker(new URL('./field-test-worker.js?v=saved-cutoff1',import.meta.url),{type:'module'});
+    const active = worker = new Worker(new URL('./field-test-worker.js?v=scale-probe1',import.meta.url),{type:'module'});
     updateControls();
     function fail(message) {
       if (active !== worker) return;
@@ -397,13 +369,15 @@ export function initFieldTest(downloadJSON) {
           updateControls(); return;
         }
         report = data.report;
+        featureScale.setSample(data.featureProbe,report.files.model.name);
         const overlayOptions = Object.entries(methodsFor(report)).map(([id,m])=>new Option(m.label,id));
         if (report.savedCutoff && report.references?.length) overlayOptions.splice(2,0,new Option('Changed matches','changes'));
         weedPair = exampleResultLabel ? practice.record(example.value,report,exampleScanQuery) : null;
         if (weedPair) overlayOptions.push(new Option('Gains and losses','weedChanges'));
         compareWeeds.hidden = !weedPair;
         overlay.replaceChildren(...overlayOptions);
-        results.hidden = false; renderOverlay(); renderScores(report);
+        results.hidden = false; renderOverlay();
+        renderScoreTables(report.evaluation ? Object.values(methodsFor(report)) : []);
         if (exampleResultLabel) {
           const receipt = byId('testExampleResult');
           const threshold = report.detector.threshold;
