@@ -159,6 +159,8 @@ A generator URL can include `box=0` or another zero-based box index. Include the
 
 In the field generator, expand **Compare two scans of this field**. Choose **Ray budget** to vary density on the displayed layout, or **Scan layout** to scan the same planting with 60,000 reference-grid rays and 60,000 simulated OS1-64 rays. Select a marked plant to open it in either 3D scan. The downloaded JSON records each full recipe, tile ID, actual sampled rays, per-plant returns, matched proposals and scored pins. The map can show up to 9,000 example points per scan. All acquired points enter scoring. The apple option includes a geometric base locator. Replay the multi-field studies with `node benchmark/studies/seedling-density.mjs` and `node benchmark/studies/orchard-bases.mjs`. [Seedling results](docs/seedling-density.md) · [Orchard results](docs/orchard-bases.md)
 
+For apple **Tree-base pin spacing**, both arms score one generated point cloud. **Download results** records the spacing used by each locator, the fixed height baseline and the second arm’s scan reuse. Select a tree and zoom both maps to locate the nearest pin. Replay the held-out fields with `node benchmark/studies/orchard-spacing.mjs confirmation`. [Spacing experiment and clickable field replays](docs/orchard-bases.md#does-shorter-pin-spacing-recover-the-missed-bases)
+
 Choose **Height pin · sampled cells only** on the maps to inspect another height detector. Its kernel omits empty cells and still counts a measured zero-height return. Compare extra pins as well as matches. The soil-only check can be replayed with `node benchmark/studies/seedling-peaks.mjs`. [Measured peak and soil examples](docs/seedling-peaks.md)
 
 ### Replay a model trained with a different peak rule

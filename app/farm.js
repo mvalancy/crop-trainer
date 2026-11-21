@@ -1,6 +1,6 @@
 import {encodePly} from '../trainer/field-test/ply.js?v=export1';
 import {setupFirstSteps} from './first-steps.js?v=context-help2';
-import {initScanStudy} from '../trainer/study/scan-study-ui.js?v=compare-layout1';
+import {initScanStudy} from '../trainer/study/scan-study-ui.js?v=orchard-spacing1';
 import {createFieldLesson} from './field-lesson.js?v=generator-guide3';
 import {cropProfile} from '../trainer/generator/crops.js?v=systems1';
 import {scanSession} from '../trainer/generator/scan-session.js?v=plants3';

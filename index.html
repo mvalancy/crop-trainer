@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="app/farm.css?v=context-help2">
 <link rel="stylesheet" href="app/weight-lesson.css">
 <link rel="stylesheet" href="app/field-guide.css">
-<link rel="stylesheet" href="app/scan-comparison.css?v=compare-layout1">
+<link rel="stylesheet" href="app/scan-comparison.css?v=orchard-spacing1">
 <link rel="stylesheet" href="trainer/plants/portrait.css?v=scan-settings2">
 <link rel="stylesheet" href="app/advanced-scan.css">
 <link rel="stylesheet" href="app/help.css?v=context-help2">
@@ -159,28 +159,39 @@
 <div class="studySetup">
 <div class="studyIntro"><p id="studyField" data-help-label="Planting used for comparison" data-help="The crop and seed identify this planting. Both scans use these plant positions to make their results comparable.">Grow a field to compare its scans.</p>
 <p id="studyQuestion">Do more laser rays help you find more plants?</p></div>
-<form id="studyForm" aria-label="Paired scan settings"><label class="studyMode">What changes?<select id="studyMode" data-help="Grow the field first, then change one thing between two scans of that planting. Start with ray budget to see which plants a denser scan reaches."><option value="budgets">Ray budget</option><option value="layouts">Scan layout · 60k rays each</option><option value="damage" hidden disabled>Scaffold damage</option><option value="scaffolds" hidden disabled>Scaffold widths · v3 vs v4</option></select></label>
+<form id="studyForm" aria-label="Paired scan settings"><label class="studyMode">What changes?<select id="studyMode" data-help="Grow the field first, then change one thing between two scans of that planting. Start with ray budget to see which plants a denser scan reaches."><option value="budgets">Ray budget</option><option value="layouts">Scan layout · 60k rays each</option><option value="damage" hidden disabled>Scaffold damage</option><option value="scaffolds" hidden disabled>Scaffold widths · v3 vs v4</option><option value="spacing" hidden disabled>Tree-base pin spacing</option></select></label>
 <label>First budget<select id="studyLow" data-help="Set the requested rays in the first scan. Compare its coverage with the second scan of the same planting."></select></label><label>Second budget<select id="studyHigh" data-help="Set the requested rays in the second scan. Some layouts reach their maximum number of sample positions first."></select></label>
-<div class="studyActions"><button class="primary" id="studyRun" data-help="Generate both scans of this planting and compare each result against its known plant positions." disabled>Compare scans</button><button type="button" id="studyCancel" data-help="Stop the comparison in progress. Your main scan stays available." hidden>Cancel</button></div></form></div>
+<label hidden>Compare 1.05 m with<select id="studySpacing" disabled data-help="The locator keeps the strongest candidate first and sets aside nearby candidates. Try another minimum distance on exactly the same scan. Matching to a labeled tree still uses centimetres."><option value="0.75">0.75 m · closer</option><option value="1.35">1.35 m · farther apart</option></select></label>
+<div class="studyActions"><button class="primary" id="studyRun" data-help="Run the selected comparison and score each result against the known planting positions." disabled>Compare scans</button><button type="button" id="studyCancel" data-help="Stop the comparison in progress. Your main scan stays available." hidden>Cancel</button></div></form></div>
 <p id="studyStatus" data-help-label="Comparison progress" data-help="The two scans run in order. When the comparison finishes, use the maps and scores to check the effect of the changed setting." role="status"></p>
 <div id="studyResults" hidden>
 <div class="studyLayout"><div class="studyMapPane">
 <fieldset class="studyMapView"><legend data-help="See both scans together or enlarge one map to pick a plant. The selected plant stays highlighted when you switch views.">Map view</legend><div>
 <label><input type="radio" name="studyMapView" value="both" checked>Both</label>
-<label><input type="radio" name="studyMapView" value="first">First scan</label>
-<label><input type="radio" name="studyMapView" value="second">Second scan</label></div></fieldset>
+<label><input type="radio" name="studyMapView" value="first"><span id="studyViewA">First scan</span></label>
+<label><input type="radio" name="studyMapView" value="second"><span id="studyViewB">Second scan</span></label></div></fieldset>
 <div class="studyMaps" id="studyMaps" data-view="both">
 <figure><figcaption><strong id="studyTitleA"></strong><span id="studyCountA" data-help="See how many known plants meet the selected measure and how many rays the first layout actually sampled." data-help-label="First scan measurements"></span></figcaption><canvas id="studyFirst" role="img" aria-labelledby="studyTitleA studyCountA" aria-describedby="studyLegend studyDistanceA"></canvas></figure>
 <figure><figcaption><strong id="studyTitleB"></strong><span id="studyCountB" data-help="Compare this count with the first scan using the same measure and known planting positions." data-help-label="Second scan measurements"></span></figcaption><canvas id="studySecond" role="img" aria-labelledby="studyTitleB studyCountB" aria-describedby="studyLegend studyDistanceB"></canvas></figure></div></div>
 <div id="studyInspect" hidden>
 <div class="studyChoices"><label>Mark plants by<select id="studyMetric" data-help="Choose what counts as finding a plant. A single crop return shows it was measured. A matched pin means a detector also located it within the stated distance." aria-describedby="studyMetricHelp studyChange"><option value="returns">At least one crop return</option><option value="peaks">Matched height peak · 15 cm</option><option value="pins">Height-only pin · 15 cm</option><option value="sampledPins">Sampled-cell pin · 15 cm</option><option value="orchard">Orchard base pin · 15 cm</option></select></label>
 <label class="studyOverlay"><input id="studyCloud" data-help="Draw a preview of up to 9,000 points over each map. Coverage and detection scores use the complete scans." type="checkbox"> Show up to 9,000 scan points</label>
-<p id="studyLegend"><span><i class="studyDot" aria-hidden="true"></i>Dot meets the measure</span><span><i class="studyCross" aria-hidden="true">×</i>Cross misses it</span></p>
+<p id="studyLegend"><span><i class="studyDot" aria-hidden="true"></i>Dot meets the measure</span><span><i class="studyCross" aria-hidden="true">×</i>Cross misses it</span><span id="studyZoomKey" hidden>2.5 m view · white circle = 15 cm · gold line to nearest pin</span></p>
 <p id="studyChange" data-help="Counts each plant that passes the selected measure in just one scan. Two equal totals can hide different missed plants." data-help-label="Plants gained or lost"></p><p id="studyMetricHelp"></p><p id="studyPeakGuide" hidden><a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/seedling-peaks.md" data-help="See why neighborhood peaks in sparse tomato scans can produce extra crop pins.">When do these extra peaks help?</a></p>
 </div>
 <div class="studyFocus"><label>Inspect a plant<select id="studyTarget" data-help="Pick the same planting position on both maps to compare its crop returns and nearby pins." aria-describedby="studyTargetDetail"><option value="">All plants</option></select></label>
+<div id="studyZoomTools" hidden><label class="check"><input type="checkbox" id="studyZoom" data-help="See a 2.5 m square around the selected base in both maps. The white circle is the 15 cm match radius. A gold line connects the base to its nearest predicted pin.">Zoom both maps to this tree</label></div>
 <p id="studyTargetDetail" data-help-label="Selected plant returns" data-help="Compare the points recorded from the same plant in each scan. The plant can still be present when either count is zero." role="status" aria-atomic="true"></p>
-<div class="studyDistances"><span id="studyDistanceA" data-help="Read the distance to the nearest estimated base and whether a pin matched this plant in the one-to-one score." data-help-label="First scan pin distance" hidden></span><span id="studyDistanceB" data-help="Use the same plant in both scans to see whether the nearest pin moved and whether a match was awarded." data-help-label="Second scan pin distance" hidden></span></div></div>
+<div class="studyDistances"><span id="studyDistanceA" data-help="Read the distance to the nearest estimated base and whether a pin matched this plant in the one-to-one score." data-help-label="First scan pin distance" hidden></span><span id="studyDistanceB" data-help="Use the same plant in both scans to see whether the nearest pin moved and whether a match was awarded." data-help-label="Second scan pin distance" hidden></span></div>
+<div id="studyOrchardTrace" hidden>
+<table class="orchardTrace"><caption id="studyTraceTitle">How the orchard locator placed its pins</caption>
+<thead><tr><th scope="col">At this tree</th><th scope="col" id="studyTraceArmA">First scan</th><th scope="col" id="studyTraceArmB">Second scan</th></tr></thead>
+<tbody>
+<tr><th scope="row" data-help="Number of 5 cm cells within 15 cm of the planted base that reached the geometric support threshold. The locator combines occupied height bands with the spread of returns around each cell.">Supported cells</th><td id="studySupportA"></td><td id="studySupportB"></td></tr>
+<tr><th scope="row" data-help="The locator keeps stronger cells first, removing close neighbors. This counts the kept cells within 15 cm before each pin receives its final position.">Cells after spacing</th><td id="studySpacedA"></td><td id="studySpacedB"></td></tr>
+<tr><th scope="row" data-help="Distance from this base to the closest pin after the locator refines its position. A pin can move into or out of the 15 cm circle during this final step.">Nearest final pin</th><td id="studyNearestA"></td><td id="studyNearestB"></td></tr>
+<tr><th scope="row" data-help="A final pin within 15 cm can match one planted base. Each pin and base may be used once.">15 cm match</th><td id="studyOutcomeA"></td><td id="studyOutcomeB"></td></tr>
+</tbody></table><p id="studyTraceNote" class="hint"></p></div></div>
 <div class="studyActions"><a id="studyLinkA" data-help="Open the first scan in the field viewer, with the selected plant highlighted.">First scan in 3D</a><a id="studyLinkB" data-help="Open the second scan in the field viewer with the same highlighted plant.">Second scan in 3D</a><a id="studyShare" data-help="Open a replay link for this pair, including the selected measure and plant.">Comparison link</a><button type="button" id="studySave" data-help="Save both scan recipes and comparison measurements as JSON so you can check or repeat the result.">Download results</button></div></div></div>
 <details id="studyScores" hidden><summary data-help="See how many estimated centers qualify as matches when the allowed distance changes." data-help-label="Pin scores at each matching distance">Pin scores at each matching distance</summary><div class="studyScoreLayout"><div class="scoreSettings"><label>Matching distance<select id="studyScoreDistance" data-help="Switch the maximum distance between a pin and a plant. Each score uses a one-to-one match. The plant markers on the maps use 15 cm for pin comparisons."><option value="7.5">7.5 cm</option><option value="10">10 cm</option><option value="15" selected>15 cm</option></select></label>
 <div id="studyScoreArms"></div></div>
@@ -266,6 +277,6 @@
 </main>
 <footer class="siteFoot"><span>Created by Matthew Valancy</span>
 <div><a href="AGENTS.md" data-help="Find instructions for running reproducible experiments from the browser or command line.">Agent quickstart</a><a href="#missions" data-help="Jump to the stamps earned in this browser and the experiments that unlock them.">Farm journal</a><a href="LICENSE" data-help="Read the MIT terms for reusing and modifying the app.">MIT license</a></div><small class="contextHint"><span class="hoverHint">Hover or focus a button or score for help.</span><span class="touchHint">Tap a score or hold a button for help. A quick tap runs the action.</span></small></footer>
-<script type="module" src="app/farm.js?v=scan-workspace4"></script>
+<script type="module" src="app/farm.js?v=orchard-spacing1"></script>
 </body>
 </html>

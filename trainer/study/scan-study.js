@@ -1,5 +1,5 @@
 import {features, matchCenters, detectionStages, targetCenters} from '../models/data.js?v=peak-study1';
-import {detectOrchardBases} from '../models/orchard.js';
+import {detectOrchardBases, inspectOrchardBases} from '../models/orchard.js?v=orchard-spacing1';
 import {cropProfile} from '../generator/crops.js';
 import {evaluatePins} from '../field-test/references.js';
 import {RAY_BUDGETS, getSensor} from '../generator/sensors.js';
@@ -13,6 +13,10 @@ function heightResult(peaks, separation, references) {
 }
 
 export function studyRecipes(recipe, mode, budgets) {
+  if (mode === 'spacing') {
+    if (recipe.crop !== 'apple') throw Error('Choose an apple orchard to compare base pin spacing.');
+    return [recipe, recipe];
+  }
   if (mode === 'scaffolds') {
     if (recipe.crop !== 'apple') throw Error('Choose an apple orchard to compare scaffold widths.');
     return [3,4].map(plantArchitecture => ({...recipe,plantArchitecture}));
@@ -34,7 +38,7 @@ export function studyRecipes(recipe, mode, budgets) {
 
 // Only the observation counts use the simulator's point origins. The detectors
 // see the same XYZ a visitor would find in an exported PLY.
-export function analyzeStudyScan(scan, comparison) {
+export function analyzeStudyScan(scan, comparison, orchardSeparationMeters) {
   const profile = cropProfile(scan.p.crop);
   const centers = targetCenters(scan.labels.boxes);
   const references = centers.map(localPoint);
@@ -43,16 +47,20 @@ export function analyzeStudyScan(scan, comparison) {
   const sampled = heightResult(features({xyz:scan.xyz},profile.peakHeight,'occupied'),profile.pinSeparation,references);
   const proposals = matchCenters(peaks.pos,centers,.15);
 
-  const orchardPins = scan.p.crop === 'apple'
-    ? detectOrchardBases(scan.xyz).pins.map(({x,y}) => [x,y]) : null;
-  const orchard = orchardPins && evaluatePins(orchardPins.map(localPoint),references);
+  const orchardStages = scan.p.crop === 'apple'
+    ? detectOrchardBases(scan.xyz,{includeStages:true, separationMeters:orchardSeparationMeters}) : null;
+  const orchardPins = orchardStages?.pins.map(({x,y})=>[x,y]);
+  const orchard = orchardStages && evaluatePins(orchardPins.map(localPoint),references);
+  const orchardTrace = orchard && inspectOrchardBases(orchardStages,centers,orchard.pinByReference15);
   const plants = centers.map(([x,y],i) => ({
     x,y,returns:scan.plantReturns[i],
     peak:proposals.pinByBox[i] !== -1,
     height:height.pinByReference15[i] !== -1,
     sampledHeight:sampled.pinByReference15[i] !== -1,
     ...(orchard ? {orchard:orchard.pinByReference15[i] !== -1,
-      nearestOrchardPinM:orchardPins.length ? Math.min(...orchardPins.map(([px,py]) => Math.hypot(px-x,py-y))) : null} : {})
+      nearestOrchardPinM:orchardTrace[i].nearestPinMeters,
+      orchardTrace:{state:orchardTrace[i].state,supportCellCount:orchardTrace[i].supportCellCount,
+        spacedCellCount:orchardTrace[i].spacedCellCount}} : {})
   }));
   return {
     tileId:scan.labels.tile_id,recipe:scan.p,sampledRays:scan.sampledRays,
@@ -65,7 +73,7 @@ export function analyzeStudyScan(scan, comparison) {
     ...(comparison==='scaffolds' && scan.parts ? {
       orchardWoodReturns:scan.parts.reduce((n,part,i)=>n+(part===1 && scan.cls[i]===1),0)
     } : {}),
-    ...(orchard ? {orchardScores:orchard.scores,orchardPins,orchardMethod:'height-band-occupancy-v1'} : {})
+    ...(orchard ? {orchardScores:orchard.scores,orchardPins,orchardSeparationMeters:orchardStages.separationMeters,orchardMethod:'height-band-occupancy-v1'} : {})
   };
 }
 

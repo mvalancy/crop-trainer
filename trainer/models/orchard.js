@@ -3,7 +3,9 @@
 const size = 200, step = .05, stride = size+1;
 const lowerHeights = [.48, .78, 1.12, 1.55, 2.04];
 const weights = [1.5, 1.5, 1, .35, .35];
-const threshold = 4, separation = 1.05;
+const threshold = 4;
+export const DEFAULT_ORCHARD_SPACING = 1.05;
+export const ORCHARD_SPACINGS = Object.freeze([.75, DEFAULT_ORCHARD_SPACING, 1.35]);
 
 function integral(mask) {
   const sums = new Uint32Array(stride*stride);
@@ -64,7 +66,8 @@ function supportAt(bands, crown, x, y) {
   return support*(.20+.80*occupied/4)*(1+2.5*balance);
 }
 
-export function detectOrchardBases(xyz, {includeStages=false}={}) {
+export function detectOrchardBases(xyz, {includeStages=false, separationMeters=DEFAULT_ORCHARD_SPACING}={}) {
+  if (!ORCHARD_SPACINGS.includes(separationMeters)) throw Error('Choose orchard candidate spacing of 0.75, 1.05 or 1.35 metres.');
   if ((!Array.isArray(xyz) && !ArrayBuffer.isView(xyz)) || !Number.isInteger(xyz.length) ||
       xyz.length%3!==0 || xyz.length>3_000_000) throw Error('Provide up to one million interleaved XYZ returns.');
   const {bands,crown}=occupiedBands(xyz), support=new Float32Array(size*size), candidates=[];
@@ -78,7 +81,7 @@ export function detectOrchardBases(xyz, {includeStages=false}={}) {
   candidates.sort((a,b)=>b.score-a.score);
   const selected=[];
   for (const cell of candidates) {
-    if (!selected.some(p=>((p.x-cell.x)**2+(p.y-cell.y)**2)*step**2<separation**2)) selected.push(cell);
+    if (!selected.some(p=>((p.x-cell.x)**2+(p.y-cell.y)**2)*step**2<separationMeters**2)) selected.push(cell);
   }
   // Center a broad maximum instead of biasing flat plateaus to an early cell.
   const pins=selected.map(({x,y,score})=>{
@@ -91,7 +94,7 @@ export function detectOrchardBases(xyz, {includeStages=false}={}) {
     }
     return {x:wx/sum, y:wy/sum, score};
   });
-  const result = {pins,candidateCount:candidates.length,threshold,separationMeters:separation};
+  const result = {pins,candidateCount:candidates.length,threshold,separationMeters};
   if (includeStages) {
     const center = cell => ({x:(cell.x+.5)*step, y:(cell.y+.5)*step, score:cell.score});
     result.supportCells = candidates.map(center);

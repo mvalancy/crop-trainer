@@ -108,6 +108,32 @@ Four development plantings gave 305/352 v3 and 291/352 v4 matches. All detector 
 
 Run `node benchmark/studies/orchard-support.mjs confirmation > orchard-support.json` from the project root. Omit `confirmation` to include the development split. The JSON records all three tolerances, per-field counts, tile IDs, distances and the stage reached for each tree. One Node 24 CPU confirmation took 3.73 s, including 1.97 s for generating scans, 1.18 s for the locator, 0.25 s for the height rule, 0.052 s for stage diagnostics and 0.008 s for matching. Both detectors use fixed rules, so there was no fitting phase. A second run reproduced all counts and distances. Enabling the stage trace preserved the original locator’s pins and scores on all 320 original and hybrid scan inputs. [Replay code and fixed seeds](../benchmark/studies/orchard-support.mjs)
 
+## Does shorter pin spacing recover the missed bases?
+
+**At 15 cm, shortening the locator’s spacing from 1.05 m to 0.75 m recovered zero missed trees and added 134 extra pins** on the six confirmation plantings. Of 320 misses at the usual spacing, 225 had qualifying cells near the base, 82 lacked one and 13 lost the match during final centering. The shorter spacing recovered none of these and also lost one former match. Its F1 fell on all six plantings. Of the 134 additional extra pins, 125 appeared in leafy scans. The four development plantings gave the same pattern, with zero recoveries and 75 additional extra pins.
+
+Why did all 225 misses with nearby support persist? For each base we traced its highest-ranked nearby cell back to the first retained cell that excluded it. On the usual 1.05 m setting those two grid cells lay **5–65 cm apart, with a median of 25 cm**. They were already inside the tighter 75 cm radius. In the actual 0.75 m replay, the same earlier cell still blocked the same candidate in every one of the 225 cases. These distances describe grid cells before the final pin-centering step.
+
+| Detector and spacing | F1 at 7.5 cm | F1 at 10 cm | F1 at 15 cm | Matched / extra / missed at 15 cm |
+| --- | ---: | ---: | ---: | ---: |
+| Orchard locator, 0.75 m | .421 | .528 | .665 | 767 / 452 / 321 |
+| Orchard locator, 1.05 m | .446 | .559 | .707 | 768 / 318 / 320 |
+| Orchard locator, 1.35 m | .451 | .565 | .713 | 767 / 298 / 321 |
+| Spaced height peaks, 0.75 m | .121 | .144 | .164 | 385 / 3,210 / 703 |
+| Spaced height peaks, 1.05 m | .110 | .128 | .149 | 247 / 1,985 / 841 |
+| Spaced height peaks, 1.35 m | .131 | .153 | .176 | 238 / 1,379 / 850 |
+
+Wider spacing also changed **which** trees were found. At 1.35 m the locator gained four matches, lost five and removed 20 extra pins. The nearest two distinct bases in these plots were 1.81 m apart. Closely planted orchards would need a separate test.
+
+Open either replay and choose **Compare pin spacing**. Both maps zoom to the same tree. The white circle shows the 15 cm match radius and the gold line leads to the nearest predicted pin.
+
+- On healthy tree 2, 21 qualifying cells lay within 15 cm of its base. At both 1.05 m and 0.75 m the nearest final pin landed 23.3 cm away. The field gained two extra pins at the shorter spacing and matched the same seven of ten trees. [Inspect tree 2 at 1.05 m and 0.75 m](https://mvalancy.github.io/crop-trainer/?crop=apple&plantArchitecture=4&plantForm=central-leader&plantCondition=healthy&appleCanopy=leafy&seed=17107753&sensor=reference&budget=60000&ground=true&noise=clean&weeds=off&sticks=off&boards=off&tile=a481a4eb571f9f65&studyMode=spacing&studySpacing=0.75&studyMetric=orchard&studyCloud=on&studyZoom=tree&studyBox=2#scan-study)
+- On damaged tree 4, 13 cells qualified near the base. The 1.05 m rule kept none of them. Wider spacing changed which cells remained available later in the ranking. At 1.35 m one nearby cell survived and its final pin landed 8.0 cm from the base. The field went from five to six matched trees. [Inspect tree 4 at 1.05 m and 1.35 m](https://mvalancy.github.io/crop-trainer/?crop=apple&plantArchitecture=4&plantForm=central-leader&plantCondition=damaged&appleCanopy=leafy&seed=17107753&sensor=os1-64&budget=60000&ground=true&noise=clean&weeds=off&sticks=off&boards=off&tile=9099bb9c52ea493d&studyMode=spacing&studySpacing=1.35&studyMetric=orchard&studyCloud=on&studyZoom=tree&studyBox=4#scan-study)
+
+The seed lists, three spacing values and stage check were fixed before scoring. Confirmation used 68 distinct bases across six plantings. Each planting appeared in 16 combinations of tree form, healthy/damaged scaffolds, leafy/dormant canopy and grid/OS1-64-inspired layout. All settings received the same XYZ for each comparison, with 60,000 sampled rays, ground included, and no added noise or clutter. The locator’s support threshold and final centering stayed fixed. The trace checks the actual support ranking, stable row order for tied scores and strict distance rule on the 5 cm grid.
+
+Run `node benchmark/studies/orchard-spacing.mjs confirmation > orchard-spacing.json` from the project root. Omit `confirmation` for both splits. The JSON includes per-seed scores, per-tree gains and losses, damage and foliage breakdowns and timings. On an AMD EPYC 7763 CPU under Node 24, the 96-scan confirmation took 8.76 s, including 4.02 s for generation, 3.61 s for the three locator settings, 0.54 s for height peaks and their spacing, 0.079 s for scoring and 0.21 s for diagnostics. Neither method needed a training step. A second run reproduced all pins and match assignments. [Study code and seeds](../benchmark/studies/orchard-spacing.mjs)
+
 ## What a field test would have to establish
 
 AppleQSM used terrestrial laser scans and processed individual apple trees to extract trunk and branch characteristics. The study covered 84 trees from two cultivars. It motivates looking for woody structure when the application needs a trunk location. Its scan geometry, task and evaluation differ from locating all bases in a single overhead plot. [Qiu and colleagues, AppleQSM](https://pubmed.ncbi.nlm.nih.gov/38721548/)

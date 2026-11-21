@@ -62,6 +62,19 @@ try {
     return JSON.parse(file.buffer.toString('utf8'));
   }
 
+  function clippedValues(controls) {
+    return controls.evaluateAll(elements=>{
+      const measure=document.createElement('canvas').getContext('2d');
+      return elements.filter(control=>{
+        const style=getComputedStyle(control);
+        measure.font=style.font;
+        const text=control.selectedOptions?.[0]?.text ?? control.value;
+        const available=control.clientWidth-parseFloat(style.paddingLeft)-parseFloat(style.paddingRight);
+        return measure.measureText(text).width+16>available; // Allow for the arrow or spinner.
+      }).map(control=>control.id);
+    });
+  }
+
   async function checkDirectHelp(target, gesture, expected) {
     await target.scrollIntoViewIfNeeded();
     if (gesture === 'focus') await page.keyboard.press('Tab'); // Use keyboard focus modality.
@@ -281,18 +294,54 @@ try {
   await page.locator('#scan').selectOption('os1-128');
   await page.locator('#budget').selectOption('1000000');
   assert.match(await page.locator('#grow #resolutionInfo').innerText(), /262,144 of the 1,000,000 requested rays/);
-  const clipped=await page.locator('#grow select, #grow input[type=number]').evaluateAll(controls=>{
-    const textMeasure=document.createElement('canvas').getContext('2d');
-    return controls.filter(control=>{
-      const style=getComputedStyle(control);
-      textMeasure.font=style.font;
-      const text=control.selectedOptions?.[0]?.text ?? control.value;
-      const innerWidth=control.clientWidth-parseFloat(style.paddingLeft)-parseFloat(style.paddingRight);
-      // Reserve space for a native select arrow or number spinner.
-      return textMeasure.measureText(text).width+16>innerWidth;
-    }).map(control=>control.id);
-  });
-  assert.deepEqual(clipped,[],'All four selected recipe values should be readable on a narrow phone');
+  assert.deepEqual(await clippedValues(page.locator('#grow select, #grow input[type=number]')),[],
+    'All four selected recipe values should be readable on a narrow phone');
+
+  // Replay a documented tree whose nearby v4 candidates all fell out during spacing.
+  const traceQuery=new URLSearchParams(orchardQuery);
+  for (const [key,value] of Object.entries({plantArchitecture:3,plantForm:'central-leader',
+    seed:14151223,studyMode:'scaffolds',studyMetric:'orchard',studyBox:2})) traceQuery.set(key,value);
+  await open('?'+traceQuery+'#scan-study');
+  await page.locator('#studyRun').tap();
+  const trace=page.locator('#studyOrchardTrace');
+  await trace.waitFor({state:'visible'});
+  const traceReport=await downloadJSON(page.locator('#studySave'),'tap');
+  assert.deepEqual(traceReport.arms.map(arm=>arm.tileId),['ac90cc2ee71a50fe','c1222bdf0546d761']);
+  for (const [i,expected] of [[20,1,'7.7 cm','matched'],[3,0,'79.2 cm','spacing']].entries()) {
+    const side=i?'B':'A', tree=traceReport.arms[i].plants[2];
+    const row=await Promise.all(['Support','Spaced','Nearest'].map(key=>page.locator('#study'+key+side).innerText()));
+    assert.deepEqual([...row,await page.locator('#studyOutcome'+side).getAttribute('data-state')],expected.map(String));
+    assert.deepEqual([tree.orchardTrace.supportCellCount,tree.orchardTrace.spacedCellCount,
+      (tree.nearestOrchardPinM*100).toFixed(1)+' cm',tree.orchardTrace.state],expected);
+  }
+  await page.locator('#studyZoom').check();
+  assert.ok(await page.locator('#studyZoomKey').isVisible());
+  assert.equal(new URL(await page.locator('#studyShare').getAttribute('href')).searchParams.get('studyZoom'),'tree');
+  // Final centering can bring an outside cell into the scoring circle.
+  await page.locator('#studyTarget').selectOption('10');
+  assert.equal(await page.locator('#studySpacedB').innerText(),'0');
+  assert.equal(await page.locator('#studyOutcomeB').getAttribute('data-state'),'matched');
+  assert.equal(new URL(await page.locator('#studyShare').getAttribute('href')).searchParams.get('studyBox'),'10');
+  await page.locator('#studyTarget').selectOption('');
+  assert.ok(await trace.isHidden());
+  assert.ok(await page.locator('#studyZoom').isHidden());
+  console.log('Orchard traces reproduced the documented spacing loss and a matched tree after refinement.');
+
+  await page.locator('#studyMode').selectOption('spacing');
+  await page.locator('#studySpacing').selectOption('1.35');
+  assert.deepEqual(await clippedValues(page.locator('#studySpacing,#studyMode')),[],
+    'The selected spacing and comparison mode should be readable at 320px');
+  await page.locator('#studyRun').tap();
+  await page.locator('#studySave:visible').waitFor();
+  const spacingReport=await downloadJSON(page.locator('#studySave'),'tap');
+  const [standard,wider]=spacingReport.arms;
+  assert.deepEqual([standard.orchardSeparationMeters,wider.orchardSeparationMeters],[1.05,1.35]);
+  assert.equal(standard.tileId,wider.tileId);
+  assert.deepEqual(standard.heightScores,wider.heightScores);
+  assert.deepEqual(standard.sampledHeightScores,wider.sampledHeightScores);
+  assert.deepEqual(await page.locator('#studyScoreBody tbody th[scope=row]').allTextContents(),['Fixed','Fixed','1.05 m','1.35 m']);
+  assert.deepEqual([standard.reusedScan,wider.reusedScan,wider.timingsMs.generation],[false,true,0]);
+  assert.equal(new URL(spacingReport.source).searchParams.get('studySpacing'),'1.35');
 
   await open('trainer/?plan=quick&engine=cpu&crop=lettuce&seed=27&sensor=reference&epochs=3');
   {

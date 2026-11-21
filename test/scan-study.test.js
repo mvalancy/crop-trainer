@@ -28,6 +28,7 @@ test('paired generator study reproduces reference seedling hits and one-to-one p
     assert.deepEqual([cm,tp,fp,fn],[15,...counts]);
     assert.equal(arm.plants.filter(plant=>plant.height).length,tp);
     assert.ok(!('orchardPins' in arm));
+    assert.ok(arm.plants.every(plant=>!('orchardTrace' in plant)));
   }
   const wrong={...high,plants:high.plants.map(p=>({...p,x:p.x+.1}))};
   assert.throws(()=>checkStudyPair(low,wrong),/target locations/);
@@ -95,7 +96,7 @@ test('orchard damage gives a nearest distance even when the pin misses the 15 cm
     assert.equal(scan.orchardScores.at(-1).tp,matches);
   }
   const soil={...field(source),xyz:new Float32Array([0,0,0])};
-  assert.ok(analyzeStudyScan(soil).plants.every(p=>!p.orchard&&p.nearestOrchardPinM===null));
+  assert.ok(analyzeStudyScan(soil).plants.every(p=>!p.orchard&&p.nearestOrchardPinM===null&&p.orchardTrace.state==='support'));
 });
 
 test('scaffold widths vary orchard wood returns while preserving the planted bases and scan settings',()=>{
@@ -113,4 +114,43 @@ test('scaffold widths vary orchard wood returns while preserving the planted bas
   ]);
   assert.equal(source.plantArchitecture,2);
   assert.ok(!('orchardWoodReturns' in analyzeStudyScan(field(recipes[0]),'damage')));
+});
+
+test('paired orchard study explains a spacing miss and a pin centered in from outside 15 cm',()=>{
+  const source={...makeRecipe(14151223,true,getSensor('reference'),'apple',3,'central-leader','healthy'),
+    points:60000, appleCanopy:'leafy', weeds:false, sticks:false, boards:false, scanNoise:null};
+  const [first,second]=studyRecipes(source,'scaffolds').map(recipe=>analyzeStudyScan(field(recipe),'scaffolds'));
+  assert.deepEqual(first.plants[2].orchardTrace,{state:'matched',supportCellCount:20,spacedCellCount:1});
+  assert.deepEqual(second.plants[2].orchardTrace,{state:'spacing',supportCellCount:3,spacedCellCount:0});
+  assert.equal((first.plants[2].nearestOrchardPinM*100).toFixed(1),'7.7');
+  assert.equal((second.plants[2].nearestOrchardPinM*100).toFixed(1),'79.2');
+  for (const result of [first,second]) {
+    const tree=result.plants[10];
+    assert.equal(tree.orchardTrace.spacedCellCount,0);
+    assert.equal(tree.orchardTrace.state,'matched');
+    assert.ok(tree.nearestOrchardPinM<=.15);
+    assert.equal(result.plants.filter(p=>p.orchardTrace.state==='matched').length,result.orchardScores.at(-1).tp);
+    assert.ok(!('supportCells' in result) && !('spacedCells' in result));
+  }
+});
+
+test('apple pin-spacing arms use one scan and preserve the height-only control',()=>{
+  const source={...makeRecipe(17107753,true,getSensor('reference'),'apple',4,'central-leader','healthy'),
+    points:60000, appleCanopy:'leafy', weeds:false, sticks:false, boards:false, scanNoise:null};
+  const [first,second]=studyRecipes(source,'spacing');
+  assert.equal(first,source);
+  assert.equal(second,first);
+  assert.throws(()=>studyRecipes(seedlingRecipe('reference'),'spacing'),/apple orchard/);
+  const scan=field(source);
+  const control=analyzeStudyScan(scan,'spacing');
+  const closer=analyzeStudyScan(scan,'spacing',.75);
+  assert.deepEqual(control,analyzeStudyScan(scan,'spacing',1.05));
+  checkStudyPair(control,closer);
+  assert.equal(control.tileId,'a481a4eb571f9f65');
+  assert.equal(closer.tileId,control.tileId);
+  assert.equal(control.orchardSeparationMeters,1.05);
+  assert.equal(closer.orchardSeparationMeters,.75);
+  assert.deepEqual(closer.heightPins,control.heightPins);
+  assert.deepEqual(closer.sampledHeightScores,control.sampledHeightScores);
+  assert.deepEqual([control,closer].map(r=>[r.orchardScores.at(-1).tp,r.orchardScores.at(-1).fp]),[[7,3],[7,5]]);
 });

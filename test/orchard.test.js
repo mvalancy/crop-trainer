@@ -32,6 +32,9 @@ test('bare soil and an isolated high return do not supply vertical support',()=>
   assert.throws(()=>detectOrchardBases([2,3,Infinity]),/finite/);
   assert.throws(()=>detectOrchardBases([-1,3,1]),/plot/);
   assert.throws(()=>detectOrchardBases([1,2]),/XYZ/);
+  for(const spacing of [0, Infinity, '0.75']) {
+    assert.throws(()=>detectOrchardBases([], {separationMeters:spacing}),/orchard candidate spacing/);
+  }
 });
 
 test('collecting the support trace preserves every prediction in a paired v3/v4 orchard',()=>{

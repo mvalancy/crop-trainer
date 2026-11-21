@@ -74,3 +74,30 @@
   #studyScores .scoreSettings { display: grid; align-content: start; gap: .6rem; }
   #studyScores .studyScoreTable { max-width: none; }
 }
+
+#studyOrchardTrace {
+  max-inline-size: 36rem;
+  border-top: 1px solid var(--line);
+  padding-top: .5rem;
+}
+#studyOrchardTrace .orchardTrace { width: 100%; margin: 0; font-variant-numeric: tabular-nums; }
+.orchardTrace caption { text-align: start; font-size: .94rem; font-weight: 650; color: var(--forest); }
+.orchardTrace :is(th,td) { padding: .32rem .45rem; text-align: end; font-size: .86rem; }
+.orchardTrace th:first-child { text-align: start; }
+.orchardTrace tbody th { font-weight: 500; background: transparent; }
+.orchardTrace [data-state] { font-weight: 650; color: #90401f; }
+.orchardTrace [data-state=matched] { color: #396335; }
+#studyTraceNote { margin: .4rem 0 0; }
+@media (max-width: 535px) {
+  .orchardTrace :is(th,td) { padding-inline: .22rem; }
+}
+
+#studyZoomTools label { min-height: 44px; align-items: center; gap: .5rem; }
+#studyForm .helpField:has(#studySpacing) { grid-column: 1 / -1; }
+#studyForm:has(#studyLow:disabled) .helpField > label.studyMode { grid-area: 1 / 1; }
+@media (min-width: 620px) {
+  #studyForm:has(#studySpacing:enabled) {
+    grid-template-columns: minmax(11rem,1.3fr) minmax(11rem,1fr) auto;
+  }
+  #studyForm:has(#studySpacing:enabled) .helpField:has(#studySpacing) { grid-column: auto; }
+}

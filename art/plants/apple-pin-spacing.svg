@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="424" height="660" viewBox="0 0 424 660" role="img" aria-labelledby="title desc">
+  <title id="title">Which guesses survive spacing?</title>
+  <desc id="desc">At the same synthetic tree base, 20 nearby cells qualify in v3 and one survives spacing. Three qualify in v4 and none survives. A stronger v4 cell is selected 82.2 centimetres away. Its final pin is 79.2 centimetres from the base. Adding the three rejected nearby cells as extra guesses would gain one match and two extra pins.</desc>
+  <style>
+    text { font-family: system-ui, sans-serif; fill: #243f33 }
+    .title { font-size: 24px; font-weight: 700 }
+    .section { font-size: 19px; font-weight: 670 }
+    .label { font-size: 17px; font-weight: 650 }
+    .note { font-size: 15px; fill: #42594d }
+    .ring { fill: #f2f3e5; stroke: #577065; stroke-width: 1.5; stroke-dasharray: 3 3 }
+    .cell { fill: #a3bb8e; stroke: #49634c }
+    .kept { fill: #a94d24; stroke: #733218 }
+    .pin { fill: #145c71; stroke: #f9faed; stroke-width: 1 }
+    .refine { display: none }
+    @media (prefers-reduced-motion: no-preference) {
+      .refine { display: inline; animation: refine 3.6s ease 1 both }
+      @keyframes refine {
+        0% { opacity: 0; transform: translate(0,0) }
+        20% { opacity: .85; transform: translate(0,0) }
+        75%,100% { opacity: 0; transform: translate(-1.7px,-12.9px) }
+      }
+    }
+  </style>
+  <defs>
+    <g id="base" fill="none" stroke-linecap="round">
+      <path d="M-5 0H5m-5-5V5" stroke="#faf8ec" stroke-width="4"/>
+      <path d="M-5 0H5m-5-5V5" stroke="#193829" stroke-width="2"/>
+    </g>
+  </defs>
+  <rect x="1" y="1" width="422" height="658" rx="16" fill="#faf8ec" stroke="#c4d1ba"/>
+  <text class="title" x="18" y="36">Which guesses survive spacing?</text>
+  <text class="note" x="19" y="60">Synthetic orchard · healthy, leafy central leader</text>
+  <path d="M18 74H406" stroke="#c4d1ba"/>
+  <text class="section" x="19" y="103">Within 15 cm of the planted base</text>
+  <text class="note" x="19" y="127">The cross marks the same trunk in both scans.</text>
+  <g aria-label="Version 3"><circle class="ring" cx="110" cy="200" r="49.8"/>
+    <rect class="kept" x="130.2" y="189.9" width="10.0" height="10.0" rx="1"/>
+    <rect class="cell" x="130.2" y="173.3" width="10.0" height="10.0" rx="1"/>
+    <rect class="cell" x="130.2" y="206.5" width="10.0" height="10.0" rx="1"/>
+    <rect class="cell" x="146.8" y="173.3" width="10.0" height="10.0" rx="1"/>
+    <rect class="cell" x="97.0" y="223.1" width="10.0" height="10.0" rx="1"/>
+    <rect class="cell" x="80.4" y="223.1" width="10.0" height="10.0" rx="1"/>
+    <rect class="cell" x="146.8" y="189.9" width="10.0" height="10.0" rx="1"/>
+    <rect class="cell" x="113.6" y="189.9" width="10.0" height="10.0" rx="1"/>
+    <rect class="cell" x="146.8" y="206.5" width="10.0" height="10.0" rx="1"/>
+    <rect class="cell" x="97.0" y="239.7" width="10.0" height="10.0" rx="1"/>
+    <rect class="cell" x="113.6" y="173.3" width="10.0" height="10.0" rx="1"/>
+    <rect class="cell" x="80.4" y="189.9" width="10.0" height="10.0" rx="1"/>
+    <rect class="cell" x="97.0" y="206.5" width="10.0" height="10.0" rx="1"/>
+    <rect class="cell" x="113.6" y="206.5" width="10.0" height="10.0" rx="1"/>
+    <rect class="cell" x="97.0" y="189.9" width="10.0" height="10.0" rx="1"/>
+    <rect class="cell" x="80.4" y="206.5" width="10.0" height="10.0" rx="1"/>
+    <rect class="cell" x="63.8" y="189.9" width="10.0" height="10.0" rx="1"/>
+    <rect class="cell" x="80.4" y="173.3" width="10.0" height="10.0" rx="1"/>
+    <rect class="cell" x="97.0" y="173.3" width="10.0" height="10.0" rx="1"/>
+    <rect class="cell" x="63.8" y="206.5" width="10.0" height="10.0" rx="1"/>
+    <use href="#base" x="110" y="200"/>
+    <text class="label" x="110" y="278" text-anchor="middle">v3 · 20 qualified</text>
+    <text class="note" x="110" y="302" text-anchor="middle">1 kept inside circle</text></g>
+  <g aria-label="Version 4"><circle class="ring" cx="314" cy="200" r="49.8"/>
+    <rect class="cell" x="284.4" y="189.9" width="10.0" height="10.0" rx="1"/>
+    <rect class="cell" x="334.2" y="173.3" width="10.0" height="10.0" rx="1"/>
+    <rect class="cell" x="317.6" y="173.3" width="10.0" height="10.0" rx="1"/>
+    <use href="#base" x="314" y="200"/>
+    <text class="label" x="314" y="278" text-anchor="middle">v4 · 3 qualified</text>
+    <text class="note" x="314" y="302" text-anchor="middle">0 kept inside circle</text></g>
+  <path d="M18 317H406" stroke="#c4d1ba"/>
+  <text class="section" x="19" y="346">Where the v4 pin landed</text>
+  <circle class="ring" cx="180" cy="397" r="33.6"/>
+    <rect class="cell" x="159.6" y="389.8" width="7.6" height="7.6" rx="1"/>
+    <rect class="cell" x="193.2" y="378.6" width="7.6" height="7.6" rx="1"/>
+    <rect class="cell" x="182.0" y="378.6" width="7.6" height="7.6" rx="1"/>
+  <path d="M180 397L38.5 504.0" fill="none" stroke="#658181" stroke-width="1.5" stroke-dasharray="3 3"/>
+    <rect class="kept" x="35.4" y="512.0" width="9.6" height="9.6" rx="1"/>
+  <path class="pin" d="M38.5 497.6l6.4 6.4-6.4 6.4-6.4-6.4z"/>
+  <circle class="refine" cx="40.2" cy="516.8" r="4" fill="#145c71"/>
+  <use href="#base" x="180" y="397"/>
+  <rect class="cell" x="228" y="379" width="9" height="9" rx="1"/>
+  <text class="note" x="246" y="389">Qualifying cell</text>
+  <rect class="kept" x="228" y="414" width="9" height="9" rx="1"/>
+  <text class="label" x="246" y="425">Kept cell</text>
+  <text class="note" x="246" y="449">82.2 cm from base</text>
+  <path class="pin" d="m232.5 468 6 6-6 6-6-6z"/>
+  <text class="label" x="246" y="480">Final pin</text>
+  <text class="note" x="246" y="504">79.2 cm from base</text>
+  <path d="M18 529H406" stroke="#c4d1ba"/>
+  <text class="section" x="19" y="559">If all three nearby cells became pins</text>
+  <circle cx="31" cy="590" r="10" fill="#31724a"/>
+  <path d="m26 590 3.5 3.5 6.5-7" fill="none" stroke="white" stroke-width="2"/>
+  <text class="label" x="49" y="596">1 new match</text>
+  <path d="m222 585 10 10m-10 0 10-10m4 0 10 10m-10 0 10-10" fill="none" stroke="#99441f" stroke-width="2.6"/>
+  <text class="label" x="258" y="596">2 extra pins</text>
+  <text class="note" x="19" y="640">Field 14151223 · tree 2 · overhead grid</text>
+</svg>
