@@ -99,6 +99,27 @@ node benchmark/seedling-density.mjs --match-training-layout > seedling-trained-l
 
 The next experiment changed how the detector treats empty cells. On four confirmation plots its height-only baseline recovered more seedlings and also marked more bare soil. [Inspect the two peak rules on the same scans](seedling-peaks.md)
 
+## Do the seedling models still work after the tomato grows?
+
+Training on denser scans helped both models find small seedlings on six fresh plots. On branching plants, it reduced F1 for both training seeds and both scan layouts. The six plots contained **633 plants per growth stage**. Every test scan sampled 60,000 rays on a clean 10 × 10 m plot with soil present.
+
+| Growth stage and scan layout | F1 after 30k-ray training | F1 after 1M-ray training | Height-only F1 |
+| --- | ---: | ---: | ---: |
+| Seedling · grid | 0.200 / 0.267 | 0.291 / 0.289 | 0.290 |
+| Seedling · rings | 0.034 / 0.132 | 0.154 / 0.151 | 0.157 |
+| Leafy transplant · grid | 0.741 / 0.678 | 0.581 / 0.655 | 0.829 |
+| Leafy transplant · rings | 0.438 / 0.522 | 0.519 / 0.630 | 0.850 |
+| Branching plant · grid | 0.864 / 0.814 | 0.468 / 0.746 | 0.860 |
+| Branching plant · rings | 0.738 / 0.705 | 0.357 / 0.598 | 0.899 |
+
+Each pair lists training seeds `82173` and `379331`. F1 uses the pooled counts of correct, extra and missed pins at 15 cm. The height-only baseline uses the same candidate peaks and spacing rule. On branching plants in the grid, all 633 targets had a candidate nearby. With training seed `82173`, the 30k model found 603 plants and placed 160 extra pins. The 1M model placed fewer extra pins (116), but found only 229 plants. On transplants, which training density worked better depended on the test layout.
+
+The script verifies the SHA-256 of each original model, including weights, feature scaling and detection settings, before opening a test field. Changing growth stage keeps planting positions and ray XY coordinates fixed within a layout. Each form is scored against the midpoint of its own canopy box. Those midpoints moved up to 7.4 cm relative to the seedling stage. The ring pattern is an overhead simulation. The report includes tile IDs, zero-return counts, scoring times and results at 7.5, 10 and 15 cm. [Stage-transfer experiment](../benchmark/seedling-stages.mjs)
+
+```sh
+node benchmark/seedling-stages.mjs > seedling-stages.json
+```
+
 ## Reproduce the original scan-density sweep
 
 Run this from the repository root with Node.js 22 or later.
