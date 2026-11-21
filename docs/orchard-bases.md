@@ -52,6 +52,39 @@ To replay all four benchmark methods, run the following command from the reposit
 node benchmark/orchard-bases.mjs > orchard-bases.json
 ```
 
+## What happens when a tree loses one scaffold?
+
+Breaking one major limb left many predictions close to a tree but outside the 15 cm matching distance. On eight fresh synthetic plots the orchard locator matched **599 of 736 tree appearances** when limbs were intact and **500** after damage. Of the 132 previously matched appearances that lost their match, **112 still had a pin within 40 cm** of the same base. The other 20 had no pin that close. Another 33 previously missed appearances gained a 15 cm match. The 40 cm check describes where predictions went. The scoring distances stayed fixed.
+
+| Detector and tree condition | F1 at 7.5 cm | F1 at 10 cm | F1 at 15 cm | Mean absolute count error per scan |
+| --- | ---: | ---: | ---: | ---: |
+| Orchard locator, intact | 0.522 | 0.665 | 0.809 | 0.19 trees |
+| Orchard locator, damaged | 0.410 | 0.551 | 0.684 | 0.39 trees |
+| Spaced height peaks, intact | 0.091 | 0.113 | 0.139 | 13.09 trees |
+| Spaced height peaks, damaged | 0.099 | 0.123 | 0.153 | 10.27 trees |
+
+Tree shape mattered. For open-vase trees, the locator’s 15 cm F1 fell from **0.791 to 0.544**. These trees accounted for 112 of the 132 lost matches. For central leaders it moved from **0.828 to 0.820**. A vase here has three or four main limbs, and a central leader has seven to nine scaffolds on a continuous trunk. Removing one limb takes away a different fraction of the structure. [Apple geometry](../trainer/plants/apple.js)
+
+For an example, open field `7412177` and inspect the first tree in **Plant form and condition → Damage close-up**. The intact and broken plots both produced 11 orchard pins for 11 trees. At 15 cm, nine intact bases matched and only four damaged bases matched. The pin nearest tree 0 went from 6.7 cm to 37.9 cm from its planted base. [Open the intact plot and paired portrait](https://mvalancy.github.io/crop-trainer/?crop=apple&plantArchitecture=2&plantForm=open-vase&plantCondition=healthy&appleCanopy=leafy&seed=7412177&sensor=reference&budget=60000&ground=true&noise=clean&weeds=off&sticks=off&boards=off&box=0&tile=2ebd71591d8c0c2e#specimenCard) · [Inspect the same tree in the damaged scan](https://mvalancy.github.io/crop-trainer/?crop=apple&plantArchitecture=2&plantForm=open-vase&plantCondition=damaged&appleCanopy=leafy&seed=7412177&sensor=reference&budget=60000&ground=true&noise=clean&weeds=off&sticks=off&boards=off&box=0&tile=8771d49dce3ecaac#scan-viewer)
+
+<details>
+<summary>Experiment settings, match counts and replay</summary>
+
+Eight independent plantings contained 92 distinct bases. Each planting was rendered with both tree forms, both canopy states, and both reference-grid and OS1-64-inspired layouts at 60,000 sampled rays. Those combinations gave 64 intact/damaged pairs, or 128 scans. Every damaged tree lost one scaffold. The program checks that every pair shares the same planting positions, sampled XY and soil heights at points where both scans hit soil. There was no added clutter or scan noise. Both detectors used their existing settings. The 40 cm diagnostic circles around adjacent trees were disjoint. The test covers one simulator’s version of a broken limb and a fixed ray budget.
+
+Each cell lists matched trees, extra pins and missed trees, in that order. The JSON includes the individual pairs and nearest-pin distances.
+
+| Detector and tree condition | 7.5 cm | 10 cm | 15 cm |
+| --- | --- | --- | --- |
+| Orchard locator, intact | 386 / 358 / 350 | 492 / 252 / 244 | 599 / 145 / 137 |
+| Orchard locator, damaged | 300 / 427 / 436 | 403 / 324 / 333 | 500 / 227 / 236 |
+| Spaced height peaks, intact | 105 / 1,469 / 631 | 131 / 1,443 / 605 | 160 / 1,414 / 576 |
+| Spaced height peaks, damaged | 105 / 1,288 / 631 | 131 / 1,262 / 605 | 163 / 1,230 / 573 |
+
+Run `node benchmark/orchard-damage.mjs > orchard-damage.json` from the project root. One Node 24 CPU replay took 3.27 s to generate the scans, 1.02 s for the orchard locator, 0.45 s for the height baseline and 0.035 s to score them. A second replay reproduced the tile IDs, counts and distances. [Experiment code and fixed seeds](../benchmark/orchard-damage.mjs)
+
+</details>
+
 ## What a field test would have to establish
 
 AppleQSM used terrestrial laser scans and processed individual apple trees to extract trunk and branch characteristics. The study covered 84 trees from two cultivars. It motivates looking for woody structure when the application needs a trunk location. Its scan geometry, task and evaluation differ from locating all bases in a single overhead plot. [Qiu and colleagues, AppleQSM](https://pubmed.ncbi.nlm.nih.gov/38721548/)

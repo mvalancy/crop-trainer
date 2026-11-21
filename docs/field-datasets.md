@@ -13,6 +13,10 @@ Crop Trainer predicts one horizontal position per plant. To score a real plot, y
 | **Tomato plant geometry · TomatoPGT** | 42 reconstructed scans from three vegetative plants with part labels and graph structure. Group scans by original plant when comparing geometry. Mature greenhouse rows require separate validation. | CC BY 4.0. [Versioned deposit](https://data.mendeley.com/datasets/72md54c7n7/1) · [License metadata](https://api.datacite.org/dois/10.17632/72md54c7n7.1) |
 | **Globe artichoke** | Aerial imagery studies can inform spacing and count experiments. A field-scale XYZ survey with complete metric plant centers and verified reuse terms remains an open gap. [Published artichoke center errors and missed plants](research-evidence.md#what-researchers-have-measured) | Dataset terms unconfirmed. [Field study](https://www.sciencedirect.com/science/article/pii/S0168169923005732) |
 
+## Can we check the shape of the simulated apple branches?
+
+Purdue’s dormant apple dataset pairs Kinect 2 depth images with numbered photographs of the primary branches on nine trees. Six trees were scanned outdoors and three indoors. Akbar and colleagues measured branch diameters about 6.35 cm from the trunk and the spacing between successive branch attachments. Compare those measurements with the same locations on the simulator’s dormant trees. The numbered photographs also let you check which branches a front or rear view misses. A test of broken scaffolds would still need labeled breaks or matching scans before and after a known removal. Purdue lists a public 19 GB archive. Its download page gives no explicit data reuse license. [Measurement method and examples, §§3–4](https://openaccess.thecvf.com/content_cvpr_2016_workshops/w9/papers/Akbar_A_Novel_Benchmark_CVPR_2016_paper.pdf) · [Purdue data archive](https://engineering.purdue.edu/RVL/CVPRW_Dataset/)
+
 ## Can we score apple trunk locations on a surveyed orchard?
 
 We could verify apple LiDAR scans and published trunk surveys. None of the releases checked supplied both a registered scan and an independent trunk-base coordinate for every tree in a stated plot.
