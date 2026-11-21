@@ -1,11 +1,17 @@
-# The illustration patch
-
 ![Five cel frames of a seed sprouting, with an animated preview growing in a little pot.](sprout-strip.svg)
+
+# The illustration patch
 
 The little farm on the front page lives here. Open an SVG to see it move or open its source to see how it works. The diagrams use simple shapes and CSS animation. Each has a still frame for readers who prefer reduced motion.
 
 | Illustration | Where you’ll see it |
 | --- | --- |
+| [A leaf with missing depth pixels](depth-window.svg) · [Overlapping plant boxes](plant-boxes.svg) | [Camera measurements from field datasets](../docs/field-datasets.md) |
+| [One plant seen in dots and pixels](two-views.svg) | [Sensing methods](../docs/README.md#choose-a-sensing-method) |
+| [Six pins and a missed lettuce](count-and-locate.svg) | [Inspecting detections](../docs/field-inspection.md) |
+| [A little leaf between rays](ray-budget.svg) | [Scan density](../docs/scanners.md) |
+| [Stacked dots along a vine stem](vine-column.svg) | [Physical vineyard studies](../docs/field-datasets.md) |
+| [Opening the tested farm](check-the-build.svg) | [Release checks](../ci/README.md) |
 | [Crop Trainer leaf and LiDAR returns](crop-mark.svg) | Browser tab, mobile home screen and app navigation |
 | [Lettuce and weed at the same height](height-clues.svg) | [Watch one model update](https://mvalancy.github.io/crop-trainer/#learnWeight) |
 | [Lettuce under a scanning beam](title.svg) | [Repository welcome](../README.md) |
@@ -29,6 +35,8 @@ The little farm on the front page lives here. Open an SVG to see it move or open
 | [A notebook for exploring a field](field-notebook.svg) | [Field guide](../docs/README.md) |
 | [Two rows from the same seed](seed-replay.svg) | [Test plot](../test/README.md) |
 | [The sprout animation strip](sprout-strip.svg) | This illustration patch |
+
+![One times 1.5, plus zero times 0.4, plus a bias of minus 0.5 equals one. Its sigmoid is about 0.73.](lesson-weights.svg)
 
 The [illustrated beginner course](../docs/first-steps/README.md) adds ten diagrams, including a [weighted sum you can work out by hand](lesson-weights.svg), the [measured training loss](lesson-loss.svg) and a [pin-matching puzzle](lesson-matches.svg).
 

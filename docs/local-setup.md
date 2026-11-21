@@ -1,3 +1,5 @@
+![Use the same recipe and seed to grow the same planting and repeat the scan.](../art/seed-to-field.svg)
+
 # Local play and agent experiments
 
 Use Node.js 22 or newer. You can also [download a ZIP of the app](https://github.com/mvalancy/crop-trainer/archive/refs/heads/main.zip) and unzip it before running the server from its folder. The browser app and CPU runner have no package dependencies.
@@ -22,6 +24,8 @@ Use **Download run settings** in the training shed to replay a browser experimen
 A browser run can use WebGPU on a supported adapter over HTTPS or localhost. Generation and validation use the CPU. The agent guide includes the full settings schema, a paired experiment, and a prompt for Gemini or another local coding agent. [AGENTS.md](../AGENTS.md)
 
 ## Data and license
+
+![A dotted survey path crosses rows of plants on the left page. A magnified rosette on the facing page has a center pin and a ruler.](../art/field-notebook.svg)
 
 Every field, label and point cloud in the app is generated procedurally on demand. All source code and the original SVG artwork are released under the [MIT License](../LICENSE).
 

@@ -15,11 +15,15 @@ Give each output a fresh filename. The scoring command accepts surveyed location
 
 To test weights trained with height above nearby low returns and the spread of surrounding heights, run `node cli/run.mjs preflight --feature-mode local-ground`. Add `--peak-averaging occupied` to average over measured cells when locating peaks. Preflight fits a model, exports the weights and checks that scoring each held-out PLY reproduces its training-report matches.
 
+![A leafy crown hides the wood below. Look for low returns near the ground when estimating the trunk position.](../art/base-and-crown.svg)
+
 Compare how far an orchard pin moves between two physical scans of the same apple tree using your own copy of LFuji-air. [Compare airflow](../docs/field-datasets.md#do-pins-stay-in-the-same-place-when-the-foliage-moves) · [Compare scanner sides and detector rankings](../docs/field-datasets.md#what-changes-when-the-scanner-moves-to-the-other-side-of-the-row)
 
 With local avocado scans, count hand-labeled wood and leaf returns in two height bands using `node cli/avocado-matter.mjs /path/to/extracted-avocado-dataset`. [Scans, labels and replay instructions](../docs/field-datasets.md#how-often-does-a-low-return-actually-hit-wood)
 
 With your own copy of Crops3D, run `node cli/maize-ground.mjs /path/to/Crops3D_IS/IS` to compare a local surface estimate with visible ground on five maize test plots. [Methods, coordinate assumptions and license](../docs/field-datasets.md#can-a-ring-of-returns-estimate-the-soil-height-near-a-seedling)
+
+![Beside a seedling, dots trace the surfaces LiDAR samples. A little square color mosaic shows the shape a camera could record in pixels.](../art/two-views.svg)
 
 Measure missing depth inside the plant masks in a local copy of AgRibotLeafyVeg with `node cli/lettuce-depth.mjs /path/to/AgRibotLeafyVeg`. This command uses ImageMagick to read the masks. [Lettuce depth study and data source](../docs/field-datasets.md#how-much-of-a-lettuce-plant-has-measured-depth)
 

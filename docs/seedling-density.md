@@ -8,6 +8,8 @@ Six synthetic plantings contained 635 young tomatoes. With the standard tomato d
 
 ## Where the seedlings disappeared
 
+![Sample positions intersect two leaves and the soil. Dots show where a surface was measured.](../art/lesson-returns.svg)
+
 Each row scores the same 635 planting positions and seedling shapes. The detector proposes peaks in a smoothed 5 cm height grid, accepts those above its learned score cutoff, then removes crowded pins. **Proposed**, **accepted** and **final** count distinct plants that can be matched to at least one remaining pin within 15 cm. Ranges show the two training seeds. The proposed count is identical for both fits.
 
 | Rays per 10 × 10 m plot | Plants with zero returns | Proposed | Accepted | Final | Model F1 at 15 cm | Height baseline F1 at 15 cm |
@@ -23,6 +25,8 @@ At 100,000 rays nearly every seedling generated a crop return. Only 247 had a us
 
 ## Does lowering the peak gate help?
 
+![Measure a peak above a ground reference. A height floor decides which candidates reach the detector.](../art/measure-a-peak.svg)
+
 The default gate admits a smoothed height of at least 6.5 cm. We reran both fits with the supported 3.5 cm gate and the same training plantings and epoch count. The lower gate changes both which peaks exist and which examples become available for training.
 
 At one million rays, lowering the gate raised the number of seedlings in reach from 583 to 631. The models accepted and kept just 68 and 167 of those plants. Their final F1 at 15 cm was 0.173 and 0.375. The lower gate worked better for the leafy transplant at 30,000 rays, where F1 rose from 0.682–0.716 to 0.781–0.802.
@@ -30,6 +34,8 @@ At one million rays, lowering the gate raised the number of seedlings in reach f
 A candidate can also sit close to a planting position by chance. We removed every simulator-labeled crop return and recalculated the peaks using the remaining soil points. At one million rays the lower gate still had soil peaks within 15 cm of 77 of the original 635 planting positions. The standard gate had 17. This check preserves gaps where foliage obscured the soil. Its matches count coincidences and cannot identify which full-scan peaks came from a plant.
 
 ## Can matching the training density improve the detector?
+
+![Actual target positions from plot 216917. At left the height detector matched 15 plants at 30,000 rays. At right it matched 103 at one million. Circles indicate a match within 15 centimetres and crosses indicate a miss. A line sweeps across both maps.](../art/seedling-density.svg)
 
 On four new fields containing **434 seedlings**, both networks trained on one million rays per plot beat their counterparts trained on 30,000 rays. They also beat the height baseline on these fields. We kept the seedling form, planting positions, scan layout, learner, 6.5 cm peak gate and epoch count fixed. Only the training ray budget changed. Every evaluation used the same one-million-ray scan for all methods.
 
@@ -56,6 +62,8 @@ node benchmark/studies/seedling-density.mjs --match-training-density > seedling-
 
 ## Do those seedling models transfer to a different layout?
 
+![An overhead sketch shows grid and ring sampling patterns. A small plant can fall between samples.](../art/scanner-patterns.svg)
+
 We froze the four reference-trained seedling detectors from the training-density comparison. On **eight new plantings with 877 seedlings**, each detector scored the same plant boxes using the reference grid and an OS1-64-inspired ring layout. At 60,000 sampled rays, the ring layout recorded more crop points (3,262 versus 2,375), yet left more plants with zero returns. The 6.5 cm peak detector reached 96 plants on rings and 195 on the grid.
 
 | Layout | Actual rays per plot | Plants with zero returns | Plants in reach at 15 cm | F1, 30k-trained | F1, 1M-trained | F1, height only |
@@ -67,6 +75,8 @@ We froze the four reference-trained seedling detectors from the training-density
 | Reference grid | 65,536 | 55 | 226 | 0.241–0.315 | 0.340–0.341 | 0.353 |
 | OS1-inspired rings | 65,536 | 110 | 107 | 0.038–0.152 | 0.214–0.215 | 0.217 |
 | Reference grid | 1,000,000 | 0 | 799 | 0.485–0.833 | 0.898–0.904 | 0.846 |
+
+![In two top views the leaf stays still. Widely spaced rays fall on either side. A finer grid adds a sample on the leaf. This drawing illustrates sampling, without predicting the yield of a particular scan.](../art/ray-budget.svg)
 
 For a single-plant replay, open box 6 of field `1370561` and switch between its two 60,000-ray scans. [Inspect the matched scans](https://mvalancy.github.io/crop-trainer/?crop=tomato&plantArchitecture=2&plantForm=seedling&plantCondition=healthy&sensor=reference&budget=60000&seed=1370561&noise=clean&weeds=off&sticks=off&boards=off&studyMode=layouts&studyBox=6#scan-study) · [Compare the recorded returns in this patch](../art/seedling-layouts.svg)
 
@@ -84,6 +94,8 @@ The report includes the four fitted model fingerprints, per-field tile IDs, actu
 
 ## Does training on the ring layout recover the misses?
 
+![Grow practice fields, fit weights, then measure on separate plantings. Keep both scans of each planting in one split.](../art/field-split.svg)
+
 We trained on either the reference grid or OS1-inspired rings at **60,000 sampled rays per scan**, then tested both models on each layout. Each training seed kept the same six plantings, both soil settings, seeded clutter and noise, network settings and 40 epochs. We fixed four new test seeds (`2268523`, `2379659`, `2490781`, `2601907`) before fitting. They contained 422 healthy seedlings, scored with the same clean conditions on both layouts.
 
 | Held-out layout | Plants with a candidate at 15 cm | Grid-trained F1 at 15 cm | Ring-trained F1 at 15 cm | Height-only F1 at 15 cm |
@@ -100,6 +112,8 @@ node benchmark/studies/seedling-density.mjs --match-training-layout > seedling-t
 The next experiment changed how the detector treats empty cells. On four confirmation plots its height-only baseline recovered more seedlings and also marked more bare soil. [Inspect the two peak rules on the same scans](seedling-peaks.md)
 
 ## Do the seedling models still work after the tomato grows?
+
+![Three plants show cotyledons and early true leaves, a main shoot with compound leaves, and a side shoot growing from a leaf axil. A ring highlights the axil where the side shoot starts.](../art/plants/young-tomato.svg)
 
 Training on denser scans helped both models find small seedlings on six fresh plots. On branching plants, it reduced F1 for both training seeds and both scan layouts. The six plots contained **633 plants per growth stage**. Every test scan sampled 60,000 rays on a clean 10 × 10 m plot with soil present.
 
@@ -121,6 +135,8 @@ node benchmark/studies/seedling-stages.mjs > seedling-stages.json
 ```
 
 ## Reproduce the original scan-density sweep
+
+![Use the same recipe and seed to grow the same planting and repeat the scan.](../art/seed-to-field.svg)
 
 Run this from the repository root with Node.js 22 or later.
 

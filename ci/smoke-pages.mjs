@@ -141,6 +141,33 @@ try {
     console.log('The rendered tree followed left and right drags and retained its vertical tilt direction.');
   }
 
+  // Follow a real lesson at the Pages subpath and keep the reader's palette across workspaces.
+  await page.emulateMedia({colorScheme:'dark'});
+  await open('?budget=12000');
+  const theme = page.getByRole('combobox', {name:'Theme',exact:true});
+  assert.equal(await theme.inputValue(),'system');
+  assert.equal(await page.locator('html').getAttribute('data-theme'),'dark');
+  await theme.selectOption('light');
+  await page.getByRole('link',{name:'Docs',exact:true}).click();
+  assert.equal(await page.locator('html').getAttribute('data-theme'),'light');
+  await page.locator('.guideChapter').getByRole('link',{name:'LiDAR lessons',exact:true}).click();
+  assert.equal(new URL(page.url()).pathname,prefix+'guide/docs/first-steps/README.html');
+  await page.locator('.guideChapter img').first().evaluate(img=>img.decode());
+  await theme.selectOption('dark');
+  await page.getByRole('link',{name:'Open the hands-on field lesson'}).click();
+  assert.equal(new URL(page.url()).hash,'#guide');
+  for (const section of ['trainer/', 'benchmark/']) {
+    await open(section);
+    assert.equal(await theme.inputValue(),'dark');
+    assert.equal(await page.locator('html').getAttribute('data-theme'),'dark');
+    assert.equal(await page.getByRole('link',{name:'Docs',exact:true}).count(),1);
+  }
+  await page.emulateMedia({colorScheme:'light'});
+  assert.equal(await page.locator('html').getAttribute('data-theme'),'dark');
+  await theme.selectOption('system');
+  assert.equal(await page.locator('html').getAttribute('data-theme'),'light');
+  console.log('The Docs tab opened the illustrated lesson and returned to the app. Theme selection followed the system and persisted across workspaces.');
+
   await open('?crop=lettuce&seed=27&sensor=reference&budget=12000');
   const id=page.locator('#scanId');
   await id.filter({hasText:/^[0-9a-f]{16}$/}).waitFor();

@@ -1,10 +1,12 @@
-![Two measured 15 cm patches show how ignoring empty cells lifts both a seedling and a soil bump over the peak threshold.](../art/seedling-peak-window.svg)
+![Measure a peak above a ground reference. A height floor decides which candidates reach the detector.](../art/measure-a-peak.svg)
 
 # When the scanner misses the cell beside a seedling
 
 In one clean synthetic ring scan, the standard height filter found 10 of 93 tomato seedlings within 15 cm, with zero extra pins. Changing how the filter handled gaps found **30 of 93**, with **30 extra pins**. Select plant 5 and switch between **Height-only pin** and **Height pin · sampled cells only**. Five ring-scan returns hit that plant, but only the sampled-cell method placed a matching pin. [Explore this 60,000-ray field](https://mvalancy.github.io/crop-trainer/?crop=tomato&plantArchitecture=2&plantForm=seedling&plantCondition=healthy&sensor=reference&budget=60000&seed=3398269&noise=clean&weeds=off&sticks=off&boards=off&studyMode=layouts&studyMetric=sampledPins&studyBox=5#scan-study)
 
 ## What changed?
+
+![Two measured three-by-three windows from simulated ring scan 1370561. Counting only sampled cells lifts a seedling peak from 5.06 to 8.99 cm and a bare-soil peak from 4.60 to 6.70 cm. Both cross the 6.5 cm candidate threshold. Dashes show cells with no return.](../art/seedling-peak-window.svg)
 
 Both methods take the highest XYZ return in each 5 cm cell, smooth a three-by-three neighborhood, then keep local peaks at or above 6.5 cm. They rank the peaks by height and require 22 cm between selected pins. The standard filter divides by the full kernel weight of 16. The experimental filter divides by the weights of cells that received a return and requires a measured center cell. In both filters a measured soil return at zero height counts as a genuine measurement. These height rules rank peaks without fitting weights. The Training Shed also lets you train a neural detector on either set of peaks under **Peak detection and scoring → Average height across**. A weight export records which rule to use when scoring a new scan. [Peak extraction](../trainer/models/data.js) · [Scanner geometry](scanners.md)
 
@@ -13,6 +15,8 @@ The illustration uses two neighborhoods from a 60,000-ray synthetic ring scan at
 We generated six fresh healthy seedling plots and then repeated the fixed 6.5 cm comparison on four more. Each planting had four scans at 60,000 sampled rays, with identical plant boxes across scans. The clean grid and OS1-64-inspired rings included soil. The cluttered variants added weeds, sticks, boards, seeded range and position noise, gaps, stray points and clustered returns. Each detector saw only XYZ. The scorer matched centers to modeled plant-box midpoints one to one.
 
 ## What improved on fresh plantings?
+
+![Grow practice fields, fit weights, then measure on separate plantings. Keep both scans of each planting in one split.](../art/field-split.svg)
 
 These are pooled F1 scores at **7.5 / 10 / 15 cm**, in that order. The primary group contains 620 seedlings. The independent confirmation contains 411.
 
@@ -27,6 +31,8 @@ At 15 cm the sampled-cell method improved F1 on every clean and cluttered ring p
 
 ## Can soil alone make a peak?
 
+![Two measured patches from synthetic field 1370561. The smoothed peaks differ by less than a millimetre. Relative to the low surface in the surrounding ring, the tallest central return rises 7.7 centimetres near plant 8 and 2.4 centimetres at the soil bump. The ring spreads are 1.1 and 1.0 centimetres. Each square in the center or ring is a 5 cm cell with a measured return.](../art/tomato-local-ground.svg)
+
 Yes. We used the generator's point classes to remove every return except soil, then passed the remaining XYZ through the same two filters. Every resulting pin is false. Removing crop returns leaves gaps where the canopy hid the soil. These are partial scans of the original terrain.
 
 | Soil-only input, 6.5 cm gate | Standard false pins | Sampled-cell false pins |
@@ -39,6 +45,8 @@ Yes. We used the generator's point classes to remove every return except soil, t
 On the four new clean ring plots, five soil-only pins fell within 15 cm of an original plant center by chance. On the noisy ring plots, keeping all noncrop returns produced **456** standard pins and **673** sampled-cell pins. A nearby peak can come from terrain or clutter.
 
 ## Can training reject the extra soil peaks?
+
+![A starter model scores peaks known to be background. Of the 300 background examples in each final fit, ordinary sampling reserves no places for high scores, quarter-hard reserves 75 and half-hard reserves 150. Each model also sees the same 300 plant examples.](../art/tomato-hard-negatives.svg)
 
 On eight new synthetic plantings, a small neural net rejected some soil peaks while retaining many of the newly visible seedlings on clean ring scans. The sampled-cell height rule still scored higher. On clean grid scans, both sampled-cell nets found only **19 of 821** plants and missed the other 802.
 
@@ -55,9 +63,13 @@ F1 uses one-to-one matches within 15 cm. Paired numbers follow the training seed
 
 On clean rings the sampled-cell height rule matched 301 plants, including 192 that standard height missed. The two sampled-cell nets matched 226 and 175 plants overall, keeping 174 and 150 of those 192 extra matches. They placed 114 and 77 false pins on the full scans, down from 196 for sampled-cell height. Against their respective standard nets, their 15 cm F1 improved on seven and six of the eight clean ring plantings. Neither fit surpassed sampled-cell height on any of the eight. On the clean grid, the same reduction in soil pins came with a loss of 238 true matches relative to sampled-cell height.
 
+![In this schematic the 0.30 score drops below cutoff. The nearby 0.64 candidate loses to the 0.77 candidate.](../art/lesson-pins.svg)
+
 Raising the neural cutoff to 0.75 removed every true detection from the 6.5 cm sampled-cell fits. Lowering the gate to 3.5 cm and refitting gave a different result for standard averaging. On clean rings, both standard nets beat standard height at that gate (F1 .428 and .516 versus .383). These measurements cover one simulator, one growth stage and one network shape. Physical seedling accuracy remains an open question. [Try a paired training benchmark](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=averaging&crop=tomato&plantArchitecture=2&plantForm=seedling&plantCondition=healthy&sensor=os1-64&trainingRayBudget=60000&validationRayBudget=60000&seed=82173)
 
 ## Reproduce the comparison
+
+![A seed packet marked 27 branches into two plots. Four seedlings appear at the same positions in both rows.](../art/seed-replay.svg)
 
 ```sh
 node benchmark/studies/seedling-peaks.mjs > seedling-peaks.json

@@ -6,6 +6,8 @@ Can you teach a computer to spot a head of lettuce? Grow a virtual field, scan i
 
 **[Train your first lettuce detector →](https://mvalancy.github.io/crop-trainer/trainer/)**
 
+Open **Docs** in the top navigation to explore the illustrated field guide. The **Theme** menu follows your device by default and remembers a light or dark preference.
+
 New to LiDAR? [Try spotting a plant in the browser](https://mvalancy.github.io/crop-trainer/#guide), then [follow one lettuce through five illustrated lessons](docs/first-steps/README.md).
 
 ## Earn your first harvest 🌱
@@ -19,6 +21,8 @@ New to LiDAR? [Try spotting a plant in the browser](https://mvalancy.github.io/c
 Training uses your GPU through WebGPU when available. Your CPU can do the whole run, too.
 
 ## What will you grow next?
+
+![One trunk divides into two woody arms. Shoots grow upward from them and bear leaves. On the right, vertical laser paths end in dots on the upper surfaces or the ground. Parts of the trunk have no returns.](art/plant-architecture.svg)
 
 Can you still spot the trunk after an apple tree loses a limb? Try the orchard, or pick a crop from seven illustrated growing guides. [Explore a broken apple orchard](https://mvalancy.github.io/crop-trainer/?crop=apple&plantArchitecture=2&plantForm=open-vase&plantCondition=damaged&sensor=reference&budget=100000&seed=39061#field) · [Meet the plants](trainer/plants/README.md)
 

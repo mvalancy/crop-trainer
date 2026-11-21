@@ -1,6 +1,7 @@
 <!DOCTYPE html><html lang="en">
 <head>
 <meta charset="utf-8">
+<script src="app/theme.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Crop Trainer · The procedural farm</title>
 <link rel="icon" type="image/png" sizes="32x32" href="art/crop-mark-32.png">
@@ -16,11 +17,12 @@
 <link rel="stylesheet" href="app/help.css?v=context-help2">
 <link rel="stylesheet" href="app/scan-workspace.css?v=viewer-tools1">
 <script type="module" src="app/help.js?v=context-help2"></script>
+<link rel="stylesheet" href="app/theme.css">
 </head>
 <body class="farm"><a class="skip" href="#main" data-help="Jump past site navigation to the field, lessons and farm journal.">Skip to content</a>
 <header class="siteBar">
 <div class="barInner"><a class="brand" href="./" data-help="Return to the field generator home page."><img class="mark" src="art/crop-mark.svg" width="32" height="32" alt="">Crop Trainer</a>
-<nav aria-label="Main navigation"><a href="#field" aria-current="page" data-help="Jump to the 3D plot to inspect a scan or grow another field.">Field generator</a><a href="trainer/" data-help="Generate practice fields, fit a detector and see how it performs on fresh plantings.">Training shed</a><a href="benchmark/" data-help="Compare detector settings on matched fields and see which plants each one found.">Benchmark</a></nav><span class="sourceLinks"><a class="repoLink" data-help="Browse the source, illustrated guides and local setup instructions on GitHub." href="https://github.com/mvalancy/crop-trainer" aria-label="Crop Trainer on GitHub">GitHub <span aria-hidden="true">↗</span></a><a class="wipLink" href="https://mvalancy.github.io/crop-trainer/next/studio/" aria-label="WIP: try the development workspace" title="Try the development workspace">WIP</a></span></div></header>
+<nav aria-label="Main navigation"><a href="#field" aria-current="page" data-help="Jump to the 3D plot to inspect a scan or grow another field.">Field generator</a><a href="trainer/" data-help="Generate practice fields, fit a detector and see how it performs on fresh plantings.">Training shed</a><a href="benchmark/" data-help="Compare detector settings on matched fields and see which plants each one found.">Benchmark</a><a href="guide/" data-help="Read the illustrated lessons, crop guides and experiments.">Docs</a></nav><span class="sourceLinks"><a class="repoLink" data-help="Browse the Crop Trainer source code on GitHub." href="https://github.com/mvalancy/crop-trainer" aria-label="Crop Trainer on GitHub">GitHub <span aria-hidden="true">↗</span></a><a class="wipLink" href="https://mvalancy.github.io/crop-trainer/next/studio/" aria-label="WIP: try the development workspace" title="Try the development workspace">WIP</a></span></div></header>
 <main id="main">
 <section class="hero" aria-labelledby="hero-title">
 <figure class="specimen"><img src="art/lettuce-study.webp" width="1080" height="720" alt="An illustration of a lettuce rosette in green point-cloud dots" fetchpriority="high"><figcaption>Lettuce · scan illustration</figcaption></figure>
@@ -119,7 +121,7 @@
 <label>Condition<select form="grow" id="plantCondition" data-help="Damage changes the plant shape. A tree can lose a limb or a tomato plant can lose its growing tip. The planting locations stay fixed." required><option value="healthy">Healthy plants</option><option value="mixed">About one in four damaged</option><option value="damaged">All plants damaged</option></select></label>
 <label>Apple foliage<select form="grow" id="appleCanopy" data-help="Leaf off exposes the branches. Keep the seed and tree form fixed to compare the same wood with and without its leaves." required><option value="leafy">Leaf on</option><option value="dormant">Dormant · leaf off</option></select></label>
 </div>
-<div class="plantNotes"><p class="hint" id="systemInfo" hidden></p><a id="plantGuide" data-help="Open the growing guide for the selected crop. Compare its simulated forms with the source photos and examples." class="anatomyGuide" href="https://github.com/mvalancy/crop-trainer/tree/main/trainer/plants">Growing guide ↗</a></div>
+<div class="plantNotes"><p class="hint" id="systemInfo" hidden></p><a id="plantGuide" data-help="Open the growing guide for the selected crop. Compare its simulated forms with the source photos and examples." class="anatomyGuide" href="guide/trainer/plants/README.html">Growing guide</a></div>
 <section id="specimenCard" class="specimenComparison" aria-labelledby="specimenName">
 <h4 id="specimenName">Compare one plant</h4>
 <div class="specimenPair">
@@ -180,7 +182,7 @@
 <label class="studyOverlay"><input id="studyCloud" data-help="Show up to 9,000 sample points. In Tree-base ranking, cyan squares show every 5 cm cell that recorded a low return. Wood, weeds and other surfaces can all supply low returns. Board placement colors sampled board points orange. The detector always scores the full scan using XYZ." type="checkbox"> Show up to 9,000 scan points</label>
 <p id="studyLegend"><span><i class="studyDot" aria-hidden="true"></i>Dot meets the measure</span><span><i class="studyCross" aria-hidden="true">×</i>Cross misses it</span><span id="studyLowReturnsKey" hidden><i class="studyLowDot" aria-hidden="true"></i><span id="studyLowReturnsCount"></span></span><span id="studyBoardReturnsKey" hidden><i class="studyBoardDot" aria-hidden="true"></i><span id="studyBoardReturnsCount"></span></span><span id="studyZoomKey" hidden>2.5 m view · white circle = 15 cm · gold line to nearest pin</span></p>
 </div>
-<div class="studyFinding"><p id="studyChange" data-help="Counts each plant that passes the selected measure in just one scan. Two equal totals can hide different missed plants." data-help-label="Plants gained or lost"></p><p id="studyMetricHelp"></p><p id="studyPeakGuide" hidden><a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/seedling-peaks.md" data-help="See why neighborhood peaks in sparse tomato scans can produce extra crop pins.">When do these extra peaks help?</a></p>
+<div class="studyFinding"><p id="studyChange" data-help="Counts each plant that passes the selected measure in just one scan. Two equal totals can hide different missed plants." data-help-label="Plants gained or lost"></p><p id="studyMetricHelp"></p><p id="studyPeakGuide" hidden><a href="guide/docs/seedling-peaks.html" data-help="See why neighborhood peaks in sparse tomato scans can produce extra crop pins.">When do these extra peaks help?</a></p>
 </div>
 <div class="studyFocus"><label>Inspect a plant<select id="studyTarget" data-help="Pick the same planting position on both maps to compare its crop returns and nearby pins." aria-describedby="studyTargetDetail"><option value="">All plants</option></select></label>
 <div id="studyZoomTools" hidden><label class="check"><input type="checkbox" id="studyZoom" data-help="See a 2.5 m square around the selected base in both maps. The white circle is the 15 cm match radius. A gold line connects the base to its nearest predicted pin.">Zoom both maps to this tree</label></div>
@@ -200,7 +202,7 @@
 <details id="studyScores" hidden><summary data-help="See how many estimated centers qualify as matches when the allowed distance changes." data-help-label="Pin scores at each matching distance">Pin scores at each matching distance</summary><div class="studyScoreLayout"><div class="scoreSettings"><label>Matching distance<select id="studyScoreDistance" data-help="Switch the maximum distance between a pin and a plant. Each score uses a one-to-one match. The plant markers on the maps use 15 cm for pin comparisons."><option value="7.5">7.5 cm</option><option value="10">10 cm</option><option value="15" selected>15 cm</option></select></label>
 <div id="studyScoreArms"></div></div>
 <table class="studyScoreTable" id="studyScoreBody" aria-label="Pin scores by method and scan"><thead><tr><th scope="col" data-help="Each row identifies a scan or a tree-base rule. Fixed means that the same height detector scored the shared scan once per run.">Run</th><th scope="col" data-help="Predicted pins paired with distinct known plants within the allowed distance. Each plant can receive one match." data-help-label="Matched">Matched</th><th scope="col" data-help="Predicted pins left over after matching. This includes duplicate pins near a plant that already has a match." data-help-label="Extra">Extra</th><th scope="col" data-help="Known plant centers that received no matching prediction within this distance." data-help-label="Missed">Missed</th><th scope="col" data-help="Combines the share of pins that are correct with the share of plants found. A score of 1 means every plant has one correct pin and there are no extra pins." data-help-label="F1">F1</th></tr></thead></table></div></details></div>
-<p class="studyGuide"><a id="studyGuide" data-help="Read the measured experiment behind this comparison, including its field settings and scoring limits." href="https://github.com/mvalancy/crop-trainer/blob/main/docs/seedling-density.md">What happened on six seedling fields?</a></p></details>
+<p class="studyGuide"><a id="studyGuide" data-help="Read the measured experiment behind this comparison, including its field settings and scoring limits." href="guide/docs/seedling-density.html">What happened on six seedling fields?</a></p></details>
 <details class="samplingGuide">
 <summary data-help="Learn which surface a simulated ray records and how scan layouts distribute the rays." data-help-label="How the scanner samples a crop">How the scanner samples a crop</summary>
 <div class="samplingColumns"><div><h3>Where rays land</h3>
@@ -266,11 +268,11 @@
 <div class="weightActions"><button id="oneUpdate" class="primary" type="button" data-help="Watch one learning step. The lettuce supplies the label. Both examples then receive a fresh score.">Learn from the plant</button><button id="resetWeight" type="button" data-help="Start over with a weight of zero and a crop score of 0.50 for each plant." disabled>Reset</button></div></div><div class="lessonNext"><a id="lessonTrain" data-help="Open the Training Shed and fit a detector on new plantings of the crop and scanner shown above." href="trainer/" class="primary">Train on fresh fields →</a></div></section>
 </div>
 <details class="lessonReading"><summary data-help="Open guides and experiments that continue the three field lessons." data-help-label="Keep learning">Keep learning</summary><nav class="guideLinks" aria-label="Continue exploring">
-<a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/first-steps/README.md" data-help="Read the illustrated introduction to rays, labels and training at your own pace.">Illustrated field guide</a>
+<a href="guide/docs/first-steps/README.html" data-help="Read the illustrated introduction to rays, labels and training at your own pace.">Illustrated LiDAR lessons</a>
 <a href="benchmark/?comparison=models" data-help="Run the linear and neural detectors on matched plantings and inspect where their pins differ.">Compare two detectors</a>
-<a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/field-datasets.md" data-help="Browse field datasets with notes on what was measured and how the files are licensed.">Find a public field dataset</a>
-<a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/research-evidence.md" data-help="Read the sources and measurements behind the app’s detector and validation examples.">Explore crop detection research</a>
-<a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/README.md" data-help="Browse the full documentation, from the first lesson to detector experiments.">Browse all field guides</a></nav></details>
+<a href="guide/docs/field-datasets.html" data-help="Browse field datasets with notes on what was measured and how the files are licensed.">Find a public field dataset</a>
+<a href="guide/docs/research-evidence.html" data-help="Read the sources and measurements behind the app’s detector and validation examples.">Explore crop detection research</a>
+<a href="guide/index.html#choose-a-sensing-method" data-help="Find the LiDAR lessons and guides to plant shapes, experiments and field validation.">Field guides by sensing method</a></nav></details>
 </section>
 <section id="missions">
 <div class="journalHead">
@@ -280,7 +282,7 @@
 </section>
 </main>
 <footer class="siteFoot"><span>Created by Matthew Valancy</span>
-<div><a href="AGENTS.md" data-help="Find instructions for running reproducible experiments from the browser or command line.">Agent quickstart</a><a href="#missions" data-help="Jump to the stamps earned in this browser and the experiments that unlock them.">Farm journal</a><a href="LICENSE" data-help="Read the MIT terms for reusing and modifying the app.">MIT license</a></div><small class="contextHint"><span class="hoverHint">Hover or focus a button or score for help.</span><span class="touchHint">Tap a score or hold a button for help. A quick tap runs the action.</span></small></footer>
+<div><a href="guide/AGENTS.html" data-help="Find instructions for running reproducible experiments from the browser or command line.">Agent quickstart</a><a href="#missions" data-help="Jump to the stamps earned in this browser and the experiments that unlock them.">Farm journal</a><a href="LICENSE" data-help="Read the MIT terms for reusing and modifying the app.">MIT license</a></div><small class="contextHint"><span class="hoverHint">Hover or focus a button or score for help.</span><span class="touchHint">Tap a score or hold a button for help. A quick tap runs the action.</span></small></footer>
 <script type="module" src="app/farm.js?v=viewer-tools2"></script>
 </body>
 </html>

@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 604 152" role="img" aria-labelledby="title desc">
+  <title id="title">Which dots belong to a plant?</title>
+  <desc id="desc">A scan samples surfaces. A model combines clues around a peak and gives the candidate a score.</desc>
+  <style>
+    text { font: 600 15px system-ui,sans-serif; fill: #294941 }
+    .caption { font: bold 24px Georgia,serif }
+    @media (prefers-reduced-motion: no-preference) {
+      .step { stroke-dasharray: 54; animation: follow 5s ease-in-out infinite }
+      .step-2 { animation-delay: .65s }
+      @keyframes follow { 0% {stroke-dashoffset:54} 42%,100% {stroke-dashoffset:0} }
+      .notice { animation: trace 5s ease-in-out infinite }
+      @keyframes trace { 0%,100% {opacity:.45} 42%,76% {opacity:1} }
+    }
+  </style>
+  <defs>
+    <g id="blade">
+      <path d="M0 0 Q-13 -6 -11 -17 Q-12 -25 -7 -23 Q-6 -31 0 -28 Q8 -32 8 -23 Q16 -22 11 -14 Q12 -6 0 0Z" fill="#84aa66" stroke="#355f54" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />
+      <path d="M0 0Q-1 -13 1 -23 M0 -10l-5 -5 M0 -15l5 -6" fill="none" stroke="#517750" stroke-width="1" stroke-linejoin="round" stroke-linecap="round" />
+    </g>
+    <g id="pin">
+      <path d="M0 1Q-16 -17 -9 -24Q0 -33 9 -24Q16 -17 0 1Z" fill="#f8bc63" stroke="#875428" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />
+      <circle cx="0" cy="-19" r="3" fill="#fff4d6" />
+    </g>
+  </defs>
+  <rect x="1" y="1" width="602" height="150" rx="16" fill="#faf4df" stroke="#d6cfac" />
+  <path d="M12 112Q85 102 156 112T302 112T448 112T592 112" fill="none" stroke="#d8d7b6" stroke-dasharray="2 5" />
+  <text class="caption" x="302" y="30" text-anchor="middle">Which dots belong to a plant?</text>
+  <g transform="translate(106 83) scale(1)">
+    <path d="M-45 19Q-22 15 0 19T45 19" fill="none" stroke="#987252" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />
+    <g transform="translate(-9 17) scale(0.85)">
+      <use href="#blade" />
+    </g>
+    <g transform="translate(5 17) scale(0.65)">
+      <use href="#blade" />
+    </g>
+    <g class="notice">
+      <path d="M-36 -24v41" fill="none" stroke="#cc8051" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" />
+      <circle cx="-36" cy="17" r="3" fill="#ad523c" />
+      <path d="M-19 -24v28" fill="none" stroke="#cc8051" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" />
+      <circle cx="-19" cy="4" r="3" fill="#ad523c" />
+      <path d="M-6 -24v18" fill="none" stroke="#cc8051" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" />
+      <circle cx="-6" cy="-6" r="3" fill="#ad523c" />
+      <path d="M7 -24v26" fill="none" stroke="#cc8051" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" />
+      <circle cx="7" cy="2" r="3" fill="#ad523c" />
+      <path d="M24 -24v42" fill="none" stroke="#cc8051" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" />
+      <circle cx="24" cy="18" r="3" fill="#ad523c" />
+      <path d="M39 -24v42" fill="none" stroke="#cc8051" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" />
+      <circle cx="39" cy="18" r="3" fill="#ad523c" />
+    </g>
+  </g>
+  <text x="106" y="137" text-anchor="middle">Sample surfaces</text>
+  <path d="M170 83q16 -6 33 0m-6 -6 7 6 -8 4" fill="none" stroke="#9e936c" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" class="step step-1" />
+  <g transform="translate(302 83) scale(1)">
+    <path d="M-31 -19L0 -12" fill="none" stroke="#809b89" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" />
+    <path d="M-31 -19L0 12" fill="none" stroke="#809b89" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" />
+    <path d="M-31 0L0 -12" fill="none" stroke="#809b89" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" />
+    <path d="M-31 0L0 12" fill="none" stroke="#809b89" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" />
+    <path d="M-31 19L0 -12" fill="none" stroke="#809b89" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" />
+    <path d="M-31 19L0 12" fill="none" stroke="#809b89" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" />
+    <path d="M0 -12L32 0 0 12" fill="none" stroke="#355f54" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />
+    <circle cx="-31" cy="-19" r="6" fill="#598879" />
+    <circle cx="-31" cy="0" r="6" fill="#598879" />
+    <circle cx="-31" cy="19" r="6" fill="#598879" />
+    <circle cx="0" cy="-12" r="6" fill="#598879" />
+    <circle cx="0" cy="12" r="6" fill="#598879" />
+    <g class="notice">
+      <circle cx="32" cy="0" r="8" fill="#dea95c" />
+    </g>
+  </g>
+  <text x="302" y="137" text-anchor="middle">Combine the clues</text>
+  <path d="M366 83q16 -6 33 0m-6 -6 7 6 -8 4" fill="none" stroke="#9e936c" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" class="step step-2" />
+  <g transform="translate(498 83) scale(1)">
+    <circle cx="-39" cy="18" r="2.6" fill="#477f75" />
+    <circle cx="-31" cy="15" r="2.6" fill="#477f75" />
+    <circle cx="-23" cy="19" r="2.6" fill="#477f75" />
+    <circle cx="-15" cy="8" r="2.6" fill="#477f75" />
+    <circle cx="-13" cy="-3" r="2.6" fill="#477f75" />
+    <circle cx="-9" cy="-13" r="2.6" fill="#477f75" />
+    <circle cx="-5" cy="-7" r="2.6" fill="#477f75" />
+    <circle cx="0" cy="-17" r="2.6" fill="#477f75" />
+    <circle cx="3" cy="-4" r="2.6" fill="#477f75" />
+    <circle cx="7" cy="-11" r="2.6" fill="#477f75" />
+    <circle cx="9" cy="6" r="2.6" fill="#477f75" />
+    <circle cx="14" cy="10" r="2.6" fill="#477f75" />
+    <circle cx="22" cy="18" r="2.6" fill="#477f75" />
+    <circle cx="31" cy="17" r="2.6" fill="#477f75" />
+    <circle cx="40" cy="19" r="2.6" fill="#477f75" />
+    <g class="notice">
+      <g transform="translate(0 -17) scale(0.58)">
+        <use href="#pin" />
+      </g>
+    </g>
+  </g>
+  <text x="498" y="137" text-anchor="middle">Score the peak</text>
+</svg>

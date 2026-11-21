@@ -29,12 +29,12 @@ export function nearbyMapPoint(canvas,event,ids,points) {
   return hit;
 }
 
-export function drawExtraPins(ctx, px, py, pins, references, view) {
-  ctx.fillStyle = '#88808e';
+export function drawExtraPins(ctx, px, py, pins, references, view, colors) {
+  ctx.fillStyle = colors.returns;
   for (const center of references) {
     ctx.beginPath(); ctx.arc(px(center.localX),py(center.localY),1.8,0,2*Math.PI); ctx.fill();
   }
-  ctx.fillStyle = '#a1381e';
+  ctx.fillStyle = colors.alert;
   for (const id of view.ids) {
     const pin = pins[id];
     ctx.fillRect(px(pin.localX)-3,py(pin.localY)-3,6,6);
@@ -45,11 +45,11 @@ export function drawExtraPins(ctx, px, py, pins, references, view) {
   if (view.nearest) {
     const center = view.nearest.center, cx = px(center.localX), cy = py(center.localY);
     ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(cx,cy);
-    ctx.strokeStyle = '#644883'; ctx.lineWidth = 2; ctx.setLineDash([4,3]); ctx.stroke();
+    ctx.strokeStyle = colors.survey; ctx.lineWidth = 2; ctx.setLineDash([4,3]); ctx.stroke();
     ctx.setLineDash([]); ctx.beginPath(); ctx.arc(cx,cy,5.5,0,2*Math.PI); ctx.stroke();
   }
-  ctx.strokeStyle = '#fff'; ctx.lineWidth = 5; ctx.strokeRect(x-7,y-7,14,14);
-  ctx.strokeStyle = '#14291e'; ctx.lineWidth = 2.5; ctx.strokeRect(x-7,y-7,14,14);
+  ctx.strokeStyle = colors.paper; ctx.lineWidth = 5; ctx.strokeRect(x-7,y-7,14,14);
+  ctx.strokeStyle = colors.ink; ctx.lineWidth = 2.5; ctx.strokeRect(x-7,y-7,14,14);
   ctx.restore();
 }
 

@@ -8,6 +8,8 @@ A weed can make a small hill in a laser scan, just like a tomato seedling. In an
 
 ## How do you find a difficult example?
 
+![Three candidate distances fall in the positive, skipped and negative bands.](../art/lesson-labels.svg)
+
 Imagine highlighting a peak more than 15 cm from every planted center. It belongs in the background training group for this experiment. If a starter model still gives it a high plant score, that's a **hard negative**. We can give the next model more practice on peaks like this. A weed, a soil mound or the outer leaf of a tomato can all qualify.
 
 1. **Label the training peaks.** Within 9.5 cm of a planted center, a peak counts as a plant example. Beyond 15 cm from every center, it counts as background. Set aside the strip in between, where the label is ambiguous.
@@ -26,6 +28,8 @@ This borrows an idea from image detection. Dalal and Triggs ran an initial pedes
 
 ## What was under the hardest background peaks?
 
+![Two top views show the same patch of a synthetic ring scan. A dashed circle covers 15 centimeters around the planted center. With the single tomato return present, a pin landed 11.2 centimeters from the center. Removing only that return erased the local peak before the model could score it. The soil returns occupy the same positions in both panels.](../art/tomato-one-return.svg)
+
 **Most were on tomato tissue.** After training, we replayed the fields and looked up the tallest laser return in the original grid cell for each of the 150 highest-scoring background peaks per training seed. Among those 450 cells, **276 had tomato tissue on top, 170 had a weed, zero had soil and four had no return**. A peak can occur in an empty cell because the detector estimates local height from neighboring cells.
 
 The model is learning where to put one pin per tomato. A leaf tip more than 15 cm from every planted center qualifies as background for that job, even when the leaf belongs to a healthy tomato. Of the 276 tomato-topped cells, 273 peaks lay between 15 and 30 cm from the nearest center. Practicing on those peaks may teach the model to reject shapes it also sees near seedlings. The replay shows which examples were selected. Isolating their effect would require changing which surfaces enter the mix while keeping its size fixed. The surface labels were read only after the starter and final fits were frozen. [Training-surface audit](../benchmark/studies/tomato-hard-negative-surfaces.mjs)
@@ -34,6 +38,8 @@ Weeds beside tomatoes are also common in physical fields. In one Spanish field-p
 
 ## What would count as an improvement?
 
+![Four reference plants and three predictions. Two pins fall within different plant circles.](../art/lesson-matches.svg)
+
 We fixed 50% hard as the main comparison and 25% hard as a second comparison. Each was judged against its ordinary fit at the same **0.65 score cutoff**. On six reserved plantings, both grid and simulated OS1-64 ring scans had to show fewer extra seedling pins with weeds. At the same time, seedling recall and branching-plant precision could each fall by at most one percentage point on either layout, on clean scans and on their weedy twins. The matching distance for this decision was **15 cm**.
 
 Think of a **miss** as a planted tomato without a pin and an **extra** as a pin without a tomato. Recall asks how many of the planted tomatoes got a match. Precision asks how many of the detector's pins got a match. A model can improve precision simply by placing fewer pins, so the test also counts the tomatoes it missed.
@@ -41,6 +47,8 @@ Think of a **miss** as a planted tomato without a pin and an **extra** as a pin 
 Each starter and each final model had access only to training rows for fitting. The test fields supplied their reference centers only after predictions, to match pins and count errors. Synthetic surface labels helped identify which peaks were over weeds after scoring. A detector used solely from the weight file sees XYZ returns.
 
 ## What changed on the six test plantings?
+
+![Grow practice fields, fit weights, then measure on separate plantings. Keep both scans of each planting in one split.](../art/field-split.svg)
 
 There were **618 plants per layout and stage**. Each cell below shows the change from ordinary training in **matched seedlings / extra pins** on weedy fields at 15 cm. A positive first number means more tomatoes found. A negative second number means fewer false alarms.
 
@@ -61,11 +69,15 @@ The simple height-only rule found 403 seedlings with 1,679 extra pins on weedy g
 
 ### If you visit the same number of pins, which detector finds more tomatoes?
 
+![In this schematic the 0.30 score drops below cutoff. The nearby 0.64 candidate loses to the 0.77 candidate.](../art/lesson-pins.svg)
+
 We grew four more plantings and kept the trained weights frozen. On each scan, the ordinary detector at 0.65 set the number of stops. We gave every detector exactly that many visits to its highest-ranked pins after applying the same spacing rule. This lets us compare the locations each model would send a grower.
 
 On weedy seedlings, the first 50% hard fit found 82 grid tomatoes in 124 stops, compared with 78 for ordinary training. On rings it found 160 in 304 stops, compared with 168. The third fit improved on both layouts, with 76 versus 45 grid matches and 122 versus 115 ring matches. On branching plants, the 50% hard fit found **fewer tomatoes at equal visit counts in all 12 comparisons** across training seeds, layouts and weed settings at 15 cm. Its lower false-alarm counts at a fixed cutoff therefore tell only part of the story. [Equal-visit ranking experiment](../benchmark/studies/tomato-hard-negative-ranking.mjs)
 
 ## Does it help to keep the same mix of near and far peaks?
+
+![Two selections from the same mixed tomato training scans, seed 443731. Each fit uses 300 peaks within 9.5 cm of a labeled plant center and the same 300 background peaks. With soil returns present the ordinary draw selected 35 seedling, 58 transplant and 67 branching peaks. With soil removed it selected 26, 54 and 60. The balanced draw selected 50 from each group.](../art/tomato-training-draw.svg)
 
 The first experiment gave extra practice to peaks on tomato leaves near a center. To test whether that mattered, we fixed a new rule before growing **six new test plantings**. For each of three fresh training seeds we fit models using ordinary sampling, unrestricted 50% hard sampling and 50% hard sampling with a distance rule. We froze all nine before scoring them.
 
@@ -85,6 +97,8 @@ For every training seed, the distance rule cut both extra pins and real seedling
 
 Neither form of hard sampling met the original 15 cm goal for any of the three training seeds. Keeping the same distance mix moved training examples off tomato tissue and onto weeds. That change alone did not reliably preserve seedling recall and branching precision at the fixed 0.65 cutoff.
 
+![The same smoothed peak height is marked on two centimetre rulers from a saved weedy tomato scan. The ordinary model learned a mean of 13.97 cm and a standard deviation of 10.16 cm. This peak is 0.44 standard deviations below that mean. The half-difficult model learned a mean of 16.91 cm and a standard deviation of 9.71 cm. The peak is 0.76 standard deviations below its mean.](../art/tomato-feature-scaling.svg)
+
 Changing the background examples also changed the training means and spreads used to scale all 13 inputs. A follow-up trains on the same examples with each scale in turn. [Read one measurement and compare the four fits](tomato-feature-scaling.md)
 
 From the repository root, reproduce this separate cohort with its own saved fits.
@@ -98,6 +112,8 @@ node benchmark/studies/tomato-distance-mining.mjs surfaces bands-fit.json > band
 In one CPU run, generating the three training sets’ scans took 2.13 s in total and each final 640-epoch fit took 0.27–0.46 s. The 48 confirmation scans took 2.01 s to generate and 9.69 s to score. The frozen fit hash was `b52894fefe4b1cdea45a7df973b6f284afdebad483c220f9db8fa2deacd77b28`. [Distance rules, seeds and study design](../benchmark/studies/tomato-distance-mining.mjs)
 
 ## Look at one planting in Field Test
+
+![A computer applies saved weights to scan returns. A score can turn a candidate peak into a pin.](../art/saved-detector.svg)
 
 Open the ordinary fit and choose **Run example**. Look at the map of planting **51112017** and its 114 seedlings, then choose **Try the other fit**. Both use the same returned points, the same 0.65 cutoff and the same matching distance. Turn on **Inspect extra pins** to examine where each unmatched prediction landed. [Open ordinary training](https://mvalancy.github.io/crop-trainer/trainer/?fieldExample=tomato-weed-random#field-test) · [Open 50% hard training](https://mvalancy.github.io/crop-trainer/trainer/?fieldExample=tomato-weed-hard#field-test)
 
@@ -122,6 +138,8 @@ Across the six weedy ring plantings, the third fit went from 168 matched seedlin
 To train your own pair, open **Do difficult backgrounds help?** in Benchmark. It fits ordinary and 50% hard backgrounds on two training seeds. Inspect the count of difficult examples, then download either fit’s weights. Benchmark grows its own validation plots. The commands below replay the published six-planting test and its clean and weedy pairs. [Train both models in your browser](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=negatives&crop=tomato&plantArchitecture=2&plantForm=mixed&plantCondition=healthy&validationPlantForm=seedling&sensor=reference&validationSensor=os1-64&trainingRayBudget=60000&validationRayBudget=60000&minimumHeight=0.035&featureMode=local-ground&sampleLimit=600&epochs=640&seed=2103181&scoreGround=present)
 
 ## Reproduce the experiment
+
+![A seed packet marked 27 branches into two plots. Four seedlings appear at the same positions in both rows.](../art/seed-replay.svg)
 
 Run from the repository root with Node.js 22 or later.
 

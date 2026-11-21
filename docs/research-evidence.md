@@ -6,7 +6,11 @@ Given a scan of a known crop, where should we put one pin per plant? Crop Traine
 
 ## What researchers have measured
 
+![A dotted survey path crosses rows of plants on the left page. A magnified rosette on the facing page has a center pin and a ruler.](../art/field-notebook.svg)
+
 ### Can a model find individual plants in a field?
+
+![Measure planting centers independently, record returns, then compare predicted pins in the same frame.](../art/survey-pair.svg)
 
 - **Counting field lettuce with one dot per plant.** Ruan and colleagues trained LettuceNet on aerial photographs. On 384 test patches cut from 24 held-out images, the counts were off by 2.45 lettuce plants per patch on average. They reported a localization F-score of 0.979 using a hit whenever a predicted region contained an annotated plant point. They tested one variety at harvest on one field. This is a precedent for inexpensive point labels. Testing our pins requires positions measured in centimetres. [Ruan et al., Agriculture, 2024, Tables 1 and 3](https://doi.org/10.3390/agriculture14081412) · [Open paper and matching rule](https://mdpi-res.com/d_attachment/agriculture/agriculture-14-01412/article_deploy/agriculture-14-01412.pdf)
 - **Locating artichokes from above.** Sassu and colleagues marked individual artichokes in aerial RGB images of a Sardinian field. On the October 15 survey, YOLOv5 found 543 plants, missed 58 and added seven false detections. For matched plants the mean distance between the predicted and hand-marked box centers was 4.66 cm. They also ran their image detector offline on the original Jetson Nano. This is evidence that individual plants can be mapped on a working farm. Their camera images, reference centers and embedded model differ from our LiDAR workflow. [Sassu et al., Computers and Electronics in Agriculture, 2023](https://doi.org/10.1016/j.compag.2023.108185) · [Authors’ full text, Tables 5 and 7](https://iris.uniss.it/bitstream/11388/319309/5/1-s2.0-S0168169923005732-main%20%284%29.pdf)
@@ -15,12 +19,16 @@ Given a scan of a known crop, where should we put one pin per plant? Crop Traine
 
 ### Can synthetic examples help on real plants?
 
+![Grow practice fields, fit weights, then measure on separate plantings. Keep both scans of each planting in one split.](../art/field-split.svg)
+
 These studies scored segmentation by measuring how much a predicted mask overlapped a hand-labeled mask. A higher score means better overlap.
 
 - **Learning from synthetic plants before measuring real ones.** Turgut and colleagues compared PointNet++ training recipes on the same eight held-out real rosebushes. Training on synthetic plants alone yielded 27.29% mean intersection-over-union for flowers, leaves and stems. Training on three real plants yielded 81.53%. Synthetic pretraining followed by fitting on those same three real plants reached 86.19%. This supports testing whether synthetic training can reduce labeling effort. Eight individual rosebushes leave performance across fields, crops and sensors open. [Turgut et al., Plant Methods 2022, Table 6](https://europepmc.org/articles/PMC8858499)
 - **Rendering sugar beet and weeds.** Di Cicco and colleagues trained Basic SegNet on 1,300 rendered RGB images. It scored 59.8% and 61.1% mean intersection-over-union for crop, weed and soil pixels on two real field tests four weeks apart. Adding 100 labeled field images from each growth stage raised those scores to 74.1% and 76.2%. The real-only control trained on each corresponding stage reached 80.3% and 83.1%. This measured pixel classification in photographs. A LiDAR detector needs its own test of plant positions. [Di Cicco et al., IROS 2017](https://doi.org/10.1109/IROS.2017.8206408) · [Authors’ paper, Table I](https://arxiv.org/pdf/1612.03019#page=6)
 
 ## What Crop Trainer has measured
+
+![A schematic comparison on identical plant centers, shown as green rings. The first detector misses one center. The second finds all six but places an extra red pin between the rows.](../art/paired-field.svg)
 
 On 24 held-out synthetic lettuce plantings with simulated ring scans, the 13-feature logistic model scored 0.793 mean F1 and the height rule scored 0.706. On young tomato, the default neural detector scored 0.747 and the height rule scored 0.761. These comparisons use identical proposals and average F1 across the 7.5, 10 and 15 cm matching distances. [Reproducible crop and scan comparisons](evidence.md)
 

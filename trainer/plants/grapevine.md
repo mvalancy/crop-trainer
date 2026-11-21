@@ -6,6 +6,8 @@ Follow a vine from the soil to the wire. Its upright trunk bends into a permanen
 
 ## Grow the three forms
 
+![A leaning vine can put its highest visible leaves to one side of its surveyed trunk. This is an illustrative mechanism.](../../art/lesson-vine.svg)
+
 | Form in the recipe | What grows from one trunk |
 | --- | --- |
 | `bilateral-cordon` | Two arms extend in opposite directions. Each has three or four spur sites with upright shoots. |
@@ -18,9 +20,13 @@ Follow a vine from the soil to the wire. Its upright trunk bends into a permanen
 
 ## Read the photographs
 
+![One trunk divides into two woody arms. Shoots grow upward from them and bear leaves. On the right, vertical laser paths end in dots on the upper surfaces or the ground. Parts of the trunk have no returns.](../../art/plant-architecture.svg)
+
 Texas A&M’s photograph shows how vertical shoot positioning produces a narrow leaf wall above a clear trunk. Plate 56 from a Queensland pruning trial shows a trunk turning into one long horizontal arm, with short spurs along its upper edge. Georgia’s before-and-after pruning photographs show the short spurs left on permanent wood. The simulation borrows these arrangements. Arm lengths, the number of berries and the amount of variation are modeling choices. [Texas A&M, figure 2](https://aggie-horticulture.tamu.edu/wp-content/uploads/sites/13/2020/05/Grapevine-Trellis-Systems-for-Winegrapes-in-Texas-EHT121.pdf#page=2) · [Queensland Agricultural Journal, plate 56](https://era.dpi.qld.gov.au/id/eprint/14418/1/Vol_71NS_Part_2_RECHECK.pdf#page=33) · [UGA Extension, figure 6](https://fieldreport.caes.uga.edu/publications/B1505/dormant-spur-and-cane-pruning-bunch-grapevines/)
 
 ## Try a broken arm
+
+![Follow a leaf to its stem. Attached organs belong to one plant with one reference center.](../../art/organ-to-target.svg)
 
 The damaged condition shortens one arm partway between two spur sites. A stump and the nearer spurs remain. Leaves, shoots and fruit beyond the break disappear. A unilateral vine can still be alive and labeled after losing most of its visible canopy. Compare the same seed in both conditions, then switch to a sparser scan to see which organs still receive a return. [Healthy unilateral row](https://mvalancy.github.io/crop-trainer/?crop=grapevine&plantArchitecture=3&plantForm=unilateral-cordon&plantCondition=healthy&sensor=reference&seed=27#field) · [Broken unilateral row](https://mvalancy.github.io/crop-trainer/?crop=grapevine&plantArchitecture=3&plantForm=unilateral-cordon&plantCondition=damaged&sensor=reference&seed=27#field)
 
@@ -29,6 +35,8 @@ An overhead ray stops at the uppermost surface. Leaves can hide fruit and trunks
 In a three-field synthetic test with the same 68 vine bases and 30,000 overhead rays per field, bilateral vines averaged 100 crop returns per plant. Dormant vines averaged 12. The fitted detector scored F1 of 0.216 and 0.244 respectively at a 15 cm matching distance. The extra leaf returns offered little help finding the trunks in this test. [Reproduce the crop-form benchmark](../../docs/crop-form-benchmark.md)
 
 ## Where is the trunk in a real scan?
+
+![A leaning vine can put its highest visible leaves to one side of its surveyed trunk. This is an illustrative mechanism.](../../art/lesson-vine.svg)
 
 A vineyard crew surveyed 52 trunk locations independently of the laser scanner. We found low returns near every surveyed vine. A return there could come from wood, grass or a support. On two reserved strips, a detector trained on synthetic vines found five of the 34 surveyed trunks within 15 cm using a top view. When we gave it only the returns 15–50 cm above ground, it missed all 34. Try the generator’s **Side** camera and **Plant tissue** colors to see which parts of a synthetic vine the scanner reached. [Physical scans, survey and replay commands](../../docs/field-datasets.md#did-the-vineyard-scanner-miss-the-lower-part-of-the-plant)
 

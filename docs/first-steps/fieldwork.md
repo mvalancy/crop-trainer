@@ -18,6 +18,8 @@ We tested a different model trained on synthetic vines on one physical strip wit
 
 ## Take a detector out of the lesson
 
+![A computer applies saved weights to scan returns. A score can turn a candidate peak into a pin.](../../art/saved-detector.svg)
+
 1. After a fit, choose **Download model weights**. This saves the learned calculation, input scaling and detection settings. **Download run settings** saves the instructions for fitting again.
 2. Try **Field test** with the examples beside the file pickers. Choose the example weights, the lettuce scan (PLY) and its answer key (CSV or JSON), then press **Find plants**. Which pins move when you switch to the height-only rule? Try again with your own fitted weights and a fresh scan from the generator. [Open Field test](https://mvalancy.github.io/crop-trainer/trainer/#field-test)
 3. For a real evaluation, choose a new physical plot with a measured ground reference and a location for every target plant. Reserve independent rows or sites for the final test before adjusting settings. If you have only the scan, you can inspect the pins. Measuring recall also requires knowing which plants were missed. [Prepare your own survey](../training.md#test-a-plot-of-your-own) · [Plan a field validation](../field-validation.md)

@@ -1,6 +1,10 @@
+![Four reference plants and three predictions. Two pins fall within different plant circles.](../art/lesson-matches.svg)
+
 # Counting plants and investigating misses
 
 ## Which detector gives a better plant count?
+
+![In this sketch, five pins land on plants. One extra pin balances one missed lettuce in the total.](../art/count-and-locate.svg)
 
 Open **Compare contenders on each planting** in the benchmark and select **Count error · absolute**. A value of 4 means the predicted count differed from the label count by four plants per scan on average. Select **Count error · signed** to see the direction. For a single scan, the Training shed’s field audit shows the final pins, labeled plants, extra pins and misses together. [Try the artichoke count comparison](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=models&crop=artichoke&seed=1551&sensor=mixed&validationSensor=os1-64&validationRayBudget=12000&fieldMetric=meanAbsolute)
 
@@ -21,6 +25,8 @@ The browser CPU and SwiftShader WebGPU neural fits produced identical counts and
 
 ## Did the scan see the plants the detector missed?
 
+![Sample positions intersect two leaves and the soil. Dots show where a surface was measured.](../art/lesson-returns.svg)
+
 The generator records which plant supplied each surviving crop return. In the 3D viewer, turn on **Label centers** to see gold crosses on plants with zero crop returns. The Training Shed shows the same coverage counts beside the detection stages for each field. A return can land on a leaf far from the center. Conversely, a nearby weed can produce a peak within the scoring distance of a plant that supplied no returns.
 
 We grew three validation fields at each of two dataset seeds, 921 and 922, and scanned each planting at both ray budgets on the simulated OS1-64. The table counts each plant once using soil-present scans. Each crop and seed used the same mixed training fields and fitted weights at both budgets. Matches use the neural detector at 15 cm after 40 CPU epochs and a 0.50 cutoff.
@@ -37,6 +43,8 @@ On seed 921 the browser CPU and software WebGPU backends produced the same tomat
 
 ### Locate an individual missed plant
 
+![Four reference plants and three predictions. Two pins fall within different plant circles.](../art/lesson-matches.svg)
+
 After training, choose **Missed plants** in the field map. Select 7.5, 10 or 15 cm and pick a box to highlight. Red rings show misses with crop returns and dark squares show misses with none. The box number matches the index in the generator’s label download. If a pin lies within range of several labels, several equally large matchings may exist. The overlay shows the assignment used to score that run. [Maximum bipartite matching and non-unique solutions](https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csgraph.maximum_bipartite_matching.html)
 
 How many previously missed plants gain a pin if the score cutoff drops from 0.50 to 0.35? On fresh dataset seeds 1021 and 1022, each pair used the same 40-epoch neural weights, mixed training layouts and 12,000-ray simulated OS1-64 validation scans. These counts cover three soil-present fields per seed at 15 cm. No previously matched boxes lost their match in these six comparisons.
@@ -50,6 +58,8 @@ How many previously missed plants gain a pin if the score cutoff drops from 0.50
 For tomato seed 1021, 54 of the 59 recovered boxes had crop returns. The other five received a pin within 15 cm despite having zero returns from the plant itself. Across both soil settings, F1 at 7.5, 10 and 15 cm rose from 0.245 / 0.279 / 0.297 to 0.414 / 0.469 / 0.505. The 0.50 run took 1,896 ms to generate, 113 ms to train and 32 ms to validate on Node CPU. The 0.35 replay took 1,945 / 99 / 24 ms. [Open the field audit](https://mvalancy.github.io/crop-trainer/trainer/?crop=tomato&seed=1021&sensor=mixed&validationSensor=os1-64&validationRayBudget=12000&engine=cpu) · [Compare the cutoffs](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=cutoffs&crop=tomato&seed=1021&sensor=mixed&validationSensor=os1-64&validationRayBudget=12000)
 
 ### Can shorter peaks recover a missed plant?
+
+![Measure a peak above a ground reference. A height floor decides which candidates reach the detector.](../art/measure-a-peak.svg)
 
 In Benchmark, choose **Minimum peak height** and run the comparison. A peak is a local high point on the smoothed height map of the simulated laser returns. Lowering the minimum from 6.5 to 3.5 cm lets more locations enter the detector. The **Matched using all peaks** column shows how many labeled plants could receive a distinct pin within 15 cm before the model filters the peaks. Compare it with **Final matches** and **Extra pins**, then answer the question to earn a Peak scout stamp. [Try the sparse tomato benchmark](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=heights&crop=tomato&seed=2021&sensor=mixed&validationSensor=os1-64&validationRayBudget=12000)
 
@@ -67,6 +77,8 @@ On tomato seed 2021 across both soil settings, neural F1 at 7.5 / 10 / 15 cm ros
 
 ### Which plants change when the peak height drops?
 
+![558 peaks could cover all 199 plants. The score cutoff leaves 161 peaks covering 141 plants. The final 146 pins still cover 141.](../art/lesson-stages.svg)
+
 A larger match count can hide plants the earlier fit found. In a **Minimum peak height** benchmark, open **Which plants changed match when the peak height dropped?** Choose a scan and matching distance. The table splits its labels into plants found by both fits, those unique to each height, and those missed by both. Pick a plant unique to either height, open it in 3D, then use **Focus plant** to orbit its center. The line above the table totals gains and losses across the six soil-present fields in that run. **Link to this inspection** lets someone rerun the benchmark and reopen your chosen scan, distance and plant. [Replay a lettuce plant found only by the shorter fit](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=heights&crop=lettuce&seed=2121&sensor=mixed&validationSensor=os1-64&validationRayBudget=12000&pairSeed=2122&pairTile=39c12665d375fbb9&pairDistance=7.5&pairBox=1#modelBoxes)
 
 Across seeds 2121, 2122, 2151 and 2152, each crop contributed 12 soil-present held-out fields. Both heights used the same raw scans, six mixed-layout training fields per seed, 40 CPU neural epochs, a 0.50 score cutoff and 12,000 requested validation rays on the simulated OS1-64 layout. At 15 cm the lower height gave the following changes.
@@ -81,9 +93,13 @@ Lettuce seed 2121 lost 74 plant matches and gained 52. The other three seeds eac
 
 For tomato seed 2121 across both soil settings, neural F1 at 7.5 / 10 / 15 cm changed from 0.3377 / 0.4132 / 0.4557 to 0.4096 / 0.5225 / 0.5747. Node CPU generation, training and validation took 995 / 42 / 21 ms at 6.5 cm and 944 / 113 / 14 ms at 3.5 cm. For research on analyzing the individual errors behind an aggregate detection score, see Bolya and colleagues. [TIDE, ECCV 2020](https://dbolya.com/tide/)
 
+![An overhead sketch shows grid and ring sampling patterns. A small plant can fall between samples.](../art/scanner-patterns.svg)
+
 **Does the gain hold on denser scans?** Repeating the same synthetic plantings at 60,000 validation rays reduced the benefit of shorter peaks. At 15 cm the neural tomato fit gained 18 plant matches, lost 9 and added 71 extra pins. At 12,000 rays it had gained 379 and lost 10 with 68 extra pins. On dense lettuce the fits gained 109 and lost 56 (+159 extra pins), and on dense artichoke they gained 2 and lost 5 (+9 extra pins). Each comparison uses the same height-specific training examples at both ray budgets. Use the validation-ray links under the Peak scout question to repeat this check on other seeds. [Replay the dense tomato fields](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=heights&crop=tomato&seed=2121&sensor=mixed&validationSensor=os1-64&validationRayBudget=60000)
 
 #### Repeat the peak-height test at both ray budgets
+
+![An overhead sketch shows grid and ring sampling patterns. A small plant can fall between samples.](../art/scanner-patterns.svg)
 
 In the peak-height benchmark, follow **Repeat with 60,000 validation rays** after a 12,000-ray run and run the benchmark again in the same tab. **How well did each fit handle both densities?** shows mean F1 at each requested budget and the lower score for each fit. The JSON download includes these paired values. The comparison uses the same training scans and held-out plantings at both budgets.
 
@@ -100,6 +116,8 @@ For the 3.5 cm tomato fit on seed 2221, F1 at 7.5 / 10 / 15 cm was 0.6187 / 0.75
 
 ### Could changing the cutoff help this missed plant?
 
+![In this schematic the 0.30 score drops below cutoff. The nearby 0.64 candidate loses to the 0.77 candidate.](../art/lesson-pins.svg)
+
 In the Training Shed, run the detector, choose **Missed plants** and highlight a box. The close-up shows the height peaks, peaks that passed the score cutoff and final pins inside its matching circle. If no peak is inside the circle, changing the cutoff alone cannot recover the plant. If all nearby peaks fell below the cutoff, the highest nearby score tells you where at least one would enter the spacing filter. A retained pin may still match a neighboring plant. [Inspect tomato seed 1921](https://mvalancy.github.io/crop-trainer/trainer/?crop=tomato&seed=1921&sensor=mixed&validationSensor=os1-64&validationRayBudget=12000&engine=cpu&missBand=all)
 
 We traced every 15 cm miss at a cutoff of 0.50, then rescored the same weights and scans at 0.35. Each cell gives **misses at 0.50 → boxes matched at 0.35 among those misses**. Each crop used 12 soil-present validation fields across dataset seeds 1921, 1922, 1951 and 1952. Both CPU models used six mixed-layout training fields per seed, 40 epochs and a simulated OS1-64 at 12,000 requested validation rays.
@@ -115,6 +133,8 @@ On tomato seed 1921, F1 across both soil settings at 7.5 / 10 / 15 cm was 0.529 
 
 ### Which crops gain a match when the cutoff drops?
 
+![Four reference plants and three predictions. Two pins fall within different plant circles.](../art/lesson-matches.svg)
+
 Run **Detection score cutoffs** in Benchmark and expand **What changes from the 0.50 cutoff?** The first table covers both soil settings. The return-count table uses the soil-present scan of each planting. Read across a row to see how many plants matched at each cutoff, then check the extra pins in the bottom row. [Try the tomato benchmark at 15 cm](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=cutoffs&crop=tomato&seed=1821&sensor=mixed&validationSensor=os1-64&validationRayBudget=12000&cutoffDistance=15)
 
 On dataset seeds 1821, 1822, 1851 and 1852, each CPU fit used 40 epochs, mixed training layouts and three held-out plantings scanned at 12,000 requested rays with the simulated OS1-64. Each crop below pools 12 soil-present scans. Counts show the change in the number matched at 15 cm when moving from 0.50 to 0.35.
@@ -129,6 +149,8 @@ On dataset seeds 1821, 1822, 1851 and 1852, each CPU fit used 40 epochs, mixed t
 The neural tomato detector gained 63, 30, 19 and 40 net matches in the one-to-four-return group on the four dataset seeds, respectively. On seed 1821 its F1 across both soil settings rose from 0.387 / 0.475 / 0.516 to 0.548 / 0.710 / 0.797 at 7.5 / 10 / 15 cm. Generation and fitting took 1,030 ms and 44 ms on Node CPU. Scoring took 10 ms at 0.50 and 16 ms at 0.35. Choosing a cutoff changes the tradeoff between false positives and missed detections. Use fresh plantings to evaluate a choice made on these synthetic fields. [Decision threshold guide](https://scikit-learn.org/stable/modules/classification_threshold.html)
 
 ### Does the detector miss plants that have several returns?
+
+![Actual target positions from plot 216917. At left the height detector matched 15 plants at 30,000 rays. At right it matched 103 at one million. Circles indicate a match within 15 centimetres and crosses indicate a miss. A line sweeps across both maps.](../art/seedling-density.svg)
 
 In the Training Shed, select **Missed plants** and filter **Crop returns per plant**. The map shows how many plants the detector missed out of all plants in the selected group. Pick a box, open it in 3D and choose **Focus plant** to orbit it up close. With the canvas focused, **F** centers the highlighted plant and **R** returns to the whole field. [Inspect a young tomato field](https://mvalancy.github.io/crop-trainer/trainer/?crop=tomato&seed=1721&sensor=mixed&validationSensor=os1-64&validationRayBudget=12000&engine=cpu&missBand=fiveOrMore)
 
@@ -149,6 +171,8 @@ On tomato seed 1721, across both soil settings, logistic F1 was 0.511, 0.649 and
 
 ### Which model finds plants in a sparse scan?
 
+![An overhead sketch shows grid and ring sampling patterns. A small plant can fall between samples.](../art/scanner-patterns.svg)
+
 With 12,000 requested rays on the simulated OS1-32 layout, the neural model scored higher than logistic on each of two dataset seeds for all three crops. Both saw identical examples and held-out scans, with six mixed-layout training fields, three validation plantings per seed, 40 CPU epochs and a 0.50 cutoff. Each cell gives mean F1 for logistic → neural. [Replay the sparse model benchmark](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=models&crop=tomato&seed=821&sensor=mixed&validationSensor=os1-32&validationRayBudget=12000)
 
 | Dataset seed | Lettuce | Globe artichoke | Young tomato |
@@ -165,11 +189,15 @@ Tomato seed 822 illustrates a failure that the model average hides. On field 854
 
 ### Does removing soil help the detector?
 
+![Both views share plant locations. Removing soil returns changes the clues in a peak’s neighborhood.](../art/soil-twins.svg)
+
 In the Training Shed, run a field and open **Compare scans with and without soil**. Choose recall to see how many plants were found, or precision to see how many pins landed on a plant. In the field audit, **Switch soil setting for this field** shows the other scan at the same detector stage.
 
 On four fresh seeds (307, 308, 337 and 338), removing soil increased lettuce recall at 15 cm by 2.5 to 15.1 percentage points. Each run used mixed layouts, six training fields, three held-out plantings and 40 neural epochs. On artichoke seed 308, removing soil recovered four more plants (77 of 95 versus 73 of 95) and produced 50 additional false positives (54 versus 4). Precision fell from 94.8% to 58.8%. The generator knows which points are soil. A real ground filter must estimate that from measurements and can discard crop returns. [Repeat the artichoke experiment](https://mvalancy.github.io/crop-trainer/trainer/?crop=artichoke&seed=308) · [Zhang et al., cloth simulation for airborne LiDAR filtering](https://doi.org/10.3390/rs8060501)
 
 #### Does soil removal improve the plant count?
+
+![In this sketch, five pins land on plants. One extra pin balances one missed lettuce in the total.](../art/count-and-locate.svg)
 
 Choose **Plant count · absolute error** in the Training Shed’s soil comparison. Each row compares final pin counts against the same planting’s labels with soil present and removed. Select a field seed, then use **View without soil** or **View with soil** in the 3D viewer. The camera and highlighted plant stay in place. The scan link, PLY, labels and recipe follow the displayed version. [Replay the lettuce count comparison](https://mvalancy.github.io/crop-trainer/trainer/?crop=lettuce&seed=1652&sensor=mixed&validationSensor=os1-64&validationRayBudget=12000&engine=cpu&soilMetric=meanAbsolute)
 

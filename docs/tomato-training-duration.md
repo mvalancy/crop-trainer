@@ -6,11 +6,15 @@ On six new ring-scanned plantings, the detector found **2 of 657 seedlings after
 
 ## What does one more epoch buy?
 
+![The forty recorded training losses for the seed-27 lettuce fit. The first is 0.651 and the last is 0.321.](../art/lesson-loss.svg)
+
 An **epoch** is one pass over the training examples. We drew 300 peaks near labeled tomato plants and 300 background peaks from six mixed-stage plantings. The same six plantings supplied every run within a comparison. At 40 epochs the network had seen those 600 examples 24,000 times in total. At 640 epochs it had made 384,000 example visits. It had the same training scans, the same 13 measurements per peak and the same 61 adjustable weights and biases.
 
 The network ranks peaks. A score of at least 0.50 admits a peak, then a spacing rule keeps the higher-scoring pin within 22 cm. More training can change which peaks pass and which neighboring peak wins. Tiny seedlings with no candidate within reach cannot get a matching pin at any epoch count.
 
 ## How did we choose a training length?
+
+![Grow practice fields, fit weights, then measure on separate plantings. Keep both scans of each planting in one split.](../art/field-split.svg)
 
 We first reserved four development field seeds, a second set of six confirmation seeds and a separate training seed for each group. On development we compared 160 and 640 epochs to the 40-epoch starter. At a 15 cm matching distance, each longer fit had to improve seedling F1 on **both** the reference grid and OS1-64 ring layout. It also had to keep branching precision within one percentage point of the starter or improve it on **each** layout. F1 rewards finding plants while limiting extra pins. Precision measures the share of pins that actually match a plant.
 
@@ -24,6 +28,8 @@ If both lengths qualified, the larger of their smaller seedling F1 gains would w
 We froze the 40-epoch decision before scoring confirmation fields. The 160- and 640-epoch results below show what the longer fits did on fresh plantings and a fresh training seed.
 
 ## What did the pins land on?
+
+![Two top views show the same patch of a synthetic ring scan. A dashed circle covers 15 centimeters around the planted center. With the single tomato return present, a pin landed 11.2 centimeters from the center. Removing only that return erased the local peak before the model could score it. The soil returns occupy the same positions in both panels.](../art/tomato-one-return.svg)
 
 Each row covers **657 plants across six confirmation fields**. The layouts share identical reference centers within each stage. Growing a plant changes its box, so its scored center can shift between the seedling and branching versions of a planting. Every scan included soil and used 60,000 rays. Cells show **matched plants / extra pins** within 15 cm. The simple height rule ranks the same peaks by height and enforces the same spacing. The reachable count uses one-to-one matching on all proposed peaks before either detector filters them.
 
@@ -46,6 +52,8 @@ A closer match matters when locating the center. These are the same frozen ring-
 
 ## Did plant peaks rise in the ranking?
 
+![Three candidate distances fall in the positive, skipped and negative bands.](../art/lesson-labels.svg)
+
 Changing the cutoff can put more pins on a field without teaching a detector to tell plants and soil apart. We tested the ordering of the scores themselves. On a third training seed, we fitted the same 600 examples for 40, 160 and 640 epochs. We ranked the peaks from six fresh soil-present plantings, before the cutoff or pin-spacing step.
 
 A **positive** peak lay within 9.5 cm of a planted center. A **background** peak lay farther than 15 cm from every center. We left the intervening band out. **Average precision (AP)** measures how reliably the detector puts the positive peaks first as you work down the ranked list. A perfect ordering scores 1. Each result pools the same six plantings for one stage and layout.
@@ -59,25 +67,35 @@ A **positive** peak lay within 9.5 cm of a planted center. A **background** peak
 
 Both longer fits ranked seedling peaks better than the 40-epoch fit on **each of the six plantings**, on both layouts. Limiting every method to its top fifth of peaks gave another check at the same count. From 40 to 640 epochs, the share of those peaks labeled positive rose from 54.1% to 57.9% on seedling grids and from 56.0% to 64.0% on seedling rings. For a fixed inspection budget of 656 seedling-grid peaks, 160 epochs yielded 385 positives and 640 yielded 380. On branching rings, top-fifth precision fell from 98.0% to 94.9% between 40 and 640 epochs. All six branching ring fields lost AP.
 
+![In this schematic the 0.30 score drops below cutoff. The nearby 0.64 candidate loses to the 0.77 candidate.](../art/lesson-pins.svg)
+
 The ordering and the cutoff tell different parts of the story. At 640 epochs, grids and rings had nearly identical seedling AP, yet the 0.50 cutoff accepted only **30 of 430** labeled seedling peaks on grids, versus **259 of 348** on rings. It also accepted one background peak on grids and 48 on rings. A single cutoff gave very different results on the two layouts. Several peaks may belong to one plant, and a plant with no peak cannot enter this ranking. The preceding detection scores include those plant-level effects.
 
 Run `node benchmark/studies/tomato-epoch-ranking.mjs` for counts at each cutoff, per-field AP, scan IDs, fit times and weight hashes. The calculation treats equal scores as one threshold in AP. If tied scores cross the top-fifth boundary, their positive fraction contributes in proportion to the available places. [Candidate-ranking study](../benchmark/studies/tomato-epoch-ranking.mjs)
 
 ## Why was 640 epochs still fast?
 
+![Thirteen inputs feed four hidden units. Each hidden unit contributes to the single output.](../art/lesson-network.svg)
+
 On one AMD EPYC 7763 CPU with Node 24.22.1, the confirmation training rows took **1.40 seconds** to generate and prepare. The three separate fits took **0.063, 0.083 and 0.267 seconds**. Training loss fell from 0.475 to 0.405 to 0.324. Generating the 24 confirmation scans took another 0.71 seconds, and scoring all three models took 1.36 seconds. Device, runtime warm-up and the number of examples affect these timings. This small network reuses a prepared table of peaks for each pass. How long training takes depends on the work per pass as well as the number of passes.
 
 ## Try one planting in Field Test
 
+![A computer applies saved weights to scan returns. A score can turn a candidate peak into a pin.](../art/saved-detector.svg)
+
 Open either saved fit below and click **Run example**. Your browser grows the same 110 seedlings, scans them and scores the selected weights. Switch the fit and run again. At 15 cm the map changes from one matched plant to 53. You can also replace the example weights or scan with your own files. [Try 40 epochs](https://mvalancy.github.io/crop-trainer/trainer/?fieldExample=tomato-40#field-test) · [Try 640 epochs](https://mvalancy.github.io/crop-trainer/trainer/?fieldExample=tomato-640#field-test)
 
 ### Recreate the files yourself
+
+![Use the same recipe and seed to grow the same planting and repeat the scan.](../art/seed-to-field.svg)
 
 1. Open the 40-epoch preset, run Training Shed and download the model weights. Repeat with the same settings at 640 epochs. [Train for 40 epochs](https://mvalancy.github.io/crop-trainer/trainer/?plan=quick&engine=cpu&crop=tomato&plantArchitecture=2&plantForm=mixed&plantCondition=healthy&trainFields=6&valFields=1&seed=987149&sensor=reference&trainingRayBudget=60000&validationRayBudget=60000&featureMode=local-ground&minimumHeight=0.035&sampleLimit=600&positiveSampling=ordinary&epochs=40) · [Train for 640 epochs](https://mvalancy.github.io/crop-trainer/trainer/?plan=quick&engine=cpu&crop=tomato&plantArchitecture=2&plantForm=mixed&plantCondition=healthy&trainFields=6&valFields=1&seed=987149&sensor=reference&trainingRayBudget=60000&validationRayBudget=60000&featureMode=local-ground&minimumHeight=0.035&sampleLimit=600&positiveSampling=ordinary&epochs=640)
 2. Open the first confirmation planting and download its scan and labels. Seed `40117063` contains 110 seedlings on the ring layout. The scan ID is `56b872a50fcac3ab`. [Open this planting](https://mvalancy.github.io/crop-trainer/?crop=tomato&plantArchitecture=2&plantForm=seedling&plantCondition=healthy&sensor=os1-64&seed=40117063&budget=60000&ground=true&weeds=off&sticks=off&boards=off&noise=clean&tile=56b872a50fcac3ab)
 3. In Field Test, choose the scan, labels and each model in turn. At the saved cutoff, the starter matches one plant with four extra pins at 15 cm. The longer fit matches 53 with 23 extra pins. Change **Match distance** to 7.5 cm on the same map. Now 44 pins match and 32 are extra. The Benchmark link above runs a separate paired comparison with its own seeded validation fields. [Open Field Test](https://mvalancy.github.io/crop-trainer/trainer/#field-test)
 
 ## Can a higher cutoff protect branching precision?
+
+![Two 640-epoch fits scored the same 405 peaks near labeled seedlings on six simulated ring scans. At a score cutoff of 0.70, 122 peaks passed in the first fit and 6 in the second. Each bar counts peaks in one tenth of the score range on the same vertical scale.](../art/tomato-score-cutoff.svg)
 
 At a fixed cutoff of 0.50, longer training placed extra pins on branching tomatoes. We revisited the original four development fields with **one global cutoff for both stages and both scanners**. We tried 0.05 through 0.95 in steps of 0.05 for each of the three existing fits. Candidates had to keep branching precision within one percentage point of the 40-epoch starter on *each* layout at 15 cm. Among those candidates, we chose the largest seedling F1 gain on the weaker layout. Ties favored a cutoff closest to 0.50, then fewer epochs, then a higher cutoff.
 
@@ -94,6 +112,8 @@ Each confirmation row covers 663 plants. The cells show **matched plants / extra
 
 The frozen pair met the requirement again. At 15 cm it found **five of 663 grid seedlings and four of 663 ring seedlings**, with zero extra seedling pins. The height rule found 435 and 345, alongside 1,430 and 818 extras. The longer fit raised branching precision from 87.3% to 94.4% on grids and from 86.4% to 92.0% on rings. It also missed 21 more branching plants on grids and 33 more on rings. A rule that protects precision can still lose plants the starter found.
 
+![Use the same recipe and seed to grow the same planting and repeat the scan.](../art/seed-to-field.svg)
+
 In one CPU run, confirmation data preparation took 2.06 s. Training took 0.06 s and 0.32 s for the selected schedules. Generating 24 test scans took 0.72 s and replaying their weights through Field Test took 1.04 s. To repeat the selection, create `duration-dev.json` with the command below, then run these two commands.
 
 ```sh
@@ -104,6 +124,8 @@ node benchmark/studies/tomato-duration-cutoffs.mjs confirmation cutoffs-dev.json
 Both commands record the same decision hash, `97cdc42c77f0199325db8c22e6d00faed3ec062452d455dfe026ca5b2f023963`. The output includes trained-weight hashes, scan IDs, per-field counts at each distance and hardware-specific timings. [Duration and cutoff study](../benchmark/studies/tomato-duration-cutoffs.mjs)
 
 ## Was it the planting or the trained model?
+
+![A schematic comparison on identical plant centers, shown as green rings. The first detector misses one center. The second finds all six but places an extra red pin between the rows.](../art/paired-field.svg)
 
 We replayed the two confirmation fits on **both** sets of six previously scored plantings. Each model saw the same scan IDs and candidate peaks at both cutoffs. This retrospective comparison changes one factor at a time. The duration cohort has 657 plants per stage, the cutoff cohort 663.
 
@@ -120,7 +142,7 @@ Changing the test plantings kept the same pattern. One 640-epoch fit found over 
 
 The fit that produced fewer pins actually **ranked ring seedling peaks better**. For the duration and cutoff cohorts respectively, its AP was .896 and .896, versus .619 and .602 for the fit trained with seed 987149. Its median score on labeled positive peaks was lower, .403 and .392 versus .601 and .575. A model can put true peaks nearer the top of its list and still put many of them below a shared cutoff. These results cover two synthetic training draws. Measuring probability calibration in a physical field would require independently labeled scans.
 
-![Two histograms of scores for the same 405 peaks near seedlings. One model passed 122 peaks at a cutoff of 0.70, the other passed six.](../art/tomato-score-cutoff.svg)
+![Three candidate distances fall in the positive, skipped and negative bands.](../art/lesson-labels.svg)
 
 This ranking used the original distance labels. The duration ring scans contained 405 positive and 1,905 background peaks, with 60 ambiguous peaks omitted. The cutoff ring scans contained 366 positive and 1,923 background peaks, with 63 omitted. The command below verifies both sets of weights, checks the scan IDs and proposal counts, and reproduces the previously published operating points before reporting the crossed results.
 
@@ -129,6 +151,8 @@ node benchmark/studies/tomato-duration-cutoffs.mjs crossed duration-check.json c
 ```
 
 ## Reproduce the whole experiment
+
+![A seed packet marked 27 branches into two plots. Four seedlings appear at the same positions in both rows.](../art/seed-replay.svg)
 
 Run these commands in order with Node.js 22 or later from the repository root. The second command reads the development decision before generating confirmation data.
 

@@ -1,3 +1,4 @@
+import {plotPalette} from '../../app/plot-palette.js';
 // Each saved loss has an explicit epoch. Long runs thin the history and keep the final point.
 export function createLossCurve(canvas, slider, readout) {
   let epochs = [], values = [], examples = 0;
@@ -13,15 +14,16 @@ export function createLossCurve(canvas, slider, readout) {
     ctx.scale(ratio, ratio);
     if (!values.length) return;
 
+    const colors = plotPalette(canvas);
     const maxLoss = Math.max(...values) || 1;
     const left = 45, right = w - 14, top = 10, bottom = h - 26;
     const x = epoch => left + (right - left) * (epoch - 1) / Math.max(1, epochs.at(-1) - 1);
     const y = loss => bottom - (bottom - top) * loss / maxLoss;
     ctx.font = '12px system-ui, sans-serif';
     for (const tick of [0, maxLoss / 2, maxLoss]) {
-      ctx.strokeStyle = '#d5dfd1';
+      ctx.strokeStyle = colors.grid;
       ctx.beginPath(); ctx.moveTo(left, y(tick)); ctx.lineTo(right, y(tick)); ctx.stroke();
-      ctx.fillStyle = '#435643'; ctx.textAlign = 'right';
+      ctx.fillStyle = colors.muted; ctx.textAlign = 'right';
       ctx.fillText(formatTick(tick), left - 7, y(tick) + 4);
     }
     ctx.textAlign = 'left';
@@ -32,15 +34,15 @@ export function createLossCurve(canvas, slider, readout) {
     }
     ctx.beginPath();
     values.forEach((loss, i) => i ? ctx.lineTo(x(epochs[i]), y(loss)) : ctx.moveTo(x(epochs[i]), y(loss)));
-    ctx.strokeStyle = '#286349'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.strokeStyle = colors.plant; ctx.lineWidth = 2; ctx.stroke();
     ctx.lineTo(x(epochs.at(-1)), bottom); ctx.lineTo(left, bottom); ctx.closePath();
     ctx.fillStyle = 'rgba(86,139,84,.12)'; ctx.fill();
 
     const i = slider.valueAsNumber;
     ctx.beginPath(); ctx.moveTo(x(epochs[i]), bottom); ctx.lineTo(x(epochs[i]), y(values[i]));
-    ctx.setLineDash([3, 3]); ctx.strokeStyle = '#607a62'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.setLineDash([3, 3]); ctx.strokeStyle = colors.muted; ctx.lineWidth = 1; ctx.stroke();
     ctx.beginPath(); ctx.arc(x(epochs[i]), y(values[i]), 4, 0, 2 * Math.PI);
-    ctx.fillStyle = '#164c38'; ctx.fill();
+    ctx.fillStyle = colors.plant; ctx.fill();
   }
 
   function select() {
@@ -52,6 +54,7 @@ export function createLossCurve(canvas, slider, readout) {
     draw();
   }
 
+  window.addEventListener('crop-theme-change', draw);
   new ResizeObserver(draw).observe(canvas);
   slider.addEventListener('input', select);
   return function show(fit, sampleCount) {

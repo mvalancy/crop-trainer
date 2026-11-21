@@ -1,3 +1,4 @@
+import {plotPalette} from '../../app/plot-palette.js';
 import {scoreHelp, renderScoreTables} from './score-tables.js';
 import {initFeatureScale} from './feature-scale.js';
 import {initSurveyAlignment} from './survey-alignment.js';
@@ -77,10 +78,11 @@ function methodsFor(report) {
 
 function drawPlot(report, sampled, pins, assignment, changes, extras, focusedCenter, inspectedPeak) {
   const canvas = byId('testMap'), ctx = canvas.getContext('2d');
+  const colors = plotPalette(canvas);
   const {px,py} = plotCoordinates(canvas);
-  ctx.fillStyle = '#f2f3e9';
+  ctx.fillStyle = colors.paper;
   ctx.fillRect(0,0,canvas.width,canvas.height);
-  ctx.strokeStyle = '#d1d7c5';
+  ctx.strokeStyle = colors.grid;
   ctx.lineWidth = 1;
   ctx.beginPath();
   for (let n = 0; n <= 10; n += 2) {
@@ -88,17 +90,17 @@ function drawPlot(report, sampled, pins, assignment, changes, extras, focusedCen
     ctx.moveTo(px(0),py(n)); ctx.lineTo(px(10),py(n));
   }
   ctx.stroke();
-  ctx.fillStyle = '#4c5d4f'; ctx.font = '13px system-ui';
+  ctx.fillStyle = colors.muted; ctx.font = '13px system-ui';
   ctx.fillText('0',px(0)-9,py(0)+15);
   ctx.fillText('X · 10 m',px(10)-46,py(0)+15);
   ctx.fillText('Y · 10 m',px(0),py(10)-6);
   const {unit,origin} = report.frame, scale = {m:1,cm:.01,mm:.001}[unit];
-  ctx.fillStyle = '#acb79f';
+  ctx.fillStyle = colors.returns;
   for (let i = 0; i < sampled.length; i += 2) {
     ctx.fillRect(px((sampled[i]-origin[0])*scale),py((sampled[i+1]-origin[1])*scale),1.6,1.6);
   }
   if (extras) {
-    drawExtraPins(ctx,px,py,pins,report.references,extras);
+    drawExtraPins(ctx,px,py,pins,report.references,extras,colors);
     return;
   }
   if (changes) {
@@ -107,24 +109,24 @@ function drawPlot(report, sampled, pins, assignment, changes, extras, focusedCen
       ctx.beginPath();
       ctx.arc(x,y,change ? 5.5 : 2.6,0,2*Math.PI);
       if (!change) {
-        ctx.strokeStyle = '#798577'; ctx.lineWidth = 1.3; ctx.stroke(); return;
+        ctx.strokeStyle = colors.muted; ctx.lineWidth = 1.3; ctx.stroke(); return;
       }
-      ctx.fillStyle = change > 0 ? '#00664e' : '#a1381e'; ctx.fill();
+      ctx.fillStyle = change > 0 ? colors.plant : colors.alert; ctx.fill();
       ctx.beginPath(); ctx.moveTo(x-3,y); ctx.lineTo(x+3,y);
       if (change > 0) {ctx.moveTo(x,y-3); ctx.lineTo(x,y+3);}
-      ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.6; ctx.stroke();
+      ctx.strokeStyle = colors.paper; ctx.lineWidth = 1.6; ctx.stroke();
     });
     if (focusedCenter) {
       const x = px(focusedCenter.localX), y = py(focusedCenter.localY);
       ctx.beginPath(); ctx.arc(x,y,10,0,2*Math.PI);
-      ctx.strokeStyle = '#fff'; ctx.lineWidth = 4; ctx.stroke();
-      ctx.strokeStyle = '#14291e'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.strokeStyle = colors.paper; ctx.lineWidth = 4; ctx.stroke();
+      ctx.strokeStyle = colors.ink; ctx.lineWidth = 2; ctx.stroke();
     }
     return;
   }
   const assigned = new Set(assignment);
   if (report.references) {
-    ctx.strokeStyle = '#887899';
+    ctx.strokeStyle = colors.survey;
     ctx.lineWidth = 1.2;
     ctx.beginPath();
     report.references.forEach(({localX,localY},i) => {
@@ -138,7 +140,7 @@ function drawPlot(report, sampled, pins, assignment, changes, extras, focusedCen
     ctx.lineWidth = 1.8;
     report.references.forEach(({localX,localY},i) => {
       const x = px(localX), y = py(localY);
-      ctx.strokeStyle = '#644883';
+      ctx.strokeStyle = colors.survey;
       ctx.beginPath();
       if (assignment[i] === -1) {
         ctx.moveTo(x-3,y-3); ctx.lineTo(x+3,y+3);
@@ -150,17 +152,17 @@ function drawPlot(report, sampled, pins, assignment, changes, extras, focusedCen
   pins.forEach(({localX,localY},i) => {
     const x = px(localX), y = py(localY);
     if (assignment && !assigned.has(i)) {
-      ctx.fillStyle = '#a1381e'; ctx.fillRect(x-2.5,y-2.5,5,5);
+      ctx.fillStyle = colors.alert; ctx.fillRect(x-2.5,y-2.5,5,5);
     } else {
-      ctx.fillStyle = '#00664e'; ctx.beginPath(); ctx.arc(x,y,2.6,0,2*Math.PI); ctx.fill();
+      ctx.fillStyle = colors.plant; ctx.beginPath(); ctx.arc(x,y,2.6,0,2*Math.PI); ctx.fill();
     }
   });
   if (inspectedPeak) {
     const x = px(inspectedPeak[0]), y = py(inspectedPeak[1]), size = 8;
     ctx.beginPath();
     ctx.moveTo(x,y-size); ctx.lineTo(x+size,y); ctx.lineTo(x,y+size); ctx.lineTo(x-size,y); ctx.closePath();
-    ctx.strokeStyle = '#fff'; ctx.lineWidth = 4; ctx.stroke();
-    ctx.strokeStyle = '#943e1e'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.strokeStyle = colors.paper; ctx.lineWidth = 4; ctx.stroke();
+    ctx.strokeStyle = colors.alert; ctx.lineWidth = 2; ctx.stroke();
   }
 }
 
@@ -233,6 +235,7 @@ export function initFieldTest(downloadJSON) {
   let weedPair;
   let currentModelFile, runningModel, worker, sampled, loaded = false, running = false, report;
 
+  window.addEventListener('crop-theme-change', renderOverlay);
   const extraInspector = initExtraPins(renderOverlay);
   const setSurvey = initSurveyAlignment();
   const featureScale = initFeatureScale(renderOverlay);

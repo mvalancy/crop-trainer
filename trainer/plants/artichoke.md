@@ -6,6 +6,8 @@ A young globe artichoke can be all leaves. Later it can raise several heads on o
 
 ## How the plant is drawn
 
+![Follow a leaf to its stem. Attached organs belong to one plant with one reference center.](../../art/organ-to-target.svg)
+
 Version 3 grows the vegetative rosette from a short axis connected to the soil. Long arching midribs attach at different heights around it. Each one carries three pairs of tapered side lobes. Varying their spread gives the scan a jagged outline with gaps between leaves. If the selected stage bears a bud, a tapered stalk ends in a rounded core. Fifteen bracts rise around the core at staggered heights, each collar seated inside the core’s curved surface. The branching form also grows two side stalks with smaller heads. One whole plant supplies one detection label. [Artichoke generator](artichoke.js) · [Surface sampler](surfaces.js)
 
 | Form | What reaches the scanner |
@@ -15,6 +17,8 @@ Version 3 grows the vegetative rosette from a short axis connected to the soil. 
 | Branching buds | Lateral heads sit below and to either side of the main head. A peak finder can propose multiple centers on one plant. |
 
 ## Take away the top bud
+
+![Two side views have spreading divided leaves. The later form adds a terminal bud high on a thick stalk and two smaller buds on branches.](../../art/plants/artichoke.svg)
 
 Start with two branching plants at the same seed and scan settings. On the damaged version, a sector of leaves and the terminal head have been removed. The stalk remains and the two lateral heads survive. Compare them from above, then choose a side view. Where would you place one pin for the whole plant? [Healthy branching artichoke](https://mvalancy.github.io/crop-trainer/?crop=artichoke&plantArchitecture=3&plantForm=branched-buds&plantCondition=healthy&seed=31907&sensor=reference&noise=clean&box=3#field) · [Damaged branching artichoke](https://mvalancy.github.io/crop-trainer/?crop=artichoke&plantArchitecture=3&plantForm=branched-buds&plantCondition=damaged&seed=31907&sensor=reference&noise=clean&box=3#field)
 

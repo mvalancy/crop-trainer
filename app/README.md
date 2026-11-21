@@ -1,8 +1,10 @@
-# Inside the field generator
-
 [![A scanning beam passes over a lettuce and leaves a trail of points.](../art/title.svg)](https://mvalancy.github.io/crop-trainer/#scan-viewer)
 
+# Inside the field generator
+
 Grow a field, zoom in on a single plant and see which leaves the laser reached. Open the paired scan comparison to find out what changes when the same planting receives fewer rays. [Open the field generator](https://mvalancy.github.io/crop-trainer/#field)
+
+![Use the same recipe and seed to grow the same planting and repeat the scan.](../art/seed-to-field.svg)
 
 | To change… | Start here |
 | --- | --- |

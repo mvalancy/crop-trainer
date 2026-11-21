@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 216" role="img" aria-labelledby="title desc">
+  <title id="title">Two ways to see a seedling</title>
+  <desc id="desc">Beside a seedling, dots trace the surfaces LiDAR samples. A little square color mosaic shows the shape a camera could record in pixels.</desc>
+  <style>
+    text { font: 600 16px system-ui,sans-serif; fill: #284d42 }
+    .title { font: bold 24px Georgia,serif }
+    @media (prefers-reduced-motion: no-preference) {
+      .dots { animation: trace 6s ease-in-out infinite }
+      .pixels { animation: trace 6s 2s ease-in-out infinite }
+      @keyframes trace { 0%,100% {opacity:.5} 35%,70% {opacity:1} }
+    }
+  </style>
+  <defs>
+    <pattern id="paper" width="14" height="14" patternUnits="userSpaceOnUse"><path d="M14 0H0V14" stroke="#ded5b5" fill="none"/></pattern>
+    <pattern id="pixels" width="8" height="8" patternUnits="userSpaceOnUse"><path d="M8 0H0V8" stroke="#faf2cf" fill="none"/></pattern>
+  </defs>
+  <rect x="1" y="1" width="638" height="214" rx="18" fill="#fbf5de" stroke="#cfc7a5"/>
+  <text class="title" x="320" y="32" text-anchor="middle">Two ways to see a seedling</text>
+  <g stroke="#426954" stroke-width="2.5" stroke-linejoin="round">
+    <path d="M49 154Q93 145 149 155" fill="none" stroke="#966841"/>
+    <path d="M97 151Q103 125 95 94M98 130L75 111M98 115l20-29" fill="none"/>
+    <path d="M95 96Q63 89 67 59Q96 64 95 96Z" fill="#b0c978"/>
+    <path d="M98 118Q97 79 135 66Q139 98 98 118Z" fill="#74a572"/>
+    <path d="M88 122Q58 123 48 96Q78 95 88 122Z" fill="#94bb69"/>
+    <path d="M70 64l23 29m8 19 29-39M54 100l29 19" fill="none" stroke-width="1"/>
+  </g>
+  <rect x="241" y="54" width="154" height="108" rx="8" fill="url(#paper)" stroke="#b8b59c"/>
+  <path class="dots" d="M248 151h1m12-2h1m10-48h1m9 5h1m4-39h1m10 7h1m9 15h1m12 17h1m11-20h1m11-10h1m12-7h1m11 82h1m12 1h1" stroke="#397f72" stroke-width="5" stroke-linecap="round"/>
+  <rect x="444" y="54" width="152" height="108" rx="8" fill="#e3eabb" stroke="#a2ad87"/>
+  <g class="pixels">
+    <path d="M484 70h16v8h8v8h8v16h-16v-8h-8v-8h-8ZM516 110V94h8v-8h8v-8h24v16h-8v8h-16v8Z" fill="#709c61"/>
+    <path d="M476 102h24v8h8v8h8v-16h8v48h-8v-24h-16v-8h-16v-8h-8Z" fill="#5a8657"/>
+    <path d="M444 150h152v8H444Z" fill="#b38b62"/>
+    <rect x="444" y="54" width="152" height="108" fill="url(#pixels)"/>
+  </g>
+  <g text-anchor="middle"><text x="99" y="191">One plant</text><text x="318" y="191">LiDAR returns</text><text x="520" y="191">Camera pixels</text></g>
+</svg>

@@ -1,3 +1,5 @@
+![The same field travels from the source files into a built site. Opening it in a browser checks that a scan can run.](../art/check-the-build.svg)
+
 # Release checks
 
 Use the same generated site that GitHub Pages will serve when testing a layout or moving a module. The build uses the current contents of Git-tracked files. Stage newly added public assets before running a local build.

@@ -1,10 +1,12 @@
-# Test a saved detector on a plot
-
 ![A surveyed plot becomes a point cloud and its predicted pins are compared with surveyed centers.](../../art/field-deployment.svg)
+
+# Test a saved detector on a plot
 
 Load a saved Crop Trainer weights file and a Z-up PLY covering one plot up to 10 m on each side. Set the file units, plot origin and ground elevation. Add surveyed plant centers to measure accuracy. With only the scan, you can inspect predicted locations. [Open Field test](https://mvalancy.github.io/crop-trainer/trainer/#field-test)
 
 For a first try, download the examples next to the file pickers. Select the weights, the PLY and either reference file. Keep metres and zero origin, then choose **Find plants**. On this synthetic lettuce plot the detector puts down 188 pins. At 15 cm, 137 match a planted center, 51 are extra and 80 plants are missed. Switch to **Height only** to compare a simple rule on the same plot. Change **Match distance** to inspect which centers matched within 7.5, 10 or 15 cm. Each distance pairs pins and centers one to one. [Practice files and how to reproduce them](example/README.md)
+
+![558 peaks could cover all 199 plants. The score cutoff leaves 161 peaks covering 141 plants. The final 146 pins still cover 141.](../../art/lesson-stages.svg)
 
 With **Trained model** selected, the three bars follow the map’s match distance. In the practice plot, tightening it from 15 to 7.5 cm reduces the number of plants within reach of a peak from 185 to 125. After the cutoff and spacing, the corresponding counts are 137 and 88. The same 188 final pins were scored at both distances.
 
@@ -12,7 +14,11 @@ To test a new cutoff, start with a saved tomato fit, run the example, then choos
 
 Choose **Inspect extra pins** to see which predictions were left without a match. Tap a rust-colored square, use the arrows, or enter its position in the list. The outlined pin gets a distance to the nearest surveyed center and, for learned detectors, a model score. Two predictions close to the same plant can leave one extra. An empty survey counts every pin as extra. A plot without a reference file has no extra-pin score.
 
+![The same smoothed peak height is marked on two centimetre rulers from a saved weedy tomato scan. The ordinary model learned a mean of 13.97 cm and a standard deviation of 10.16 cm. This peak is 0.44 standard deviations below that mean. The half-difficult model learned a mean of 16.91 cm and a standard deviation of 9.71 cm. The peak is 0.76 standard deviations below its mean.](../../art/tomato-feature-scaling.svg)
+
 Open **How are scan measurements scaled?** after a run to inspect a peak from the actual scan. A diamond on the trained-model map marks the candidate nearest the middle of the plot. Pick any of its 13 measurements to see the raw value, the mean and divisor saved with the weights, and the number the network received. In the two weedy tomato fits, the same 0.09497 m peak enters the random fit at −0.4406 and the half-difficult fit at −0.7627. Both numbers fall below their fit’s training mean. Try both fits on the same scan to see why the ruler changes. [Open the weedy tomato example](https://mvalancy.github.io/crop-trainer/trainer/?fieldExample=tomato-weed-random#field-test)
+
+![Two detector pins stay still while a survey circle slides east. In a real vineyard laser scan, the trained detector matched eleven surveyed trunks and the column rule matched thirty-two within fifteen centimeters. Moving the references twenty-five centimeters east changed those counts to seventeen and eight.](../../art/survey-alignment.svg)
 
 Open **Survey alignment** below the map to check how sensitive a count is to the coordinate frame. Select a pin method and match distance above the map, choose a **10 cm** or **25 cm** shift, then click **Check survey alignment**. The first row uses the recorded XY coordinates. Four more rows move all survey centers along positive and negative local X and Y while keeping every pin fixed. Each row uses the same one-to-one matcher as the field score. A jump in matches is a reason to check independent survey control points. The original coordinates supply the exported result. If the survey covers only some plants, unmatched pins alone cannot tell which are false alarms.
 

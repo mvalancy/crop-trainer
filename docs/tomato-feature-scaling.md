@@ -1,4 +1,4 @@
-![The same 9.50 cm smoothed peak sits 0.44 standard deviations below the ordinary training mean and 0.76 below the half-difficult training mean.](../art/tomato-feature-scaling.svg)
+![Darker squares have taller returns. The model compares the center with bands around a possible peak.](../art/lesson-patch.svg)
 
 # How tall is a peak compared with the ones the model practiced on?
 
@@ -7,6 +7,8 @@ A 9.50 cm peak in a tomato scan became an input of **−0.44** in one trained de
 A model gets 13 measurements around each candidate plant center. Some describe height in metres. Others describe the fraction of surrounding cells that have laser returns. Before training, Crop Trainer puts each measurement on a common scale. It subtracts the **training mean** and divides by the **training standard deviation**, a measure of spread. A value of 0 means “at the training average.” A value of −1 means “one training spread below average.” [How standardization works](https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html)
 
 ## Try it with one peak
+
+![The same smoothed peak height is marked on two centimetre rulers from a saved weedy tomato scan. The ordinary model learned a mean of 13.97 cm and a standard deviation of 10.16 cm. This peak is 0.44 standard deviations below that mean. The half-difficult model learned a mean of 16.91 cm and a standard deviation of 9.71 cm. The peak is 0.76 standard deviations below its mean.](../art/tomato-feature-scaling.svg)
 
 Open the saved weedy tomato example and choose **Run example**. Under **How are scan measurements scaled?**, select **Smoothed peak height**. A diamond on the trained-model map marks the candidate nearest the center of the plot. Both saved detectors see the same 0.09497 m peak at about (5.02 m, 5.02 m). The diagram above shows the same heights in centimetres. [Inspect the saved detector in Field Test](https://mvalancy.github.io/crop-trainer/trainer/?fieldExample=tomato-weed-hard#field-test)
 
@@ -18,6 +20,8 @@ Open the saved weedy tomato example and choose **Run example**. Under **How are 
 Choose **Try the other fit** to repeat the measurement. Both the scaling and the learned weights differ between these saved detectors. To see what scaling alone changes during training, we need a comparison that holds the practice examples fixed.
 
 ## Train four models on the same plantings
+
+![Grow practice fields, fit weights, then measure on separate plantings. Keep both scans of each planting in one split.](../art/field-split.svg)
 
 We took an ordinary shuffled draw of 300 background peaks. For a second draw, we reserved half of those 300 places for peaks a 40-epoch starter scored highly. The second draw kept the ordinary counts of background peaks near and far from a tomato center. Both draws included the **same 300 positive examples**. We calculated a set of 13 means and spreads from each draw’s full 600 training rows. [How the distance rule selects difficult backgrounds](tomato-hard-negatives.md#does-it-help-to-keep-the-same-mix-of-near-and-far-peaks)
 
@@ -33,6 +37,8 @@ Each row trains a new four-unit network for 640 epochs, starting with identical 
 We repeated the four fits on three fresh training seeds. Before looking at six reserved plantings, we froze the models and the operating cutoff of 0.65. At a matching distance of 15 cm, success meant fewer extra seedling pins on both weedy layouts than ordinary examples with ordinary scaling. Seedling recall and branching-plant precision also had to stay within one percentage point of that fit, or improve, on each layout under both clean and weedy conditions. Grid and ring scans covered the same planted centers. Only training examples supplied the means and spreads.
 
 ## Which seedlings did the detectors find?
+
+![Actual target positions from plot 216917. At left the height detector matched 15 plants at 30,000 rays. At right it matched 103 at one million. Circles indicate a match within 15 centimetres and crosses indicate a miss. A line sweeps across both maps.](../art/seedling-density.svg)
 
 Each column shows the same **678 seedlings on six weedy ring scans**. The first number in each cell counts matched seedlings at 15 cm. The second counts extra pins. The seed at the top tells you which training plantings made those weights.
 
@@ -53,13 +59,19 @@ Branching precision measured the share of pins that matched an older plant. A de
 
 ### Could an existing detector read either scale?
 
+![One times 1.5, plus zero times 0.4, plus a bias of minus 0.5 equals one. Its sigmoid is about 0.73.](../art/lesson-weights.svg)
+
 Yes, if we also convert the weights and biases that read the 13 inputs. Think of rewriting a calculation in centimetres when it originally accepted metres. The numbers entering the calculation change, and the conversion preserves what the calculation predicts. We tested this on 48 more scans containing 25,787 candidate peaks. For every tested fit, changing the scale **and** converting the first layer preserved every peak’s decision at 0.65 and every final pin location. Dropping another fit’s scale into the file without converting that layer changed decisions. [How to change a scale while preserving the detector’s calculation](tomato-scaler-transport.md)
 
 ## Try your own four fits in Benchmark
 
+![A schematic comparison on identical plant centers, shown as green rings. The first detector misses one center. The second finds all six but places an extra red pin between the rows.](../art/paired-field.svg)
+
 Choose **Does feature scaling matter?** in Benchmark. The tomato preset pairs grid training scans with ring validation scans, using the same four combinations of examples and scales. Select **Run benchmark**, choose a training seed in the results, then **Save weights** for the combination you want to try in Field Test. Its first training seed matches the study. Benchmark generates its own validation plantings. To score the six reserved plantings in the table, use the commands below. [Train the four combinations in Benchmark](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=scaling&crop=tomato&plantArchitecture=2&plantForm=mixed&plantCondition=healthy&validationPlantForm=seedling&sensor=reference&validationSensor=os1-64&trainingRayBudget=60000&validationRayBudget=60000&minimumHeight=0.035&featureMode=local-ground&sampleLimit=600&epochs=640&seed=3301907&scoreGround=present)
 
 ## Reproduce the held-out experiment
+
+![A seed packet marked 27 branches into two plots. Four seedlings appear at the same positions in both rows.](../art/seed-replay.svg)
 
 Run from the repository root with Node.js 22 or later.
 

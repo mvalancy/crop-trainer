@@ -1,8 +1,16 @@
-# Crop Trainer field guide
-
 ![An open field notebook pairs a mapped crop row with a magnified sketch of one plant.](../art/field-notebook.svg)
 
+# Crop Trainer field guide
+
+## Choose a sensing method
+
+![One seedling appears as sampled surface dots in LiDAR and as colored squares in a camera image.](../art/two-views.svg)
+
+**LiDAR is ready to explore.** Follow a laser return from a leaf to a predicted plant center in the [LiDAR lessons](first-steps/README.md). **Camera vision is planned.** A regular camera records a grid of colored pixels. Both methods can ask where plants grow and how to check a prediction against a measured center. Start with [plant shapes](crop-architecture.md) and [field validation](field-validation.md) for those shared questions.
+
 ## New to machine learning?
+
+![Sample positions intersect two leaves and the soil. Dots show where a surface was measured.](../art/lesson-returns.svg)
 
 **[Start the illustrated tour · Follow one lettuce from scan to score →](first-steps/README.md)**
 
@@ -11,6 +19,8 @@ See what a laser measures, try a two-clue model by hand, and check whether a pin
 [What is a model?](first-steps/models.md) · [How does it learn?](first-steps/learning.md) · [Was the pin any good?](first-steps/scoring.md) · [Would it work on a farm?](first-steps/fieldwork.md)
 
 ## Guides for your own experiments
+
+![A dotted survey path crosses rows of plants on the left page. A magnified rosette on the facing page has a center pin and a ruler.](../art/field-notebook.svg)
 
 | I want to… | Open |
 | --- | --- |
@@ -39,6 +49,8 @@ See what a laser measures, try a two-clue model by hand, and check whether a pin
 | Check how a change reaches the public app | [Tests and Pages deployment](deployment.md) |
 
 ## Pick a question
+
+![A schematic comparison on identical plant centers, shown as green rings. The first detector misses one center. The second finds all six but places an extra red pin between the rows.](../art/paired-field.svg)
 
 Open a question and select **Run benchmark**. Each preset fills in the crop, scanner, seed and comparison. All three run on a local CPU.
 

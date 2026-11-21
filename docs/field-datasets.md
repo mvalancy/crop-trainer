@@ -1,3 +1,5 @@
+![Measure planting centers independently, record returns, then compare predicted pins in the same frame.](../art/survey-pair.svg)
+
 # Find a field dataset for your detector
 
 Crop Trainer predicts one horizontal position per plant. To score a real plot, you need a metric scan and a reference position for **every plant in the plot**, both in the same coordinate frame. A labeled leaf, fruit or visible patch of canopy answers a different question. Start with the vineyard if you want a test you can replay today. Public data stays on your computer. [Local scoring guide](scan-cli.md)
@@ -16,6 +18,8 @@ Crop Trainer predicts one horizontal position per plant. To score a real plot, y
 | **Globe artichoke** | Aerial imagery studies can inform spacing and count experiments. A field-scale XYZ survey with complete metric plant centers and verified reuse terms remains an open gap. [Published artichoke center errors and missed plants](research-evidence.md#what-researchers-have-measured) | Dataset terms unconfirmed. [Field study](https://www.sciencedirect.com/science/article/pii/S0168169923005732) |
 
 ## How often do weeds share a photo with a young tomato?
+
+![Draw a box around each plant. The boxes share a strip of soil even where the two plants have separate leaves.](../art/plant-boxes.svg)
 
 Moreno, Rivera Cárdenas and Andújar photographed early-season tomato fields in Santa Amalia, Spain, from about 1–1.5 m overhead. Experts drew a rectangle around each recognized plant. We read the two COCO annotation files and checked their class names against the accompanying YOLO lists. The scans in Crop Trainer measure height. These field photos measure a plant’s **projected footprint in pixels**. [Dataset and authors](https://doi.org/10.20350/digitalCSIC/17475) · [Acquisition and annotation paper](https://doi.org/10.1016/j.dib.2025.112249)
 
@@ -38,6 +42,8 @@ node benchmark/studies/tomato-field-boxes.mjs /path/to/Annotations_extra/coco_An
 
 ## How much of a lettuce plant has measured depth?
 
+![The same leaf appears in color and in a schematic depth map. Hatching shows a cluster of pixels where the camera found no distance.](../art/depth-window.svg)
+
 A leaf visible in a color image can leave a hole in the depth map. Milella and colleagues photographed romaine lettuce outdoors in Bari, Italy, with a RealSense D435 about 0.9–1.3 m above the ground. We matched all 128 plant masks to their color-aligned 16-bit depth maps. Some frames show two separately masked plants. A white pixel selects the focal plant and a zero depth means the camera supplied no distance there. [Study, files and mask definitions](https://github.com/ispstiima/AgRibotLeafyVeg/tree/6a1b5e79ffef06bd7d9444280d2e4243d62d1500) · [RealSense depth encoding](https://dev.realsenseai.com/docs/projection-in-realsense-sdk-2-0/)
 
 | 2025 visit (32 plants each) | Median plant mask area (pixels) | Median mask with nonzero depth | Adjacent in-mask pixels both missing | Expected after shuffling within each mask |
@@ -59,6 +65,8 @@ node cli/lettuce-depth.mjs /path/to/AgRibotLeafyVeg
 
 ### Does the detector notice the shape of a gap?
 
+![Two measured three-by-three windows from simulated ring scan 1370561. Counting only sampled cells lifts a seedling peak from 5.06 to 8.99 cm and a bare-soil peak from 4.60 to 6.70 cm. Both cross the 6.5 cm candidate threshold. Dashes show cells with no return.](../art/seedling-peak-window.svg)
+
 We tested the gap pattern on synthetic romaine. Each 30,000-ray plot supplied three scans from the same coordinates. One kept all returns. The second dropped a random 20% of each plant’s returns, rounded per plant. The third dropped exactly as many from the same plant by removing the returns nearest a randomly chosen spot in the XY plane. Every soil return stayed. One four-unit network trained on six mixed-layout fields; six new planting seeds screened the comparison and six more confirmed it with the same weights and cutoff.
 
 | Confirmation layout | Complete scan F1 | Scattered gaps F1 | One patch per plant F1 | Height-peak baseline F1 (same three scans) |
@@ -72,6 +80,8 @@ Run the [paired synthetic study](../benchmark/studies/lettuce-return-gaps.mjs) w
 
 ## Can a ring of returns estimate the soil height near a seedling?
 
+![Two measured patches from synthetic field 1370561. The smoothed peaks differ by less than a millimetre. Relative to the low surface in the surrounding ring, the tallest central return rises 7.7 centimetres near plant 8 and 2.4 centimetres at the soil bump. The ring spreads are 1.1 and 1.0 centimetres. Each square in the center or ring is a 5 cm cell with a measured return.](../art/tomato-local-ground.svg)
+
 A low leaf can hide the soil it grows over. We checked Crop Trainer’s ground-height calculation using five outdoor maize seedling plots from Zhu and colleagues’ **Crops3D**. Their FARO terrestrial laser scans include a ground label (`scalar_sf = 0`) and a separate ID for each plant. We used every maize file in the authors’ instance-segmentation test list. The tomato collection in this release was photographed in a greenhouse and its labels cover plant organs. [Dataset and CC0 license](https://doi.org/10.6084/m9.figshare.27313272) · [Acquisition and labels, Table 2](https://doi.org/10.1038/s41597-024-04290-0) · [Authors’ file guide](https://github.com/clawCa/Crops3D#data-format-description)
 
 **How close was the estimate?** Across 9,318,986 measured points, 160 plant IDs provided query locations. Only 99 had enough nearby labeled ground to check a height. The reference was the median of the lowest ground-labeled returns in occupied cells within 10 cm. The estimates below used all returns without their labels. Both summaries give each eligible plant equal weight. The table assumes the raw scanner axes are in metres. The source PLY files omit unit and coordinate-system metadata.
@@ -80,6 +90,8 @@ A low leaf can hide the soil it grows over. We checked Crop Trainer’s ground-h
 | --- | ---: | ---: | ---: |
 | Whole plot | 3.2 mm | 84.3 mm | 85 / 99 |
 | Ring 15–30 cm from the query | 2.1 mm | 72.1 mm | 84 / 99 |
+
+![Two measured patches from synthetic field 1370561. The smoothed peaks differ by less than a millimetre. Relative to the low surface in the surrounding ring, the tallest central return rises 7.7 centimetres near plant 8 and 2.4 centimetres at the soil bump. The ring spreads are 1.1 and 1.0 centimetres. Each square in the center or ring is a 5 cm cell with a measured return.](../art/tomato-local-ground.svg)
 
 The ring’s height spread tells a different story. Across the 99 queries, the median distance between its 20th and 80th percentiles was **163.2 mm** using all occupied-cell minima. Restricting the same rings to ground-labeled returns gave **5.1 mm**. A cell whose lowest visible return is a leaf can make the spread large even on fairly level soil. All 160 rings had sufficient returns. In the inner reference patch, 22 plants had zero ground-labeled cells, 16 had one, and 23 had two. Those 61 were excluded from both methods. These maize scans do not establish tomato detection accuracy.
 
@@ -95,11 +107,15 @@ For an independently calibrated soil measurement, Herodowicz-Mleczak and colleag
 
 ## Can we check the shape of the simulated apple branches?
 
+![Follow a primary branch 6.35 cm from its attachment to the trunk. Calipers measure diameter across the branch, at right angles to its axis. For each tree, divide its thinnest measured primary branch by its thickest. Purdue caliper charts show about 35% for Tree 1 and 29% for Tree 3. For 91 simulated trees per form, median ratios in versions 3 and 4 were 52.6% and 42.9% for central leaders, and 99.6% and 59.1% for open vases.](../art/plants/apple-calipers.svg)
+
 Purdue’s dormant apple dataset pairs Kinect 2 depth images with numbered photographs of the primary branches on nine trees. Six trees were scanned outdoors and three indoors. Akbar and colleagues measured branch diameters about 6.35 cm from the trunk and the spacing between successive branch attachments. Compare those measurements with the same locations on the simulator’s dormant trees. The numbered photographs also let you check which branches a front or rear view misses. A test of broken scaffolds would still need labeled breaks or matching scans before and after a known removal. Purdue lists a public 19 GB archive. Its download page gives no explicit data reuse license. [Measurement method and examples, §§3–4](https://openaccess.thecvf.com/content_cvpr_2016_workshops/w9/papers/Akbar_A_Novel_Benchmark_CVPR_2016_paper.pdf) · [Purdue data archive](https://engineering.purdue.edu/RVL/CVPRW_Dataset/)
 
 Cornell’s AppleQSM study measured 84 twelve-year-old trees in a tall-spindle orchard in Ithaca, New York. Its three rows give separate height ranges for the SnapDragon and RubyFrost cultivars. When comparing a generator, measure from the soil at the trunk to the highest point of the tree. For branch diameter, Cornell used a disc 5 cm from the trunk–branch junction on 106 branches from nine trees. The team measured trunk diameter relative to a protective cover, so reproducing that comparison requires the cover height. The paper publishes summary measurements and links the analysis code. The authors offer raw scans by request. [Field methods and Tables 1–2](https://pmc.ncbi.nlm.nih.gov/articles/PMC11077705/#T1) · [Apple generator and shape checks](../trainer/plants/apple.md)
 
 ## Can we score apple trunk locations on a surveyed orchard?
+
+![Measure planting centers independently, record returns, then compare predicted pins in the same frame.](../art/survey-pair.svg)
 
 We could verify apple LiDAR scans and published trunk surveys. None of the releases checked supplied both a registered scan and an independent trunk-base coordinate for every tree in a stated plot.
 
@@ -111,6 +127,8 @@ We could verify apple LiDAR scans and published trunk surveys. None of the relea
 - **SEEmear, Brazil.** Embrapa released two stereo recordings from a palmette-trained Fuji orchard in Vacaria. The `.pos` file contains the moving rover’s time-stamped GNSS solution. Teams can reconstruct the trees from depth and compare trunk visibility from the two cameras. The five-file release has no separate survey of trunk centers. The dataset is CC BY 4.0. [Acquisition and files](https://zenodo.org/records/17750202) · [Rover position file](https://zenodo.org/records/17750202/files/gnss-ppk_solution-20250313140650.pos?download=1) · [License](https://api.datacite.org/dois/10.5281/zenodo.17750202)
 - **AgLiMatch, Spain.** A robot drove through six alleys in a Fuji apple orchard with a Velodyne VLP-16 laser scanner. The authors pair 11 laser recordings with 11 high-precision GPS tracks. Alley 4 has three passes, so you can ask whether the same trunk appears on each trip. The GPS tracks follow the robot. Checking whether a pin lands within 15 cm of the wood would also require independently measured trunk centers. The data are licensed CC BY-NC-SA 4.0. [Dataset and license](https://doi.org/10.34810/DATA2320) · [Authors’ readme](https://dataverse.csuc.cat/api/access/datafile/293814) · [Scan and track pairs](https://dataverse.csuc.cat/api/access/datafile/293825)
 
+![Measure planting centers independently, record returns, then compare predicted pins in the same frame.](../art/survey-pair.svg)
+
 For a new survey, record the center of each trunk where it enters the soil, including trunks hidden by foliage or guards. Save the plot boundary, coordinate frame and registration error alongside the coordinates. A count from the whole orchard cannot tell whether individual pins land within 15 cm. [Field validation protocol](field-validation.md) · [Synthetic apple locator results](orchard-bases.md)
 
 **Another orchard reference for the low-trunk band.** TreeScope’s Merced County pistachio plot pairs aerial OS1-64 and ground-based OS0-128 scans with measurements from 70 trees. The field crew measured diameter at 30 cm above ground, inside the height range used by Crop Trainer’s experimental ranker. We inspected both `UCM-0523` measurement JSONs. Each has 70 tree IDs with a single `DBH` field. These measurements can check the width of visible stems. Scoring a pin’s horizontal error requires separate base coordinates. TreeScope specifies CC BY-NC-SA 4.0. [Measurements](https://tnl.treescope.org/Treescope/Treescope_v1.0_DIST/UCM-0523/ground_truth/measurements/) · [Field methods and Table II](https://arxiv.org/pdf/2310.02162) · [License and project](https://treescope.org/)
@@ -120,6 +138,8 @@ For a new survey, record the center of each trunk where it enters the soil, incl
 **For comparing the shapes of individual orchard trees.** PilotSCAN provides summer and autumn mobile-LiDAR reconstructions. We inspected the autumn `trees.zip` directory and found 37 individually named point clouds, including `trees/A1.txt` and `trees/C14.txt`. The header of `A1.txt` includes XYZ, ring, elevation angle, `passing_beams` and `local_transmittance`. Those fields give a starting point for investigating how much of a canopy a scan sees. The authors manually segmented these trees from the registered scans. Their `tf.zip` describes the sensor poses used in reconstruction. The release lists no independent survey of where each trunk enters the soil. Use the tree crops to compare structure across scans and check registration before interpreting an apparent shift as damage. Both reconstruction deposits specify CC BY 4.0. [Autumn tree files and methods](https://doi.org/10.5281/zenodo.20031878) · [Summer companion](https://doi.org/10.5281/zenodo.20030062)
 
 ### How often does a low return actually hit wood?
+
+![Example of the low-return ranking trial. The side view marks five laser returns between 15 centimetres inclusive and 48 centimetres exclusive above the plot’s zero-height plane. The local soil surface can vary. The top view places those five returns in three distinct 5 centimetre cells near a candidate. The trial adds two points to that candidate’s ranking score, the maximum bonus. It considers the same qualifying candidates and keeps their usual 1.05 metre spacing. A weed can contribute low returns too.](../art/plants/apple-low-returns.svg)
 
 Westling’s Queensland avocado dataset includes handheld scans with human labels for woody and leafy material. The 1,135 rows in `trunks.csv` look promising for scoring base locations. The field methods explain that a person selected a scanned point on one side of each real trunk. A tree 20–50 cm across can put that surface point roughly 10–25 cm from its center. Use the labels to study visibility. A 15 cm trunk-center accuracy test would need a separate survey. The scans use north–east–down coordinates and were aligned to earlier GPS-equipped mobile LiDAR scans. [Dataset and CC BY 4.0 license](https://doi.org/10.17632/h49fpprg6c.1) · [Annotation and matching methods, §§2.3 and 4.1](https://arxiv.org/pdf/2009.13727)
 
@@ -140,6 +160,8 @@ node cli/avocado-matter.mjs /path/to/extracted-avocado-dataset
 
 ### Does a second view reveal a hidden trunk?
 
+![A leafy crown hides the wood below. Look for low returns near the ground when estimating the trunk position.](../art/base-and-crown.svg)
+
 **BranchMatch** provides four terrestrial laser scans per tree for 10 dormant Aztec Fuji apple trees in Beijing. The authors cropped each tree and used spherical markers to register its views. The reported 0.59 mm mean error measures that alignment. Table 1 gives trunk diameters measured 25 cm above a fitted ground plane. The paper supplies no independent survey of where each trunk enters the soil. [Field methods and Table 1](https://pmc.ncbi.nlm.nih.gov/articles/PMC12546229/)
 
 For a local visibility test, reserve stations S2 and S3 to mark the center of that 25 cm trunk slice before looking at any predictions. In the same frame, compare pins from S1 alone with pins from S1 plus its opposite view, S4. Report horizontal offsets, missing pins and cases where the reference slice is too obscured to mark. This measures agreement with a visible trunk slice on individual trees. Whole-row base accuracy still requires a surveyed plot.
@@ -147,6 +169,8 @@ For a local visibility test, reserve stations S2 and S3 to mark the center of th
 The authors link the scans and registration matrices through a contact form. The form cites CC BY-NC-SA 4.0 and also asks users to agree to non-profit research or academic use and no redistribution. [Dataset access](https://github.com/NingWang1999/BranchMatch#benchmark-dataset) · [Download terms](https://www.wjx.top/vm/QyYKf73.aspx)
 
 ### Do pins stay in the same place when the foliage moves?
+
+![The central leader keeps a tall trunk. The open vase has low forks. Leaf clusters fade to reveal the modeled wood. Dashed red shows the scaffold removed in a break.](../art/plants/apple.svg)
 
 Gené-Mola and colleagues scanned 11 consecutive Fuji apple trees with a sprayer fan off and on. We checked all 88 LFuji-air scan filenames against the experimental design. Each tree has both east and west passes at heights of 1.8 and 2.5 m in the same metric world frame. The eight GNSS tracks locate the scanner, and the 1,353 annotation files mark fruit. An independent survey of the trunk bases would still be needed for a 15 cm accuracy score. The authors specify CC BY-NC-SA 4.0 and research or educational use. [Dataset and terms](https://hdl.handle.net/10459.1/68782) · [Acquisition and coordinates](https://doi.org/10.1016/j.dib.2020.105248) · [Forced-air experiment](https://doi.org/10.1016/j.compag.2019.105121)
 
@@ -160,6 +184,8 @@ We ran the geometric orchard locator on the 22 east-side, 1.8 m scans. **In the 
 
 For the first three measurements, each input was the authors’ crop around one tree. We compared pins by tree ID only when each pass produced exactly one. For the last column we concatenated neighboring crops in four groups (01–03, 04–06, 07–09, 10–11), keeping fan-off and fan-on returns separate. We used the deposited coordinates without additional alignment or point deduplication. These groups contain the authors’ selected returns from 11 trees. An uncropped row could also contain background between trees. Both settings above 1 m produced the same isolated pins, yet the wider spacing suppressed more pins in the grouped scans.
 
+![A seed packet marked 27 branches into two plots. Four seedlings appear at the same positions in both rows.](../art/seed-replay.svg)
+
 **Replay locally.** Extract the source archive under its terms. From the Crop Trainer repository, run the command below with Node 22 or newer. For each tree or group the helper uses every XYZ return. It sets each lower-left horizontal coordinate to the floor of the fan-off minimum minus 3 m. The ground is level at the first percentile of fan-off elevations, linearly interpolated between sorted samples. Both passes share that 10 m square and ground estimate. The output lists counts by tree and group and reports the shift only for single-pin pairs. [Local replay source](https://github.com/mvalancy/crop-trainer/blob/main/cli/fuji-repeatability.mjs)
 
 ```sh
@@ -167,6 +193,8 @@ node cli/fuji-repeatability.mjs /path/to/AllTrees_pcloud
 ```
 
 ### What changes when the scanner moves to the other side of the row?
+
+![An overhead sketch shows grid and ring sampling patterns. A small plant can fall between samples.](../art/scanner-patterns.svg)
 
 We used the same 11 Fuji trees and the same 1.8 m scanner height for both passes, with the fan off. The east and west views see different parts of the same tree. We froze both ranking rules and their 1.05 m pin spacing before comparing the 22 original MAT files. The trial gives qualifying candidates more weight for returns 15–48 cm above the estimated ground. Any object in that band can contribute.
 
@@ -187,6 +215,8 @@ node cli/fuji-repeatability.mjs /path/to/AllTrees_pcloud --compare-sides --west-
 ```
 
 ## Replay the vineyard test
+
+![Three side views show leafy shoots rising from two arms, a single long arm, and two leafless arms cut back to short spurs. Gold rings mark each vine's planting base.](../art/plants/grapevine.svg)
 
 **Question.** Can a detector trained on synthetic trellised vines place pins on surveyed trunks in an early-season laser scan? The model and threshold were fixed before scoring the physical strip. Both detectors used the same points, ground plane and 18 references.
 
@@ -210,11 +240,15 @@ node cli/score-scan.mjs vine-weights.json vine-strip/plot.ply vine-score.json --
 
 3. To inspect the pins visually, open **Training shed → Field test**, select the weights, PLY and CSV, and enter the metre origin and grade percentages from `vine-strip/frame.json`. [Open Field test](https://mvalancy.github.io/crop-trainer/trainer/#field-test)
 
+![Two detector pins stay still while a survey circle slides east. In a real vineyard laser scan, the trained detector matched eleven surveyed trunks and the column rule matched thirty-two within fifteen centimeters. Moving the references twenty-five centimeters east changed those counts to seventeen and eight.](../art/survey-alignment.svg)
+
 **How the strip was prepared.** The archive contains 33,512,063 returns in the processed LAS. A 10 × 10 m square centered on the trunk survey extent (snapped to whole metres) contained 12,058,322 returns. The adapter retained the highest measured point in each occupied 5 cm cell, giving 16,685 points. It estimated a ground plane from the low returns of 45 occupied square-metre patches. The reference CSV uses the deposited PointZ geometry in EPSG:3763. The height-only and learned detectors both see the same overhead representation. This preprocessing can discard trunk returns visible from the side.
 
 **What the result supports.** This synthetic-only model failed to localize most trunks on one physical strip at one date. Its mean F1 across the three tolerances on its synthetic holdout was 0.150. The physical test gives us a place to inspect proposal coverage, canopy displacement and survey alignment. For future comparisons, reserve another row or site before tuning. The nine dates revisit the same vines and measure seasonal change on that planting. [Source archive and attribution](https://doi.org/10.5281/zenodo.18259014)
 
 ### Did the vineyard scanner miss the lower part of the plant?
+
+![A leafy crown hides the wood below. Look for low returns near the ground when estimating the trunk position.](../art/base-and-crown.svg)
 
 We checked the raw April 9 returns around the published trunk coordinates. We counted each 5 cm XY cell containing a return **within 15 cm horizontally of the coordinate and 15–50 cm above the fitted ground plane**. That band can contain grass, supports or wood. A count there measures sampled space. Identifying the trunk surface requires a material label.
 
@@ -230,6 +264,8 @@ Could exposing those low returns help the detector? We made a second input by ke
 
 Each arrow runs from the original highest-point input to the band-only input. On the 34 held-out vines, the frozen network lost all five of its 15 cm matches. The height baseline matched five under either preparation, with 107 extra pins on the original input and 99 on the band-only input. More visible low surfaces alone did not rescue localization. These strips share one site, date and scanner registration. They support a within-site comparison. [Dataset paper and acquisition methods](https://doi.org/10.1016/j.dib.2026.112614) · [Versioned dataset and license](https://doi.org/10.5281/zenodo.18259014)
 
+![A side-view sketch shows dots stacked near a vine stem. Height bands light up from the ground upward. The square is a candidate to check against the surveyed base.](../art/vine-column.svg)
+
 We also checked whether removing the upper canopy had concealed a benefit. On the same three strips, we kept every original point and added the highest distinct in-band point in each cell. Adding 2,301 measured points left the proposal counts and both detectors’ scores unchanged at all three tolerances. The current proposal rule uses a grid of maximum heights. A detector that explicitly scores **vertical support below the canopy** would test a different use of the raw measurements. This follow-up used the same 52 vines after the strip results were known.
 
 **Replay with the April archive and the saved weights from the instructions above.** The preparation commands create new directories. The study prints counts for both coverage groups, per-tolerance scores for both detectors on all three inputs, and separate preparation and scoring times. The optional strip argument defaults to the original center plot.
@@ -244,6 +280,8 @@ node benchmark/studies/vineyard-low-band.mjs /path/to/extracted-dataset vine-sou
 
 ### Can stacked returns locate a vine trunk?
 
+![A side-view sketch shows dots stacked near a vine stem. Height bands light up from the ground upward. The square is a candidate to check against the surveyed base.](../art/vine-column.svg)
+
 Imagine viewing a stake from the side. Several laser returns can form a narrow vertical column. From above, that column might look like just one dot. We tested whether a rule that keeps this vertical information can find the surveyed vine bases. We reserved the April 19 and January 30 scans before evaluating the rule. Both revisit the same 52 vines from April 9. They test a different acquisition and season at one site. [Gomes and colleagues’ acquisition methods](https://doi.org/10.1016/j.dib.2026.112614) · [TLS-Grapevine2024 data and attribution, CC BY 4.0](https://doi.org/10.5281/zenodo.18259014)
 
 **Are there unused surveyed vines for a new test?** Matching the published trunk coordinates against the three strip CSVs accounts for all 52 distinct horizontal positions once each (18 central, 17 north, 17 south). The other point layers record registration targets and scanner stations. Another visit here can test changes in visibility over time. An independent planting test needs newly surveyed positions. [Survey files and description](https://doi.org/10.5281/zenodo.18259014)
@@ -257,6 +295,8 @@ We divided the space 15–55 cm above the fitted soil plane into eight 5 cm laye
 | January 30, 2025 · dormancy | 59 | 4 | 3 | 5 / 9 / 19 | 40 / 33 |
 
 **The April 19 gain came from the middle strip.** Our rule had to beat both the frozen model and the footprint at 15 cm on each outer strip. It failed on both. In the north, it matched two of 17 vines and both comparators matched four. In the south, it matched four of 17, versus five for the model and three for the footprint. In the center, the model found four of 18 and the column rule found 11. On the dormant scan, the column rule found three in the north and seven in the south, up from one and zero with the model.
+
+![A side-view sketch shows dots stacked near a vine stem. Height bands light up from the ground upward. The square is a candidate to check against the surveyed base.](../art/vine-column.svg)
 
 Does the full stack add information beyond simply having many returns near a plant? We added two controls after inspecting April 9 and before scoring either reserved date. Ranking by the **number of returns** in the neighborhood found 14 vines at 15 cm on each date. Keeping only the **highest occupied layer inside the band** per ground cell, then ranking by the stack across adjacent cells, found 10, 18 and 17 on the three dates. The full stack helped on some dates and strips. A stake, weeds or another structure can also produce stacked returns. Identifying their material, or validating an apple tree’s trunk base, requires separate labels. The browser’s vineyard detector still uses the original fitted weights.
 
@@ -273,6 +313,8 @@ done
 
 ### Can the same rule find trunks at a second vineyard?
 
+![A side-view sketch shows dots stacked near a vine stem. Height bands light up from the ground upward. The square is a candidate to check against the surveyed base.](../art/vine-column.svg)
+
 At block B7 in Tomiño, Spain, Vélez and colleagues measured trunk positions using a Trimble R2 GNSS receiver. They photographed the plot from a drone and surveyed it with a DJI Zenmuse L1 laser on July 14, 2022. We reserved both captures before placing any pins. We ran the same three detectors on every 10 m square containing a survey record, keeping the Portuguese model, ground-plane estimator, column rule and pin spacing fixed. Each capture supplied its own soil estimate, derived from the lowest returns in occupied cells. [EscaYard field methods](https://doi.org/10.1016/j.dib.2024.110497) · [VineLiDAR flight and instrument](https://doi.org/10.1016/j.dib.2023.109686)
 
 | Drone capture | Returns in 26 squares | Pins per method | Model matches at 7.5 / 10 / 15 cm | Footprint matches | Vertical-column matches |
@@ -284,9 +326,13 @@ The denominator is **138 trunk-position records**. One pair is only 2 cm apart. 
 
 At 15 cm, the column rule matched more survey records than the model in **14 of 26 LiDAR squares**, fewer in five and the same in seven. For the photo reconstruction the corresponding counts were 12, four and ten. After scoring, we checked whether each recorded location had any possible column within 15 cm. All **138 of 138** had one in the LiDAR, and **120 of 138** in the photo reconstruction. Each qualifying 5 cm ground cell had a return 15–55 cm above the estimated ground. Many available columns never became matching pins. A column can contain leaves, grass or trellis material. The survey marks the plant’s location and gives no material label for those returns.
 
+![Two detector pins stay still while a survey circle slides east. In a real vineyard laser scan, the trained detector matched eleven surveyed trunks and the column rule matched thirty-two within fifteen centimeters. Moving the references twenty-five centimeters east changed those counts to seventeen and eight.](../art/survey-alignment.svg)
+
 **Alignment changed the answer.** The survey’s projection file specifies ETRS89 / UTM 29N (EPSG:25829). Both cloud headers specify WGS 84 / UTM 29N (EPSG:32629). The standard ETRS89-to-WGS84 operation changes the nominal projected coordinates here by less than 1 mm and lists 1 m accuracy. We used the published XY values and fitted no shifts. We also moved the survey 25 cm in four prespecified directions as a sensitivity check. Moving it east changed the LiDAR model/column matches at 15 cm from **11/32 to 17/8**, and the photo comparison from **11/21 to 18/6**. Survey targets measured independently in both capture frames would be needed to establish centimeter-level registration. [Coordinate operation, EPSG 1149](https://epsg.io/1149)
 
 **Where are the alignment checkpoints?** EscaYard’s 16 released files include trunk positions, a plant health table, smartphone photographs, ten photo-derived clouds and two orthomosaics. VineLiDAR supplies ten laser clouds. We found no B7 target-ID/XYZ pairs or measured horizontal checkpoint residuals in either release. The reflectance panel in the imaging methods calibrates image brightness. A related 2021 deposit does supply surveyed black-and-white targets in `GCPs.zip`. All seven PointZ coordinates fall outside the July B7 clouds, the nearest about **143 m** beyond their bounds. They were photographed at the neighboring B9 site. [EscaYard inventory and methods](https://doi.org/10.1016/j.dib.2024.110497) · [VineLiDAR inventory](https://zenodo.org/records/8113105) · [Surveyed targets](https://zenodo.org/records/7383601) · [Marker photograph and survey method](https://doi.org/10.1016/j.dib.2022.108876)
+
+![Measure planting centers independently, record returns, then compare predicted pins in the same frame.](../art/survey-pair.svg)
 
 **What can those seven targets check?** VineLiDAR’s September 16, 2021 flight at 30 m over B9 matches the date and block of the published checkerboard survey. Its 15,166,707 colorized returns use local coordinates. The LAS header contains no map projection, and its reported horizontal bounds are all zero. Reading the actual points gave X from −0.10 to 78.67 m and Y from −3.56 to 120.90 m. The nominal coordinate published for the vineyard describes the site. It does not locate the cloud’s origin. [September data and flight dates](https://doi.org/10.1016/j.dib.2023.109686) · [Survey and marker photograph, Fig. 3](https://doi.org/10.1016/j.dib.2022.108876)
 
@@ -299,6 +345,8 @@ laszip -i 20210916_FLEXIGROBOTS_L1_PRO_30M_4MS_B9.laz -o b9-september.las
 node benchmark/studies/vineyard-b9-checkpoints.mjs b9-september.las GCPs.dbf b9-previews
 ```
 
+![A computer applies saved weights to scan returns. A score can turn a candidate peak into a pin.](../art/saved-detector.svg)
+
 **Replay the B7 detector comparison.** Extract `trunk_locations_VineyardB7.zip` and download the red B7 LAS from EscaYard. Get the July 14, 30 m B7 LAZ from VineLiDAR. LASzip decompresses the laser file into LAS. Train `vine-weights.json` using the CPU command under “Replay the vineyard test” above. The study selects grid squares using the survey, fits a plane in each from scan heights alone, and matches predictions across plot boundaries. The final CPU passes took about 10 seconds for the photo cloud and 56 seconds for the laser cloud on this machine, excluding download and LAZ decompression. Both deposits are by Vélez and colleagues and use CC BY 4.0. [EscaYard files](https://zenodo.org/records/10362568) · [VineLiDAR files](https://zenodo.org/records/8113105) · [LASzip](https://laszip.org/) · [Local comparison code](../benchmark/studies/vineyard-b7.mjs)
 
 ```sh
@@ -308,6 +356,8 @@ node benchmark/studies/vineyard-b7.mjs b7-laser.las trunk_locations_VineyardB7.s
 ```
 
 ### Does the B7 result hold in the neighboring vineyard?
+
+![Measure planting centers independently, record returns, then compare predicted pins in the same frame.](../art/survey-pair.svg)
 
 We froze the three-marker B9 translation before scoring a single trunk. The separate `Trunk_locations.zip` contains 121 distinct RTK coordinates. The survey covered three selected rows, and two records are just 7 mm apart. Across the 28 grid squares that contain those records, the 30 m laser flight supplied **11,678,611 returns**. All squares had sufficient ground-plane samples. We kept the Portuguese weights, the 15–55 cm height band and the 65 cm pin spacing. Three of the 28 squares had too few separated candidate positions for the column rule to fill the model’s pin count. [September survey and methods](https://doi.org/10.1016/j.dib.2022.108876) · [Same-day drone laser acquisition](https://doi.org/10.1016/j.dib.2023.109686)
 
@@ -321,6 +371,8 @@ The column rule lost to the model in nine squares at 15 cm, won in one and tied 
 
 All **121** survey coordinates had an occupied 5 cm ground cell within 15 cm when returns at every height were counted. Restricting cells to returns 15–55 cm above the estimated soil left just **64** coordinates with a candidate nearby. The rule placed a matching pin at two. Both the availability of low returns and the choice among nearby candidates deserve attention. With each of the four prespecified survey shifts (25 cm east, west, north or south), the column rule matched 13, 7, 7 and 6 records at 15 cm. The model matched 8, 7, 5 and 11. We kept the checkpoint-based alignment for the main result. The difference between the B7 and B9 results could arise from plot structure, acquisition geometry, season, registration or their combination.
 
+![Use the same recipe and seed to grow the same planting and repeat the scan.](../art/seed-to-field.svg)
+
 **Replay B9 locally.** Use the same September LAS and `GCPs.dbf` as for the checkpoint check. Add `Trunks.shp` from the survey deposit and the CPU-generated `vine-weights.json` from “Replay the vineyard test.” The command recalculates the translation from checkerboards before loading trunk positions. One CPU run took about 3 seconds for registration and 21 seconds for the detector comparison, excluding download and decompression. [Survey files, CC BY 4.0](https://zenodo.org/records/7383601) · [Laser files, CC BY 4.0](https://zenodo.org/records/8113105) · [Scoring code](../benchmark/studies/vineyard-b9.mjs)
 
 ```sh
@@ -328,6 +380,8 @@ node benchmark/studies/vineyard-b9.mjs b9-september.las GCPs.dbf Trunks.shp vine
 ```
 
 ### Can we compare the 30 m and 50 m vineyard scans?
+
+![An overhead sketch shows grid and ring sampling patterns. A small plant can fall between samples.](../art/scanner-patterns.svg)
 
 A vine detector can appear to miss a trunk if its scan and survey maps are even a few centimeters apart. The September 16, 2021 B9 deposit offers two DJI L1 flights over the **same vines**, flown at 4 m/s. The 50 m flight began at 17:00 and the 30 m flight at 17:15. We reserved the higher flight to see whether its own ground markers could align it accurately enough for the same detector test. [VineLiDAR flight table](https://doi.org/10.1016/j.dib.2023.109686) · [Survey and marker photograph](https://doi.org/10.1016/j.dib.2022.108876)
 

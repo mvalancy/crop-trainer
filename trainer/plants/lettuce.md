@@ -6,6 +6,8 @@ A loose-leaf lettuce spreads across the bed. A butterhead packs broad leaves int
 
 ## How a head grows in the simulator
 
+![Follow a leaf to its stem. Attached organs belong to one plant with one reference center.](../../art/organ-to-target.svg)
+
 Start at the short stem and rotate around it as each new leaf appears. The outer leaves reach farthest. The inner leaves start higher and occupy the heart. Each blade has an arched center line, a width that tapers toward the ends and a margin that curls up. A seed varies the count, reach and angle. The field and bench presets can grow the same three forms. In version 3 each retained blade joins the stem through a short stalk, and the bench stem starts 73 cm above the greenhouse floor at the bench surface. Version 2 recipes retain their original 74 cm stem position. [Lettuce generator](lettuce.js) · [Surface sampler](surfaces.js)
 
 | Choose this form | Look for this in the scan |
@@ -17,6 +19,8 @@ Start at the short stem and rotate around it as each new leaf appears. The outer
 The scanner samples the highest visible surface at each ray. A tall, tight heart and a wide rosette can produce different patterns of peaks even at the same ray budget. The field lettuce label uses the center of the canopy’s bounding box. The bench label uses the planting position, even when leaves lean away from it.
 
 ## Take one head apart
+
+![Loose-leaf and butterhead heads seen from above, and a side view of upright romaine. Younger leaf whorls appear in order.](../../art/plants/lettuce.svg)
 
 Open both scans, highlight a plant and choose **Focus plant**. On the damaged form a sector of outer leaves is missing and adjacent blades are shorter. Watch how the visible outline changes and which leaves still produce the tallest returns. Both links use the same crop, form, sensor, seed and clean scan settings. [Healthy romaine](https://mvalancy.github.io/crop-trainer/?crop=lettuce&plantArchitecture=3&plantForm=romaine&plantCondition=healthy&seed=31907&sensor=reference&noise=clean&box=3#field) · [Damaged romaine](https://mvalancy.github.io/crop-trainer/?crop=lettuce&plantArchitecture=3&plantForm=romaine&plantCondition=damaged&seed=31907&sensor=reference&noise=clean&box=3#field)
 

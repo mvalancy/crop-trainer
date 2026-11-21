@@ -1,8 +1,10 @@
-# Repeat a field experiment
-
 [![Two detectors place different pins on the same rows of plants.](../../art/paired-field.svg)](https://mvalancy.github.io/crop-trainer/benchmark/)
 
+# Repeat a field experiment
+
 Does a denser scan see more seedlings? Can a detector still find an apple trunk after a limb breaks? Each study keeps the planting seeds fixed so the two versions can be compared. You can [try a comparison in the browser](https://mvalancy.github.io/crop-trainer/benchmark/) or run a study with Node.js 22 or later.
+
+![A leafy crown hides the wood below. Look for low returns near the ground when estimating the trunk position.](../../art/base-and-crown.svg)
 
 From the repository root, run this short check to see how often an overhead scan catches wood near a known tree base. It prints JSON with the counts and scan settings.
 
@@ -31,6 +33,8 @@ node benchmark/studies/orchard-visibility.mjs
 | How much can the orchard detector see? | [Trunk visibility](orchard-visibility.mjs) · [Base detection](orchard-bases.mjs) · [Broken scaffolds](orchard-damage.mjs) · [Near-base support](orchard-support.mjs) · [Spacing sweep](orchard-spacing.mjs) · [Low-return ranking and ray density](orchard-ranking.mjs) · [Clutter origins](orchard-ranking-clutter.mjs) · [Board placement and damage](orchard-board-placement.mjs) | [Tree-base results](../../docs/orchard-bases.md) · [Low-return field replays](../../docs/orchard-ranking.md) |
 | Do the simulated branches vary enough within a tree? | [Branch measurements](orchard-branch-caliber.mjs) · [Version comparison](orchard-architecture.mjs) · [Shared measurement code](orchard-measurements.mjs) | [Apple dimensions and source measurements](../../trainer/plants/apple.md) |
 | How does an incorrect ground height affect a detector? | [Ground-reference test](ground-reference.mjs) | [Field validation guide](../../docs/field-validation.md) |
+
+![A starter model scores peaks known to be background. Of the 300 background examples in each final fit, ordinary sampling reserves no places for high scores, quarter-hard reserves 75 and half-hard reserves 150. Each model also sees the same 300 plant examples.](../../art/tomato-hard-negatives.svg)
 
 To replay the near/far tomato comparison, run these commands from the repository root. The last command looks up the surface under each selected training peak after the models have been frozen.
 

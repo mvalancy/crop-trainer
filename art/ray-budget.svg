@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 580 206" role="img" aria-labelledby="title desc">
+  <title id="title">Will a ray touch this little leaf?</title>
+  <desc id="desc">In two top views the leaf stays still. Widely spaced rays fall on either side. A finer grid adds a sample on the leaf. This drawing illustrates sampling, without predicting the yield of a particular scan.</desc>
+  <defs>
+    <pattern id="wide" width="44" height="44" patternUnits="userSpaceOnUse"><circle cx="7" cy="7" r="2.5" fill="#816646"/></pattern>
+    <pattern id="fine" width="22" height="22" patternUnits="userSpaceOnUse"><circle cx="7" cy="7" r="2.5" fill="#816646"/></pattern>
+    <g id="bed"><rect width="212" height="108" rx="12" fill="#eee1b9" stroke="#bcb18c"/>
+      <path d="M54 57Q43 43 30 47Q29 60 54 57Z" fill="#88ad69" stroke="#426b4b"/>
+      <path d="M53 57Q57 37 75 32Q77 49 53 57Z" fill="#a1c67c" stroke="#426b4b"/>
+      <path d="M40 52l13 5 16-18" fill="none" stroke="#51764f"/>
+    </g>
+  </defs>
+  <style>
+    text {font:600 16px system-ui,sans-serif;fill:#284b3d}
+    .title {font:bold 23px Georgia,serif}
+    @media (prefers-reduced-motion:no-preference) {
+      .added {animation:sample 5s ease-in-out infinite}
+      .hit {animation:notice 5s ease-in-out infinite}
+      @keyframes sample {0%,100% {opacity:.18} 45%,80% {opacity:1}}
+      @keyframes notice {0%,26%,100% {stroke-opacity:.2} 56%,85% {stroke-opacity:1}}
+    }
+  </style>
+  <rect x="1" y="1" width="578" height="204" rx="16" fill="#fbf5df" stroke="#d1caac"/>
+  <text class="title" x="290" y="32" text-anchor="middle">Will a ray touch this little leaf?</text>
+  <g transform="translate(42 51)"><use href="#bed"/><rect width="212" height="108" rx="12" fill="url(#wide)" transform="translate(0 -9)" y="9"/></g>
+  <g transform="translate(326 51)"><use href="#bed"/><rect width="212" height="108" rx="12" fill="url(#wide)" transform="translate(0 -9)" y="9"/>
+    <rect class="added" width="212" height="108" rx="12" fill="url(#fine)" transform="translate(0 -9)" y="9"/>
+    <circle class="hit" cx="73" cy="42" r="6" fill="none" stroke="#ae552f" stroke-width="2"/>
+  </g>
+  <text x="148" y="185" text-anchor="middle">A wide grid can miss</text><text x="432" y="185" text-anchor="middle">A finer grid can hit</text>
+</svg>

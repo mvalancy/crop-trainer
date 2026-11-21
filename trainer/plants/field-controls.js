@@ -67,8 +67,8 @@ export function setupFieldPlants(params) {
     for (const control of [form,condition,canopy]) control.parentElement.hidden=control.disabled;
     card.hidden=!structured || !version.validity.valid || !form.value || !condition.value || !seed.validity.valid || (apple && !canopy.value);
     const guide=plantGuide(crop.value), profile=cropProfile(crop.value);
-    el('plantGuide').href='https://github.com/mvalancy/crop-trainer/blob/main/trainer/plants/'+guide+'.md';
-    el('plantGuide').textContent=profile.name+' growing guide ↗';
+    el('plantGuide').href='guide/trainer/plants/'+guide+'.html';
+    el('plantGuide').textContent=profile.name+' growing guide';
     if(card.hidden)return;
     const forms=formsFor(crop.value);
     const recipe=makeRecipe(Number(seed.value),true,null,crop.value,selectedVersion,form.value,condition.value);

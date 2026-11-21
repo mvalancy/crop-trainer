@@ -14,6 +14,8 @@ The model makes a score using its current weights. **Loss** measures how much th
 
 To update a weight, the trainer works out which direction would reduce the loss nearby. In a neural network it traces the influence of the output backward through the layers, a calculation called **backpropagation**. The **learning rate** controls the size of the step. A very small step can be slow. A very large one can overshoot. The next set of predictions uses the updated weights.
 
+![One times 1.5, plus zero times 0.4, plus a bias of minus 0.5 equals one. Its sigmoid is about 0.73.](../../art/lesson-weights.svg)
+
 <details>
 <summary>Work through one weight update with a pencil</summary>
 
@@ -30,6 +32,8 @@ What would a “no” label do at the same starting point? The slope becomes +0.
 An **epoch** is one pass through the practice examples. The recorded seed-27 Quick check used 3,052 balanced candidates, six practice fields and 40 epochs. With full-batch updates, all candidates contribute to one update per epoch. Mini-batches update the weights several times during the pass. The starter chart records loss just before each full-batch update. With mini-batches, each batch contributes its loss just before its own update. Final validation uses the weights after the last update.
 
 ## Give the detector a fair exam
+
+![Grow practice fields, fit weights, then measure on separate plantings. Keep both scans of each planting in one split.](../../art/field-split.svg)
 
 A **validation field** is an unseen planting kept out of fitting. The app holds out whole field seeds, since two scans of the same row can show the same lettuce. The starter uses three validation fields, each scanned with soil and with soil removed. Those six scans represent three plantings. Compare the pins with the hidden centers to find out whether a lower practice loss also helped on these plantings. If you use their scores to choose an epoch count or a cutoff, save that choice and try it once on new field seeds. That gives you a fresh test of the choice you made.
 

@@ -24,6 +24,8 @@ The app pools matches, extras and misses across the validation scans at each dis
 
 ## Score a held-out synthetic field
 
+![558 peaks could cover all 199 plants. The score cutoff leaves 161 peaks covering 141 plants. The final 146 pins still cover 141.](../../art/lesson-stages.svg)
+
 For the soil-present seed **627223796** in the starter CPU run, the detector placed **146 pins** among **199 labeled lettuces**. At 7.5 cm, 136 matched. At 10 cm, 141 matched. At 15 cm, the match count stayed at 141, leaving five extras and 58 misses. The extra 5 cm of tolerance rescued no more plants on this particular tile.
 
 **See it on one planting.** Open the tomato example and choose **Run example**, then **Try 0.70 on this planting**. Under **Map view**, choose **Changed matches**. Each minus marks a seedling the stricter cutoff missed. At 15 cm, you can count 27 of them. [Open the tomato field](https://mvalancy.github.io/crop-trainer/trainer/?fieldExample=tomato-640#field-test)

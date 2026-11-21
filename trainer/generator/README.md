@@ -1,6 +1,6 @@
-# From a planted field to a scan
-
 ![Laser rays hit leaves and the soil between them.](../../art/lesson-returns.svg)
+
+# From a planted field to a scan
 
 A recipe fixes the crop, seed, soil, scanner and ray budget. The generator grows the field, samples its visible surfaces and records the XYZ returns. Given the same recipe and generator version, it produces the same scan ID. [Try the field generator](https://mvalancy.github.io/crop-trainer/)
 
@@ -14,6 +14,8 @@ A recipe fixes the crop, seed, soil, scanner and ray budget. The generator grows
 | Worker progress, cancellation or scan handoff | [Scan session](scan-session.js) · [Generator worker](generate-worker.js) |
 
 Use the field’s PLY download for XYZ and its labels JSON for the simulator’s answer key. The scanner presets approximate sampling layouts. [Scanner assumptions](../../docs/scanners.md)
+
+![Two overhead sketches show the same eight trees. In the first, four sample boards are centred on selected tree bases. In the second, the same shapes land at independently sampled positions. One still lands close to a tree by chance. The detector sees laser returns without labels for tree or board.](../../art/plants/apple-board-placement.svg)
 
 With boards enabled, the original recipe places nine rectangles on randomly selected plant positions. Set `boardPlacement` to `independent` to scatter their centers uniformly over the 10 m square. A separate seeded draw sets each center, so changing the planting positions does not move the boards. Switching placements preserves their nominal widths, lengths and angles for a fixed obstacle recipe. Boards can overlap and an edge can extend beyond the plot. Only visible surfaces inside the scanned area produce returns. Omitting the option or using `plant` replays the original scan IDs. With boards off, placement has no effect on the scan or its ID.
 
