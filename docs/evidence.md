@@ -35,9 +35,28 @@ We trained three new models on reference grids. For each fit, we chose a cutoff 
 
 Calibration recovered recall at the cost of precision. This used labeled examples from the target layout. The result supports calibrating a crop and scan setup on separate fields before trusting its operating point.
 
+## Does a grid-trained artichoke detector transfer to rings?
+
+In a smaller browser test at **12,000 sampled rays per scan**, the CPU and WebGPU fits agreed on every tile’s match counts. Changing the held-out scan from a reference grid to simulated OS1-64 rings reduced pooled mean F1 from **.455 to .422**. At 15 cm the rings produced 43 fewer matches and nine fewer extra pins. The difference varied by fit. For seed `14512693`, mean F1 went from .490 to .424. For `14512694` it went from .417 to .420.
+
+| Held-out layout | Match distance | Matched pins | Extra pins | Missed centers | F1 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Reference grid | 7.5 cm | 110 | 198 | 304 | .305 |
+| Reference grid | 10 cm | 154 | 154 | 260 | .427 |
+| Reference grid | 15 cm | 229 | 79 | 185 | .634 |
+| OS1-64 rings | 7.5 cm | 99 | 157 | 315 | .296 |
+| OS1-64 rings | 10 cm | 139 | 117 | 275 | .415 |
+| OS1-64 rings | 15 cm | 186 | 70 | 228 | .555 |
+
+Each seed trained on six synthetic reference-grid plantings and held out three. Both layouts used the same **six independent held-out plantings** across the two seeds. Each planting had a soil-on and soil-off scan, giving 12 scans and 414 labeled center appearances per layout. The training recipes matched exactly. In the held-out recipes only the sampling layout changed. The table counts each scan once.
+
+**Replay in Benchmark.** Use healthy globe artichoke, plant architecture v3 and mixed forms. With a 6.5 cm peak floor, class balancing retained 584 and 604 training examples in seed order. Both fits used 13 inputs, four tanh hidden units, one output, initialization seed `12345`, full-batch SGD for 40 epochs at learning rate 0.25, a score cutoff of 0.50 and 40 cm pin spacing. Open each preset and run the CPU/WebGPU comparison. [Test on grids](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=backend&crop=artichoke&plantArchitecture=3&plantForm=mixed&plantCondition=healthy&sensor=reference&seed=14512693&trainingRayBudget=12000&validationRayBudget=12000&validationSensor=reference&epochs=40&minimumHeight=0.065) · [Test on rings](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=backend&crop=artichoke&plantArchitecture=3&plantForm=mixed&plantCondition=healthy&sensor=reference&seed=14512693&trainingRayBudget=12000&validationRayBudget=12000&validationSensor=os1-64&epochs=40&minimumHeight=0.065)
+
+With live preview on, generation took 0.62–2.44 s per dataset. Fitting took 39–77 ms on CPU and 5.22–8.19 s through Chromium’s SwiftShader software WebGPU adapter. Scoring took 15–51 ms per fit. These are single-run wall times on small datasets. Physical GPU throughput and performance on real artichoke scans remain unmeasured.
+
 ## Reproduce the tests
 
-From the repository root, run this command with Node.js 22 or later.
+To repeat the four-detector comparison and tomato cutoff test, run this command from the repository root with Node.js 22 or later.
 
 ```sh
 node benchmark/studies/paired-evidence.mjs > evidence.ndjson

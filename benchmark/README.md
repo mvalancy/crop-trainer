@@ -4,7 +4,7 @@
 
 Open the benchmark, pick a crop and select **Run benchmark**. The first question compares two models on your CPU. They see the same training examples and test scans. [Run the first comparison →](https://mvalancy.github.io/crop-trainer/benchmark/)
 
-Read the result at 15 cm. How many planted centers did each detector find, and how many extra pins did it place? A higher average F1 can come with more extra pins. Expand **Which plants did each model find?** to inspect one difference in 3D. To repeat the test on new plantings, change **First seed** under **Seeds, training and scan settings**.
+Read the result at 15 cm. How many planted centers did each detector find, and how many extra pins did it place? A higher average F1 can come with more extra pins. Open **Scores at each matching distance** to switch between 7.5, 10 and 15 cm or see all three together. Each card on a phone shows the seed, fit settings, F1 and error counts. Expand **Which plants did each model find?** to inspect one difference in 3D. To repeat the test on new plantings, change **First seed** under **Seeds, training and scan settings**.
 
 | If you want to… | Start here |
 | --- | --- |

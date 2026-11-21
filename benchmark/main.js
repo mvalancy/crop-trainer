@@ -82,7 +82,7 @@ if (/^\d+$/.test(requestedEpochs) && Number(requestedEpochs) >= 1 && Number(requ
 const gpuOption = $('comparison').querySelector('[value="backend"]');
 const gpuQuestion = gpuOption.textContent;
 gpuOption.disabled = true;
-gpuOption.textContent = 'CPU vs WebGPU · checking adapter';
+gpuOption.textContent = 'CPU vs WebGPU · checking';
 function showReadyState() {
   showingSetup = true;
   const needsGpu = $('comparison').value === 'backend';
@@ -100,7 +100,7 @@ async function discoverGpu() {
   try { adapter = await navigator.gpu?.requestAdapter(); } catch {}
   gpuState = adapter ? 'available' : 'unavailable';
   gpuOption.disabled = !adapter;
-  gpuOption.textContent = adapter ? gpuQuestion : 'CPU vs WebGPU · unavailable in this browser';
+  gpuOption.textContent = adapter ? gpuQuestion : 'WebGPU unavailable';
   // A slow discovery must not interrupt a run or replace its result.
   if (showingSetup) showReadyState();
 }
@@ -286,6 +286,37 @@ function showOutcome(rows, comparison, crop) {
   }
 }
 
+// Keep finished fits available while a comparison runs or after it is canceled.
+const completedScores = [];
+const scoreDistance = $('scoreDistance');
+const scoreHeaders = [...$('scoreRows').closest('table').tHead.rows[0].cells];
+const sharedDistance = requested.get('scoreDistance');
+if ([...scoreDistance.options].some(option => option.value === sharedDistance)) scoreDistance.value = sharedDistance;
+
+function appendDistanceScores(row, modelLabel) {
+  for (const score of row.scores) {
+    if (scoreDistance.value !== 'all' && Number(scoreDistance.value) !== score.cm) continue;
+    const detail = $('scoreRows').insertRow();
+    const values = [row.seed, modelLabel, row.epochs, row.threshold, score.cm+' cm',
+      score.precision.toFixed(4), score.recall.toFixed(4), score.f1.toFixed(4), score.tp, score.fp, score.fn];
+    values.forEach((value, i) => {
+      const cell = detail.insertCell();
+      cell.dataset.label = scoreHeaders[i].dataset.compact || scoreHeaders[i].textContent;
+      cell.textContent = value;
+    });
+  }
+}
+scoreDistance.addEventListener('change', () => {
+  $('scoreRows').replaceChildren();
+  for (const {row, modelLabel} of completedScores) appendDistanceScores(row, modelLabel);
+  if (report) {
+    const replay = new URL(report.replayUrl);
+    replay.searchParams.set('scoreDistance', scoreDistance.value);
+    report.replayUrl = replay.href;
+    $('replay').href = replay.href;
+  }
+});
+
 function appendRow(row, comparison, settings) {
   const tr=document.createElement('tr');
   const widest=row.scores.at(-1);
@@ -324,14 +355,8 @@ function appendRow(row, comparison, settings) {
   }
   $('results').append(tr);
   $('scoreDetails').hidden = false;
-  for (const score of row.scores) {
-    const detail = $('scoreRows').insertRow();
-    for (const value of [row.seed, modelLabel, row.epochs, row.threshold, score.cm+' cm',
-      score.precision.toFixed(4), score.recall.toFixed(4), score.f1.toFixed(4),
-      score.tp, score.fp, score.fn]) {
-      detail.insertCell().textContent = value;
-    }
-  }
+  completedScores.push({row, modelLabel});
+  appendDistanceScores(row, modelLabel);
 }
 function displayValidationBudgets(container) {
   container.replaceChildren();
@@ -779,6 +804,7 @@ $('benchForm').onsubmit = async event => {
   $('modelBoxes').open = false;
   report=null;$('export').disabled=true;$('summary').textContent='';$('results').replaceChildren();
   $('scoreDetails').hidden = true;
+  completedScores.length = 0;
   $('scoreRows').replaceChildren();
   const lockedControls = [...$('benchForm').querySelectorAll('input:enabled,select:enabled,button:enabled:not(.helpTrigger,.helpDisabledProxy)')];
   for (const input of lockedControls) input.disabled = true;
@@ -859,6 +885,7 @@ $('benchForm').onsubmit = async event => {
     if (trainingRayBudget) replay.searchParams.set('trainingRayBudget', trainingRayBudget);
     if (validationRayBudget) replay.searchParams.set('validationRayBudget', validationRayBudget);
     if (validationSensorMode) replay.searchParams.set('validationSensor', validationSensorMode);
+    if (scoreDistance.value !== '15' || sharedDistance === '15') replay.searchParams.set('scoreDistance', scoreDistance.value);
     if (settings.epochs !== undefined && settings.epochs !== 40) replay.searchParams.set('epochs', settings.epochs);
     if (comparison === 'cutoffs') replay.searchParams.set('cutoffDistance', $('cutoffDistance').value);
     $('replay').href = replay.href;
@@ -896,6 +923,7 @@ $('benchForm').onsubmit = async event => {
       $('modelBoxes').open = Boolean(selected);
       if (selected && location.hash === '#modelBoxes') $('modelBoxes').scrollIntoView();
     }
+    if (sharedDistance === scoreDistance.value) $('scoreDetails').open = true;
     displayFields();
     $('fieldDetails').open = $('fieldMetric').value !== 'mean';
     $('fieldDetails').hidden = false;

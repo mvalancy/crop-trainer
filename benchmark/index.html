@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="../app/farm.css?v=context-help2">
 
 <link rel="stylesheet" href="../app/help.css?v=context-help2">
-<link rel="stylesheet" href="layout.css?v=compact1">
+<link rel="stylesheet" href="layout.css?v=score-cards1">
 <script type="module" src="../app/help.js?v=context-help2"></script>
 </head>
 <body class="benchmark"><a class="skip" href="#main" data-help="Jump past the navigation to the benchmark controls.">Skip to content</a>
@@ -23,7 +23,7 @@
 <section class="panel benchSetup">
 <form id="benchForm" class="benchForm">
 <fieldset><legend>Choose a comparison</legend><div class="benchFields">
-<label class="comparisonChoice">Question<select id="comparison" data-help="Pick one question. The benchmark repeats it on two sets of plantings so you can see whether the result holds on fresh fields."><option value="models" selected>Which model places more accurate pins?</option><option value="backend">How fast does WebGPU train compared with CPU?</option><option value="heights">Does including shorter peaks help?</option><option value="epochs">Does training for longer help?</option><option value="density">Does training on denser scans help?</option><option value="forms">Does mixing plant forms during training help?</option><option value="layouts">Does the scan layout change which plants we find?</option><option value="averaging">Does ignoring gaps help a trained detector?</option><option value="cutoffs">What happens when we accept lower scores?</option></select></label>
+<label class="comparisonChoice">Question<select id="comparison" data-help="Pick one question. The benchmark repeats it on two sets of plantings so you can see whether the result holds on fresh fields."><option value="models" selected>Which model scores best?</option><option value="backend">CPU or WebGPU for speed?</option><option value="heights">Do shorter peaks help?</option><option value="epochs">Do more epochs help?</option><option value="density">Do denser scans help?</option><option value="forms">Does a mix of forms help?</option><option value="layouts">Does scan layout matter?</option><option value="averaging">Does ignoring gaps help?</option><option value="cutoffs">Do lower cutoffs help?</option></select></label>
 <label>Crop<select id="crop" data-help="Choose what grows on both sides of the comparison. Each crop has its own plant shapes and typical spacing."><option value="lettuce">Lettuce</option><option value="artichoke">Globe artichoke</option><option value="tomato">Young tomato</option><optgroup label="Experimental growing systems"><option value="apple">Apple orchard</option><option value="grapevine">Trellised vineyard</option><option value="bench-lettuce">Greenhouse bench lettuce</option><option value="high-wire-tomato">Greenhouse high-wire tomato</option></optgroup></select></label>
 </div></fieldset>
 <p id="comparisonHelp" class="hint"></p>
@@ -147,10 +147,13 @@
 <tbody id="coverageRows"></tbody><tfoot id="coverageFoot"></tfoot></table></div></details>
 <details id="scoreDetails" hidden="">
 <summary data-help="Inspect matches, extra pins and missed plants separately at 7.5, 10 and 15 cm.">Scores at each matching distance</summary>
+<label class="scoreDistanceChoice">Matching distance<select id="scoreDistance" data-help="Show how many final pins landed within this distance of a different labeled plant. The same pins are scored at all three distances.">
+<option value="7.5">7.5 cm</option><option value="10">10 cm</option><option value="15" selected>15 cm</option><option value="all">All three distances</option>
+</select></label>
 <div class="tableScroll">
-<table>
+<table class="distanceScores" aria-label="Detection scores at the selected matching distances">
 <thead>
-<tr><th scope="col" data-help="The dataset seed selects the six training plantings and three fresh test plantings in this repeat.">Seed</th><th scope="col" data-help="The detector or setting being compared. Rows with the same dataset seed use the same held-out plantings.">Contender</th><th scope="col" data-help="How many passes the model made through the retained training examples.">Epochs</th><th scope="col" data-help="A proposed plant needs at least this model score before the detector can keep its pin.">Cutoff</th><th scope="col" data-help="Farthest horizontal distance allowed between a final pin and its labeled center. Each pin and plant can match only once.">Tolerance</th><th scope="col" data-help="Fraction of final pins that matched a labeled plant at this distance.">Precision</th><th scope="col" data-help="Fraction of all labeled plants that received a matching pin at this distance.">Recall</th><th scope="col" data-help="F1 combines precision and recall at this distance. A perfect 1 means every plant got a matching pin and every pin found a plant.">F1</th><th scope="col" data-help="Final pins paired with distinct labeled plants within this distance.">Matched</th><th scope="col" data-help="Final pins left without a labeled plant after one-to-one matching at the stated distance.">Extra pins</th><th scope="col" data-help="Labeled plants without a matching final pin at this distance.">Missed plants</th></tr></thead>
+<tr><th scope="col" data-help="The dataset seed selects the six training plantings and three fresh test plantings in this repeat.">Seed</th><th scope="col" data-help="The detector or setting being compared. Rows with the same dataset seed use the same held-out plantings.">Contender</th><th scope="col" data-help="How many passes the model made through the retained training examples.">Epochs</th><th scope="col" data-help="A proposed plant needs at least this model score before the detector can keep its pin.">Cutoff</th><th scope="col" data-help="Farthest horizontal distance allowed between a final pin and its labeled center. Each pin and plant can match only once." data-compact="Distance">Tolerance</th><th scope="col" data-help="Fraction of final pins that matched a labeled plant at this distance.">Precision</th><th scope="col" data-help="Fraction of all labeled plants that received a matching pin at this distance.">Recall</th><th scope="col" data-help="F1 combines precision and recall at this distance. A perfect 1 means every plant got a matching pin and every pin found a plant.">F1</th><th scope="col" data-help="Final pins paired with distinct labeled plants within this distance.">Matched</th><th scope="col" data-help="Final pins left without a labeled plant after one-to-one matching at the stated distance." data-compact="Extra">Extra pins</th><th scope="col" data-help="Labeled plants without a matching final pin at this distance." data-compact="Missed">Missed plants</th></tr></thead>
 <tbody id="scoreRows"></tbody></table></div></details>
 <details id="fieldDetails" hidden="">
 <summary data-help="Look for difficult fields hidden by the average. Both soil views of a field contribute to its score.">Compare contenders on each planting</summary>
@@ -169,6 +172,6 @@
 </main>
 <footer class="siteFoot"><span>Created by Matthew Valancy</span>
 <div><a href="../AGENTS.md" data-help="Read how to reproduce browser experiments and run the project from the command line.">Agent quickstart</a><a href="../#missions" data-help="Open the farm challenges and check your progress.">Farm journal</a><a href="../LICENSE" data-help="Read the permission and attribution terms for the Crop Trainer source code.">MIT license</a></div><small class="contextHint"><span class="hoverHint">Hover or focus a button or score for help.</span><span class="touchHint">Tap a score or hold a button for help. A quick tap runs the action.</span></small></footer>
-<script type="module" src="main.js?v=context-help2"></script>
+<script type="module" src="main.js?v=score-cards1"></script>
 </body>
 </html>

@@ -448,6 +448,21 @@ try {
   const f1Cell=page.locator('#scoreRows tr').first().locator('td').nth(7);
   assert.ok(/\d/.test(await f1Cell.innerText()), 'inspect a score from the completed run');
   await checkDirectHelp(f1Cell,'hover',/precision and recall/i);
+  await page.setViewportSize({width:320,height:700});
+  for (const distance of ['7.5','10','15','all']) {
+    await page.locator('#scoreDistance').selectOption(distance);
+    const cells=await page.locator('#scoreRows tr').evaluateAll(rows=>rows.map(row=>Array.from(row.cells,cell=>cell.textContent)));
+    const visibleScores=report.rows.flatMap(row=>row.scores.filter(s=>distance==='all' || s.cm===Number(distance)));
+    assert.deepEqual(cells.map(r=>r.slice(4)),visibleScores.map(s=>[
+      s.cm+' cm',s.precision.toFixed(4),s.recall.toFixed(4),s.f1.toFixed(4),String(s.tp),String(s.fp),String(s.fn)
+    ]));
+    assert.equal(new URL(await page.locator('#replay').getAttribute('href')).searchParams.get('scoreDistance'),distance);
+  }
+  assert.ok(await scores.evaluate(el=>el.scrollWidth<=el.clientWidth+1 &&
+    Array.from(el.querySelectorAll('tbody td')).every(cell=>{
+      const rect=cell.getBoundingClientRect();
+      return rect.width>0 && rect.left>=0 && rect.right<=innerWidth;
+    })), 'Each phone score and label must fit without sideways scrolling');
   assert.deepEqual(errors,[]);
   console.log('Paired benchmark exported both seeds, three cutoffs and three matching distances.');
   console.log('Direct file and result help worked with hover, touch and keyboard; the first export tap downloaded its file.');

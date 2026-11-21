@@ -32,3 +32,106 @@
   .benchRunNumbers { column-gap: .5rem; }
   .benchRunNumbers #epochControl { max-width: 7rem; }
 }
+
+#scoreDetails .scoreDistanceChoice {
+  display: inline-grid;
+  gap: .25rem;
+  margin: .8rem 0 .2rem;
+}
+#scoreDistance { min-height: 44px; width: auto; }
+
+#scoreDetails { container: distance-results / inline-size; }
+
+@container distance-results (max-width: 48rem) {
+  #scoreDetails .tableScroll { overflow: visible; }
+  .distanceScores { display: block; }
+  .distanceScores thead,
+  .distanceScores thead tr { display: block; }
+  /* Keep the keyboard-accessible column descriptions visible when focused. */
+  .distanceScores th:not(:focus) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .distanceScores th:focus { display: block; width: fit-content; margin-bottom: .5rem; }
+  .distanceScores tbody {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+    gap: .75rem;
+  }
+  .distanceScores tbody tr {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-areas:
+      "contender contender seed seed"
+      "f1 matched extra missed"
+      "precision recall epochs cutoff"
+      "distance distance distance distance";
+    gap: .55rem .25rem;
+    padding: .7rem;
+    border: 1px solid var(--line);
+    border-radius: .55rem;
+    background: var(--surface);
+  }
+  .distanceScores td {
+    padding: 0;
+    border: 0;
+    min-width: 0;
+    font-size: .86rem;
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .distanceScores td:nth-child(2) { white-space: normal; overflow-wrap: anywhere; }
+  .distanceScores td::before {
+    content: attr(data-label) / "";
+    white-space: normal;
+    display: block;
+    margin-bottom: .14rem;
+    font-size: .72rem;
+    line-height: 1.15;
+    color: var(--muted);
+    font-weight: 550;
+  }
+  .distanceScores td:nth-child(1) { grid-area: seed; }
+  .distanceScores td:nth-child(2) { grid-area: contender; font-weight: 700; }
+  .distanceScores td:nth-child(3) { grid-area: epochs; }
+  .distanceScores td:nth-child(4) { grid-area: cutoff; }
+  .distanceScores td:nth-child(5) {
+    grid-area: distance;
+    display: flex;
+    align-items: baseline;
+    gap: .3rem;
+    color: var(--muted);
+    font-size: .76rem;
+  }
+  .distanceScores td:nth-child(6) { grid-area: precision; }
+  .distanceScores td:nth-child(7) { grid-area: recall; }
+  .distanceScores td:nth-child(8) { grid-area: f1; color: var(--forest); }
+  .distanceScores td:nth-child(9) { grid-area: matched; }
+  .distanceScores td:nth-child(10) { grid-area: extra; }
+  .distanceScores td:nth-child(11) { grid-area: missed; }
+  .distanceScores td:nth-child(n+8) {
+    border-top: 1px solid var(--line);
+    padding-top: .45rem;
+    font-weight: 680;
+    font-size: .96rem;
+  }
+}
+
+
+@container distance-results (max-width: 16rem) {
+  .distanceScores tbody tr {
+    grid-template-areas:
+      "contender contender seed seed"
+      "f1 f1 matched matched"
+      "extra extra missed missed"
+      "precision precision recall recall"
+      "epochs cutoff distance distance";
+  }
+  .distanceScores td:nth-child(5) { display: block; }
+  .distanceScores td:nth-child(10),
+  .distanceScores td:nth-child(11) { border: none; padding-top: 0; }
+}
