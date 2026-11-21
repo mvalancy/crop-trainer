@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="../app/farm.css?v=context-help2">
 
 <link rel="stylesheet" href="../app/help.css?v=context-help2">
-<link rel="stylesheet" href="layout.css?v=background-cost1">
+<link rel="stylesheet" href="layout.css?v=feature-scale1">
 <script type="module" src="../app/help.js?v=context-help2"></script>
 </head>
 <body class="benchmark"><a class="skip" href="#main" data-help="Jump past the navigation to the benchmark controls.">Skip to content</a>
@@ -23,9 +23,10 @@
 <section class="panel benchSetup">
 <form id="benchForm" class="benchForm">
 <fieldset><legend>Choose a comparison</legend><div class="benchFields">
-<label class="comparisonChoice">Question<select id="comparison" data-help="Pick one question. The benchmark repeats it on two sets of plantings so you can see whether the result holds on fresh fields."><option value="models" selected>Which model scores best?</option><option value="backend">CPU or WebGPU for speed?</option><option value="heights">Do shorter peaks help?</option><option value="epochs">Do more epochs help?</option><option value="density">Do denser scans help?</option><option value="forms">Does a mix of forms help?</option><option value="layouts">Does scan layout matter?</option><option value="sampling">Does balancing examples help?</option><option value="negatives">Do difficult backgrounds help?</option><option value="features">Does local ground help?</option><option value="averaging">Does ignoring gaps help?</option><option value="cutoffs">What changes with the cutoff?</option></select></label>
+<label class="comparisonChoice">Question<select id="comparison" data-help="Pick one question. The benchmark repeats it on two sets of plantings so you can see whether the result holds on fresh fields."><option value="models" selected>Which model scores best?</option><option value="backend">CPU or WebGPU for speed?</option><option value="heights">Do shorter peaks help?</option><option value="epochs">Do more epochs help?</option><option value="density">Do denser scans help?</option><option value="forms">Does a mix of forms help?</option><option value="layouts">Does scan layout matter?</option><option value="sampling">Does balancing examples help?</option><option value="negatives">Do difficult backgrounds help?</option><option value="scaling">Does feature scaling matter?</option><option value="features">Does local ground help?</option><option value="averaging">Does ignoring gaps help?</option><option value="cutoffs">What changes with the cutoff?</option></select></label>
 <label>Crop<select id="crop" data-help="Choose what grows on both sides of the comparison. Each crop has its own plant shapes and typical spacing."><option value="lettuce">Lettuce</option><option value="artichoke">Globe artichoke</option><option value="tomato">Young tomato</option><optgroup label="Experimental growing systems"><option value="apple">Apple orchard</option><option value="grapevine">Trellised vineyard</option><option value="bench-lettuce">Greenhouse bench lettuce</option><option value="high-wire-tomato">Greenhouse high-wire tomato</option></optgroup></select></label>
 </div></fieldset>
+<div id="scaleEngineControl" hidden><label>Fit the four models on<select id="scaleEngine" data-help="Choose the CPU or a WebGPU adapter for the four final fits. The small practice model always uses CPU so both engines select the same examples."><option value="cpu">CPU</option><option value="webgpu">WebGPU</option></select></label></div>
 <div id="epochChoices" hidden>
 <label>Training lengths<select id="epochSchedule" data-help="Compare two epoch counts you choose, or repeat the original three-length benchmark."><option value="pair">Choose two lengths</option><option value="classic">10, 40 and 100 epochs</option></select></label>
 <label id="shortEpochControl">Short fit<input type="number" id="shortEpochs" inputmode="numeric" min="1" max="4999" step="1" value="40" required data-help="How many full passes the shorter CPU fit makes through its training examples."></label>
@@ -84,6 +85,7 @@
 <li><a href="?comparison=heights&amp;crop=tomato&amp;seed=2221&amp;sensor=mixed&amp;validationSensor=os1-64&amp;validationRayBudget=12000" data-help="Load two minimum peak heights and score both on sparse ring scans of the same tomato fields.">Test shorter peaks on sparse tomatoes</a></li>
 <li><a href="?comparison=heights&amp;crop=lettuce&amp;seed=2121&amp;sensor=mixed&amp;validationSensor=os1-64&amp;validationRayBudget=12000&amp;pairSeed=2122&amp;pairTile=39c12665d375fbb9&amp;pairDistance=7.5&amp;pairBox=1#modelBoxes" data-help="Load the lettuce experiment and its selected plant. Run the comparison to restore the inspection.">Inspect a missed lettuce plant in 3D</a></li>
 <li><a href="?comparison=models&amp;crop=artichoke&amp;seed=1551&amp;sensor=mixed&amp;validationSensor=os1-64&amp;validationRayBudget=12000&amp;fieldMetric=meanAbsolute" data-help="Compare how far the logistic and neural detectors’ plant counts differ from the labeled count.">Compare artichoke counts by model</a></li>
+<li><a href="?comparison=scaling&amp;crop=tomato&amp;plantArchitecture=2&amp;plantForm=mixed&amp;plantCondition=healthy&amp;validationPlantForm=seedling&amp;sensor=reference&amp;validationSensor=os1-64&amp;trainingRayBudget=60000&amp;validationRayBudget=60000&amp;minimumHeight=0.035&amp;featureMode=local-ground&amp;sampleLimit=600&amp;epochs=640&amp;seed=3301907&amp;scoreGround=present" data-help="Train four networks on the same tomato fields. Change the examples and how the model scales its inputs, one at a time.">Try two ways to scale a tomato detector’s inputs</a></li>
 <li><a href="?comparison=negatives&amp;crop=tomato&amp;plantArchitecture=2&amp;plantForm=mixed&amp;plantCondition=healthy&amp;validationPlantForm=seedling&amp;sensor=reference&amp;validationSensor=os1-64&amp;trainingRayBudget=60000&amp;validationRayBudget=60000&amp;minimumHeight=0.035&amp;featureMode=local-ground&amp;sampleLimit=600&amp;epochs=640&amp;seed=2103181&amp;scoreGround=present" data-help="Compare two networks trained on the same weedy tomato plots. Change which background peaks they practice on and inspect or save either detector.">Teach a detector to reject difficult background peaks</a></li>
 <li><a href="?comparison=cutoffs&amp;trialCutoff=0.65&amp;crop=tomato&amp;plantArchitecture=2&amp;plantForm=mixed&amp;validationPlantForm=seedling&amp;sensor=reference&amp;validationSensor=os1-64&amp;trainingRayBudget=60000&amp;validationRayBudget=60000&amp;minimumHeight=0.035&amp;featureMode=local-ground&amp;sampleLimit=600&amp;epochs=640&amp;seed=1403129&amp;scoreGround=present" data-help="Train once per seed, then compare the same detector at 0.50 and 0.65 on fresh tomato seedling scans.">See which seedling pins survive the 0.65 cutoff</a></li>
 <li><a href="?comparison=forms&amp;crop=tomato&amp;plantArchitecture=2&amp;plantForm=seedling&amp;validationPlantForm=branching&amp;seed=82173&amp;sensor=reference&amp;trainingRayBudget=60000&amp;validationRayBudget=60000" data-help="Compare seedling-only training with mixed growth stages on branching tomatoes.">Train on seedlings or a mix, then find branching tomatoes</a></li>
@@ -102,6 +104,17 @@
 </section>
 <section class="panel benchResults" id="benchResults">
 <h2>Results</h2>
+<section id="scalingReview" hidden aria-labelledby="scalingTitle">
+<h3 id="scalingTitle">Four detectors on the same field scans</h3>
+<p>Compare the two scales within one row to keep its training examples fixed. Each scale uses the average and spread of its own training sample for all 13 measurements.</p>
+<label>Training seed<select id="scalingSeed" data-help="Compare the four detectors for this seed. Each seed grows three fresh test plantings."></select></label>
+<p class="hint">The green bars show the share of plants found within 15 cm on the three scans with soil.</p>
+<div id="scalingGrid" aria-live="polite"></div>
+<details><summary data-help="See how this seed’s practice model selected difficult backgrounds and how near and far peaks were balanced.">Which examples did they practice on?</summary><p id="scalingQuota"></p>
+<p id="scalingCost"></p><p>Each difficult example was a background peak that the practice model scored highly. Its distance from a planted center determines which group it can fill. The test scans contribute no training rows.</p></details>
+<p id="scalingBackend"></p>
+<p class="scaleLinks"><a href="../trainer/#field-test" data-help="Load any of the four downloaded weight files into Field Test and inspect its predictions.">Try saved weights in Field Test →</a> <a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/tomato-feature-scaling.md" data-help="See how the same experiment performed on separately reserved clean and weedy tomato plots.">Read the tomato experiment</a></p>
+</section>
 <div id="summary"></div>
 <p id="emptyResults">Run a comparison to see timing, precision, recall and F1 for both seeds.</p>
 <div class="tableScroll">
@@ -215,6 +228,6 @@
 </main>
 <footer class="siteFoot"><span>Created by Matthew Valancy</span>
 <div><a href="../AGENTS.md" data-help="Read how to reproduce browser experiments and run the project from the command line.">Agent quickstart</a><a href="../#missions" data-help="Open the farm challenges and check your progress.">Farm journal</a><a href="../LICENSE" data-help="Read the permission and attribution terms for the Crop Trainer source code.">MIT license</a></div><small class="contextHint"><span class="hoverHint">Hover or focus a button or score for help.</span><span class="touchHint">Tap a score or hold a button for help. A quick tap runs the action.</span></small></footer>
-<script type="module" src="main.js?v=background-cost1"></script>
+<script type="module" src="main.js?v=feature-scale1"></script>
 </body>
 </html>

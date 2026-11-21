@@ -1,6 +1,7 @@
 import {field} from '../trainer/generator/field.js';
-import {buildDataset} from '../trainer/models/data.js?v=negative1';
+import {buildDataset} from '../trainer/models/data.js?v=scaling1';
 import {selectHardNegatives} from '../trainer/models/hard-negatives.js';
+import {selectDistanceMatched} from '../trainer/models/distance-bands.js';
 import {scoreSavedWeights, trainerId, weightArtifact} from '../trainer/models/network.js';
 import {trainNetworkCPU} from '../trainer/models/neural.js';
 
@@ -15,8 +16,8 @@ export function backgroundWeights(set, weights, settings, epochs) {
 
 // Only training scenes have a forced weed patch. Test scenes keep their normal
 // generator recipes, so the same tile IDs open in the shared 3D field viewer.
-export async function prepareBackgroundPair(settings, {signal, generate=field, onScan, onStage, onEpoch}) {
-  const options = {...settings, signal, onScan, generate(recipe, step) {
+export async function prepareBackgroundPair(settings, {signal, generate=field, onScan, onStage, onEpoch, crossScales=false}) {
+  const options = {...settings, signal, onScan, keepRawFeatures:crossScales, generate(recipe, step) {
     const scene = step.split === 'Training' ? {...recipe, weeds:true, sticks:false, boards:false, scanNoise:null} : recipe;
     return generate(scene);
   }};
@@ -30,15 +31,18 @@ export async function prepareBackgroundPair(settings, {signal, generate=field, o
   const pilotWeights = backgroundWeights(ordinary, pilot.weights, settings, 40);
   const pilotMs = performance.now() - start;
 
-  onStage('half-hard');
+  const difficult = crossScales ? 'distance-matched' : 'half-hard';
+  onStage(difficult);
   let ordinarySelection, hardSelection;
   start = performance.now();
-  const hard = await buildDataset({...options, selectNegativeRows(raw, count) {
+  const hard = await buildDataset({...options, includeNegativeDistances:crossScales, selectNegativeRows(raw, count, dims, distances) {
     const scoringStart = performance.now();
     const scores = scoreSavedWeights(raw, pilotWeights, settings.peakAveraging, settings.featureMode);
     const pilotScoringMs = performance.now() - scoringStart;
     const selectionStart = performance.now(), hardCount = Math.floor(count / 2);
-    const indices = selectHardNegatives(scores, count, hardCount);
+    const {indices, bands} = crossScales
+      ? selectDistanceMatched(scores, count, {sampling:difficult, hardCount}, distances)
+      : {indices:selectHardNegatives(scores, count, hardCount)};
     const rankingMs = performance.now() - selectionStart;
     const pilot = {eligible:scores.length, selected:count, pilotEpochs:40, pilotMs, pilotScoringMs, rankingMs};
     function scoreBin(score) { return Math.min(3, Math.floor(score*4)); }
@@ -48,7 +52,7 @@ export async function prepareBackgroundPair(settings, {signal, generate=field, o
       hardBins[scoreBin(scores[indices[i]])]++;
     }
     ordinarySelection = {...pilot, hardCount:0, ordinaryRetained:count, scoreBins:shuffledBins};
-    hardSelection = {...pilot, hardCount, ordinaryRetained:indices.filter(i=>i < count).length, scoreBins:hardBins};
+    hardSelection = {...pilot, ...(bands ? {bands} : {}), hardCount, ordinaryRetained:indices.filter(i=>i < count).length, scoreBins:hardBins};
     return indices;
   }});
   const rebuildMs = performance.now() - start;
@@ -58,7 +62,7 @@ export async function prepareBackgroundPair(settings, {signal, generate=field, o
   }
   return {
     ordinary:{set:ordinary, generationMs:ordinaryMs, selection:ordinarySelection},
-    'half-hard':{set:hard, generationMs:rebuildMs-hardSelection.pilotScoringMs-hardSelection.rankingMs,
+    [difficult]:{set:hard, generationMs:rebuildMs-hardSelection.pilotScoringMs-hardSelection.rankingMs,
       selection:{...hardSelection, rebuildMs}}
   };
 }

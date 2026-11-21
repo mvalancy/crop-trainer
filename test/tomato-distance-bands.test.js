@@ -54,3 +54,20 @@ test('optional center distances follow the shuffled XYZ feature rows in the trai
   }});
   assert.deepEqual(audited,ordinary);
 });
+
+test('crossing scales keeps the original rows, the donor scale and identically prepared validation inputs', async () => {
+  const {buildDataset,withTrainingScale}=await import('../trainer/models/data.js');
+  const options={seed:198317,trainFields:2,valFields:1,minimumHeight:.035,sampleLimit:36,keepRawFeatures:true};
+  const ordinary=await buildDataset(options);
+  const alternate=await buildDataset({...options,selectNegativeRows:(raw,n,dims)=>Array.from({length:n},(_,i)=>raw.length/dims-1-i)});
+  const snapshot=ordinary.X.slice();
+  assert.notDeepEqual(ordinary.scaling,alternate.scaling);
+  const cross=withTrainingScale(ordinary,alternate);
+  const expected=ordinary.rawX.map((x,i)=>(x-alternate.scaling.means[i%ordinary.dims])/alternate.scaling.std[i%ordinary.dims]);
+  assert.deepEqual(cross.X,expected);
+  assert.equal(cross.Y,ordinary.Y);
+  assert.equal(cross.scaling,alternate.scaling);
+  assert.equal(cross.validation,alternate.validation);
+  assert.deepEqual(ordinary.X,snapshot);
+  assert.throws(()=>withTrainingScale(ordinary,{...alternate,manifest:[]}),/matching scans/);
+});

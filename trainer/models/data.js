@@ -122,7 +122,7 @@ function selectRows(pool,count,indices,label) {
  }
  return indices.map(i=>pool[i]);
 }
-export async function buildDataset({seed=27,crop='lettuce',plantArchitecture=1,plantForm='mixed',plantCondition='healthy',validationPlantForm,trainFields=6,valFields=3,sensorMode='reference',validationSensorMode=sensorMode,trainingRayBudget=0,validationRayBudget=0,minimumHeight=.065,peakAveraging='zero-filled',featureMode='absolute',sampleLimit=MAX_SAMPLE_LIMIT,positiveSampling='ordinary',auditPositiveSampling=false,selectPositiveRows,selectNegativeRows,includeNegativeDistances=false,generate,onScan,onProgress=()=>{},signal}={}){
+export async function buildDataset({seed=27,crop='lettuce',plantArchitecture=1,plantForm='mixed',plantCondition='healthy',validationPlantForm,trainFields=6,valFields=3,sensorMode='reference',validationSensorMode=sensorMode,trainingRayBudget=0,validationRayBudget=0,minimumHeight=.065,peakAveraging='zero-filled',featureMode='absolute',sampleLimit=MAX_SAMPLE_LIMIT,positiveSampling='ordinary',auditPositiveSampling=false,selectPositiveRows,selectNegativeRows,includeNegativeDistances=false,keepRawFeatures=false,generate,onScan,onProgress=()=>{},signal}={}){
  const geometry = plantSettings({crop,plantArchitecture,plantForm,plantCondition});
  const holdout = validationFormSettings({crop,plantArchitecture,plantForm,validationPlantForm});
  checkPeakAveraging(peakAveraging);
@@ -239,12 +239,28 @@ export async function buildDataset({seed=27,crop='lettuce',plantArchitecture=1,p
  for(let j=0;j<DIMS;j++)means[j]/=Y.length;
  for(let i=0;i<X.length;i++)std[i%DIMS]+=(X[i]-means[i%DIMS])**2;
  for(let j=0;j<DIMS;j++)std[j]=Math.max(.00001,Math.sqrt(std[j]/Y.length));
+ const rawX=keepRawFeatures ? X.slice() : undefined;
  normalizeFeatures(X,means,std);for(const t of validation)normalizeFeatures(t.X,means,std);
- return{X,Y,dims:DIMS,validation,scaling:{means:Array.from(means),std:Array.from(std)},
+ return{X,Y,...(keepRawFeatures ? {rawX} : {}),dims:DIMS,validation,scaling:{means:Array.from(means),std:Array.from(std)},
   stats:{crop,...geometry,...holdout,...(peakAveraging==='occupied'?{peakAveraging}:{}),...(featureMode==='local-ground'?{featureMode}:{}),trainFields,valFields,trainTiles:training.length,valTiles:validation.length,minimumHeight,samples:Y.length,sampleLimit,
    ...(positiveSampling==='form-soil'?{positiveSampling}:{}),...(positiveGroups?{positiveExamplesByFormSoil:[...positiveGroups.values()]}:{}),
    trainingExamplesByField:[...bySeed.values()],sensorMode,validationSensorMode,trainingRayBudget,validationRayBudget,fieldSeeds:{training:trainSeeds,validation:valSeeds},generator:'crop-trainer-v1'},
   manifest:[...training.map(t=>manifestTile(t,'train')),...validation.map(t=>manifestTile(t,'validation'))]};
+}
+// Cross two training draws on the same scans. The donor's validation inputs already
+// use its training scale. Start training inputs from raw float32 measurements so
+// rounding the original normalized rows cannot change the crossed fit.
+export function withTrainingScale(set, sourceSet) {
+ if (!set.rawX || set.rawX.length !== set.X.length) throw Error('Keep the raw training features before crossing scales.');
+ if (set.dims !== sourceSet.dims || set.stats.featureMode !== sourceSet.stats.featureMode ||
+     set.stats.minimumHeight !== sourceSet.stats.minimumHeight || set.stats.peakAveraging !== sourceSet.stats.peakAveraging ||
+     set.manifest.length !== sourceSet.manifest.length || set.manifest.some((t,i)=>t.tile_id !== sourceSet.manifest[i].tile_id)) {
+  throw Error('Cross training scales only between matching scans and feature settings.');
+ }
+ if (set === sourceSet) return set;
+ const X=set.rawX.slice(), scaling=sourceSet.scaling;
+ normalizeFeatures(X,scaling.means,scaling.std);
+ return {...set,X,scaling,validation:sourceSet.validation};
 }
 // Change only the held-out layout. Preserve the fitted feature scale and
 // verify plant centers before scoring either view as a matched planting.
