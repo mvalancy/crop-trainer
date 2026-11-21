@@ -76,6 +76,7 @@
 .pinKey { color: #985e12; font: bold 1.08rem/1 var(--mono); }
 .hitKey { color: #a44930; margin-inline-start: .5rem; }
 .scanSummary .scanFiles { grid-column: 1 / -1; align-items: start; }
+.viewTools select { padding-inline: .5rem .35rem; }
 
 @media (max-width: 28rem) {
   .viewTools .helpField:has(#color, #highlight) { grid-column: 1 / -1; }
@@ -87,10 +88,6 @@
   .viewOptions .viewTools { grid-template-columns: minmax(8.5rem,1fr) minmax(15rem,1.5fr); }
 }
 @media (min-width: 44rem) {
-  #grow {
-    grid-template-columns: 1fr 1fr;
-    gap: .6rem 1.2rem;
-  }
   #grow .advancedJump { align-self: center; }
   #grow .quickScanner { grid-template-columns: minmax(0, 1.4fr) minmax(6rem, 1fr); }
   #generationStatus { grid-column: 1 / -1; }
@@ -106,6 +103,9 @@
   .scanFiles .scanDownloads { grid-column: 1; grid-row: 2; }
   .scanFiles .scanSharing { grid-column: 2; grid-row: 1 / 3; border: 0; padding: 0; }
   .scanFiles .trainLink { grid-column: 1 / -1; justify-self: start; padding-inline: .9rem; }
+}
+@media (min-width: 48rem) {
+  #grow { grid-template-columns: 1fr 1fr; gap: .6rem 1.2rem; }
 }
 @media (min-width: 58rem) {
   #field .lab {

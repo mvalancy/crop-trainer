@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="../app/farm.css?v=context-help2">
 
 <link rel="stylesheet" href="../app/help.css?v=context-help2">
-<link rel="stylesheet" href="layout.css?v=option-fit1">
+<link rel="stylesheet" href="layout.css?v=option-fit2">
 <script type="module" src="../app/help.js?v=context-help2"></script>
 </head>
 <body class="benchmark"><a class="skip" href="#main" data-help="Jump past the navigation to the benchmark controls.">Skip to content</a>
@@ -40,7 +40,7 @@
 </div>
 <label>Plant architecture<select id="plantArchitecture" data-help="Chooses the plant generator version. Use the same version as a saved run to regrow its shapes." required><option value="3" selected>Connected plants · v3</option><option value="4" hidden>Variable apple scaffolds · v4</option><option value="2">Structured plants · v2</option><option value="1">Original plants · v1</option></select></label>
 <label>Training plant form<select id="plantForm" data-help="Choose one shape or growth stage for training. In the mixed-form comparison, the second detector sees several forms." required><option value="mixed">Seeded mix</option></select></label>
-<label>Plant condition<select id="plantCondition" data-help="Damaged plants can have missing or bent parts. A seeded mix grows healthy and damaged plants together." required><option value="healthy">Healthy</option><option value="mixed">Seeded damage · about 1 in 4</option><option value="damaged">All damaged</option></select></label>
+<label>Plant condition<select id="plantCondition" data-help="Damaged plants can have missing or bent parts. In the seeded mix, about one plant in four has damage." required><option value="healthy">Healthy</option><option value="mixed">About 1 in 4 damaged</option><option value="damaged">All damaged</option></select></label>
 <label id="heightControl">Minimum peak height<select id="minimumHeight" data-help="A bump must reach this height to become a possible plant. Lower values can reveal seedlings and pick up more soil bumps."><option value="default">Crop default</option><option value="0.065">6.5 cm</option><option value="0.035">3.5 cm</option></select></label>
 <label id="averagingControl">Peak averaging<select id="peakAveraging" data-help="Smooth nearby heights before looking for peaks. The experimental sampled-cells setting ignores empty cells. On sparse scans this can reveal small plants and extra soil peaks." required><option value="zero-filled">All cells · standard</option><option value="occupied">Sampled cells only</option></select></label>
 </div></fieldset>

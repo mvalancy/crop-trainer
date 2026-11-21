@@ -14,7 +14,7 @@
 <link rel="stylesheet" href="trainer/plants/portrait.css?v=scan-settings2">
 <link rel="stylesheet" href="app/advanced-scan.css?v=option-fit1">
 <link rel="stylesheet" href="app/help.css?v=context-help2">
-<link rel="stylesheet" href="app/scan-workspace.css?v=option-fit1">
+<link rel="stylesheet" href="app/scan-workspace.css?v=option-fit2">
 <script type="module" src="app/help.js?v=context-help2"></script>
 </head>
 <body class="farm"><a class="skip" href="#main" data-help="Jump past site navigation to the field, lessons and farm journal.">Skip to content</a>
@@ -113,7 +113,7 @@
 <summary data-help="Choose the plant’s growth habit and compare its intact and damaged shapes." data-help-label="Plant form and condition">Plant form and condition</summary>
 <div class="anatomyFields">
 <div class="detailFields">
-<label>Plant architecture<select form="grow" id="plantArchitecture" data-help="This is the version of the plant shapes. Keep the original version to replay a shared scan. For apples, v4 varies branch thickness within each tree." required><option value="3" selected>Connected plants · v3</option><option value="4" hidden>Variable apple scaffolds · v4</option><option value="2">Structured plants · v2</option><option value="1">Original plants · v1</option></select></label>
+<label>Plant architecture<select form="grow" id="plantArchitecture" data-help="This is the version of the plant shapes. Keep the original version to replay a shared scan. For apples, v4 varies branch thickness within each tree." required><option value="3" selected>Connected plants · v3</option><option value="4" hidden>Variable branches · v4</option><option value="2">Structured plants · v2</option><option value="1">Original plants · v1</option></select></label>
 <label>Plant form<select form="grow" id="plantForm" data-help="Choose one growth habit for the whole field, or choose a mix to let the seed pick a form for each plant." required></select></label>
 <label>Condition<select form="grow" id="plantCondition" data-help="Damage changes the plant shape. A tree can lose a limb or a tomato plant can lose its growing tip. The planting locations stay fixed." required><option value="healthy">Healthy plants</option><option value="mixed">About one in four damaged</option><option value="damaged">All plants damaged</option></select></label>
 <label>Apple foliage<select form="grow" id="appleCanopy" data-help="Leaf off exposes the branches. Keep the seed and tree form fixed to compare the same wood with and without its leaves." required><option value="leafy">Leaf on</option><option value="dormant">Dormant · leaf off</option></select></label>
@@ -143,7 +143,7 @@
 <p class="hint" id="sensorInfo"></p>
 </div>
 <div class="detailFields">
-<label>Scan noise<select form="grow" id="noise" data-help="Clean keeps the layout’s normal sampling pattern. Rough adds effects such as scattered points and gaps. Seeded variation repeats the same noise settings for the same field seed."><option value="seeded">Seeded variation</option><option value="clean">Clean returns</option><option value="rough">Jitter, gaps and stray returns</option></select></label>
+<label>Scan noise<select form="grow" id="noise" data-help="Clean keeps the layout’s normal sampling pattern. Rough adds jitter, gaps and stray returns. Seeded variation repeats the same noise settings for the same field seed."><option value="seeded">Seeded variation</option><option value="clean">Clean returns</option><option value="rough">Rough returns</option></select></label>
 <label class="check"><input form="grow" type="checkbox" id="ground" data-help="Keep points that hit the soil or greenhouse floor. Turning this off removes those points from the finished scan and keeps the same plants." checked=""> Include ground returns</label></div></details>
 <details id="obstacleSettings">
 <summary data-help="Add background objects to test which surfaces can cover a plant or resemble it in a scan." data-help-label="Weeds, obstacles and fixtures">Weeds, obstacles and fixtures</summary>
@@ -159,7 +159,7 @@
 <div class="studySetup">
 <div class="studyIntro"><p id="studyField" data-help-label="Planting used for comparison" data-help="The crop and seed identify this planting. Both scans use these plant positions to make their results comparable.">Grow a field to compare its scans.</p>
 <p id="studyQuestion">Do more laser rays help you find more plants?</p></div>
-<form id="studyForm" aria-label="Paired scan settings"><label class="studyMode">What changes?<select id="studyMode" data-help="Choose what to change on the planting. Ray budget compares two scans. The apple tree-base rules compare predictions from exactly the same scan."><option value="budgets">Ray budget</option><option value="layouts">Scan layout · 60k rays each</option><option value="damage" hidden disabled>Scaffold damage</option><option value="scaffolds" hidden disabled>Scaffold widths · v3 vs v4</option><option value="spacing" hidden disabled>Tree-base pin spacing</option><option value="ranking" hidden disabled>Tree-base ranking</option></select></label>
+<form id="studyForm" aria-label="Paired scan settings"><label class="studyMode">What changes?<select id="studyMode" data-help="Choose what to change on the planting. Ray budget compares two scans. The apple tree-base rules compare predictions from exactly the same scan."><option value="budgets">Ray budget</option><option value="layouts">Scan layout · 60k rays</option><option value="damage" hidden disabled>Scaffold damage</option><option value="scaffolds" hidden disabled>Scaffold widths · v3 vs v4</option><option value="spacing" hidden disabled>Tree-base pin spacing</option><option value="ranking" hidden disabled>Tree-base ranking</option></select></label>
 <label>First budget<select id="studyLow" data-help="Set the requested rays in the first scan. Compare its coverage with the second scan of the same planting."></select></label><label>Second budget<select id="studyHigh" data-help="Set the requested rays in the second scan. Some layouts reach their maximum number of sample positions first."></select></label>
 <label hidden>Compare 1.05 m with<select id="studySpacing" disabled data-help="The locator keeps the strongest candidate first and sets aside nearby candidates. Try another minimum distance on exactly the same scan. Matching to a labeled tree still uses centimetres."><option value="0.75">0.75 m · closer</option><option value="1.35">1.35 m · farther apart</option></select></label>
 <div class="studyActions"><button class="primary" id="studyRun" data-help="Run the selected comparison and score each result against the known planting positions." disabled>Compare scans</button><button type="button" id="studyCancel" data-help="Stop the comparison in progress. Your main scan stays available." hidden>Cancel</button></div></form></div>
@@ -279,6 +279,6 @@
 </main>
 <footer class="siteFoot"><span>Created by Matthew Valancy</span>
 <div><a href="AGENTS.md" data-help="Find instructions for running reproducible experiments from the browser or command line.">Agent quickstart</a><a href="#missions" data-help="Jump to the stamps earned in this browser and the experiments that unlock them.">Farm journal</a><a href="LICENSE" data-help="Read the MIT terms for reusing and modifying the app.">MIT license</a></div><small class="contextHint"><span class="hoverHint">Hover or focus a button or score for help.</span><span class="touchHint">Tap a score or hold a button for help. A quick tap runs the action.</span></small></footer>
-<script type="module" src="app/farm.js?v=orchard-ranking1"></script>
+<script type="module" src="app/farm.js?v=orchard-ranking2"></script>
 </body>
 </html>

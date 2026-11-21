@@ -3,13 +3,14 @@
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 16.5rem), 1fr));
 }
 #benchForm .helpField:has(.comparisonChoice) { grid-column: auto; }
+#benchForm select { padding-inline: .45rem .2rem; }
 #benchOptions select { min-height: 44px; }
 
 @media (min-width: 865px) {
   #benchOptions > div { grid-template-columns: repeat(auto-fit, minmax(min(100%, 16.5rem), 1fr)); }
 }
 @media (max-width: 24rem) {
-  .benchSetup { padding-inline: .65rem; }
+  .benchSetup { margin-inline: -.5rem; padding-inline: .55rem; }
   #benchOptions { padding-inline: 0; border-inline: 0; border-radius: 0; }
 }
 

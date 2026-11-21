@@ -7,7 +7,7 @@ const catalog = {
   tomato: [['seedling','First true leaves'], ['transplant','Leafy transplant'], ['branching','Branching young plant']],
   apple: [['central-leader','Central leader'], ['open-vase','Open vase']],
   grapevine: [['bilateral-cordon','Two cordon arms'], ['unilateral-cordon','One cordon arm'], ['pruned-cordon','Dormant spur-pruned vine']],
-  'high-wire-tomato': [['single-leader','Single fruiting leader'], ['twin-leader','Twin fruiting leaders'], ['young-leader','Young leader before fruit set']]
+  'high-wire-tomato': [['single-leader','Single fruiting leader'], ['twin-leader','Twin fruiting leaders'], ['young-leader','Young leader, no fruit']]
 };
 
 export function formsFor(crop) {

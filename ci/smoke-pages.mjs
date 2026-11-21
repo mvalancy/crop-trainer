@@ -399,10 +399,13 @@ try {
   assert.equal(source.searchParams.get('studyBox'),'9');
   assert.ok(!new URL(await page.locator('#studyLinkA').getAttribute('href')).searchParams.has('studyMode'));
   await page.locator('#field details').evaluateAll(groups=>groups.forEach(group=>{group.open=true;}));
-  for (const width of [320,390,704,1024,1440]) {
-    await page.setViewportSize({width,height:844});
-    assert.deepEqual(await clippedValues(page.locator('#budget, .viewTools select, #advanced-scan select:enabled:visible'),true),
-      [],'Generator options should fit the controls at '+width+'px');
+  for (const family of ['system-ui','DejaVu Sans']) {
+    await page.evaluate(name=>document.documentElement.style.setProperty('--sans',name+', sans-serif'),family);
+    for (const width of [320,390,608,704,1024,1088,1440]) {
+      await page.setViewportSize({width,height:844});
+      assert.deepEqual(await clippedValues(page.locator('#grow select, .viewTools select, #studyForm select:enabled:visible, #advanced-scan select:enabled:visible'),true),
+        [],'Generator options should fit at '+width+'px in '+family);
+    }
   }
   rankQuery.set('seed','18101637');
   rankQuery.set('sensor','reference');
