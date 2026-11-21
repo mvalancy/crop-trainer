@@ -12,6 +12,8 @@ On two fresh mixed-scan artichoke seeds, the neural model beat logistic on seed 
 
 The crop-specific spacing filter was tested on seeds 61 and 62, with six training fields, three validation fields, mixed sampling, 40 neural epochs and 6.5 cm peaks. Increasing artichoke spacing from 12.5 to 40 cm raised mean F1 from 0.536 to 0.600 and from 0.673 to 0.779. On seed 61, 15 cm recall slipped from 85.4% to 84.3%. For young tomato, 22 cm spacing raised mean F1 from 0.730 to 0.757 and from 0.781 to 0.799. These are whole-plant center scores on procedural fields.
 
+On the v3 branched-bud artichoke test (seed 817221, mixed plant condition), Chromium's CPU and software WebGPU backends used the same 632 training examples and identical tile IDs. After 40 epochs both scored **0.364 / 0.487 / 0.610** at 7.5 / 10 / 15 cm. CPU generation, fitting and validation took 4.39, 0.32 and 0.08 seconds. SwiftShader took 2.57, 23.80 and 0.02 seconds. Field generation runs separately from the optimizer. These single runs on shared compute measure this software configuration. [Run the v3 fit](https://mvalancy.github.io/crop-trainer/trainer/?plan=quick&seed=817221&crop=artichoke&plantForm=branched-buds&plantCondition=mixed&plantArchitecture=3&epochs=40&engine=cpu)
+
 ## Which plants did only one model find?
 
 Run **Logistic vs neural · CPU**, then expand **Which plants did each model find?** Choose a scan and a matching distance. The table counts every labeled plant once. Select a box found by just one model to open its center in the 3D viewer and earn the **Model scout** stamp. A cyan ring tracks the highlighted plant as you orbit or zoom. **Copy scan link** preserves the box selection. In the Training Shed, you can also open a highlighted missed plant in 3D.

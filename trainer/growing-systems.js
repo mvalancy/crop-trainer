@@ -1,3 +1,6 @@
+export const BENCH_HEIGHT_M = .73;
+export const TROUGH_HEIGHT_M = .19;
+
 // Metres in a 10 m plot. Render the upper intersection of each plant surface
 // at the scanner's existing XY samples. Dimensions are procedural assumptions.
 export function canopyPlant(crop,x,y,radius,soilZ,random,rays,hit,id) {
@@ -53,20 +56,21 @@ export function canopyPlant(crop,x,y,radius,soilZ,random,rays,hit,id) {
 
 // Fixtures are non-crop surfaces, class 6 with no plant ID. Their geometry
 // stays fixed when a seed skips a plant or the scan changes sampling layout.
-export function scanFixtures(crop,rows,terrain,rays,hit) {
+export function scanFixtures(crop,rows,terrain,rays,hit,plantArchitecture=1) {
   for(let row=0;row<rows;row++) {
     const y=(row+.5)*10/rows;
     rays(5,y,5,(i,dx,dy)=>{
       const x=5+dx, floor=terrain(x,y+dy);
       if (crop==='bench-lettuce') {
-        if(Math.abs(dy)<.31 && Math.abs(dx)<4.78) hit(i,floor+.73,6,0);
+        // The v3 row continues through both tile edges, under the end plants.
+        if(Math.abs(dy)<.31 && (plantArchitecture>=3 || Math.abs(dx)<4.78)) hit(i,floor+BENCH_HEIGHT_M,6,0);
       } else if (crop==='grapevine' || crop==='high-wire-tomato') {
         const highWire=crop==='high-wire-tomato', height=highWire?2.45:1.32;
         const lineOffset=highWire?.08:0;
         if(Math.abs(dy-lineOffset)<.009 && Math.abs(dx)<4.7) hit(i,floor+height,6,0);
         const postX=.35+Math.round((x-.35)/3.1)*3.1;
         if(Math.hypot(x-postX,dy-lineOffset)<.047) hit(i,floor+height+.08,6,0);
-        if(highWire && Math.abs(dy)<.17 && Math.abs(dx)<4.75) hit(i,floor+.19,6,0);
+        if(highWire && Math.abs(dy)<.17 && Math.abs(dx)<4.75) hit(i,floor+TROUGH_HEIGHT_M,6,0);
       }
     });
   }

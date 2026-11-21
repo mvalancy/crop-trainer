@@ -12,13 +12,13 @@ const trainUsage = 'node run.mjs train new-report.json [settings.json] [--weight
 const cliUsage = 'node run.mjs serve [port]\n'+trainUsage+
   '\nnode run.mjs preflight\n  Train on CPU and replay the held-out synthetic scans through the field CLI. Prints JSON.';
 if(command==='serve'){
- const allowed=new Set(['index.html','farm.js','first-steps.js','field-lesson.js','farm.css','viewer.js','benchmark/index.html','benchmark/watch.js','benchmark/main.js','benchmark/density.js','art/title.svg','art/lettuce-study.webp','trainer/index.html','trainer/main.js','trainer/data.js','trainer/field.js','trainer/model.js','trainer/neural.js','trainer/network.js','trainer/fit-worker.js','trainer/sandbox.js','trainer/crops.js','trainer/sensors.js','README.md','AGENTS.md','LICENSE']);
- for(const module of ['live-scene','scan-session','growing-systems','plant-version','generate-worker','field-test-ui','field-test-worker','score-scan','inference','ply','references']) allowed.add('trainer/'+module+'.js');
- for(const page of ['README','training','scanners','field-inspection','benchmarks','research','local-setup','field-datasets','field-validation','scan-cli','evidence','edge-deployment','research-evidence','industry-practice','crop-architecture','crop-form-benchmark']) allowed.add('docs/'+page+'.md');
+ const allowed=new Set(['index.html','farm.js','first-steps.js','field-lesson.js','farm.css','viewer.js','benchmark/index.html','benchmark/watch.js','benchmark/main.js','benchmark/density.js','art/title.svg','art/lettuce-study.webp','trainer/index.html','trainer/main.js','trainer/data.js','trainer/field.js','trainer/plants/portrait.css','trainer/model.js','trainer/neural.js','trainer/network.js','trainer/fit-worker.js','trainer/sandbox.js','trainer/crops.js','trainer/sensors.js','README.md','AGENTS.md','LICENSE']);
+ for(const module of ['live-scene','scan-session','growing-systems','plant-version','generate-worker','scan-study','scan-study-worker','scan-study-ui','scan-study-map','orchard','field-test-ui','field-test-worker','score-scan','inference','ply','references']) allowed.add('trainer/'+module+'.js');
+ for(const page of ['README','training','scanners','field-inspection','benchmarks','research','local-setup','field-datasets','field-validation','scan-cli','evidence','edge-deployment','research-evidence','industry-practice','crop-architecture','crop-form-benchmark','orchard-bases','seedling-density']) allowed.add('docs/'+page+'.md');
  for(const lesson of ['README','models','learning','scoring','fieldwork']) allowed.add('docs/first-steps/'+lesson+'.md');
  for(const diagram of ['returns','patch','weights','network','labels','loss','pins','matches','stages','vine']) allowed.add('art/lesson-'+diagram+'.svg');
  for(const folder of ['art','benchmark','test','trainer','trainer/plants','art/plants']) allowed.add(folder+'/README.md');
- for(const figure of ['scan-learn-find','paired-field','field-notebook','seed-replay','sprout-strip','field-deployment','plant-architecture']) allowed.add('art/'+figure+'.svg');
+ for(const figure of ['scan-learn-find','paired-field','field-notebook','seed-replay','sprout-strip','field-deployment','plant-architecture','orchard-bases','seedling-density']) allowed.add('art/'+figure+'.svg');
  const types={html:'text/html',js:'text/javascript',css:'text/css',svg:'image/svg+xml',webp:'image/webp',md:'text/plain'};
  const port=Number(output||4173);
  if(!Number.isInteger(port)||port<1||port>65535)throw Error('Choose a port from 1 to 65535.');

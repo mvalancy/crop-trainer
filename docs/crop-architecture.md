@@ -33,6 +33,12 @@ A form can describe a market type, a growth stage or a grower’s pruning decisi
 
 Photographs establish which organs connect and which shapes are plausible. The generator’s leaf counts, dimensions and mix frequencies are modeling assumptions. To calibrate one form for a site, measure several representative plants at the stated stage, record their training system, and compare held-out scans from matching viewpoints.
 
+## Replay geometry by version
+
+Fresh browser scans, training runs and benchmarks use **Connected plants · v3**. Version 3 joins each retained lettuce blade to its own stem with a short stalk. Vegetative artichokes grow from a stem rooted in the soil, and each bud bract meets the core at its own collar height. Greenhouse lettuce meets the 0.73 m bench, including its ends. High-wire tomato meets the 0.19 m trough. Vines, apple trees and young field tomatoes share their v2 organ shapes. Use the version recorded in a saved recipe or run to reproduce its geometry, tile IDs and scores. [Generator versions](../trainer/plant-version.js) · [Replay and attachment tests](../test/plant-attachments.test.js)
+
+The vineyard fixture represents one catch wire and posts. The greenhouse fixture represents the overhead cable, posts and trough. A real grower also uses a fruiting wire or twine to hold plants in position. Those finer supports are simplified out of the fixture layer and can be absent from a side view. [Vineyard growing guide](../trainer/plants/grapevine.md) · [Greenhouse tomato growing guide](../trainer/plants/high-wire-tomato.md)
+
 ## Which position gets scored?
 
 For apple, grapevine, greenhouse bench lettuce and high-wire tomato, the reference pin is the planting base recorded by the generator. Field lettuce, artichoke and young tomato use the horizontal midpoint of the full plant’s bounding box. A one-sided loss of leaves can shift that midpoint even though the underlying planting stayed in place. Use the same target definition when comparing detectors. [Reference positions in the scorer](../trainer/data.js)

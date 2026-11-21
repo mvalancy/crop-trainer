@@ -22,7 +22,7 @@ The initial browser schedule, **Field practice**, sets 16 training and eight val
 
 ### Reproduce a crop form or an injury
 
-Use `plantArchitecture: 2` for structured plants in saved JSON. Choose a named `plantForm` from the [catalog](trainer/plants/forms.js) or use `mixed`. Set `plantCondition` to `healthy`, `mixed` or `damaged`. All three settings travel with the recipe, training settings and benchmark replay. Keep the seed and scanner fixed when comparing conditions. Field export boxes report each resolved form and condition. Apple leaf-on and dormant form an additional paired inspection in the field generator. For the visual rule, photo references and limitations, open the [seven illustrated generator guides](trainer/plants/README.md).
+Use `plantArchitecture: 3` for new structured-plant experiments. Version 3 joins lettuce blades to their stems, grounds vegetative artichokes, seats artichoke bracts and meets greenhouse support heights. Keep the recorded architecture when replaying an export. Version 2 reproduces the first organ models and version 1 reproduces original canopies. Choose a named `plantForm` from the [catalog](trainer/plants/forms.js) or use `mixed`. Set `plantCondition` to `healthy`, `mixed` or `damaged`. All three settings travel with the recipe, training settings and benchmark replay. Keep the seed and scanner fixed when comparing conditions. Field export boxes report each resolved form and condition. Apple leaf-on and dormant form an additional paired inspection in the field generator. For the visual rule, photo references and limitations, open the [seven illustrated generator guides](trainer/plants/README.md).
 
 ### Check the actual training set
 
@@ -154,6 +154,10 @@ Run `/benchmark/?comparison=models&crop=lettuce&seed=1121&sensor=mixed&validatio
 For a local agent, import `compareMatchedBoxes` from `trainer/data.js`. Pair the logistic and neural rows by dataset seed, and their tiles by `tile_id`. Call `compareMatchedBoxes(logisticTile, neuralTile, 15)` on reports containing `missesByTolerance`. The result includes counts `both` and `neither`, zero-based box index arrays `firstOnly` and `secondOnly`, and extra pin counts `firstFP` and `secondFP`. Row order reverses on the second seed. The helper takes distances in centimetres. Sum both shared counts and the two array lengths to recover the label count. For earlier reports, reproduce the run to obtain the assigned box indices.
 
 A generator URL can include `box=0` or another zero-based box index. Include the matching `tile` value when building links from a report. This prevents a stale tile link highlighting an unrelated plant. Box highlighting affects only the camera overlay and shared URL.
+
+### Compare two ray budgets on one planting
+
+In the field generator, expand **Compare two ray budgets on this field** and run both scans. The downloaded JSON records the full recipe, actual sampled rays, per-plant returns, matched proposals and scored pins for each arm. Keep the tile IDs with the results. A hardware-inspired layout can reach its channel limit before the requested budget. The apple option includes a geometric base locator. Its support value and the learned detector’s probability have different meanings. Replay the multi-field studies with `node benchmark/seedling-density.mjs` and `node benchmark/orchard-bases.mjs`. [Seedling results](docs/seedling-density.md) · [Orchard results](docs/orchard-bases.md)
 
 ### Compare training duration
 

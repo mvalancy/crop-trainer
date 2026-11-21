@@ -1,11 +1,12 @@
 import {encodePly} from './trainer/ply.js?v=export1';
 import {setupFirstSteps} from './first-steps.js';
+import {initScanStudy} from './trainer/scan-study-ui.js?v=paired-study1';
 import {createFieldLesson} from './field-lesson.js';
 import {cropProfile} from './trainer/crops.js?v=systems1';
-import {scanSession} from './trainer/scan-session.js?v=plants2';
-import {makeRecipe} from './trainer/data.js?v=plants2';
+import {scanSession} from './trainer/scan-session.js?v=plants3';
+import {makeRecipe} from './trainer/data.js?v=plants3';
 import {formsFor} from './trainer/plants/forms.js';
-import {setupFieldPlants} from './trainer/plants/field-controls.js';
+import {setupFieldPlants} from './trainer/plants/field-controls.js?v=plants3';
 import {getSensor, sensorOptions, sensorDetails, rayBudgetOptions, layoutCapacity, DEFAULT_GENERATOR_RAYS} from './trainer/sensors.js?v=dense1';
 import {createLiveScene} from './trainer/live-scene.js';
 import {createViewer} from './viewer.js?v=wood2';
@@ -38,6 +39,7 @@ function showSystemControls() {
 }
 sensorOptions($('scan'));
 const requested = new URLSearchParams(location.search);
+const scanStudy=initScanStudy(requested);
 const narrowField = matchMedia('(max-width: 740px)');
 document.querySelector('.scannerSetup').open = !narrowField.matches;
 $('crop').addEventListener('change',showSystemControls);
@@ -147,6 +149,7 @@ function grow(checkReplay = false) {
 let scanController;
 async function showScan(recipe, url, selectedBox, expectedTile, checkReplay = false) {
   scanController?.abort();
+  scanStudy.pause();
   scanController=new AbortController();
   const {signal}=scanController, session=scanSession(signal);
   live.reset();
@@ -170,6 +173,7 @@ async function showScan(recipe, url, selectedBox, expectedTile, checkReplay = fa
   }catch(error){
     if(signal.aborted)return;
     live.reset();
+    scanStudy.resume();
     $('generationStatus').textContent = error.message+'. Try another ray budget.';
   }finally{session.close();}
 }
@@ -196,6 +200,7 @@ function applyScan(value, recipe, url, selectedBox, expectedTile) {
   url.searchParams.set('tile', scan.labels.tile_id);
   url.hash = 'field';
   $('scanLink').href = url.href;
+  scanStudy.setScan(scan,url.href);
   $('copyScan').disabled = false;
   $('switchSoil').disabled = false;
   const profile=cropProfile(recipe.crop);
@@ -231,7 +236,7 @@ function applyScan(value, recipe, url, selectedBox, expectedTile) {
   const training = new URLSearchParams({plan:'practice',crop:recipe.crop,sensor:recipe.sampling.key});
   const budget = url.searchParams.get('budget');
   training.set('plantArchitecture',recipe.plantArchitecture??1);
-  if(recipe.plantArchitecture===2){
+  if(recipe.plantArchitecture>=2){
     training.set('plantForm',recipe.plantForm);training.set('plantCondition',recipe.plantCondition);
   }
   if (Number(budget)) training.set('validationRayBudget', budget);

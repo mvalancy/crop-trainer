@@ -1,3 +1,11 @@
+import {DENSITY_BUDGETS} from '../trainer/sensors.js?v=dense1';
+
+export const CLASSIC_TRAINING_PAIR = '12k-60k';
+export const TRAINING_RAY_PAIRS = new Map([
+  [CLASSIC_TRAINING_PAIR, DENSITY_BUDGETS],
+  ['30k-1m', [30000, 1000000]]
+]);
+
 // Version the tab-local snapshot key when the fitter, features or scorer change.
 export const DENSITY_HISTORY_KEY = 'crop-trainer-density-f1-v1';
 export const HEIGHT_HISTORY_KEY = 'crop-trainer-peak-height-f1-v1';

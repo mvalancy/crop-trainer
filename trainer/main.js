@@ -1,10 +1,10 @@
-import {scanSession} from './scan-session.js?v=plants2';
-import {setupPlantControls, plantSettings} from './plant-version.js';
+import {scanSession} from './scan-session.js?v=plants3';
+import {setupPlantControls, plantSettings} from './plant-version.js?v=plants3';
 import {createLiveScene} from './live-scene.js';
-import {initFieldTest} from './field-test-ui.js?v=systems1';
+import {initFieldTest} from './field-test-ui.js?v=orchard2';
 import {initSandbox, modelSettings, duration, trainInWorker, inspectWeights, runPresets, startingPreset} from './sandbox.js?v=field-practice1';
 import {MAX_SANDBOX_EPOCHS, trainerId, weightArtifact} from './network.js?v=plants2';
-import {returnBand,sampleCloud} from './field.js?v=plants2';
+import {returnBand,sampleCloud} from './field.js?v=plants3';
 import {cropProfile} from './crops.js?v=systems1';
 import {allProfiles, sensorOptions, validationSensorOptions, sensorDetails, rayBudgetOptions, trainingRayOptions, trainingRayValue, ALTERNATING_BUDGET} from './sensors.js?v=dense1';
 if(new URLSearchParams(location.search).has('embed'))document.body.classList.add('embed');
@@ -30,7 +30,7 @@ const seedParam = params.get('seed');
 if (/^\d+$/.test(seedParam) && Number(seedParam) <= 0xffffffff) $('seed').value = String(Number(seedParam));
 const cropParam = params.get('crop');
 if ([...$('crop').options].some(option => option.value === cropParam)) $('crop').value = cropParam;
-const readPlantControls = setupPlantControls($('crop'), $('plantArchitecture'), $('plantForm'), $('plantCondition'), params, initialPlan === 'practice' ? 2 : 1);
+const readPlantControls = setupPlantControls($('crop'), $('plantArchitecture'), $('plantForm'), $('plantCondition'), params, initialPlan === 'practice' ? 3 : 1);
 function selectCropDefault() { $('peakHeight').value = String(cropProfile($('crop').value).peakHeight); }
 $('crop').addEventListener('change', selectCropDefault);
 selectCropDefault();
@@ -70,7 +70,7 @@ initSandbox(params);
 let finishTraining=null, calibration=null;
 let controller=null,losses=[],lastPreview=null,backendReady=false,deps,webgpuAvailable=false,lastRun=null,lastPaint=0;
 try {
- deps=await Promise.all([import('./data.js?v=plants2'),import('./model.js?v=benchmark1'),import('./neural.js?v=live1')]);
+ deps=await Promise.all([import('./data.js?v=plants3'),import('./model.js?v=benchmark1'),import('./neural.js?v=live1')]);
  $('epochs').max=MAX_SANDBOX_EPOCHS;
  const epochsParam = params.get('epochs');
  if (/^\d+$/.test(epochsParam) && Number(epochsParam) >= 1 && Number(epochsParam) <= MAX_SANDBOX_EPOCHS) {

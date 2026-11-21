@@ -1,11 +1,15 @@
 // A cultivated globe artichoke has a divided rosette and can bear flower buds.
 const spiral = Math.PI * (3 - Math.sqrt(5));
 
-export function artichoke({x, y, z, radius, random, leaf, stem, ellipsoid, damaged, form = 'single-bud'}) {
+export function artichoke({x, y, z, radius, random, leaf, stem, ellipsoid, damaged, plantArchitecture, form = 'single-bud'}) {
   const phase = random() * 2 * Math.PI;
   const vegetative = form === 'rosette';
   const count = (vegetative ? 8 : 11) + Math.floor(3 * random());
   const spread = radius * (vegetative ? .77 : 1);
+  if (vegetative && plantArchitecture >= 3) {
+    // The compact vegetative axis joins the stacked rosette leaf bases to the soil.
+    stem(x, y, z, x, y, z + .27 * radius, .067 * radius, .040 * radius);
+  }
   for (let i = 0; i < count; i++) {
     const t = i / (count - 1);
     const angle = phase + spiral * i + .25 * (random() - .5);
@@ -54,8 +58,15 @@ export function artichoke({x, y, z, radius, random, leaf, stem, ellipsoid, damag
     for (let i = 0; i < 15; i++) {
       const tier = i / 14, angle = rotation + spiral * i;
       const dx = Math.cos(angle), dy = Math.sin(angle);
-      const root = scale * (.43 + .34 * Math.sin(Math.PI * tier)), tip = scale * (1.05 - .72 * tier);
-      leaf(cx + dx * root, cy + dy * root, cz + scale * (-.82 + 1.21 * tier),
+      const collar = -.82 + 1.21 * tier;
+      let root = scale * (.43 + .34 * Math.sin(Math.PI * tier));
+      if (plantArchitecture >= 3) {
+        // An ellipsoid narrows toward each pole. Seat this bract slightly
+        // inside the core's horizontal section at the actual collar height.
+        root = Math.min(root, .99 * .74 * scale * Math.sqrt(1 - (collar / .99) ** 2));
+      }
+      const tip = scale * (1.05 - .72 * tier);
+      leaf(cx + dx * root, cy + dy * root, cz + scale * collar,
         cx + dx * tip, cy + dy * tip, cz + scale * (.08 + .99 * tier),
         scale * (.36 - .09 * tier), scale * .1);
     }

@@ -2,7 +2,7 @@
 
 # Greenhouse high-wire tomato
 
-A **leader** is a growing main stem. In a greenhouse, a grower can guide one or two leaders from one plant toward an overhead support. A **truss** is a branching stalk bearing several flowers or fruit. Look for the shared planting base when the foliage splits into two tops. The trainer awards one planting target to that plant. [Open the twin-leader greenhouse](https://mvalancy.github.io/crop-trainer/?crop=high-wire-tomato&plantArchitecture=2&plantForm=twin-leader&plantCondition=healthy&sensor=reference&seed=27#field)
+A **leader** is a growing main stem. In a greenhouse, a grower can guide one or two leaders from one plant toward an overhead support. A **truss** is a branching stalk bearing several flowers or fruit. Look for the shared planting base when the foliage splits into two tops. The trainer awards one planting target to that plant. [Open the twin-leader greenhouse](https://mvalancy.github.io/crop-trainer/?crop=high-wire-tomato&plantArchitecture=3&plantForm=twin-leader&plantCondition=healthy&sensor=reference&seed=27#field)
 
 ## Grow the three forms
 
@@ -12,7 +12,7 @@ A **leader** is a growing main stem. In a greenhouse, a grower can guide one or 
 | `single-leader` | One fruiting stem leans down the row and turns upright near its tip. The older lower stem has a bare section. |
 | `twin-leader` | A short common stem forks near the substrate. Two fruiting stems fan out along the row and carry their own leaves and trusses. |
 
-1. Place the stem base 0.20 m above the simulated greenhouse floor at trough height. The wire and trough belong to the greenhouse fixture layer.
+1. Place the stem base at the simulated trough surface, 0.19 m above the floor in version 3. Version 2 uses a 0.20 m base. The wire and trough belong to the greenhouse fixture layer. The tube clips and hanging twine visible in real houses are omitted.
 2. Choose plant vigor and draw the leader in tapered segments. The young leader has five to seven nodes. Each mature leader has nine to eleven. Seeded differences in height, lean and leaf reach vary the row’s profile.
 3. At each retained leaf node, bend the leaf stalk outward. Attach two pairs of side leaflets and a terminal leaflet. On mature plants, selected lower nodes also carry a descending truss with three to five individually attached fruit. [Generator code](high-wire-tomato.js)
 
@@ -22,7 +22,7 @@ Alberta’s propagation photographs show small leafy plants before transplanting
 
 ## Try a missing growing tip
 
-The damaged condition breaks one leader between two nodes, leaving lower stem and foliage attached. On a twin-leader plant the second stem keeps growing to its usual height. Switch between healthy and damaged fields at the same seed and compare the structure overlay with the overhead returns. [Healthy single leader](https://mvalancy.github.io/crop-trainer/?crop=high-wire-tomato&plantArchitecture=2&plantForm=single-leader&plantCondition=healthy&sensor=reference&seed=27#field) · [Broken single leader](https://mvalancy.github.io/crop-trainer/?crop=high-wire-tomato&plantArchitecture=2&plantForm=single-leader&plantCondition=damaged&sensor=reference&seed=27#field)
+The damaged condition breaks one leader between two nodes, leaving lower stem and foliage attached. On a twin-leader plant the second stem keeps growing to its usual height. Switch between healthy and damaged fields at the same seed and compare the structure overlay with the overhead returns. [Healthy single leader](https://mvalancy.github.io/crop-trainer/?crop=high-wire-tomato&plantArchitecture=3&plantForm=single-leader&plantCondition=healthy&sensor=reference&seed=27#field) · [Broken single leader](https://mvalancy.github.io/crop-trainer/?crop=high-wire-tomato&plantArchitecture=3&plantForm=single-leader&plantCondition=damaged&sensor=reference&seed=27#field)
 
 The overhead scanner records the first visible surface. A leaf can hide an entire fruit or a stem junction. The highest return can lie well along the row from the planting base. This makes the three forms a test of localization across crop stages and training systems. Fruit yield, ripeness and a grower’s pruning schedule would require separate measurements.
 

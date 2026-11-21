@@ -1,6 +1,6 @@
 import {cropProfile} from './crops.js?v=systems1';
-import {field, returnBand} from './field.js?v=plants2';
-import {plantSettings} from './plant-version.js';
+import {field, returnBand} from './field.js?v=plants3';
+import {plantSettings} from './plant-version.js?v=plants3';
 import {predict} from './model.js';
 
 export const PEAK_HEIGHTS = [0.065, 0.035];
@@ -30,7 +30,7 @@ export function makeRecipe(seed,ground,sampling,crop='lettuce',plantArchitecture
     density:noise<.25?0:8+19*r(),gaps:noise<.65?0:1+4*r(),stray:noise<.6?0:.08+.28*r(),cluster:noise<.25?0:7+16*r()}
  };
 }
-function centers(boxes){return boxes.map(({min,max,base_xy_m})=>base_xy_m ?? [(min[0]+max[0])/2,(min[1]+max[1])/2]);}
+export function targetCenters(boxes){return boxes.map(({min,max,base_xy_m})=>base_xy_m ?? [(min[0]+max[0])/2,(min[1]+max[1])/2]);}
 export function features(tile, minimumHeight=.065){
  // Only XYZ, never the synthetic return classes or supplied training boxes.
  const xy=tile.xyz,N=SIZE*SIZE, max=new Float32Array(N), count=new Uint32Array(N);
@@ -93,7 +93,7 @@ export async function buildDataset({seed=27,crop='lettuce',plantArchitecture=1,p
    if (rayBudget) recipe.points = rayBudget;
    const step={split:trainingField?'Training':'Validation',done:2*k+v+1,total,firstValidation:k===trainFields && v===0};
    const t=generate ? await generate(recipe,step) : field(recipe);
-   const f=features(t,minimumHeight), truth=centers(t.labels.boxes), points=[];
+   const f=features(t,minimumHeight), truth=targetCenters(t.labels.boxes), points=[];
    if(onScan) onScan(t,step);
    if(!trainingField){const n=t.xyz.length/3,inc=Math.max(1,Math.ceil(n/1500));for(let i=0;i<n;i+=inc)points.push([t.xyz[3*i],t.xyz[3*i+1]]);}
    const item={...f,truth,coverage:t.coverage,seed:id,ground:v===0,recipe:t.p,sampledRays:t.sampledRays,tile_id:t.labels.tile_id,returnCount:t.labels.num_points,points};

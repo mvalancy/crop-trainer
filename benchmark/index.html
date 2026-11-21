@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Benchmark · Crop Trainer</title>
-<link rel="stylesheet" href="../farm.css?v=fieldlesson1">
+<link rel="stylesheet" href="../farm.css?v=plant-study3">
 </head>
 <body class="benchmark"><a class="skip" href="#main">Skip to content</a>
 <header class="siteBar">
@@ -26,7 +26,7 @@
 <button type="button" id="cancel" disabled="">Cancel</button></div>
 <details id="benchOptions"><summary>Seeds, training and scan settings</summary><div>
 <fieldset><legend>Detector settings</legend><div class="benchFields">
-<label>Plant architecture<select id="plantArchitecture" required><option value="2" selected>Structured plants · v2</option><option value="1">Original plants · v1</option></select></label>
+<label>Plant architecture<select id="plantArchitecture" required><option value="3" selected>Connected plants · v3</option><option value="2">Structured plants · v2</option><option value="1">Original plants · v1</option></select></label>
 <label>Plant form<select id="plantForm" required><option value="mixed">Seeded mix</option></select></label>
 <label>Plant condition<select id="plantCondition" required><option value="healthy">Healthy</option><option value="mixed">Seeded damage · about 1 in 4</option><option value="damaged">All damaged</option></select></label>
 <label>First seed<input type="number" id="seed" value="27" min="0" max="4294967294" step="1" required=""></label>
@@ -37,6 +37,8 @@
 <fieldset><legend>Training scans</legend><div class="benchFields">
 <label>Training layout<select id="sensor"></select></label>
 <label id="trainingBudgetControl">Training ray budget<select id="trainingRayBudget"></select></label>
+<label id="trainingPairControl" hidden>Training ray budgets<select id="trainingPair" required aria-describedby="trainingPairHelp"></select></label>
+<p class="hint" id="trainingPairHelp" hidden>Reference grid can sample the full million rays. Other layouts may reach their scanner limit sooner.</p>
 <label id="mixedControl" class="check" hidden><input id="includeMixed" type="checkbox"> Include a mixed-density fit</label>
 </div></fieldset>
 <fieldset><legend>Validation scans</legend><div class="benchFields">
@@ -55,6 +57,9 @@
 <li><a href="?comparison=heights&amp;crop=tomato&amp;seed=2221&amp;sensor=mixed&amp;validationSensor=os1-64&amp;validationRayBudget=12000">Test shorter peaks on sparse tomatoes</a></li>
 <li><a href="?comparison=heights&amp;crop=lettuce&amp;seed=2121&amp;sensor=mixed&amp;validationSensor=os1-64&amp;validationRayBudget=12000&amp;pairSeed=2122&amp;pairTile=39c12665d375fbb9&amp;pairDistance=7.5&amp;pairBox=1#modelBoxes">Inspect a missed lettuce plant in 3D</a></li>
 <li><a href="?comparison=models&amp;crop=artichoke&amp;seed=1551&amp;sensor=mixed&amp;validationSensor=os1-64&amp;validationRayBudget=12000&amp;fieldMetric=meanAbsolute">Compare artichoke counts by model</a></li>
+<li><a href="?comparison=density&amp;trainingPair=30k-1m&amp;crop=tomato&amp;plantArchitecture=2&amp;plantForm=seedling&amp;plantCondition=healthy&amp;sensor=reference&amp;validationRayBudget=1000000&amp;seed=82173">Train on sparse and dense seedling scans</a></li>
+<li><a href="../?crop=tomato&amp;plantArchitecture=2&amp;plantForm=seedling&amp;sensor=reference&amp;seed=216917&amp;noise=clean&amp;weeds=off&amp;sticks=off&amp;boards=off&amp;studyLow=30000&amp;studyHigh=1000000#scan-study">See which seedlings a denser scan reveals</a></li>
+<li><a href="../?crop=apple&amp;plantArchitecture=2&amp;plantForm=open-vase&amp;sensor=os1-64&amp;seed=1430867&amp;noise=rough&amp;studyLow=12000&amp;studyHigh=30000&amp;studyMetric=orchard#scan-study">Find apple tree bases at two ray budgets</a></li>
 </ul></nav></details></div>
 </section>
 <section id="benchWatch" tabindex="-1" class="panel benchWatch" aria-labelledby="watchTitle" hidden>
@@ -103,7 +108,7 @@
 <p class="hint">Scanner capacity can cap the rays sampled per scan. The training examples are balanced candidate peaks from both soil variants. All fits at each seed used the same validation tiles.</p>
 <p id="mixedNote" class="hint" hidden>The alternating fit uses three plantings at 12,000 rays and three at 60,000 rays. Each planting keeps its budget across both soil scans.</p>
 <div class="tableScroll"><table><thead><tr><th>Seed</th><th>Rays requested per scan</th><th>Rays sampled per training scan</th><th>Training examples</th><th>Mean F1</th></tr></thead><tbody id="densityRows"></tbody></table></div>
-<p id="densityCapNote" hidden>Both ray requests reached the layout’s sampling limit on every training scan. Choose a layout with a higher capacity, such as OS1-64, to compare different training densities.</p>
+<p id="densityCapNote" hidden></p>
 <p class="hint" id="densityRepeatHelp"></p>
 <div class="action" id="densityRepeats"></div>
 </section>
@@ -150,6 +155,6 @@
 </main>
 <footer class="siteFoot"><span>Created by Matthew Valancy</span>
 <div><a href="../AGENTS.md">Agent quickstart</a><a href="../#missions">Farm journal</a><a href="../LICENSE">MIT license</a></div></footer>
-<script type="module" src="main.js?v=plants2"></script>
+<script type="module" src="main.js?v=raypairs1"></script>
 </body>
 </html>

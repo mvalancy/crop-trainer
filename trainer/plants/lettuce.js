@@ -7,7 +7,7 @@ const lettuceForms = {
   romaine: {leaves:16, spread:.84, inner:.23, height:1.58, width:.21, lobes:1, outerRise:.46, collar:.09}
 };
 
-function lettuceRosette({x, y, z, radius, random, leaf, stem, damaged}, form) {
+function lettuceRosette({x, y, z, radius, random, leaf, stem, damaged, plantArchitecture}, form) {
   const phase = random() * 2 * Math.PI;
   const leaves = form.leaves + Math.floor(4 * random());
   const aspect = .82 + .15 * random();
@@ -31,6 +31,10 @@ function lettuceRosette({x, y, z, radius, random, leaf, stem, damaged}, form) {
     if (damaged && inward < .78 && exposure > .59) continue;
     const torn = damaged && inward < .68 && exposure > .17;
     const tip = torn ? start + .56 * (reach - start) : reach;
+    if (plantArchitecture >= 3) {
+      // A short basal petiole connects each blade collar to this plant’s own stem.
+      stem(x, y, baseZ, x + start * dx, y + start * dy, baseZ, .030 * radius, .016 * radius);
+    }
     leaf(x + start * dx, y + start * dy, baseZ, x + tip * dx, y + tip * dy,
       torn ? baseZ + .59 * (tipZ - baseZ) : tipZ, torn ? width * .76 : width,
       height * (.21 - .1 * inward), form.lobes);

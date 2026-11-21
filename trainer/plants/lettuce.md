@@ -6,7 +6,7 @@ A loose-leaf lettuce spreads across the bed. A butterhead packs broad leaves int
 
 ## How a head grows in the simulator
 
-Start at the short stem and rotate around it as each new leaf appears. The outer leaves reach farthest. The inner leaves start higher and occupy the heart. Each blade has an arched center line, a width that tapers toward the ends and a margin that curls up. A seed varies the count, reach and angle. The field and bench presets can grow the same three forms. The bench places the stem 74 cm above the greenhouse floor. [Lettuce generator](lettuce.js) · [Surface sampler](surfaces.js)
+Start at the short stem and rotate around it as each new leaf appears. The outer leaves reach farthest. The inner leaves start higher and occupy the heart. Each blade has an arched center line, a width that tapers toward the ends and a margin that curls up. A seed varies the count, reach and angle. The field and bench presets can grow the same three forms. In version 3 each retained blade joins the stem through a short stalk, and the bench stem starts 73 cm above the greenhouse floor at the bench surface. Version 2 recipes retain their original 74 cm stem position. [Lettuce generator](lettuce.js) · [Surface sampler](surfaces.js)
 
 | Choose this form | Look for this in the scan |
 | --- | --- |
@@ -18,6 +18,6 @@ The scanner samples the highest visible surface at each ray. A tall, tight heart
 
 ## Take one head apart
 
-Open both scans, highlight a plant and choose **Focus plant**. On the damaged form a sector of outer leaves is missing and adjacent blades are shorter. Watch how the visible outline changes and which leaves still produce the tallest returns. Both links use the same crop, form, sensor, seed and clean scan settings. [Healthy romaine](https://mvalancy.github.io/crop-trainer/?crop=lettuce&plantArchitecture=2&plantForm=romaine&plantCondition=healthy&seed=31907&sensor=reference&noise=clean&box=3#field) · [Damaged romaine](https://mvalancy.github.io/crop-trainer/?crop=lettuce&plantArchitecture=2&plantForm=romaine&plantCondition=damaged&seed=31907&sensor=reference&noise=clean&box=3#field)
+Open both scans, highlight a plant and choose **Focus plant**. On the damaged form a sector of outer leaves is missing and adjacent blades are shorter. Watch how the visible outline changes and which leaves still produce the tallest returns. Both links use the same crop, form, sensor, seed and clean scan settings. [Healthy romaine](https://mvalancy.github.io/crop-trainer/?crop=lettuce&plantArchitecture=3&plantForm=romaine&plantCondition=healthy&seed=31907&sensor=reference&noise=clean&box=3#field) · [Damaged romaine](https://mvalancy.github.io/crop-trainer/?crop=lettuce&plantArchitecture=3&plantForm=romaine&plantCondition=damaged&seed=31907&sensor=reference&noise=clean&box=3#field)
 
 These are procedural canopy sketches. The blade dimensions, spiral and damage pattern are choices for testing. Measuring the spread, leaf inclination and head height of a named cultivar at a specific age would let you calibrate a closer model. The canopy scan leaves fine veins, below-bench roots and internal head layers unresolved.

@@ -1,0 +1,49 @@
+.specimenComparison {
+  display: grid;
+  gap: .6rem;
+  min-width: 0;
+  padding: .85rem;
+  color: #264437;
+  background: #f7f6e9;
+  border: 1px solid #ccd4bf;
+  border-radius: .65rem;
+}
+.specimenComparison h4 { margin: 0; font: 600 1.15rem/1.25 var(--serif); }
+.specimenPair { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); }
+.specimenPair figure { margin: 0; min-width: 0; text-align: center; }
+.specimenPair figure + figure { border-left: 1px solid #d1d8c5; }
+.specimenPair canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  background-image: radial-gradient(#a4b39c4d .65px,transparent .8px);
+  background-size: 9px 9px;
+  cursor: grab;
+  touch-action: pan-y;
+}
+.specimenPair canvas:active { cursor: grabbing; }
+.specimenPair figcaption { padding-block: .16rem; font: 650 .85rem/1.25 var(--sans); }
+.specimenComparison p { margin: 0; font-size: .84rem; line-height: 1.4; }
+.specimenComparison .specimenAngle { display: grid; gap: 0; border-top: 1px solid #d6ddc8; padding-top: .55rem; }
+#grow .specimenAngle input {
+  padding: 0;
+  border: 0;
+  margin: 0;
+  height: 2rem;
+  min-height: 2rem;
+  background: transparent;
+  accent-color: var(--forest);
+}
+.specimenModes { display: flex; flex-wrap: wrap; align-items: center; gap: .2rem .65rem; }
+#damageZoom { min-height: 2.75rem; padding: .28rem .65rem; font-size: .85rem; }
+#damageZoom[aria-pressed=true] { color: white; border-color: #345542; background: #345542; }
+.specimenComparison .specimenHatch {
+  display: flex; align-items: center;
+  margin: 0; min-height: 2.75rem; gap: .45rem;
+}
+.specimenHatch span::before {
+  content: ''; display: inline-block; width: .8rem; height: .8rem; margin-right: .35rem; vertical-align: -.05em;
+  border: 1px solid #965323; border-radius: .1rem;
+  background: repeating-linear-gradient(-45deg,#f7dfb1,#f7dfb1 3px,#9c582a 3px,#9c582a 4.5px);
+}
+#specimenContext { color: #53604e; }

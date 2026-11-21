@@ -63,11 +63,11 @@ async function main(args) {
   const identity=file=>file ? {name:file.name,sha256:file.sha256} : null;
   const files={model:identity(modelFile),scan:identity(scanFile),labels:identity(labelFile)};
   await writeNewJson([[opts.out,{format:'crop-trainer-field-test-v1',files,...result}]]);
-  console.log(result.pointCount+' scan points · '+result.pins.length+' model pins · '+result.baselinePins.length+' height-only pins');
+  console.log(result.pointCount+' scan points · '+result.pins.length+' model pins · '+result.baselinePins.length+' height-only pins'+(result.orchard?' · '+result.orchard.pins.length+' orchard-base pins':''));
   if (result.evaluation) {
     const show=score=>score.f1===null?'undefined':score.f1.toFixed(4);
     for (const [i,score] of result.evaluation.scores.entries()) {
-      console.log(score.cm+' cm F1 · model '+show(score)+' · height only '+show(result.baselineEvaluation.scores[i]));
+      console.log(score.cm+' cm F1 · model '+show(score)+' · height only '+show(result.baselineEvaluation.scores[i])+(result.orchardEvaluation?' · orchard base '+show(result.orchardEvaluation.scores[i]):''));
     }
   } else console.log('Add surveyed centers with --labels to measure accuracy.');
   console.log('Wrote '+opts.out);

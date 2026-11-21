@@ -1,7 +1,25 @@
 const byId = id => document.getElementById(id);
 const rate = v => v === null ? '—' : (100*v).toFixed(1)+'%';
 
-function drawPlot(report, sampled, baseline) {
+function methodsFor(report) {
+  const detector = report.detector;
+  const cm = meters => (meters*100).toFixed(1)+' cm';
+  const peaks = 'Peak floor '+cm(detector.minimumHeight);
+  const spacing = 'minimum spacing '+cm(detector.pinSeparation);
+  const methods={
+    model:{label:'Trained model',pins:report.pins,evaluation:report.evaluation,
+      rule:peaks+' · saved score cutoff '+detector.threshold+' · '+spacing+'.'},
+    baseline:{label:'Height only',pins:report.baselinePins,evaluation:report.baselineEvaluation,
+      rule:peaks+' · peaks ranked by smoothed height · '+spacing+'.'}
+  };
+  if (report.orchard) methods.orchard={
+    label:'Orchard base locator',pins:report.orchard.pins,evaluation:report.orchardEvaluation,
+    rule:'Height-band support cutoff '+report.orchard.threshold+' · minimum spacing '+cm(report.orchard.separationMeters)+'.'
+  };
+  return methods;
+}
+
+function drawPlot(report, sampled, {pins,evaluation}) {
   const canvas = byId('testMap'), ctx = canvas.getContext('2d');
   const inset = 26, side = canvas.width-2*inset;
   const px = x => inset+x*side/10, py = y => inset+(10-y)*side/10;
@@ -24,8 +42,6 @@ function drawPlot(report, sampled, baseline) {
   for (let i = 0; i < sampled.length; i += 2) {
     ctx.fillRect(px((sampled[i]-origin[0])*scale),py((sampled[i+1]-origin[1])*scale),1.6,1.6);
   }
-  const pins = baseline ? report.baselinePins : report.pins;
-  const evaluation = baseline ? report.baselineEvaluation : report.evaluation;
   const assigned = new Set(evaluation?.pinByReference15);
   if (report.references) {
     ctx.lineWidth = 1.8;
@@ -58,7 +74,7 @@ function renderScores(report) {
   body.replaceChildren();
   byId('testMetrics').hidden = !report.evaluation;
   if (!report.evaluation) return;
-  for (const [method,evaluation] of [['Trained model',report.evaluation],['Height only',report.baselineEvaluation]]) {
+  for (const {label:method,evaluation} of Object.values(methodsFor(report))) {
     for (const s of evaluation.scores) {
       const tr = body.insertRow();
       for (const v of [method,s.cm+' cm',s.tp,s.fp,s.fn,rate(s.precision),rate(s.recall),rate(s.f1)]) {
@@ -90,18 +106,23 @@ export function initFieldTest(downloadJSON) {
   }
   function renderOverlay() {
     if (!report) return;
-    const baseline = byId('testOverlay').value === 'baseline';
-    const evaluation = baseline ? report.baselineEvaluation : report.evaluation;
-    const pins = baseline ? report.baselinePins : report.pins;
-    const name = baseline ? 'The height-only baseline' : 'The trained model';
-    let message = name+' placed '+pins.length+' pins.';
+    const selected = byId('testOverlay').value;
+    const method = methodsFor(report)[selected];
+    const {pins,evaluation} = method;
+    const target = selected==='orchard' ? 'base' : 'center';
+    byId('testSummary').textContent = method.label+' · '+pins.length+' predicted '+report.crop+' '+target+(pins.length===1?'':'s');
+    byId('testRule').textContent = method.rule;
+    byId('testOrchardHelp').hidden = selected!=='orchard';
+    byId('testStages').hidden = selected!=='model' || !report.stages15cm;
+    let message = 'Add surveyed centers to measure accuracy.';
     if (evaluation) {
-      const delta = evaluation.signedCountError;
-      message += ' The survey has '+report.references.length+' centers. ';
-      message += delta === 0 ? 'The counts agree.' : 'The count is '+Math.abs(delta)+(delta > 0 ? ' over' : ' under')+' the survey total.';
-    } else message += ' Add surveyed centers to measure accuracy.';
+      const at15 = evaluation.scores.find(score=>score.cm===15);
+      message = at15.tp+' of '+report.references.length+' surveyed centers matched within 15 cm. '+
+        at15.fp+' extra '+(at15.fp===1?'pin':'pins')+' · '+at15.fn+' missed '+(at15.fn===1?'center':'centers')+'.';
+    }
     byId('testOutcome').textContent = message;
-    drawPlot(report,sampled,baseline);
+    status.textContent = 'Showing '+method.label.toLowerCase()+' pins on '+report.files.scan.name+'.';
+    drawPlot(report,sampled,method);
   }
   function loadScan() {
     worker?.terminate(); worker = null;
@@ -114,7 +135,7 @@ export function initFieldTest(downloadJSON) {
       updateControls(); return;
     }
     status.textContent = 'Reading '+file.name+'…';
-    const active = worker = new Worker(new URL('./field-test-worker.js?v=systems1',import.meta.url),{type:'module'});
+    const active = worker = new Worker(new URL('./field-test-worker.js?v=orchard1',import.meta.url),{type:'module'});
     updateControls();
     function fail(message) {
       if (active !== worker) return;
@@ -143,18 +164,14 @@ export function initFieldTest(downloadJSON) {
           updateControls(); return;
         }
         report = data.report;
-        byId('testRule').textContent = 'Peak floor '+(report.detector.minimumHeight*100).toFixed(1)+' cm · saved score cutoff '+report.detector.threshold+' · minimum spacing '+(report.detector.pinSeparation*100).toFixed(1)+' cm.';
-        byId('testStages').hidden = !report.stages15cm;
         if (report.stages15cm) {
           const [peaks,passed,kept] = report.stages15cm;
           byId('testStageSummary').textContent = report.references.length
             ? 'Of '+report.references.length+' surveyed plants, '+peaks.matched+' could be matched to raw peaks, '+passed.matched+' after the score cutoff, and '+kept.matched+' after spacing.'
             : 'The surveyed plot is empty. The detector found '+peaks.count+' raw peaks, '+passed.count+' passed the cutoff, and '+kept.count+' pins remained after spacing.';
         }
-        byId('testSummary').textContent = report.pins.length+' predicted '+report.crop+' centers';
-        byId('testOverlay').value = 'model';
+        byId('testOverlay').replaceChildren(...Object.entries(methodsFor(report)).map(([id,m])=>new Option(m.label,id)));
         results.hidden = false; renderOverlay(); renderScores(report);
-        status.textContent = 'Compared both detectors on '+report.proposalCount+' candidate peaks in '+report.files.scan.name+'.';
       }
       updateControls();
     };
@@ -174,7 +191,7 @@ export function initFieldTest(downloadJSON) {
     const numbers = ids => ids.map(id=>byId(id).valueAsNumber);
     const alignment = {unit:byId('testUnits').value,origin:numbers(['testX','testY','testZ']),
       gradePercent:numbers(['testGradeX','testGradeY'])};
-    runningModel = modelFile; clearReport(); running = true; status.textContent = 'Finding peaks and comparing both detectors…';
+    runningModel = modelFile; clearReport(); running = true; status.textContent = 'Finding plant centers in the scan…';
     updateControls();
     worker.postMessage({type:'detect',alignment,modelFile,labelFile:labels.files[0]});
   });

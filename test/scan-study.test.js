@@ -1,0 +1,57 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {makeRecipe} from '../trainer/data.js';
+import {field} from '../trainer/field.js';
+import {getSensor} from '../trainer/sensors.js';
+import {analyzeStudyScan,checkStudyPair} from '../trainer/scan-study.js';
+
+function seedlingRecipe(sensor) {
+  const recipe=makeRecipe(216917,true,getSensor(sensor),'tomato',2,'seedling');
+  Object.assign(recipe,{weeds:false,sticks:false,boards:false});
+  for(const key of ['xy','z','density','gaps','stray','cluster']) recipe.scanNoise[key]=0;
+  return recipe;
+}
+
+test('paired generator study reproduces reference seedling hits and one-to-one pin scores',()=>{
+  const recipe=seedlingRecipe('reference');
+  const [low,high]=[30000,1000000].map(points=>analyzeStudyScan(field({...recipe,points})));
+  checkStudyPair(low,high);
+  for(const [arm,id,observed,peaks,counts] of [
+    [low,'add860f363b25596',93,15,[15,4,90]],
+    [high,'e09123723c475a38',105,103,[103,23,2]]
+  ]) {
+    assert.equal(arm.tileId,id);
+    assert.equal(arm.plants.length,105);
+    assert.equal(arm.observedPlants,observed);
+    assert.equal(arm.matchedProposals,peaks);
+    const {cm,tp,fp,fn}=arm.heightScores.at(-1);
+    assert.deepEqual([cm,tp,fp,fn],[15,...counts]);
+    assert.equal(arm.plants.filter(plant=>plant.height).length,tp);
+    assert.ok(!('orchardPins' in arm));
+  }
+  const wrong={...high,plants:high.plants.map(p=>({...p,x:p.x+.1}))};
+  assert.throws(()=>checkStudyPair(low,wrong),/target locations/);
+});
+
+test('two requests above a ring layout ceiling show the same acquired scan',()=>{
+  const recipe=seedlingRecipe('os1-32');
+  const [low,high]=[30000,100000].map(points=>analyzeStudyScan(field({...recipe,points})));
+  checkStudyPair(low,high);
+  assert.equal(low.sampledRays,32*512);
+  assert.equal(high.sampledRays,low.sampledRays);
+  assert.equal(low.tileId,high.tileId);
+  assert.deepEqual(low.plants,high.plants);
+  assert.deepEqual(low.heightPins,high.heightPins);
+});
+
+test('generator observation labels have no influence on either orchard detector',()=>{
+  const scan=field({...makeRecipe(81357,true,getSensor('reference'),'apple',3,'open-vase'),points:30000});
+  const original=analyzeStudyScan(scan);
+  const changed=analyzeStudyScan({...scan,plantReturns:scan.plantReturns.map(()=>0),
+    cls:new Uint8Array(scan.cls.length),parts:undefined,
+    labels:{...scan.labels,boxes:scan.labels.boxes.map(b=>({...b,base_xy_m:[0,0]}))}});
+  assert.ok(original.orchardPins.length>0);
+  assert.deepEqual(changed.orchardPins,original.orchardPins);
+  assert.deepEqual(changed.heightPins,original.heightPins);
+  assert.equal(changed.observedPlants,0);
+});

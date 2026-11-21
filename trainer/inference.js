@@ -2,6 +2,8 @@ import {features, detectionStages, checkScoreThreshold, PEAK_HEIGHTS} from './da
 import {cropProfile} from './crops.js?v=systems1';
 import {scoreSavedWeights} from './network.js?v=systems1';
 
+import {detectOrchardBases} from './orchard.js';
+
 const metersPerUnit = {m:1, cm:.01, mm:.001};
 
 // The feature grid covers one 10 m square. Its origin must stay fixed when two
@@ -71,9 +73,16 @@ export function detectScan(xyz, model, {unit='m', origin=[0,0,0], gradePercent=[
     const [localX,localY] = point;
     return {x:origin[0]+localX/metersPerUnit[unit],y:origin[1]+localY/metersPerUnit[unit],localX,localY};
   };
+  let orchard;
+  if(model.crop==='apple'){
+    const result=detectOrchardBases(local);
+    orchard={...result,method:'height-band-occupancy-v1',
+      pins:result.pins.map(({x,y,score})=>({...pin([x,y]),support:score}))};
+  }
   const frame = {unit,origin:[...origin]};
   if (gradePercent[0] || gradePercent[1]) frame.gradePercent = [...gradePercent];
   return {
+    ...(orchard ? {orchard} : {}),
     crop:model.crop,frame,pointCount:local.length/3,
     detector:{featureSchema:model.featureSchema,hiddenLayers:[...model.hiddenLayers],activation:model.activation,
       minimumHeight:model.minimumHeight,threshold:model.threshold,pinSeparation:model.pinSeparation},

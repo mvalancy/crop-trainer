@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Train &amp; validate · Crop Trainer</title>
-<link rel="stylesheet" href="../farm.css?v=fieldlesson1"></head>
+<link rel="stylesheet" href="../farm.css?v=plant-study3"></head>
 <body class="shed"><a class="skip" href="#main">Skip to content</a>
 <header class="siteBar">
 <div class="barInner"><a class="brand" href="../"><span class="mark" aria-hidden="true"><i></i></span>Crop Trainer</a>
@@ -69,7 +69,7 @@
 <label id="initLabel">Weight initialization seed<input id="initSeed" type="number" min="0" max="4294967295" value="12345" required><span>Neural weights start from this seed. Logistic weights start at zero.</span></label>
 </div></details>
 <details id="datasetOptions"><summary>Fields and dataset seed</summary><div class="detailFields"><label>Dataset seed<input id="seed" type="number" min="0" max="4294967295" step="1" value="27" required=""></label>
-<label>Plant architecture<select id="plantArchitecture" required><option value="2" selected>Structured plants · v2</option><option value="1">Original plants · v1</option></select></label>
+<label>Plant architecture<select id="plantArchitecture" required><option value="3" selected>Connected plants · v3</option><option value="2">Structured plants · v2</option><option value="1">Original plants · v1</option></select></label>
 <label>Plant form<select id="plantForm" required><option value="mixed">Seeded mix</option></select></label>
 <label>Plant condition<select id="plantCondition" required><option value="healthy">Healthy</option><option value="mixed">Seeded damage · about 1 in 4</option><option value="damaged">All damaged</option></select></label>
 <label>Training fields<input id="train" type="number" min="2" max="256" step="1" value="16" required=""></label>
@@ -211,11 +211,11 @@
 <div class="testView"><figure><canvas id="testMap" width="500" height="500" aria-label="Top view of the imported scan and plant detections" role="img"></canvas>
 <figcaption id="testLegend"></figcaption></figure>
 <div><label>Show pins from<select id="testOverlay"><option value="model">Trained model</option><option value="baseline">Height-only baseline</option></select></label>
-<p>The baseline keeps the tallest peaks first. Both methods use the same candidate peaks and plant spacing.</p>
 <p id="testOutcome"></p><p class="hint" id="testRule"></p>
+<p id="testOrchardHelp" hidden>The orchard locator looks for returns at several heights around a tree base. Its support score measures this geometric evidence. <a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/orchard-bases.md">Read the orchard study</a></p>
 <button type="button" id="testExport">Download field test JSON</button></div></div>
 <div id="testMetrics" class="tableScroll" hidden><table><caption>One-to-one matches against supplied centers</caption><thead><tr><th>Method</th><th>Distance</th><th>Matched</th><th>Extra</th><th>Missed</th><th>Precision</th><th>Recall</th><th>F1</th></tr></thead><tbody id="testRows"></tbody></table></div>
-<div id="testStages" hidden><h3>Where did the model lose plants?</h3>
+<div id="testStages" hidden><h3>Trained model detection stages</h3>
 <p id="testStageSummary"></p><p class="hint">Each stage matches peaks to surveyed centers one to one within 15 cm. A plant needs a nearby candidate before the network can score it.</p></div>
 </div>
 <details class="fieldEvidence">
@@ -232,6 +232,6 @@
 </main>
 <footer class="siteFoot"><span>Created by Matthew Valancy</span>
 <div><a href="../AGENTS.md">Agent quickstart</a><a href="../#missions">Farm journal</a><a href="../LICENSE">MIT license</a></div></footer>
-<script type="module" src="./main.js?v=plants2"></script>
+<script type="module" src="./main.js?v=plants4"></script>
 </body>
 </html>

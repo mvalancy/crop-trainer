@@ -4,7 +4,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Crop Trainer · The procedural farm</title>
 <meta name="description" content="Generate crop LiDAR scans, explore them in 3D, and train crop detectors locally with CPU or WebGPU.">
-<link rel="stylesheet" href="farm.css?v=wood2"></head>
+<link rel="stylesheet" href="farm.css?v=plant-study3">
+<link rel="stylesheet" href="trainer/plants/portrait.css"></head>
 <body class="farm"><a class="skip" href="#main">Skip to content</a>
 <header class="siteBar">
 <div class="barInner"><a class="brand" href="./"><span class="mark" aria-hidden="true"><i></i></span>Crop Trainer</a>
@@ -44,7 +45,7 @@
 <p class="hint" id="modelLegend" hidden>Turquoise lines trace the modeled stems through the canopy, including sections hidden from the scanner.</p>
 <details class="cameraHelp">
 <summary>Camera controls</summary>
-<p class="hint" id="cameraHelp">Drag to orbit. Shift-drag or right-drag to pan. Scroll to zoom. On touch, use two fingers to pan and pinch. With the canvas focused, arrow keys rotate, Shift + arrows pan, + / − zoom, F centers the highlighted plant for close-up orbit, and R resets the field view. Structured plants (v2) add plant tissue colors and model stem lines.</p></details>
+<p class="hint" id="cameraHelp">Drag to orbit. Shift-drag or right-drag to pan. Scroll to zoom. On touch, use two fingers to pan and pinch. With the canvas focused, arrow keys rotate, Shift + arrows pan, + / − zoom, F centers the highlighted plant for close-up orbit, and R resets the field view. Structured plants (v2 and v3) add plant tissue colors and model stem lines.</p></details>
 </article>
 <aside id="scan-settings">
 <h3>Scan settings</h3>
@@ -58,11 +59,24 @@
 <details id="anatomySettings">
 <summary>Plant form and condition</summary>
 <div class="detailFields">
-<label>Plant architecture<select id="plantArchitecture" required><option value="2">Structured plants · v2</option><option value="1">Original plants · v1</option></select></label>
+<label>Plant architecture<select id="plantArchitecture" required><option value="3" selected>Connected plants · v3</option><option value="2">Structured plants · v2</option><option value="1">Original plants · v1</option></select></label>
 <label>Plant form<select id="plantForm" required></select></label>
 <label>Condition<select id="plantCondition" required><option value="healthy">Healthy plants</option><option value="mixed">About one in four damaged</option><option value="damaged">All plants damaged</option></select></label>
 <label>Apple foliage<select id="appleCanopy" required><option value="leafy">Leaf on</option><option value="dormant">Dormant · leaf off</option></select></label>
-<figure class="specimenCard" id="specimenCard"><canvas id="specimenCanvas" width="280" height="188" role="img"></canvas><figcaption><small>Plant preview</small><b id="specimenName"></b><span id="specimenDetail"></span></figcaption></figure>
+<section id="specimenCard" class="specimenComparison" aria-labelledby="specimenName">
+<h4 id="specimenName">Compare one plant</h4>
+<div class="specimenPair">
+<figure><canvas id="specimenCanvas" width="400" height="380" role="img" aria-describedby="specimenDetail"></canvas><figcaption>Intact</figcaption></figure>
+<figure><canvas id="damagedCanvas" width="400" height="380" role="img" aria-describedby="specimenDetail"></canvas><figcaption>Damaged</figcaption></figure>
+</div>
+<p id="specimenDetail"></p>
+<label class="specimenAngle">Rotate both plants<input id="specimenAngle" type="range" min="0" max="360" step="5" value="35"></label>
+<div class="specimenModes">
+<label class="check specimenHatch"><input type="checkbox" id="specimenGaps" checked><span>Show gaps</span></label>
+<button id="damageZoom" type="button" aria-pressed="false">Damage close-up</button>
+</div>
+<p id="specimenContext"></p>
+</section>
 <a id="plantGuide" class="anatomyGuide" href="https://github.com/mvalancy/crop-trainer/tree/main/trainer/plants">Growing guide ↗</a>
 </div></details>
 <details class="scannerSetup" open>
@@ -100,6 +114,26 @@
 <p class="fileId">Scan ID <code id="scanId"></code></p>
 <p class="shareActions"><a id="scanLink">Open scan link</a> <button id="copyScan" type="button" disabled="">Copy scan link</button> <span id="shareStatus" role="status"></span></p>
 <details class="formatHelp"><summary>About the files</summary><p class="hint">PLY contains little-endian XYZ coordinates in metres. The label file gives each plant’s bounding box and crop return count. The recipe and scan link use the settings of the displayed scan. Choose Grow and scan to apply your edits.</p></details><a id="trainLayout" href="trainer/" class="trainLink">Train this crop and layout →</a></div></section></div>
+<details class="panel studyPanel" id="scan-study"><summary>Compare two ray budgets on this field</summary>
+<div class="studySetup">
+<div class="studyIntro"><p id="studyField">Grow a field to compare its scans.</p>
+<p>Scan the same field twice. Do more laser rays help you find more plants?</p></div>
+<form id="studyForm" aria-label="Laser ray budgets"><label>First budget<select id="studyLow"></select></label><label>Second budget<select id="studyHigh"></select></label>
+<div class="studyActions"><button class="primary" id="studyRun" disabled>Compare scans</button><button type="button" id="studyCancel" hidden>Cancel</button></div></form></div>
+<p id="studyStatus" role="status"></p>
+<div id="studyResults" hidden>
+<div class="studyLayout"><div class="studyMaps">
+<figure><figcaption><strong id="studyTitleA"></strong><span id="studyCountA"></span></figcaption><canvas id="studyFirst" role="img" aria-labelledby="studyTitleA studyCountA" aria-describedby="studyLegend"></canvas></figure>
+<figure><figcaption><strong id="studyTitleB"></strong><span id="studyCountB"></span></figcaption><canvas id="studySecond" role="img" aria-labelledby="studyTitleB studyCountB" aria-describedby="studyLegend"></canvas></figure></div>
+<div id="studyInspect" hidden>
+<div class="studyChoices"><label>Mark plants by<select id="studyMetric" aria-describedby="studyMetricHelp studyChange"><option value="returns">At least one crop return</option><option value="peaks">Matched height peak · 15 cm</option><option value="pins">Height-only pin · 15 cm</option><option value="orchard">Orchard base pin · 15 cm</option></select></label>
+<p id="studyLegend"><span><i class="studyDot" aria-hidden="true"></i>Dot meets the measure</span><span><i class="studyCross" aria-hidden="true">×</i>Cross misses it</span></p>
+<p id="studyChange"></p><p id="studyMetricHelp"></p>
+<label>Inspect a plant<select id="studyTarget" aria-describedby="studyTargetDetail"><option value="">All plants</option></select></label>
+<p id="studyTargetDetail" role="status" aria-atomic="true"></p></div>
+<div class="studyActions"><a id="studyLinkA">First scan in 3D</a><a id="studyLinkB">Second scan in 3D</a><a id="studyShare">Comparison link</a><button type="button" id="studySave">Download results</button></div></div></div>
+<details id="studyScores" hidden><summary>Pin scores at each matching distance</summary><div class="tableScroll" tabindex="0" role="region" aria-label="Pin scores by method, sampled ray count and distance"><table aria-label="Pin scores at each matching distance"><thead><tr><th>Method</th><th>Sampled rays</th><th>Distance</th><th>Matched</th><th>Extra</th><th>Missed</th><th>F1</th></tr></thead><tbody id="studyScoreBody"></tbody></table></div></details></div>
+<p class="studyGuide"><a id="studyGuide" href="https://github.com/mvalancy/crop-trainer/blob/main/docs/seedling-density.md">What happened on six seedling fields?</a></p></details>
 <details>
 <summary>How the scanner samples a crop</summary>
 <p>Grid profiles distribute jittered samples over the plot. Line and sweep profiles change coverage along and across rows. Ring layouts use angular columns and channels, capped by the ray budget. The synthetic renderer takes the highest surface at each sample. Hardware-inspired presets reproduce selected channel and column counts. Beam calibration, pulse intensity, motion and multiple returns would require a richer sensor model. <a href="https://static.ouster.dev/sensor-docs/image_route1/image_route2/sensor_data/sensor-data.html">Ouster sensor data reference</a></p>
@@ -155,6 +189,6 @@
 </main>
 <footer class="siteFoot"><span>Created by Matthew Valancy</span>
 <div><a href="AGENTS.md">Agent quickstart</a><a href="#missions">Farm journal</a><a href="LICENSE">MIT license</a></div></footer>
-<script type="module" src="farm.js?v=wood2"></script>
+<script type="module" src="farm.js?v=plants3"></script>
 </body>
 </html>

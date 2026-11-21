@@ -43,6 +43,10 @@ Begin with a horticultural distinction a scan could reveal. For example, romaine
 2. Read `ctx.form` in the crop renderer. Use it to choose attachment points, organ counts, orientation or a new branching pattern. The renderer receives a resolved form for each plant in a mixed field. `ctx.damaged` is a separate boolean that the crop can use to omit or shorten an organ. [Example lettuce forms](lettuce.js) · [Crop registry](index.js)
 3. Check a fixed form on several seeds, then compare the seeded mixed population. Count labeled plants, inspect the returns, and confirm the exported recipe replays. Forms in a mixed planting have equal selection probability. Mixed condition independently selects damage with a 25% probability per planting position. These synthetic stress settings impose no field prevalence. [Per-plant trait selection](traits.js)
 
+## Inspect one plant before scanning
+
+Open **Plant form and condition** in Scan settings. Pick a form and turn its intact and damaged views together. Both come from the first plant on that seed, at its generated size. **Damage close-up** frames the area where the silhouette changed. Orbit the plant to see a break that another branch hides from the front. This view shows the modeled stems and leaves. The field scanner records the surfaces its rays reach. [Explore a damaged open-vase apple](https://mvalancy.github.io/crop-trainer/?crop=apple&plantArchitecture=3&plantForm=open-vase&plantCondition=damaged&seed=27#anatomySettings)
+
 ## Add a crop or growing system
 
 1. Choose the stage, growing system and detection target. A young field tomato and a fruiting high-wire tomato need different geometry even though they belong to the same species. Link to a source photo and record the assumptions beside the implementation.
@@ -50,4 +54,4 @@ Begin with a horticultural distinction a scan could reveal. For example, romaine
 3. Add a crop profile for row layout, spacing, size and detector defaults. Connect the choice to the generator, Training Shed and benchmark. Keep benches, support wires and posts in the fixture layer so their returns remain distinguishable from plant parts. [Crop profiles](../crops.js) · [Growing systems and fixtures](../growing-systems.js)
 4. Generate a field with the new architecture. Repeat the identical recipe and compare tile ID, XYZ and labels. Check that reducing the ray budget can hide small organs without moving the planting bases. Preserve previous geometry when replaying an older architecture version. [Architecture tests](../../test/crop-architecture.test.js)
 
-Run `node --test test/crop-architecture.test.js` from the repository root for the geometry and replay checks. Then run `node --test` and try the crop through the browser. Compare detections on fresh field seeds before drawing conclusions about the detector. [Agent quickstart](../../AGENTS.md) · [Field validation](../../docs/field-validation.md)
+Run `node --test test/crop-architecture.test.js test/plant-attachments.test.js` from the repository root for the geometry and replay checks. Then run `node --test` and try the crop through the browser. Compare detections on fresh field seeds before drawing conclusions about the detector. [Agent quickstart](../../AGENTS.md) · [Field validation](../../docs/field-validation.md)

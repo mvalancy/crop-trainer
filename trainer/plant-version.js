@@ -1,17 +1,17 @@
 import {formsFor, checkPlantForm, checkPlantCondition} from './plants/forms.js';
 
 export function checkPlantArchitecture(version) {
-  if (version !== 1 && version !== 2) throw Error('Choose plant architecture version 1 or 2.');
+  if (version !== 1 && version !== 2 && version !== 3) throw Error('Choose plant architecture version 1, 2 or 3.');
   return version;
 }
 
-// Unversioned recipes and exports retain their original geometry. Only v2
+// Unversioned recipes and exports retain their original geometry. Structured
 // datasets carry form and condition, both of which affect the plant surfaces.
 export function plantSettings({crop, plantArchitecture = 1, plantForm = 'mixed', plantCondition = 'healthy'}) {
   checkPlantArchitecture(plantArchitecture);
   if (plantArchitecture === 1) {
     if (plantForm !== 'mixed' || plantCondition !== 'healthy') {
-      throw Error('Choose structured plants (v2) for plant form or damage settings.');
+      throw Error('Choose structured plants (v2 or v3) for plant form or damage settings.');
     }
     return {plantArchitecture};
   }
@@ -32,7 +32,7 @@ function unsupported(select) {
 export function restorePlantArchitecture(select, params, defaultVersion) {
   const structured = params.has('plantForm') || params.has('plantCondition');
   const value = params.get('plantArchitecture') ?? String(structured ? 2 : defaultVersion);
-  if (value !== '1' && value !== '2') {
+  if (value !== '1' && value !== '2' && value !== '3') {
     unsupported(select);
     return;
   }
@@ -42,7 +42,7 @@ export function restorePlantArchitecture(select, params, defaultVersion) {
 export function setupPlantControls(crop, version, form, condition, params, defaultVersion) {
   restorePlantArchitecture(version, params, defaultVersion);
   function populate(formValue, conditionValue, fromLink = false) {
-    const structured = version.value === '2';
+    const structured = Number(version.value) >= 2;
     const forms = structured ? formsFor(crop.value) : [];
     form.replaceChildren(new Option(structured ? 'Seeded mix' : 'Original form', 'mixed'),
       ...forms.map(({id,label}) => new Option(label, id)));
@@ -67,7 +67,7 @@ export function setupPlantControls(crop, version, form, condition, params, defau
   const changed = () => populate(form.value, condition.value || 'healthy');
   crop.addEventListener('change', changed);
   version.addEventListener('change', changed);
-  return () => version.value === '2'
-    ? {plantArchitecture: 2, plantForm: form.value, plantCondition: condition.value}
+  return () => Number(version.value) >= 2
+    ? {plantArchitecture: Number(version.value), plantForm: form.value, plantCondition: condition.value}
     : {plantArchitecture: Number(version.value)};
 }

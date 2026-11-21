@@ -1,8 +1,8 @@
 import {benchmarkView} from './watch.js';
-import {scanSession} from '../trainer/scan-session.js?v=plants2';
-import {setupPlantControls, plantSettings} from '../trainer/plant-version.js';
-import {DENSITY_HISTORY_KEY, HEIGHT_HISTORY_KEY, densitySnapshot, pairDensityScores} from './density.js?v=plants2';
-import {buildDataset, validateModel, compareMatchedBoxes, coverageAtDistance, PEAK_HEIGHTS} from '../trainer/data.js?v=plants2';
+import {scanSession} from '../trainer/scan-session.js?v=plants3';
+import {setupPlantControls, plantSettings} from '../trainer/plant-version.js?v=plants3';
+import {CLASSIC_TRAINING_PAIR, TRAINING_RAY_PAIRS, DENSITY_HISTORY_KEY, HEIGHT_HISTORY_KEY, densitySnapshot, pairDensityScores} from './density.js?v=raypairs1';
+import {buildDataset, validateModel, compareMatchedBoxes, coverageAtDistance, PEAK_HEIGHTS} from '../trainer/data.js?v=plants3';
 import {trainNetworkCPU, trainNetworkGPU, predictNetwork} from '../trainer/neural.js';
 import {trainCPU, MAX_EPOCHS} from '../trainer/model.js';
 import {cropProfile} from '../trainer/crops.js?v=systems1';
@@ -16,11 +16,11 @@ let controller, report, gpuAvailable = false;
 sensorOptions($('sensor'), true);
 validationSensorOptions($('validationSensor'));
 const requested = new URLSearchParams(location.search);
-$('benchOptions').open = ['plantArchitecture','plantForm','plantCondition','seed','sensor','validationSensor','trainingRayBudget','validationRayBudget','epochs','minimumHeight','includeMixed'].some(key=>requested.has(key));
+$('benchOptions').open = ['plantArchitecture','plantForm','plantCondition','seed','sensor','validationSensor','trainingRayBudget','validationRayBudget','epochs','minimumHeight','trainingPair','includeMixed'].some(key=>requested.has(key));
 // Earlier shared comparisons omit a geometry version. Keep their plantings
 // reproducible. A fresh Benchmark uses the current plant architecture.
 const replayKeys = ['comparison','crop','sensor','seed','epochs','trainingRayBudget','validationRayBudget',
-  'validationSensor','minimumHeight','includeMixed','fieldMetric','cutoffDistance','live'];
+  'validationSensor','minimumHeight','trainingPair','includeMixed','fieldMetric','cutoffDistance','live'];
 function revealSettingsAnchor(hash) {
   const target = document.getElementById(hash.slice(1));
   const disclosure = target?.closest('#benchOptions,#benchExamples');
@@ -38,12 +38,21 @@ document.addEventListener('click', event => {
 $('benchOptions').addEventListener('invalid', () => { $('benchOptions').open = true; }, true);
 $('livePreview').checked=requested.get('live')!=='off';
 $('includeMixed').checked = requested.get('includeMixed') === '1';
+const trainingPair = $('trainingPair');
+for (const [key, budgets] of TRAINING_RAY_PAIRS) {
+  trainingPair.add(new Option(budgets.map(n => n.toLocaleString()).join(' vs '), key));
+}
+trainingPair.value = requested.get('trainingPair') ?? CLASSIC_TRAINING_PAIR;
+if (!trainingPair.value) {
+  trainingPair.prepend(new Option('Unsupported pair · choose budgets', ''));
+  trainingPair.value = '';
+}
 for (const id of ['comparison', 'crop', 'sensor', 'validationSensor', 'minimumHeight', 'fieldMetric', 'cutoffDistance']) {
   const value = requested.get(id);
   if ([...$(id).options].some(option => option.value === value)) $(id).value = value;
 }
 const readPlantControls = setupPlantControls($('crop'), $('plantArchitecture'), $('plantForm'), $('plantCondition'),
-  requested, replayKeys.some(key => requested.has(key)) ? 1 : 2);
+  requested, replayKeys.some(key => requested.has(key)) ? 1 : 3);
 trainingRayOptions($('trainingRayBudget'), requested.get('trainingRayBudget'));
 rayBudgetOptions($('validationRayBudget'), requested.get('validationRayBudget'));
 const requestedSeed = requested.get('seed');
@@ -72,8 +81,14 @@ function explainComparison() {
   $('heightControl').hidden = compareHeights;
   $('minimumHeight').disabled = compareHeights;
   const compareDensity = $('comparison').value === 'density';
-  $('mixedControl').hidden = !compareDensity;
-  $('includeMixed').disabled = !compareDensity;
+  const budgets = TRAINING_RAY_PAIRS.get(trainingPair.value);
+  const allowMixed = compareDensity && trainingPair.value === CLASSIC_TRAINING_PAIR;
+  $('trainingPairControl').hidden = !compareDensity;
+  trainingPair.disabled = !compareDensity;
+  $('trainingPairHelp').hidden = !compareDensity || trainingPair.value !== '30k-1m';
+  $('mixedControl').hidden = !allowMixed;
+  $('includeMixed').disabled = !allowMixed;
+  if (compareDensity && !allowMixed) $('includeMixed').checked = false;
   $('trainingBudgetControl').hidden = compareDensity;
   $('trainingRayBudget').disabled = compareDensity;
   const compareDurations = $('comparison').value === 'epochs';
@@ -81,7 +96,8 @@ function explainComparison() {
   $('fitEpochs').disabled = compareDurations;
   const descriptions = {
     heights: 'Both detectors look for high points in the same scans. One starts at 6.5 cm and one at 3.5 cm. Check whether including shorter peaks recovers plants or adds stray pins.',
-    density: 'Train on the same plantings scanned with 12,000 or 60,000 laser rays. Test both detectors on identical fresh scans to see whether denser training helped.',
+    density: budgets ? 'Grow each training field twice, using '+budgets[0].toLocaleString()+' and '+budgets[1].toLocaleString()+' rays. Test both detectors on the same fresh fields.'
+      : 'Choose two training ray budgets in the scan settings to begin.',
     epochs: 'An epoch is one pass over the training examples. Fit the same CPU neural model from identical starting weights for 10, 40 and 100 epochs. Compare training loss with F1 on unseen fields.',
     cutoffs: 'Train one neural network per seed. Set the minimum score for placing a pin to 0.35, 0.50 or 0.65. Check how many extra plants and stray pins each cutoff picks up.',
     models: 'A logistic model weights each scan feature directly. A neural network learns combinations of features. Both train on your CPU. Compare their pins on the same fresh scans.',
@@ -89,6 +105,7 @@ function explainComparison() {
   };
   $('comparisonHelp').textContent = descriptions[$('comparison').value];
 }
+trainingPair.addEventListener('change', explainComparison);
 $('comparison').addEventListener('change', () => {
   explainComparison();
   $('status').textContent = readyMessage;
@@ -241,10 +258,12 @@ function displayDensityStudy() {
   const body = $('densityRows');
   body.replaceChildren();
   const trainingCounts = new Map();
-  let sampledCountChanged = false;
+  let sampledCountChanged = false, capped = false;
   for (const row of report.rows) {
     const dataset = report.datasets[row.datasetIndex];
-    const sampled = dataset.recipeManifest.filter(tile => tile.split === 'train').map(tile => tile.sampledRays);
+    const training = dataset.recipeManifest.filter(tile => tile.split === 'train');
+    if (training.some(tile => tile.sampledRays < tile.recipe.points)) capped = true;
+    const sampled = training.map(tile => tile.sampledRays);
     const previous = trainingCounts.get(row.seed);
     if (previous && sampled.some((count, i) => count !== previous[i])) sampledCountChanged = true;
     trainingCounts.set(row.seed, sampled);
@@ -258,7 +277,12 @@ function displayDensityStudy() {
   }
   displayValidationBudgets($('densityRepeats'));
   $('mixedNote').hidden = !report.rows.some(row => row.trainingRayBudget === ALTERNATING_BUDGET);
-  $('densityCapNote').hidden = sampledCountChanged;
+  $('densityCapNote').hidden = !capped;
+  if (capped) {
+    $('densityCapNote').textContent = sampledCountChanged
+      ? 'Some training scans reached their layout’s ray limit. The sampled counts show the density each model saw.'
+      : 'Both budgets reached the same ray limit on every paired training scan. Choose Reference grid to sample both requested densities.';
+  }
   if (sampledCountChanged) {
     try { localStorage.setItem('crop-trainer-ray-scout', 'earned'); } catch {}
   }
@@ -266,7 +290,10 @@ function displayDensityStudy() {
 }
 function displayValidationComparison() {
   const heights = report.comparison === 'heights';
-  const key = heights ? HEIGHT_HISTORY_KEY : DENSITY_HISTORY_KEY;
+  // Preserve the classic 12k/60k validation history when visitors also try
+  // an independent 30k/1M training comparison in this browser tab.
+  let key = heights ? HEIGHT_HISTORY_KEY : DENSITY_HISTORY_KEY;
+  if (!heights && report.settings.trainingPair !== CLASSIC_TRAINING_PAIR) key += '-'+report.settings.trainingPair;
   const snapshot = densitySnapshot(report);
   const help = $(heights ? 'heightRepeatHelp' : 'densityRepeatHelp');
   help.textContent = snapshot
@@ -570,14 +597,20 @@ $('benchForm').onsubmit = async event => {
   if (comparison !== 'heights') settings.minimumHeight = Number($('minimumHeight').value) || cropProfile(crop).peakHeight;
   if (comparison !== 'epochs') settings.epochs = $('fitEpochs').valueAsNumber;
   const neuralCPU = {model:'neural', backend:'CPU', train:trainNetworkCPU};
-  const includeMixed = comparison === 'density' && $('includeMixed').checked;
-  const trainingBudgets = includeMixed ? [...DENSITY_BUDGETS, ALTERNATING_BUDGET] : DENSITY_BUDGETS;
+  const includeMixed = comparison === 'density' && trainingPair.value === CLASSIC_TRAINING_PAIR && $('includeMixed').checked;
+  const trainingBudgets = TRAINING_RAY_PAIRS.get(trainingPair.value) ?? [];
+  if (comparison === 'density') {
+    settings.trainingPair = trainingPair.value;
+    settings.trainingRayBudgets = trainingBudgets;
+    settings.includeMixed = includeMixed;
+  }
+  const densityFits = includeMixed ? [...trainingBudgets, ALTERNATING_BUDGET] : trainingBudgets;
   const comparisons = {
     backend: [neuralCPU, {model:'neural', backend:'WebGPU', train:trainNetworkGPU}],
     models: [{model:'linear', backend:'CPU', train:trainCPU}, neuralCPU],
     cutoffs: [neuralCPU],
     heights: PEAK_HEIGHTS.map(minimumHeight => ({...neuralCPU, minimumHeight})),
-    density: trainingBudgets.map(trainingRayBudget => ({...neuralCPU, trainingRayBudget})),
+    density: densityFits.map(trainingRayBudget => ({...neuralCPU, trainingRayBudget})),
     epochs: [10, 40, 100].map(epochs => ({...neuralCPU, epochs}))
   };
   const contenders = comparisons[comparison];
@@ -659,6 +692,7 @@ $('benchForm').onsubmit = async event => {
     if(!livePreview)replay.searchParams.set('live','off');
     if ($('fieldMetric').value !== 'mean') replay.searchParams.set('fieldMetric', $('fieldMetric').value);
     if (comparison !== 'heights' && $('minimumHeight').value !== 'default') replay.searchParams.set('minimumHeight', settings.minimumHeight);
+    if (settings.trainingPair && settings.trainingPair !== CLASSIC_TRAINING_PAIR) replay.searchParams.set('trainingPair', settings.trainingPair);
     if (includeMixed) replay.searchParams.set('includeMixed', '1');
     if (trainingRayBudget) replay.searchParams.set('trainingRayBudget', trainingRayBudget);
     if (validationRayBudget) replay.searchParams.set('validationRayBudget', validationRayBudget);

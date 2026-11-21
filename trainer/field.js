@@ -1,10 +1,11 @@
 import {layoutDimensions, MAX_SCAN_RAYS} from './sensors.js?v=dense1';
 import {cropProfile, bladeWidth, bladeHeight} from './crops.js?v=systems1';
-import {canopyPlant,scanFixtures} from './growing-systems.js';
+import {canopyPlant,scanFixtures} from './growing-systems.js?v=plants3';
 import {formsFor,checkPlantForm,checkPlantCondition} from './plants/forms.js';
 import {plantTraits, seededRandom} from './plants/traits.js';
-import {structuredPlant} from './plants/index.js';
-import {checkPlantArchitecture} from './plant-version.js';
+import {plantingRow} from './plants/planting.js';
+import {structuredPlant} from './plants/index.js?v=plants3';
+import {checkPlantArchitecture} from './plant-version.js?v=plants3';
 export function returnBand(count) {
  if (count === 0) return 'zero';
  return count < 5 ? 'oneToFour' : 'fiveOrMore';
@@ -28,7 +29,8 @@ export function sampleCloud(xyz, classes, ground = true) {
 export function field(p,onRow){
 const crop = p.crop ?? 'lettuce';
 const profile = cropProfile(crop);
-const structured = checkPlantArchitecture(p.plantArchitecture ?? 1) === 2;
+const plantArchitecture = checkPlantArchitecture(p.plantArchitecture ?? 1);
+const structured = plantArchitecture >= 2;
 const form = structured ? checkPlantForm(crop,p.plantForm) : undefined;
 const condition = structured ? checkPlantCondition(p.plantCondition) : undefined;
 const forms = structured ? formsFor(crop) : [];
@@ -69,7 +71,7 @@ function plant(x,y,R,weed){
 if(structured && !weed){
   const id=boxes.length+1;
   const traits=plantTraits(seed,id,forms,form,condition);
-  const box=structuredPlant(crop,{...traits,x,y,soil:terrain(x,y),radius:R,rays,skeleton,
+  const box=structuredPlant(crop,{...traits,plantArchitecture,x,y,soil:terrain(x,y),radius:R,rays,skeleton,
     canopy:p.appleCanopy,write:(i,h,part)=>hit(i,h,1,id,part)});
   box.plant_form=traits.form;
   box.plant_condition=traits.damaged?'damaged':'healthy';
@@ -103,13 +105,12 @@ if (shaped) {
 }
 if(!weed){boxes.push({min:aabb.slice(0,3).map(v=>v-.002),max:aabb.slice(3).map(v=>v+.002)});centers.push([x,y])}
 rays(x,y,R*1.2,(i,dx,dy)=>{for(let a of L){let u=(dx*a.c+dy*a.s)/a.len;if(u<=0||u>=1)continue;let [w,b]=sample(a,u),v=((-dx*a.s+dy*a.c)/a.len-b)/w;if(Math.abs(v)<=1)hit(i,height(a,u,v),weed?2:1,id)}})}
-for(let j=0;j<profile.rows;j++){let y=crop==='lettuce'?1.5+(j>>1)*2.1+(j%2)*.36:(j+.5)*sz/profile.rows,ph=r()*tau;
-const edge = crop==='lettuce' ? .25 : p.radius*1.45;
-for(let x=edge+r()*.12;x<(crop==='lettuce'?9.74:sz-edge);x+=p.spacing){if(r()<.05)continue;plant(x+(r()-.5)*.04,y+.035*Math.sin(x+ph)+(r()-.5)*.024,p.radius*(.8+.4*r()),false)}
+for(let j=0;j<profile.rows;j++){
+ for (const position of plantingRow(p,profile,j,r,sz)) plant(position.x,position.y,position.radius,false);
  if (onRow) onRow({cloud:sampleCloud(xyz,cls,p.ground),row:j+1,rows:profile.rows});
 }
 let before=cls.slice();
-if(profile.fixtures && p.infrastructure!==false) scanFixtures(crop,profile.rows,terrain,rays,hit);
+if(profile.fixtures && p.infrastructure!==false) scanFixtures(crop,profile.rows,terrain,rays,hit,plantArchitecture);
 if(p.weeds)for(let j=0;j<64;j++)plant(.2+o()*9.6,.2+o()*9.6,.08+.13*o(),true);
 if(p.sticks)for(let j=0;j<30;j++){let x=o()*10,y=o()*10,a=o()*tau,c=Math.cos(a),s=Math.sin(a),l=.15+.30*o(),w=.012+.018*o();rays(x,y,l+w,(i,dx,dy)=>{let u=c*dx+s*dy,v=-s*dx+c*dy;if(Math.abs(u)<l&&Math.abs(v)<w)hit(i,terrain(x+dx,y+dy)+w+Math.sqrt(w*w-v*v),3,0)})}
 if(p.boards && centers.length)for(let j=0;j<9;j++){let [x,y]=centers[Math.floor(o()*centers.length)],a=o()*tau,c=Math.cos(a),s=Math.sin(a),l=.28+.30*o(),w=.09+.1*o();rays(x,y,l+w,(i,dx,dy)=>{let u=c*dx+s*dy,v=-s*dx+c*dy;if(Math.abs(u)<l&&Math.abs(v)<w)hit(i,terrain(x,y)+.34+.025*u,4,0)})}
@@ -172,4 +173,4 @@ if(p.ground===false){
  }
  outputN=keep;outXYZ=outXYZ.slice(0,3*keep);outCls=outCls.slice(0,keep);if(parts)outParts=outParts.slice(0,keep);counts[0]=0;
 }
-let canonical=JSON.stringify(['crop-trainer-v1',...(structured?['plant-architecture-v2',crop,form,condition,...(crop==='apple'?[p.appleCanopy??'leafy']:[])]:[]),...(profile.system?['growing-system-v1',crop,!!profile.fixtures && p.infrastructure!==false]:crop==='lettuce'?[]:['crop-shape-v1',crop]),seed,n,sz,p.spacing,p.radius,8,.36,2.1,.04,.024,.05,.012,.004,!!p.weeds,!!p.sticks,!!p.boards,...(p.ground===false?['ground-removed-v1']:[]),...(active?['sensor-v1',sensor.key,sensor.pattern,nx,ny,sensor.along,sensor.across]:[]),...(noiseActive?['noise-v1',q.seed,q.xy,q.z,q.density,q.gaps,q.stray,...(q.cluster?['cluster-v1',q.cluster]:[])]:[])]);let hash=14695981039346656037n;for(let i=0;i<canonical.length;i++)hash=BigInt.asUintN(64,(hash^BigInt(canonical.charCodeAt(i)))*1099511628211n);let tile_id=hash.toString(16).padStart(16,'0');return {xyz:outXYZ,cls:outCls,...(structured?{parts:outParts,skeleton:Float32Array.from(skeleton)}:{}),counts,plantReturns,coverage,lost,groundRemoved,sampledRays:n,labels:{tile_id,crop,...(structured?{plantArchitecture:2,plantForm:form,plantCondition:condition}:{}),...(profile.system?{center_target:'plant-base-xy',growing_system:profile.system}:{}),tile_size_m:[10,10],num_points:outputN,boxes},p}}
+let canonical=JSON.stringify(['crop-trainer-v1',...(structured?['plant-architecture-v'+plantArchitecture,crop,form,condition,...(crop==='apple'?[p.appleCanopy??'leafy']:[])]:[]),...(profile.system?['growing-system-v1',crop,!!profile.fixtures && p.infrastructure!==false]:crop==='lettuce'?[]:['crop-shape-v1',crop]),seed,n,sz,p.spacing,p.radius,8,.36,2.1,.04,.024,.05,.012,.004,!!p.weeds,!!p.sticks,!!p.boards,...(p.ground===false?['ground-removed-v1']:[]),...(active?['sensor-v1',sensor.key,sensor.pattern,nx,ny,sensor.along,sensor.across]:[]),...(noiseActive?['noise-v1',q.seed,q.xy,q.z,q.density,q.gaps,q.stray,...(q.cluster?['cluster-v1',q.cluster]:[])]:[])]);let hash=14695981039346656037n;for(let i=0;i<canonical.length;i++)hash=BigInt.asUintN(64,(hash^BigInt(canonical.charCodeAt(i)))*1099511628211n);let tile_id=hash.toString(16).padStart(16,'0');return {xyz:outXYZ,cls:outCls,...(structured?{parts:outParts,skeleton:Float32Array.from(skeleton)}:{}),counts,plantReturns,coverage,lost,groundRemoved,sampledRays:n,labels:{tile_id,crop,...(structured?{plantArchitecture,plantForm:form,plantCondition:condition}:{}),...(profile.system?{center_target:'plant-base-xy',growing_system:profile.system}:{}),tile_size_m:[10,10],num_points:outputN,boxes},p}}

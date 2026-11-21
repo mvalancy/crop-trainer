@@ -69,3 +69,16 @@ test('pair peak heights across ray budgets only for the same fit', () => {
   otherBackend.rows[0].backend = 'WebGPU';
   assert.deepEqual(pairDensityScores(sparse, densitySnapshot(otherBackend)), []);
 });
+
+test('million-ray training uses the existing independent validation-budget history', () => {
+  const experimentAt = (validation, training) => {
+    const run=experiment(validation);
+    run.rows[0].trainingRayBudget=training;
+    run.datasets[0].recipeManifest[0].tile_id='train-'+training;
+    return densitySnapshot(run);
+  };
+  const sparse=experimentAt(12000,1000000);
+  assert.equal(pairDensityScores(sparse,experimentAt(60000,1000000))[0].trainingRayBudget,1000000);
+  assert.deepEqual(pairDensityScores(sparse,experimentAt(60000,60000)),[]);
+  assert.equal(experimentAt(1000000,1000000),null);
+});
