@@ -3,13 +3,13 @@ import {field, returnBand} from '../generator/field.js?v=board-placement1';
 import {plantSettings} from '../generator/plant-version.js?v=plants3';
 import {predict} from './model.js';
 import {checkFeatureMode,localSurfaceFeatures} from './terrain-features.js';
+import {formSoilGroup,balanceFormSoil,validSampleLimit,MAX_SAMPLE_LIMIT} from './positive-sampling.js';
 
 export const PEAK_HEIGHTS = [0.065, 0.035];
 export const FIELD_LIMITS={train:256,validation:128};
-const SAMPLE_LIMIT = 48_000;
 import {mixedProfiles as SENSORS, getSensor, RAY_BUDGETS, ALTERNATING_BUDGET, DENSITY_BUDGETS} from '../generator/sensors.js?v=dense1';
 const SIZE=200, STEP=.05, DIMS=13, TOL=[.075,.1,.15];
-export {TOL as MATCH_RADII_METERS};
+export {TOL as MATCH_RADII_METERS, SIZE as PEAK_GRID_SIZE, STEP as PEAK_CELL_METERS};
 const at=(x,y)=>y*SIZE+x, clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const pause=()=>new Promise(r=>setTimeout(r,0));
 function check(signal){if(signal?.aborted)throw new DOMException('Training stopped','AbortError');}
@@ -35,7 +35,7 @@ export function targetCenters(boxes){return boxes.map(({min,max,base_xy_m})=>bas
 function checkPeakAveraging(averaging) {
  if (averaging !== 'zero-filled' && averaging !== 'occupied') throw new Error('Choose zero-filled or occupied peak averaging.');
 }
-export function features(tile, minimumHeight=.065, averaging='zero-filled', featureMode='absolute'){
+export function features(tile, minimumHeight=.065, averaging='zero-filled', featureMode='absolute', onPeakCell){
  // Only XYZ, never the synthetic return classes or supplied training boxes.
  checkPeakAveraging(averaging);
  checkFeatureMode(featureMode);
@@ -80,6 +80,7 @@ export function features(tile, minimumHeight=.065, averaging='zero-filled', feat
   }
   const f=ring.map((a,i)=>a/Math.max(1,n[i]));
   pos.push([(x+.5+clamp(wx/(w||1),-1,1))*STEP,(y+.5+clamp(wy/(w||1),-1,1))*STEP]);
+  onPeakCell?.(x,y);
   const local=minima ? localSurfaceFeatures(minima,max,SIZE,x,y) : null;
   vec.push(h,local ? local[0] : max[j],f[0],f[1],f[2],h-f[2],high[1]/Math.max(1,n[1]),
     high[2]/Math.max(1,n[2]),occupied[0]/Math.max(1,n[0]),occupied[2]/Math.max(1,n[2]),
@@ -114,12 +115,19 @@ export function validationFormSettings({crop,plantArchitecture=1,plantForm='mixe
  plantSettings({crop,plantArchitecture,plantForm:validationPlantForm});
  return validationPlantForm===plantForm ? {} : {validationPlantForm};
 }
-export async function buildDataset({seed=27,crop='lettuce',plantArchitecture=1,plantForm='mixed',plantCondition='healthy',validationPlantForm,trainFields=6,valFields=3,sensorMode='reference',validationSensorMode=sensorMode,trainingRayBudget=0,validationRayBudget=0,minimumHeight=.065,peakAveraging='zero-filled',featureMode='absolute',sampleLimit=SAMPLE_LIMIT,selectPositiveRows,generate,onScan,onProgress=()=>{},signal}={}){
+export async function buildDataset({seed=27,crop='lettuce',plantArchitecture=1,plantForm='mixed',plantCondition='healthy',validationPlantForm,trainFields=6,valFields=3,sensorMode='reference',validationSensorMode=sensorMode,trainingRayBudget=0,validationRayBudget=0,minimumHeight=.065,peakAveraging='zero-filled',featureMode='absolute',sampleLimit=MAX_SAMPLE_LIMIT,positiveSampling='ordinary',auditPositiveSampling=false,selectPositiveRows,generate,onScan,onProgress=()=>{},signal}={}){
  const geometry = plantSettings({crop,plantArchitecture,plantForm,plantCondition});
  const holdout = validationFormSettings({crop,plantArchitecture,plantForm,validationPlantForm});
  checkPeakAveraging(peakAveraging);
  checkFeatureMode(featureMode);
- if (!Number.isInteger(sampleLimit) || sampleLimit<24 || sampleLimit>SAMPLE_LIMIT || sampleLimit%2) {
+ if (positiveSampling !== 'ordinary' && positiveSampling !== 'form-soil') {
+  throw new Error('Choose ordinary or form-soil positive sampling.');
+ }
+ if (selectPositiveRows && positiveSampling !== 'ordinary') {
+  throw new Error('Choose either custom positive rows or form-soil sampling.');
+ }
+ const positiveGroups = auditPositiveSampling || positiveSampling === 'form-soil' ? new Map() : null;
+ if (!validSampleLimit(sampleLimit)) {
   throw new Error('Choose an even training sample limit from 24 to 48,000.');
  }
  if(!PEAK_HEIGHTS.includes(minimumHeight))throw new Error('Choose a supported minimum peak height.');
@@ -146,6 +154,9 @@ export async function buildDataset({seed=27,crop='lettuce',plantArchitecture=1,p
    const step={split:trainingField?'Training':'Validation',done:2*k+v+1,total,firstValidation:k===trainFields && v===0};
    const t=generate ? await generate(recipe,step) : field(recipe);
    const item=prepareScan(t,minimumHeight,!trainingField,peakAveraging,featureMode);
+   if (positiveGroups && trainingField) {
+    item.targetGroups=t.labels.boxes.map(box=>formSoilGroup(positiveGroups,box.plant_form ?? 'unspecified',item.ground));
+   }
    if(onScan) onScan(t,step);
    (trainingField?training:validation).push(item);
    onProgress({done:2*k+v+1,total,stage:'data'});await pause();
@@ -161,10 +172,19 @@ export async function buildDataset({seed=27,crop='lettuce',plantArchitecture=1,p
   check(signal);
   const counts = bySeed.get(t.seed);
   for(let i=0;i<t.pos.length;i++){
-   const [x,y]=t.pos[i];let d2=Infinity;
-   for(const [a,b] of t.truth)d2=Math.min(d2,(a-x)**2+(b-y)**2);
+   const [x,y]=t.pos[i];let d2=Infinity,nearest=-1;
+   for(let j=0;j<t.truth.length;j++){
+    const [a,b]=t.truth[j],distance=(a-x)**2+(b-y)**2;
+    if(distance<d2){d2=distance;nearest=j;}
+   }
    if(d2<.095**2){
-    pos.push([t,i]);
+    const row=[t,i];
+    if(positiveGroups){
+     const group=t.targetGroups[nearest];
+     group.available++;
+     row.push(group);
+    }
+    pos.push(row);
     counts.availablePositive++;
    }else if(d2>.15**2){
     neg.push([t,i]);
@@ -182,7 +202,7 @@ export async function buildDataset({seed=27,crop='lettuce',plantArchitecture=1,p
  const n=Math.min(pos.length,neg.length,sampleLimit/2);
  // Research studies may stratify the shuffled positives using training labels.
  // Local indices keep every selected row inside this split and leave negatives paired.
- let positiveRows=pos;
+ let positiveRows=positiveSampling==='form-soil' ? balanceFormSoil(pos,n) : pos;
  if (selectPositiveRows) {
   const indices=selectPositiveRows(pos.map(([tile,i])=>({tileId:tile.tile_id,xy:tile.pos[i]})),n);
   if (!Array.isArray(indices) || indices.length!==n || new Set(indices).size!==n ||
@@ -194,7 +214,8 @@ export async function buildDataset({seed=27,crop='lettuce',plantArchitecture=1,p
  const X=new Float32Array(n*2*DIMS),Y=new Float32Array(n*2);
  for(const [pool,label,used] of [[positiveRows,1,'usedPositive'],[neg,0,'usedNegative']]){
   for(let i=0;i<n;i++){
-   const [tile,peak] = pool[i];
+   const [tile,peak,group] = pool[i];
+   if (group) group.selected++;
    const row = i*2 + (1-label);
    X.set(tile.X.subarray(peak*DIMS,(peak+1)*DIMS),row*DIMS);
    Y[row]=label;
@@ -208,7 +229,9 @@ export async function buildDataset({seed=27,crop='lettuce',plantArchitecture=1,p
  for(let j=0;j<DIMS;j++)std[j]=Math.max(.00001,Math.sqrt(std[j]/Y.length));
  normalizeFeatures(X,means,std);for(const t of validation)normalizeFeatures(t.X,means,std);
  return{X,Y,dims:DIMS,validation,scaling:{means:Array.from(means),std:Array.from(std)},
-  stats:{crop,...geometry,...holdout,...(peakAveraging==='occupied'?{peakAveraging}:{}),...(featureMode==='local-ground'?{featureMode}:{}),trainFields,valFields,trainTiles:training.length,valTiles:validation.length,minimumHeight,samples:Y.length,sampleLimit,trainingExamplesByField:[...bySeed.values()],sensorMode,validationSensorMode,trainingRayBudget,validationRayBudget,fieldSeeds:{training:trainSeeds,validation:valSeeds},generator:'crop-trainer-v1'},
+  stats:{crop,...geometry,...holdout,...(peakAveraging==='occupied'?{peakAveraging}:{}),...(featureMode==='local-ground'?{featureMode}:{}),trainFields,valFields,trainTiles:training.length,valTiles:validation.length,minimumHeight,samples:Y.length,sampleLimit,
+   ...(positiveSampling==='form-soil'?{positiveSampling}:{}),...(positiveGroups?{positiveExamplesByFormSoil:[...positiveGroups.values()]}:{}),
+   trainingExamplesByField:[...bySeed.values()],sensorMode,validationSensorMode,trainingRayBudget,validationRayBudget,fieldSeeds:{training:trainSeeds,validation:valSeeds},generator:'crop-trainer-v1'},
   manifest:[...training.map(t=>manifestTile(t,'train')),...validation.map(t=>manifestTile(t,'validation'))]};
 }
 // Change only the held-out layout. Preserve the fitted feature scale and

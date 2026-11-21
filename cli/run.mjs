@@ -45,7 +45,7 @@ if(command==='serve'){
  if (output.startsWith('--') || (args.length && (args.length !== 2 || args[0] !== '--weights' || !args[1] || args[1].startsWith('--')))) throw Error(trainUsage);
  const weightsPath = args[1];
  await checkOutputPaths(weightsPath ? [output,weightsPath] : [output]);
- const defaults={crop:'lettuce',plantArchitecture:1,plantForm:undefined,plantCondition:undefined,seed:27,trainFields:6,valFields:3,epochs:40,model:'neural',hiddenLayers:[4],activation:'tanh',optimizer:'sgd',batchSize:0,momentum:.9,learningRate:.25,initSeed:12345,sensorMode:'mixed',validationSensorMode:undefined,trainingRayBudget:0,validationRayBudget:0,minimumHeight:.035,threshold:.5,peakAveraging:undefined,featureMode:undefined,validationPlantForm:undefined};
+ const defaults={crop:'lettuce',plantArchitecture:1,plantForm:undefined,plantCondition:undefined,seed:27,trainFields:6,valFields:3,epochs:40,model:'neural',hiddenLayers:[4],activation:'tanh',optimizer:'sgd',batchSize:0,momentum:.9,learningRate:.25,initSeed:12345,sensorMode:'mixed',validationSensorMode:undefined,trainingRayBudget:0,validationRayBudget:0,minimumHeight:.035,threshold:.5,peakAveraging:undefined,featureMode:undefined,validationPlantForm:undefined,sampleLimit:undefined,positiveSampling:undefined};
  const config=configuration?JSON.parse(await readFile(configuration,'utf8')):{};
  if(!config||typeof config!=='object'||Array.isArray(config))throw Error('Expected a JSON settings object.');
  for(const key of Object.keys(config))if(!Object.hasOwn(defaults,key))throw Error('Unknown setting '+key);
@@ -57,7 +57,7 @@ if(command==='serve'){
  checkScoreThreshold(threshold);
  if(!['neural','linear'].includes(model)||!Number.isInteger(epochs)||epochs<1||epochs>MAX_SANDBOX_EPOCHS || (model==='neural' && !settings.hiddenLayers?.length))throw Error('Choose a supported detector shape and epoch count.');
  const start=performance.now();
- const set=await buildDataset(settings);
+ const set=await buildDataset({...settings,auditPositiveSampling:settings.sampleLimit!==undefined});
  const generated=performance.now();
  const fit=await trainNetworkCPU(set.X,set.Y,{...settings,dims:set.dims,lr:settings.learningRate});
  const trained=performance.now();

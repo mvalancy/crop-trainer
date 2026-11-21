@@ -27,7 +27,7 @@ export function sampleCloud(xyz, classes, ground = true) {
  return sample.subarray(0, used);
 }
 
-export function field(p,onRow){
+export function field(p,onRow,{includePlantIds=false}={}){
 const crop = p.crop ?? 'lettuce';
 const profile = cropProfile(crop);
 const boardPlacement = checkBoardPlacement(p.boardPlacement);
@@ -174,6 +174,11 @@ for (const count of plantReturns) {
 }
 let groundRemoved=0;
 if(p.ground===false){
+ // Diagnostic ownership must follow the same soil filter as the published XYZ.
+ if(includePlantIds){
+   let write=0;
+   for(let i=0;i<outputN;i++)if(outCls[i]!==0)outIds[write++]=outIds[i];
+ }
  let keep=0;
  for(let i=0;i<outputN;i++){
    if(outCls[i]===0){groundRemoved++;continue;}
@@ -184,4 +189,4 @@ if(p.ground===false){
  }
  outputN=keep;outXYZ=outXYZ.slice(0,3*keep);outCls=outCls.slice(0,keep);if(parts)outParts=outParts.slice(0,keep);counts[0]=0;
 }
-let canonical=JSON.stringify(['crop-trainer-v1',...(structured?['plant-architecture-v'+plantArchitecture,crop,form,condition,...(crop==='apple'?[p.appleCanopy??'leafy']:[])]:[]),...(profile.system?['growing-system-v1',crop,!!profile.fixtures && p.infrastructure!==false]:crop==='lettuce'?[]:['crop-shape-v1',crop]),seed,n,sz,p.spacing,p.radius,8,.36,2.1,.04,.024,.05,.012,.004,!!p.weeds,!!p.sticks,!!p.boards,...(p.boards && boardPlacement==='independent'?['uniform-board-centers-v1']:[]),...(p.ground===false?['ground-removed-v1']:[]),...(active?['sensor-v1',sensor.key,sensor.pattern,nx,ny,sensor.along,sensor.across]:[]),...(noiseActive?['noise-v1',q.seed,q.xy,q.z,q.density,q.gaps,q.stray,...(q.cluster?['cluster-v1',q.cluster]:[])]:[])]);let hash=14695981039346656037n;for(let i=0;i<canonical.length;i++)hash=BigInt.asUintN(64,(hash^BigInt(canonical.charCodeAt(i)))*1099511628211n);let tile_id=hash.toString(16).padStart(16,'0');return {xyz:outXYZ,cls:outCls,...(structured?{parts:outParts,skeleton:Float32Array.from(skeleton)}:{}),counts,plantReturns,coverage,lost,groundRemoved,sampledRays:n,labels:{tile_id,crop,...(structured?{plantArchitecture,plantForm:form,plantCondition:condition}:{}),...(profile.system?{center_target:'plant-base-xy',growing_system:profile.system}:{}),tile_size_m:[10,10],num_points:outputN,boxes},p}}
+let canonical=JSON.stringify(['crop-trainer-v1',...(structured?['plant-architecture-v'+plantArchitecture,crop,form,condition,...(crop==='apple'?[p.appleCanopy??'leafy']:[])]:[]),...(profile.system?['growing-system-v1',crop,!!profile.fixtures && p.infrastructure!==false]:crop==='lettuce'?[]:['crop-shape-v1',crop]),seed,n,sz,p.spacing,p.radius,8,.36,2.1,.04,.024,.05,.012,.004,!!p.weeds,!!p.sticks,!!p.boards,...(p.boards && boardPlacement==='independent'?['uniform-board-centers-v1']:[]),...(p.ground===false?['ground-removed-v1']:[]),...(active?['sensor-v1',sensor.key,sensor.pattern,nx,ny,sensor.along,sensor.across]:[]),...(noiseActive?['noise-v1',q.seed,q.xy,q.z,q.density,q.gaps,q.stray,...(q.cluster?['cluster-v1',q.cluster]:[])]:[])]);let hash=14695981039346656037n;for(let i=0;i<canonical.length;i++)hash=BigInt.asUintN(64,(hash^BigInt(canonical.charCodeAt(i)))*1099511628211n);let tile_id=hash.toString(16).padStart(16,'0');return {xyz:outXYZ,cls:outCls,...(includePlantIds?{plantIds:outIds.subarray(0,outputN)}:{}),...(structured?{parts:outParts,skeleton:Float32Array.from(skeleton)}:{}),counts,plantReturns,coverage,lost,groundRemoved,sampledRays:n,labels:{tile_id,crop,...(structured?{plantArchitecture,plantForm:form,plantCondition:condition}:{}),...(profile.system?{center_target:'plant-base-xy',growing_system:profile.system}:{}),tile_size_m:[10,10],num_points:outputN,boxes},p}}
