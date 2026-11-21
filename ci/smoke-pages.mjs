@@ -11,7 +11,7 @@ const root=resolve(process.argv[2]);
 await stat(resolve(root,'index.html'));
 const prefix='/crop-trainer/';
 const types={'.html':'text/html','.css':'text/css','.js':'text/javascript','.mjs':'text/javascript',
-  '.svg':'image/svg+xml','.webp':'image/webp','.json':'application/json','.csv':'text/csv','.png':'image/png'};
+  '.svg':'image/svg+xml','.webp':'image/webp','.json':'application/json','.csv':'text/csv','.png':'image/png','.wasm':'application/wasm','.mp3':'audio/mpeg'};
 const server=createServer(async(req,res)=>{
   try {
     const path=decodeURIComponent(new URL(req.url,'http://localhost').pathname);
@@ -36,6 +36,34 @@ try {
   page.on('response',response=>{
     if (response.url().startsWith(base.origin+'/') && response.status()>=400) errors.push(response.status()+' '+response.url());
   });
+  if (process.env.CHECK_WIP_RELEASE === '1') {
+    // The WIP entrance also works in local checkouts. Resolve its public URL
+    // against this exact staged artifact before permitting Pages to publish it.
+    const publicBase = 'https://mvalancy.github.io/crop-trainer/';
+    const studio = new URL('next/studio/',publicBase).href;
+    const stagedStudio = new URL('next/studio/',base).href;
+    await page.route(studio, route => route.fulfill({status:302,headers:{location:stagedStudio}}));
+    for (const path of ['', 'trainer/', 'benchmark/']) {
+      await page.goto(new URL(path,base).href);
+      const entrance = page.getByRole('link',{name:'WIP: open the narrated learning studio'});
+      assert.equal(await entrance.innerText(),'WIP');
+      assert.equal(await entrance.evaluate(link => link.href),studio);
+    }
+    await page.getByRole('link',{name:'WIP: open the narrated learning studio'}).click();
+    await page.waitForURL(stagedStudio);
+    await page.getByRole('button',{name:'Switch activity'}).click();
+    await page.getByRole('navigation',{name:'Studio activities'}).getByRole('link',{name:'Docs',exact:true}).click();
+    const article = page.frameLocator('iframe:not([hidden])').locator('.guideChapter');
+    await article.getByRole('heading',{name:'Crop Trainer field guide',exact:true}).waitFor();
+    await Promise.all([
+      page.waitForResponse(r => r.url() === new URL('next/art/audio/reader/english.wasm',base).href && r.ok()),
+      page.getByRole('button',{name:'Listen to this activity'}).click()
+    ]);
+    await page.getByRole('button',{name:'Close narration'}).click();
+    await page.goto('about:blank');
+    await page.unrouteAll({behavior:'wait'});
+    console.log('All three WIP entrances resolved to the studio. Its Docs reader loaded the local voice from /next/.');
+  }
   async function open(path) {
     const response=await page.goto(new URL(path,base).href);
     assert.equal(response?.status(),200);
