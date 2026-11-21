@@ -1,4 +1,4 @@
-import {enableViewerFullscreen} from '../trainer/ui/fullscreen.js';
+import {enableViewerFullscreen} from '../trainer/ui/fullscreen.js?v=context-help2';
 
 // An orthographic orbit camera for a 10 × 10 m plot. Points retain their XYZ
 // coordinates. Camera controls affect only the drawing, never exported data.

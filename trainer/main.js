@@ -1,8 +1,8 @@
 import {scanSession} from './generator/scan-session.js?v=plants3';
 import {setupPlantControls, setupValidationPlantForm, plantSettings} from './generator/plant-version.js?v=orchard4';
-import {createLiveScene} from './ui/live-scene.js';
-import {initFieldTest} from './field-test/field-test-ui.js?v=peak1';
-import {initSandbox, modelSettings, duration, trainInWorker, inspectWeights, runPresets, startingPreset} from './ui/sandbox.js?v=field-practice1';
+import {createLiveScene} from './ui/live-scene.js?v=context-help2';
+import {initFieldTest} from './field-test/field-test-ui.js?v=context-help2';
+import {initSandbox, modelSettings, duration, trainInWorker, inspectWeights, runPresets, startingPreset} from './ui/sandbox.js?v=context-help2';
 import {MAX_SANDBOX_EPOCHS, trainerId, weightArtifact} from './models/network.js?v=peak1';
 import {returnBand,sampleCloud} from './generator/field.js?v=plants3';
 import {cropProfile} from './generator/crops.js?v=systems1';
@@ -389,6 +389,7 @@ function showFitData(set,weightCount,epochs) {
    const budget = stats.trainingRayBudget ? tile.recipe.points : 0;
    link.href = scanViewerLink({...tile.recipe,sensor:tile.recipe.sampling.key,tile_id:tile.tile_id},budget);
    link.textContent = field.seed;
+   link.dataset.help = 'Open the soil-present scan from this practice planting in a new tab. Its retained example counts include the paired soil-removed scan.';
    link.target = '_blank';
    link.rel = 'noopener';
    link.setAttribute('aria-label','Open field '+field.seed+' in a new tab');
@@ -427,6 +428,9 @@ function displayGroundStudy({byGround, tiles}) {
  };
  $('soilMetricHelp').textContent = descriptions[metric];
  $('soilRowHeading').textContent = isCount ? 'Field seed' : 'Match distance';
+ $('soilRowHeading').dataset.help = isCount
+   ? 'Each seed identifies one planting. Open the seed to inspect it in 3D. The last row averages count error across plantings.'
+   : 'How close a pin must lie to a labeled plant to count as a one-to-one match.';
  const values = [];
  if (isCount) {
   const bareBySeed = new Map(tiles.filter(tile => !tile.ground).map(tile => [tile.seed, tile]));
@@ -451,6 +455,7 @@ function displayGroundStudy({byGround, tiles}) {
    const link = document.createElement('a');
    link.href = scanViewerLink(tile);
    link.textContent = label;
+   link.dataset.help = 'Open this validation planting in the 3D viewer. Switch the soil setting there to inspect the two scans behind this row.';
    link.target = '_blank';
    link.rel = 'noopener';
    link.setAttribute('aria-label', 'Inspect planting '+label+' in 3D (new tab)');
@@ -607,12 +612,14 @@ async function runFit(trial){
  const timeLimitMs=!trial && $('stopMode').value==='time'?$('minutes').valueAsNumber*60000:0;
  const key=JSON.stringify([settings,backend]);
  controller=new AbortController();const {signal}=controller;
- const locked=[...$('controls').querySelectorAll('input,select,button:not(.helpTrigger)')].filter(el=>!el.disabled && !sceneHost.contains(el));
+ const locked=[...$('controls').querySelectorAll('input,select,button[id]:not(#replayNetwork)')].filter(el=>!el.disabled && !sceneHost.contains(el));
  locked.forEach(el=>el.disabled=true);
  $('cancel').disabled=false;
  if(!trial)clear();
  live.reset();
- live.show({title:'Growing '+cropProfile(crop).name,metric:'Preparing terrain',detail:'Seed '+seed,legend:'Sampled laser returns',fraction:0});
+ live.show({title:'Growing '+cropProfile(crop).name,metric:'Preparing terrain',detail:'Seed '+seed,legend:'Sampled laser returns',fraction:0,
+  metricHelp:'The generator is preparing the ground and crops before sampling them with laser rays.',
+  detailHelp:'This dataset seed chooses the separate practice and validation plantings. Keep it fixed when comparing model settings.'});
  if(narrow.matches && sceneHost.getBoundingClientRect().bottom>innerHeight)sceneHost.scrollIntoView({block:'end'});
  let previewCloud, lastFrame=-Infinity;
 
@@ -624,13 +631,17 @@ async function runFit(trial){
    const showRows=step.done===1 || recipe.points>100000;
    return scans.generate(recipe,showRows ? frame=>live.show({title:step.split+' field',cloud:frame.cloud,
     metric:'Row '+frame.row+' / '+frame.rows,legend:'Building the canopy',detail:'Seed '+recipe.seed,
+    metricHelp:'Crop rows grown so far in this planting. Once the scan finishes, the trainer can find height peaks in its points.',
+    detailHelp:'This seed identifies the planting being shown. Both soil variants share its plant positions.',
     fraction:(step.done-1+frame.row/frame.rows)/step.total}) : undefined);
   },onScan:(scan,step)=>{
    if(!step.firstValidation && step.done!==step.total && performance.now()-lastFrame<150)return;
    const cloud=sampleCloud(scan.xyz,scan.cls);
    if(step.firstValidation) previewCloud=cloud;
    live.show({title:step.split+' field',cloud,metric:step.done+' / '+step.total+' scans',
-    legend:'Green · crop returns',detail:scan.labels.num_points.toLocaleString()+' returns · seed '+scan.p.seed,fraction:step.done/step.total});
+    legend:'Green · crop returns',detail:scan.labels.num_points.toLocaleString()+' returns · seed '+scan.p.seed,fraction:step.done/step.total,
+    metricHelp:'Completed scans out of all requested practice and validation scans. Each planting has a scan with soil and one with soil removed.',
+    detailHelp:'Returns count the surviving XYZ points in this scan. One plant can receive many returns or none.'});
    lastFrame=performance.now();
   },onProgress:(a,b)=>{
    if(signal.aborted)return;
@@ -643,12 +654,15 @@ async function runFit(trial){
   const tile=set.validation[0];
   const fieldsUsed=set.stats.trainingExamplesByField.filter(field=>field.usedPositive+field.usedNegative>0).length;
   live.show({title:'Fitting on '+fieldsUsed+' of '+set.stats.trainFields+' fields',cloud:previewCloud,metric:'Starting '+backend,
-   detail:'Held-out field · seed '+tile.seed,legend:'Fixed preview · test field 1 of '+set.stats.valFields+' · predicted pins',fraction:0});
+   detail:'Held-out field · seed '+tile.seed,legend:'Fixed preview · test field 1 of '+set.stats.valFields+' · predicted pins',fraction:0,
+   metricHelp:'The selected CPU or WebGPU backend is starting weight updates on the retained practice examples.',
+   detailHelp:'This single held-out field stays fixed so you can watch how the pins move while weights change.'});
   const checkpoint=(epoch,weights)=>{
    if(signal.aborted)return;
    const scores=predictNetwork(tile.X,weights,set.dims,settings.hiddenLayers,settings.activation);
    const pins=detectionStages(tile,scores,threshold).selected;
-   live.show({pins,detail:pins.length+' predicted · epoch '+epoch.toLocaleString()+' · seed '+tile.seed});
+   live.show({pins,detail:pins.length+' predicted · epoch '+epoch.toLocaleString()+' · seed '+tile.seed,
+    detailHelp:'Predicted pins on the fixed preview field using weights from the displayed epoch. Pin updates can be less frequent than loss updates.'});
   };
   let finish=false, warm=null, latest=null;
   const options={...settings,dims:set.dims,lr:settings.learningRate,epochs:timeLimitMs?40:targetEpochs,timeLimitMs};
@@ -661,7 +675,8 @@ async function runFit(trial){
    const rate=warm && p.epoch>warm.epoch?(p.elapsedMs-warm.elapsedMs)/(p.epoch-warm.epoch):p.elapsedMs/p.epoch;
    const remaining=timeLimitMs?Math.max(0,timeLimitMs-p.elapsedMs):Math.max(0,targetEpochs-p.epoch)*rate;
    const fraction=timeLimitMs?p.elapsedMs/timeLimitMs:p.epoch/targetEpochs;
-   live.show({metric:'Epoch '+p.epoch.toLocaleString()+' · loss '+p.loss.toFixed(3),fraction,loss:{epoch:p.epoch,loss:p.loss}});
+   live.show({metric:'Epoch '+p.epoch.toLocaleString()+' · loss '+p.loss.toFixed(3),fraction,loss:{epoch:p.epoch,loss:p.loss},
+    metricHelp:'An epoch is one pass over the retained practice examples. Lower loss means the scores agree more closely with the practice labels. Validation measures how well the final pins find plants.'});
    status(trial?'Timing '+backend+' trial':'Training on '+backend,set.stats.samples.toLocaleString()+' examples per epoch · Epoch '+p.epoch.toLocaleString()+
     (timeLimitMs?'':' / '+targetEpochs.toLocaleString())+' · '+duration(p.elapsedMs)+' elapsed · '+
     (p.epoch<4 && !timeLimitMs?'measuring speed…':'about '+duration(remaining)+' of training left'),30+55*Math.min(1,fraction));
@@ -688,14 +703,17 @@ async function runFit(trial){
    if(signal.aborted)return;
    live.show({title:'Checking plant centers',metric:a.done+' / '+a.total+' scans',
     cloud:null,flat:true,points:a.tile.points,pins:a.predictions,misses:a.missed.map(i=>a.tile.truth[i]),
-    legend:'○ Prediction   × Missed at 15 cm',detail:'Top view · seed '+a.tile.seed,fraction:a.done/a.total});
+    legend:'○ Prediction   × Missed at 15 cm',detail:'Top view · seed '+a.tile.seed,fraction:a.done/a.total,
+    metricHelp:'Held-out scans scored so far. The detector places pins first, then the scorer pairs them with labeled plants.',
+    detailHelp:'The seed identifies this validation planting. A cross marks a plant with no one-to-one pin match within 15 cm.'});
    if(a?.total)status('Validating held-out fields',a.done+' / '+a.total+' scan variants scored',88+11*a.done/a.total);
   }});
   const finished=performance.now();
   signal.throwIfAborted();
   const perEpoch=warm && epochs>warm.epoch?(latest.elapsedMs-warm.elapsedMs)/(epochs-warm.epoch):latest.elapsedMs/epochs;
   calibration={key,perEpoch,overhead:Math.max(0,finished-start-latest.elapsedMs)};
-  live.show({title:trial?'Trial harvest':'Harvest complete',metric:(100*scores.meanF1).toFixed(1)+'% mean F1',fraction:1});
+  live.show({title:trial?'Trial harvest':'Harvest complete',metric:(100*scores.meanF1).toFixed(1)+'% mean F1',fraction:1,
+   metricHelp:'The average of the three validation F1 scores at 7.5, 10 and 15 cm. Each score balances missed plants and extra pins across all held-out scans.'});
   if(trial){
    status('Trial complete','Timed 16 training epochs and scored the validation fields. See the estimate in Run setup.',100);
    return;
@@ -727,7 +745,8 @@ async function runFit(trial){
   $('downloadWeights').hidden=false;$('downloadRun').hidden=false;$('downloadSettings').hidden=false;$('exportText').hidden=false;
   status('Run complete',backend+' training · '+(scores.meanF1*100).toFixed(1)+'% mean F1 on held-out synthetic scans.',100);
  }catch(err){
-  live.show({title:signal.aborted?'Run canceled':'Run interrupted',metric:'Last preview'});
+  live.show({title:signal.aborted?'Run canceled':'Run interrupted',metric:'Last preview',
+   metricHelp:'The last available preview stays on screen when a run stops before producing its final validation results.'});
   if(signal.aborted){status('Canceled',trial?'Timing trial stopped.':'Training stopped.',0);if(!trial)$('resultNote').textContent='This run was canceled.'}
   else{status('Run failed',String(err?.message||err)+(backend==='WebGPU'?' Choose CPU to retry.':''),0);if(!trial)$('resultNote').textContent='No validation result was produced.'}
  }finally{controller=null;finishTraining=null;locked.forEach(el=>el.disabled=false);$('cancel').disabled=true;$('finish').hidden=true;workload()}

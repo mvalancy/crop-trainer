@@ -1,4 +1,4 @@
-import {benchmarkView} from './watch.js?v=field-desk1';
+import {benchmarkView} from './watch.js?v=context-help2';
 import {scanSession} from '../trainer/generator/scan-session.js?v=plants3';
 import {setupPlantControls, setupValidationPlantForm, plantSettings} from '../trainer/generator/plant-version.js?v=orchard4';
 import {CLASSIC_TRAINING_PAIR, TRAINING_RAY_PAIRS, DENSITY_HISTORY_KEY, HEIGHT_HISTORY_KEY, densitySnapshot, pairDensityScores} from './density.js?v=peak1';
@@ -212,8 +212,14 @@ function showOutcome(rows, comparison, crop) {
     intro.textContent = best.label+(ledBoth ? ' led on both dataset seeds' : ' had the highest average mean F1');
   }
   const observation = document.createElement('p');
+  intro.dataset.helpLabel = 'Comparison summary';
+  intro.dataset.help = 'Compares the contenders on two repeatable datasets. Each dataset contributes equally to the average mean F1.';
+  observation.dataset.helpLabel = 'Difference between contenders';
+  observation.dataset.help = 'Compares final counts at 15 cm across both seeds. Each planting contributes a separate scan with and without soil.';
   if (comparison === 'backend') {
     intro.textContent = 'Training time on this device';
+    intro.dataset.help = 'Compare elapsed fitting time for the same model and data on each training engine.';
+    observation.dataset.help = 'This average weights each dataset seed equally. Other devices and browser adapters can give different timings.';
     observation.textContent = summaries.map(s => s.label+' averaged '+formatTime(s.trainingMs)+' per fit').join(' · ')+'.';
   } else if (top.length === 1) {
     const [best, next] = ranked;
@@ -242,10 +248,16 @@ function showOutcome(rows, comparison, crop) {
     const item = document.createElement('li'), title = document.createElement('strong');
     title.textContent = entry.label+' · '+entry.mean.toFixed(4)+' mean F1';
     const count = document.createElement('span');
+    title.dataset.help = 'Average of the two dataset scores. Each seed’s score averages F1 at 7.5, 10 and 15 cm.';
+    title.dataset.helpLabel = entry.label + ' mean F1';
+    count.dataset.help = 'Each pin can match one plant within 15 cm. Counts include both soil views and both seeds. Unmatched pins are extras.';
+    count.dataset.helpLabel = entry.label + ' matches and extra pins';
     count.textContent = entry.matched.toLocaleString()+' of '+entry.labels.toLocaleString()+' centers found · '+entry.extra.toLocaleString()+' extra pins';
     item.append(title,count);
     if (comparison === 'forms') {
       const samples = document.createElement('span');
+      samples.dataset.help = 'Retained positive and negative candidate peaks for fitting, shown separately for the two seeds. Plant shapes can change this count.';
+      samples.dataset.helpLabel = 'Examples used for training';
       samples.textContent = 'Training examples on each seed · '+groups.get(entry.label).map(row => row.trainingSamples.toLocaleString()).join(' / ');
       item.append(samples);
     }
@@ -254,6 +266,8 @@ function showOutcome(rows, comparison, crop) {
       const rays = tiles[0].sampledRays.toLocaleString();
       const meanReturns = Math.round(tiles.reduce((total,tile)=>total+tile.returnCount,0)/tiles.length);
       const sampling = document.createElement('span');
+      sampling.dataset.help = 'A sampled ray is one attempted measurement. A return is a recorded point after simulated gaps and noise. The return count is averaged over the test scans.';
+      sampling.dataset.helpLabel = 'Test scan density';
       sampling.textContent = rays+' rays sampled per scan · '+meanReturns.toLocaleString()+' returns per scan on average';
       item.append(sampling);
     }
@@ -265,6 +279,8 @@ function showOutcome(rows, comparison, crop) {
   const adapter = rows.find(row => row.adapter)?.adapter;
   if (adapter) {
     const note = document.createElement('p');
+    note.dataset.help = 'Identifies the adapter the browser reported for this run. A software adapter runs GPU commands on the CPU.';
+    note.dataset.helpLabel = 'WebGPU adapter';
     note.textContent = 'WebGPU adapter · '+[adapter.kind,adapter.description || adapter.architecture].filter(Boolean).join(' · ');
     $('summary').append(note);
   }
@@ -295,6 +311,7 @@ function appendRow(row, comparison, settings) {
     if (layout) query.set('validationSensor', layout);
     const link = document.createElement('a');
     link.href = '../trainer/?'+query;
+    link.dataset.help = 'Open the Training shed with these settings to fit this contender again and inspect or export its weights.';
     const cell = {heights:modelCell, density:modelCell, layouts:modelCell, averaging:modelCell, forms:modelCell, epochs:duration, cutoffs:cutoff}[comparison];
     link.textContent = cell.textContent;
     link.setAttribute('aria-label', 'Replay '+modelLabel+' on seed '+row.seed+' with '+row.epochs+' epochs and cutoff '+row.threshold);
@@ -324,6 +341,7 @@ function displayValidationBudgets(container) {
     url.searchParams.set('validationRayBudget', budget);
     const link = document.createElement('a');
     link.href = url;
+    link.dataset.help = 'Keep this experiment’s settings and request '+budget.toLocaleString()+' rays per validation scan. Run it in the same tab to compare both budgets.';
     link.textContent = 'Repeat with '+budget.toLocaleString()+' validation rays';
     container.append(link);
   }
@@ -393,6 +411,9 @@ function displayValidationComparison() {
     help.textContent = 'Both budgets are in the comparison table below and in the JSON download.';
   }
   $('fitSetting').textContent = heights ? 'Minimum peak height' : 'Training rays';
+  $('fitSetting').dataset.help = heights
+    ? 'The smallest peak height allowed when generating candidates for this fit.'
+    : 'The ray budget requested for training, before scoring the fit on two validation densities.';
   const pairedRows = $('robustnessRows');
   pairedRows.replaceChildren();
   for (const row of paired) {
@@ -460,10 +481,11 @@ function displayCutoffCoverage(cm) {
     const th = document.createElement('th');
     th.scope = 'row';
     th.textContent = label;
+    th.dataset.help = 'Groups labeled plants by how many laser points hit them in the soil-present test scans.';
     tr.append(th);
     const total = summaries[0].groups[band].plants;
     tr.insertCell().textContent = total;
-    for (const result of summaries) {
+    for (const [index, result] of summaries.entries()) {
       const cell = tr.insertCell();
       const matched = result.groups[band].matched;
       cell.textContent = total ? matched : '—';
@@ -473,7 +495,8 @@ function displayCutoffCoverage(cm) {
         meter.value = matched;
         meter.setAttribute('aria-label', label + ' matched');
         meter.setAttribute('aria-valuetext', matched + ' of ' + total + ' plants');
-        meter.title = (100 * matched / total).toFixed(1) + '% matched';
+        cell.dataset.helpLabel = 'Matches at cutoff '+report.thresholds[index];
+        cell.dataset.help = matched+' of '+total+' plants in this group had a pin within '+cm+' cm ('+(100 * matched / total).toFixed(1)+'%).';
         cell.append(meter);
       }
     }
@@ -485,7 +508,13 @@ function displayCutoffCoverage(cm) {
   th.colSpan = 2;
   th.textContent = 'Extra pins';
   tr.append(th);
-  for (const result of summaries) tr.insertCell().textContent = result.extraPins;
+  th.dataset.help = 'Total unmatched final pins across the same soil-present scans, counted once per cutoff.';
+  for (const [index, result] of summaries.entries()) {
+    const cell = tr.insertCell();
+    cell.textContent = result.extraPins;
+    cell.dataset.helpLabel = 'Extra pins at cutoff '+report.thresholds[index];
+    cell.dataset.help = 'Pins at this cutoff that did not match a labeled plant within '+cm+' cm.';
+  }
 }
 function displayCutoffChanges() {
   const cm = Number($('cutoffDistance').value);
@@ -518,17 +547,28 @@ function displayFields() {
   const contender = row => contenderLabel(row, comparison);
   const columns = rows.filter(row => row.seed === datasets[0].seed).map(contender);
   const layouts = comparison === 'layouts';
-  const headings = ['Dataset seed', 'Field seed', ...(layouts ? [] : ['Layout']), ...columns];
+  const metric = $('fieldMetric').value;
+  const metricHelp = metric === 'meanSigned'
+    ? 'Final pins minus labeled plants, averaged per scan. A negative value means the detector undercounted.'
+    : metric === 'meanAbsolute' ? 'Average size of the count error per scan. Zero means the pin count equaled the plant count.'
+    : metric === 'mean' ? 'F1 averaged over 7.5, 10 and 15 cm, combining both soil views of this planting.'
+    : 'F1 at '+metric+' cm, combining matches, extra pins and misses from both soil views.';
+  const headings = [
+    ['Dataset seed','Selects the training and validation plantings used in one repeat.'],
+    ['Field seed','Identifies one held-out planting. Both contenders see scans of its plants.'],
+    ...(layouts ? [] : [['Layout','The simulated ray pattern used to scan this planting.']]),
+    ...columns.map(label => [label, metricHelp])
+  ];
   $('fieldGuide').textContent = 'Each row combines the scans with and without soil from one held-out planting. '+
     (layouts ? 'Select a score to inspect that layout’s soil-present scan in 3D.' : 'Select a field seed to inspect its soil-present scan in 3D.');
-  $('fieldHeading').replaceChildren(...headings.map(label => {
+  $('fieldHeading').replaceChildren(...headings.map(([label, help]) => {
     const th = document.createElement('th');
     th.scope = 'col';
     th.textContent = label;
+    th.dataset.help = help;
     return th;
   }));
   $('fieldRows').replaceChildren();
-  const metric = $('fieldMetric').value;
   const countMetric = metric === 'meanAbsolute' || metric === 'meanSigned';
   $('countHelp').hidden = !countMetric;
   $('countHelp').textContent = metric === 'meanAbsolute'
@@ -550,6 +590,7 @@ function displayFields() {
         if (settings.validationRayBudget) query.set('budget', settings.validationRayBudget);
         const link = document.createElement('a');
         link.href = '../?'+query+'#field';
+        link.dataset.help = (layouts ? metricHelp+' ' : '')+'Open the soil-present scan of this field in the 3D viewer.';
         link.textContent = text;
         if (layouts) link.setAttribute('aria-label', text+' · inspect '+layoutNames.get(result.sensor)+' on field '+seed);
         return link;
@@ -576,10 +617,14 @@ function displayFields() {
       label.scope = 'row';
       label.colSpan = layouts ? 2 : 3;
       label.textContent = 'Seed '+dataset.seed+' · all '+dataset.stats.valTiles+' scans';
+      label.dataset.help = 'This row gives equal weight to each held-out scan for this dataset seed.';
       total.append(label);
       for (const column of columns) {
         const row = group.find(row => contender(row) === column);
-        total.insertCell().textContent = formatCount(row.countError[metric]);
+        const cell = total.insertCell();
+        cell.textContent = formatCount(row.countError[metric]);
+        cell.dataset.helpLabel = column+' count error across this seed';
+        cell.dataset.help = metricHelp;
       }
     }
   }
@@ -735,7 +780,7 @@ $('benchForm').onsubmit = async event => {
   report=null;$('export').disabled=true;$('summary').textContent='';$('results').replaceChildren();
   $('scoreDetails').hidden = true;
   $('scoreRows').replaceChildren();
-  const lockedControls = [...$('benchForm').querySelectorAll('input:enabled,select:enabled,button:enabled:not(.helpTrigger)')];
+  const lockedControls = [...$('benchForm').querySelectorAll('input:enabled,select:enabled,button:enabled:not(.helpTrigger,.helpDisabledProxy)')];
   for (const input of lockedControls) input.disabled = true;
   $('cancel').disabled = false;
   const benchStart = performance.now();

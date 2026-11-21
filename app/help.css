@@ -28,7 +28,6 @@
   max-width: 100%;
 }
 .helpAction > :first-child { min-width: 0; }
-.helpTerm { display: inline; white-space: nowrap; }
 .helpGroup:has(> :first-child[hidden]),
 .helpGroup:has(> label > [data-help][hidden]) { display: none; }
 .helpGroup:has(> .comparisonChoice) { grid-column: 1 / -1; }
@@ -91,13 +90,30 @@
   .helpGroup { --help-size: 2.25rem; }
 }
 @media (max-width: 740px) {
-  #controls .action > .helpGroup:has(> .primary), .pairInspect > .helpField { grid-column: 1 / -1; }
-  .reportActions .helpAction > button:first-child { flex: 1; }
-}
-@media (max-width: 400px) {
-  #controls .action { grid-template-columns: minmax(0, 1fr); }
-  #controls .action .helpAction > button:first-child { flex: 1; }
+  .pairInspect > .helpField { grid-column: 1 / -1; }
 }
 @media (forced-colors: active) {
   .helpBubble, .helpTrigger::before { border-color: CanvasText; }
 }
+
+/* Form actions keep their native layout. Tab can still reach the explanation for
+   an unavailable button; its focus ring is painted around the disabled action. */
+.helpDisabledProxy {
+  position: absolute !important;
+  inline-size: 1px !important;
+  block-size: 1px !important;
+  min-inline-size: 0 !important;
+  min-block-size: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  clip-path: inset(50%);
+  overflow: hidden;
+  white-space: nowrap;
+}
+button:has(+ .helpDisabledProxy:focus-visible),
+:is(th,td)[aria-describedby]:focus-visible {
+  outline: 2px solid #366849;
+  outline-offset: -2px;
+}
+:is(th,td)[aria-describedby], [data-help][tabindex]:not(a,button,input,select,summary) { cursor: help; }

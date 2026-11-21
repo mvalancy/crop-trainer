@@ -1,0 +1,34 @@
+#benchOptions .benchFields {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+}
+#benchOptions select { min-height: 44px; }
+
+/* Keep repeatable run settings next to each other even on a phone. */
+.benchRunNumbers {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: .65rem 1.1rem;
+}
+
+.benchRunNumbers input[type=number] {
+  /* Reserve room for the full value, padding and native number steppers. */
+  width: calc(var(--digit-width) + 2.65rem);
+  min-height: 44px;
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.benchRunNumbers #seed { --digit-width: 10ch; }
+.benchRunNumbers #fitEpochs { --digit-width: 4ch; }
+
+@media (pointer: coarse), (max-width: 740px) {
+  .benchRunNumbers .helpGroup { --help-size: 44px; }
+  .benchRunNumbers #epochControl { max-width: 8.5rem; }
+}
+
+@media (max-width: 379px) {
+  .benchRunNumbers { column-gap: .5rem; }
+  .benchRunNumbers #epochControl { max-width: 7rem; }
+}

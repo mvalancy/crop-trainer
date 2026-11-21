@@ -1,0 +1,167 @@
+/* Keep measured quantities compact while giving the scanner and crop names room. */
+.shed :is(#controls, .testFrame) input[type=number] {
+  inline-size: min(100%, calc(var(--digits, 6) * 1ch + 2.65rem));
+  min-block-size: 2.75rem;
+  font-variant-numeric: tabular-nums;
+}
+#controls :is(#epochs, #initSeed, #seed) { --digits: 10; }
+#controls #learningRate { --digits: 9; }
+#controls :is(#train, #validation) { --digits: 3; }
+#controls #widths input { --digits: 2; }
+.testFrame :is(#testX, #testY, #testZ) { --digits: 15; }
+.shed :is(#controls, .testFrame) select { min-block-size: 2.75rem; }
+
+#controls .setupPanel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  align-items: start;
+  gap: .75rem;
+}
+#controls .setupPanel > * { margin: 0; grid-area: auto; }
+.setupPanel .setupChoices {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: start;
+  gap: .55rem .8rem;
+}
+#controls .modelCard { display: grid; align-items: start; }
+#controls .modelCard details { padding: .6rem .75rem; }
+#controls .modelCard label { margin: 0; }
+#controls #hiddenEditor {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr));
+  align-items: start;
+}
+#controls #hiddenEditor[hidden] { display: none; }
+#controls #depth { inline-size: 4.35rem; }
+#controls #activation { inline-size: 6rem; }
+#controls .unitFields {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 5.55rem), 1fr));
+  gap: .45rem .65rem;
+}
+#controls .modelCard .hint { margin: .65rem 0 0; }
+#controls .setupPanel .action {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: start;
+  gap: .4rem;
+}
+#controls .action button { min-height: 2.75rem; }
+#controls .setupPanel .action .primary { flex: 1 1 12rem; }
+#controls .setupPanel .action button:not(.primary) { flex: 0 1 auto; }
+#controls .workloadLine { flex-wrap: wrap; gap: .35rem; }
+#controls .workloadLine p { flex: 1 0 100%; margin: 0; }
+#controls .workloadLine a { display: inline-flex; align-items: center; min-height: 44px; }
+@media (min-width: 741px) { #controls .workloadLine .mobileShortcut { display: none; } }
+#controls .estimate:empty { display: none; }
+
+@container (min-width: 28rem) {
+  .setupPanel .setupChoices { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
+  .setupChoices > :last-child { grid-column: 1 / -1; }
+}
+/* Each disclosure is independent so a run can be set up with several open. */
+#controls .settingsGrid { align-items: start; }
+#controls .detailFields { gap: .9rem; }
+#controls .settingGroup {
+  display: grid;
+  gap: .75rem;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+#controls .settingGroup + .settingGroup { padding-top: .25rem; }
+#controls .settingGroup legend {
+  inline-size: 100%;
+  margin: 0 0 .45rem;
+  padding: 0 0 .3rem;
+  border-bottom: 1px solid var(--line);
+  font: 650 .82rem/1.4 var(--sans);
+  color: var(--forest);
+}
+#controls .settingGroup:has(#initLabel[hidden]) { display: none; }
+#controls .settingGroup label { margin: 0; }
+#controls .detailFields > button { justify-self: start; }
+#controls :is(.selectPair, .stopFields, .countFields, .numberRow) {
+  display: grid;
+  align-items: start;
+  gap: .65rem 1rem;
+}
+#controls .selectPair { grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); }
+#controls .stopFields { grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr)); }
+#controls .numberRow { grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr)); }
+#controls .countFields {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 7.25rem), 1fr));
+  align-items: end;
+}
+#controls .settingGroup > a { justify-self: start; }
+#controls #hiddenEditor legend { padding: 0; }
+.shed .testFrame .testInputs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), max-content));
+  justify-content: start;
+  gap: .65rem 1rem;
+}
+.shed .testFrame .testInputs select { inline-size: min(100%, 10rem); }
+
+.testSource {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: .6rem 1.5rem;
+  margin-bottom: 1rem;
+}
+.testSource > :first-child { flex: 0 1 17rem; }
+.testSource p { flex: 1 1 21rem; max-width: 64ch; margin: 0; }
+.testSource select, .testUploads input[type=file] { min-height: 2.75rem; }
+.testUploads {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  align-items: start;
+  gap: 1rem;
+}
+.testUpload {
+  display: grid;
+  gap: .5rem;
+  min-inline-size: 0;
+  padding-block-start: .65rem;
+  border-block-start: 1px solid var(--line);
+}
+.testUpload[hidden] { display: none; }
+.testUpload p { margin: 0; }
+.testExamples { display: flex; flex-wrap: wrap; gap: .4rem; }
+.testExamples a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: .35rem .65rem;
+  border: 1px solid #a5b6a4;
+  border-radius: .45rem;
+  background: var(--surface);
+  color: var(--forest);
+  font: 640 .83rem/1.25 var(--sans);
+  text-decoration: none;
+}
+.testExamples a:is(:hover, :focus-visible) {
+  background: var(--wash);
+  border-color: var(--forest);
+  text-decoration: underline;
+  text-underline-offset: .18em;
+}
+
+@media (max-width: 740px) {
+  .shed :is(#controls, .testFrame) :is(select, input[type=number]) { font-size: 1rem; }
+  #controls .settingsGrid > details { padding-inline: .7rem; }
+  #controls .setupPanel .action .primary { flex-basis: 100%; }
+  #controls .settingGroup > a { display: inline-flex; align-items: center; min-height: 44px; }
+}
+
+@media (max-width: 355px) {
+  .shed #controls > :is(.setupPanel, .advancedPanel) { padding-inline: .6rem; }
+  .shed #controls .settingsGrid > details { padding-inline: .45rem; }
+  .shed #controls select { padding-inline: .35rem; }
+  .shed #controls .settingsGrid select { letter-spacing: -.021em; }
+}

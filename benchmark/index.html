@@ -6,15 +6,16 @@
 <link rel="icon" type="image/png" sizes="32x32" href="../art/crop-mark-32.png">
 <link rel="icon" type="image/svg+xml" sizes="any" href="../art/crop-mark.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="../art/crop-touch.png">
-<link rel="stylesheet" href="../app/farm.css?v=scan-workspace2">
+<link rel="stylesheet" href="../app/farm.css?v=context-help2">
 
-<link rel="stylesheet" href="../app/help.css?v=field-desk1">
-<script type="module" src="../app/help.js?v=field-desk1"></script>
+<link rel="stylesheet" href="../app/help.css?v=context-help2">
+<link rel="stylesheet" href="layout.css?v=compact1">
+<script type="module" src="../app/help.js?v=context-help2"></script>
 </head>
-<body class="benchmark"><a class="skip" href="#main">Skip to content</a>
+<body class="benchmark"><a class="skip" href="#main" data-help="Jump past the navigation to the benchmark controls.">Skip to content</a>
 <header class="siteBar">
-<div class="barInner"><a class="brand" href="../"><img class="mark" src="../art/crop-mark.svg" width="32" height="32" alt="">Crop Trainer</a>
-<nav aria-label="Main navigation"><a href="../#field">Field generator</a><a href="../trainer/">Training shed</a><a href="../benchmark/" aria-current="page">Benchmark</a></nav><a class="repoLink" href="https://github.com/mvalancy/crop-trainer" aria-label="Crop Trainer on GitHub">GitHub <span aria-hidden="true">↗</span></a></div></header>
+<div class="barInner"><a class="brand" href="../" data-help="Return to the Crop Trainer home page."><img class="mark" src="../art/crop-mark.svg" width="32" height="32" alt="">Crop Trainer</a>
+<nav aria-label="Main navigation"><a href="../#field" data-help="Grow a field and examine its synthetic laser returns in 3D.">Field generator</a><a href="../trainer/" data-help="Design, fit and export one detector in your browser.">Training shed</a><a href="../benchmark/" aria-current="page" data-help="Open the page for paired detector experiments.">Benchmark</a></nav><a class="repoLink" href="https://github.com/mvalancy/crop-trainer" aria-label="Crop Trainer on GitHub" data-help="Open the public source code for Crop Trainer on GitHub.">GitHub <span aria-hidden="true">↗</span></a></div></header>
 <main id="main">
 <header class="pageIntro">
 <h1>Detector benchmark</h1>
@@ -28,16 +29,18 @@
 <p id="comparisonHelp" class="hint"></p>
 <div class="action">
 <label class="check"><input type="checkbox" id="livePreview" data-help="Watch the scans and pins appear while the test runs. Switch this off when measuring speed to leave out the drawing work." checked> Live view</label>
-<button id="run" class="primary" disabled="">Run benchmark</button>
-<button type="button" id="cancel" disabled="">Cancel</button></div>
-<details id="benchOptions"><summary>Seeds, training and scan settings</summary><div>
+<button id="run" data-help="Grow the fields, fit the contenders and compare their pins on fresh plantings. This runs locally in your browser." class="primary" disabled="">Run benchmark</button>
+<button type="button" id="cancel" data-help="Stop the current comparison. The results table keeps any rows that have finished scoring." disabled="">Cancel</button></div>
+<details id="benchOptions"><summary data-help="Adjust the repeatable field seed, model settings and scan patterns for training and validation.">Seeds, training and scan settings</summary><div>
 <fieldset><legend>Detector settings</legend><div class="benchFields">
+<div class="benchRunNumbers">
+<label>First seed<input type="number" inputmode="numeric" id="seed" data-help="This number fixes the random plantings. The benchmark repeats the experiment using the next number." value="27" min="0" max="4294967294" step="1" required=""></label>
+<div id="epochControl">
+<label>Epochs per fit<input id="fitEpochs" data-help="One epoch is one pass through the retained training examples. More passes give the model more chances to adjust its weights." type="number" inputmode="numeric" min="1" max="5000" step="1" value="40" required=""></label></div>
+</div>
 <label>Plant architecture<select id="plantArchitecture" data-help="Chooses the plant generator version. Use the same version as a saved run to regrow its shapes." required><option value="3" selected>Connected plants · v3</option><option value="4" hidden>Variable apple scaffolds · v4</option><option value="2">Structured plants · v2</option><option value="1">Original plants · v1</option></select></label>
 <label>Training plant form<select id="plantForm" data-help="Choose one shape or growth stage for training. In the mixed-form comparison, the second detector sees several forms." required><option value="mixed">Seeded mix</option></select></label>
 <label>Plant condition<select id="plantCondition" data-help="Damaged plants can have missing or bent parts. A seeded mix grows healthy and damaged plants together." required><option value="healthy">Healthy</option><option value="mixed">Seeded damage · about 1 in 4</option><option value="damaged">All damaged</option></select></label>
-<label>First seed<input type="number" id="seed" data-help="This number fixes the random plantings. The benchmark repeats the experiment using the next number." value="27" min="0" max="4294967294" step="1" required=""></label>
-<div id="epochControl">
-<label>Epochs per fit<input id="fitEpochs" data-help="One epoch is one pass through the retained training examples. More passes give the model more chances to adjust its weights." type="number" min="1" max="5000" step="1" value="40" required=""></label></div>
 <label id="heightControl">Minimum peak height<select id="minimumHeight" data-help="A bump must reach this height to become a possible plant. Lower values can reveal seedlings and pick up more soil bumps."><option value="default">Crop default</option><option value="0.065">6.5 cm</option><option value="0.035">3.5 cm</option></select></label>
 <label id="averagingControl">Peak averaging<select id="peakAveraging" data-help="Smooth nearby heights before looking for peaks. With sparse scans, ignoring empty cells can reveal small plants and extra soil peaks." required><option value="zero-filled">All cells · standard</option><option value="occupied">Sampled cells only · experimental</option></select></label>
 </div></fieldset>
@@ -56,29 +59,29 @@
 </div></fieldset>
 </div></details>
 </form>
-<output aria-live="polite" id="status" class="benchStatus">Checking WebGPU…</output>
+<output aria-live="polite" id="status" data-help="Before a run, this shows which training engines your browser can use. During a run, it shows the current task or any error." data-help-label="Benchmark status" class="benchStatus">Checking WebGPU…</output>
 <div class="benchContext">
 <h2>How the test works</h2>
 <figure><span><img src="../art/paired-field.svg" width="560" height="202" alt="Two detectors on the same six plants. One misses a plant. The other places an extra pin."></span><span aria-hidden="true"><img src="../art/paired-field.svg" width="560" height="202" alt=""></span></figure>
 <p>Each seed grows six fields for training and three fresh fields for scoring. Each comparison uses the same held-out plantings with and without soil. The scan-layout question rescans those plantings from two ray patterns. A second seed repeats the test on new plantings.</p>
-<details id="benchExamples"><summary id="experimentTitle">Try another experiment</summary>
+<details id="benchExamples"><summary id="experimentTitle" data-help="Choose a preset with its question, crop and scan settings already filled in.">Try another experiment</summary>
 <nav id="experiments" aria-label="Example comparisons"><ul>
-<li><a href="?comparison=heights&amp;crop=tomato&amp;seed=2221&amp;sensor=mixed&amp;validationSensor=os1-64&amp;validationRayBudget=12000">Test shorter peaks on sparse tomatoes</a></li>
-<li><a href="?comparison=heights&amp;crop=lettuce&amp;seed=2121&amp;sensor=mixed&amp;validationSensor=os1-64&amp;validationRayBudget=12000&amp;pairSeed=2122&amp;pairTile=39c12665d375fbb9&amp;pairDistance=7.5&amp;pairBox=1#modelBoxes">Inspect a missed lettuce plant in 3D</a></li>
-<li><a href="?comparison=models&amp;crop=artichoke&amp;seed=1551&amp;sensor=mixed&amp;validationSensor=os1-64&amp;validationRayBudget=12000&amp;fieldMetric=meanAbsolute">Compare artichoke counts by model</a></li>
-<li><a href="?comparison=forms&amp;crop=tomato&amp;plantArchitecture=2&amp;plantForm=seedling&amp;validationPlantForm=branching&amp;seed=82173&amp;sensor=reference&amp;trainingRayBudget=60000&amp;validationRayBudget=60000">Train on seedlings or a mix, then find branching tomatoes</a></li>
-<li><a href="?comparison=layouts&amp;crop=tomato&amp;plantArchitecture=2&amp;plantForm=seedling&amp;plantCondition=healthy&amp;sensor=reference&amp;trainingRayBudget=30000&amp;validationRayBudget=30000&amp;seed=82173">Scan the same tomato seedlings in a grid and in rings</a></li>
-<li><a href="?comparison=density&amp;trainingPair=30k-1m&amp;crop=tomato&amp;plantArchitecture=2&amp;plantForm=seedling&amp;plantCondition=healthy&amp;sensor=reference&amp;validationRayBudget=1000000&amp;seed=82173">Train on sparse and dense seedling scans</a></li>
-<li><a href="../?crop=tomato&amp;plantArchitecture=2&amp;plantForm=seedling&amp;sensor=reference&amp;seed=216917&amp;noise=clean&amp;weeds=off&amp;sticks=off&amp;boards=off&amp;studyLow=30000&amp;studyHigh=1000000#scan-study">See which seedlings a denser scan reveals</a></li>
-<li><a href="../?crop=apple&amp;plantArchitecture=2&amp;plantForm=open-vase&amp;sensor=os1-64&amp;seed=1430867&amp;noise=rough&amp;studyLow=12000&amp;studyHigh=30000&amp;studyMetric=orchard#scan-study">Find apple tree bases at two ray budgets</a></li>
+<li><a href="?comparison=heights&amp;crop=tomato&amp;seed=2221&amp;sensor=mixed&amp;validationSensor=os1-64&amp;validationRayBudget=12000" data-help="Load two minimum peak heights and score both on sparse ring scans of the same tomato fields.">Test shorter peaks on sparse tomatoes</a></li>
+<li><a href="?comparison=heights&amp;crop=lettuce&amp;seed=2121&amp;sensor=mixed&amp;validationSensor=os1-64&amp;validationRayBudget=12000&amp;pairSeed=2122&amp;pairTile=39c12665d375fbb9&amp;pairDistance=7.5&amp;pairBox=1#modelBoxes" data-help="Load the lettuce experiment and its selected plant. Run the comparison to restore the inspection.">Inspect a missed lettuce plant in 3D</a></li>
+<li><a href="?comparison=models&amp;crop=artichoke&amp;seed=1551&amp;sensor=mixed&amp;validationSensor=os1-64&amp;validationRayBudget=12000&amp;fieldMetric=meanAbsolute" data-help="Compare how far the logistic and neural detectors’ plant counts differ from the labeled count.">Compare artichoke counts by model</a></li>
+<li><a href="?comparison=forms&amp;crop=tomato&amp;plantArchitecture=2&amp;plantForm=seedling&amp;validationPlantForm=branching&amp;seed=82173&amp;sensor=reference&amp;trainingRayBudget=60000&amp;validationRayBudget=60000" data-help="Compare seedling-only training with mixed growth stages on branching tomatoes.">Train on seedlings or a mix, then find branching tomatoes</a></li>
+<li><a href="?comparison=layouts&amp;crop=tomato&amp;plantArchitecture=2&amp;plantForm=seedling&amp;plantCondition=healthy&amp;sensor=reference&amp;trainingRayBudget=30000&amp;validationRayBudget=30000&amp;seed=82173" data-help="Compare a frozen detector on two simulated patterns with the same number of rays.">Scan the same tomato seedlings in a grid and in rings</a></li>
+<li><a href="?comparison=density&amp;trainingPair=30k-1m&amp;crop=tomato&amp;plantArchitecture=2&amp;plantForm=seedling&amp;plantCondition=healthy&amp;sensor=reference&amp;validationRayBudget=1000000&amp;seed=82173" data-help="Compare 30,000 and one million training rays per scan on a shared dense test set.">Train on sparse and dense seedling scans</a></li>
+<li><a href="../?crop=tomato&amp;plantArchitecture=2&amp;plantForm=seedling&amp;sensor=reference&amp;seed=216917&amp;noise=clean&amp;weeds=off&amp;sticks=off&amp;boards=off&amp;studyLow=30000&amp;studyHigh=1000000#scan-study" data-help="Open two ray budgets in the field generator and inspect the returns around each seedling.">See which seedlings a denser scan reveals</a></li>
+<li><a href="../?crop=apple&amp;plantArchitecture=2&amp;plantForm=open-vase&amp;sensor=os1-64&amp;seed=1430867&amp;noise=rough&amp;studyLow=12000&amp;studyHigh=30000&amp;studyMetric=orchard#scan-study" data-help="Open an apple field and compare tree-base pins at 12,000 and 30,000 requested rays.">Find apple tree bases at two ray budgets</a></li>
 </ul></nav></details></div>
 </section>
 <section id="benchWatch" tabindex="-1" class="panel benchWatch" aria-labelledby="watchTitle" hidden>
-<div class="watchHead"><h2 id="watchTitle">Benchmark live</h2><ol class="watchSteps" aria-label="Benchmark stages"><li>Grow</li><li>Train</li><li>Score</li></ol></div>
+<div class="watchHead"><h2 id="watchTitle">Benchmark live</h2><ol class="watchSteps" aria-label="Benchmark stages"><li data-help="Generate the scan points and known plant centers from the seed.">Grow</li><li data-help="Adjust the model weights using labeled candidate peaks.">Train</li><li data-help="Compare the final pins against plants on fields held out of training.">Score</li></ol></div>
 <div class="watchGrid"><figure class="liveScene" hidden></figure>
-<div class="scoreboard"><h3>Mean F1 by seed</h3><table><thead><tr><th scope="col">Contender</th><th scope="col"></th><th scope="col"></th></tr></thead><tbody></tbody></table>
+<div class="scoreboard"><h3>Mean F1 by seed</h3><table><thead><tr><th scope="col" data-help="The detector or setting being compared. Rows with the same dataset seed use the same held-out plantings.">Contender</th><th scope="col" data-help="Mean F1 for this contender on the displayed dataset seed, averaged over the three matching distances."></th><th scope="col" data-help="Mean F1 for this contender on the displayed dataset seed, averaged over the three matching distances."></th></tr></thead><tbody></tbody></table>
 <p class="hint inspectHelp" hidden>Select a score to view that detector’s pins on the first field for its seed.</p>
-<p class="watchCount"></p><div class="watchActions"><button type="button" class="watchCancel" id="watchCancel">Cancel benchmark</button><a href="#benchResults">Read the comparison ↓</a></div></div></div>
+<p class="watchCount" data-help="Shows how many contender and seed combinations have finished scoring." data-help-label="Completed scores"></p><div class="watchActions"><button type="button" class="watchCancel" id="watchCancel" data-help="Stop this benchmark. You can still inspect scores that have finished.">Cancel benchmark</button><a href="#benchResults" data-help="Jump to the score tables and timing breakdown for this run.">Read the comparison ↓</a></div></div></div>
 </section>
 <section class="panel benchResults" id="benchResults">
 <h2>Results</h2>
@@ -87,38 +90,38 @@
 <div class="tableScroll">
 <table>
 <thead>
-<tr><th>Seed</th><th>Contender</th><th>Epochs</th><th><span data-help="Minimum score a candidate needs before the detector will consider placing a pin.">Cutoff</span></th><th>Generation</th><th>Training</th><th>Scoring</th><th><span data-help="How far the fitted scores were from the training labels on the last pass. Check fresh-field scores to see how well the fit travels.">Training loss</span></th><th><span data-help="Average F1 for matches within 7.5, 10 and 15 cm. Higher scores mean fewer misses and stray pins.">Mean F1</span></th><th><span data-help="Precision asks how many pins found a plant. Recall asks how many labeled plants received a pin. Both use a 15 cm matching distance.">Precision / recall at 15 cm</span></th></tr></thead>
+<tr><th scope="col" data-help="The dataset seed selects the six training plantings and three fresh test plantings in this repeat.">Seed</th><th scope="col" data-help="The detector or setting being compared. Rows with the same dataset seed use the same held-out plantings.">Contender</th><th scope="col" data-help="How many passes the model made through the retained training examples.">Epochs</th><th scope="col" data-help="A proposed plant needs at least this model score before the detector can keep its pin.">Cutoff</th><th scope="col" data-help="Time spent preparing scans and examples for this row. Contenders using the same dataset share its time.">Generation</th><th scope="col" data-help="Elapsed fitting time on this device. Reused means the benchmark applied weights fitted in an earlier row.">Training</th><th scope="col" data-help="Time spent running the detector on held-out scans and comparing final pins with labeled plants.">Scoring</th><th scope="col" data-help="How closely predicted scores fit the training labels before the last weight update. Fresh-field F1 measures detection separately.">Training loss</th><th scope="col" data-help="Average of the held-out F1 scores at 7.5, 10 and 15 cm. Each distance gets equal weight.">Mean F1</th><th scope="col" data-help="Precision is the fraction of pins that matched. Recall is the fraction of labeled plants found. Both use a 15 cm radius.">Precision / recall at 15 cm</th></tr></thead>
 <tbody id="results"></tbody></table></div>
-<details class="timingGuide"><summary>How to read timings and scores</summary><p>Generation time covers the training and validation fields. Rows that share a dataset also share its generation time. The density and peak-height comparisons build a separate set of training examples for each fit. The cutoff experiment shares training time across its three rows. The layout experiment fits once per seed. Its second generation time covers only rescanning the validation fields, and “Reused” means it kept the first fit. Training time includes model initialization, GPU setup and readback where applicable. Training loss is the cross-entropy measured before the last weight update. Mean F1 averages the three held-out F1 scores at 7.5, 10 and 15 cm.</p></details>
+<details class="timingGuide"><summary data-help="See which work each timer includes, when fits are shared and how the final score is calculated.">How to read timings and scores</summary><p>Generation time covers the training and validation fields. Rows that share a dataset also share its generation time. The density and peak-height comparisons build a separate set of training examples for each fit. The cutoff experiment shares training time across its three rows. The layout experiment fits once per seed. Its second generation time covers only rescanning the validation fields, and “Reused” means it kept the first fit. Training time includes model initialization, GPU setup and readback where applicable. Training loss is the cross-entropy measured before the last weight update. Mean F1 averages the three held-out F1 scores at 7.5, 10 and 15 cm.</p></details>
 <section id="heightStudy" hidden aria-labelledby="heightTitle">
 <h3 id="heightTitle">Do lower peaks become detections?</h3>
 <p>Each seed has three held-out plantings. This table uses the soil-present scan of each. Both match columns count one pin per plant within 15 cm. Extra pins are final detections left over after matching.</p>
-<div class="tableScroll"><table><thead><tr><th scope="col">Seed</th><th scope="col">Min. height</th><th scope="col">Labeled plants</th><th scope="col">Height peaks</th><th scope="col">Matched using all peaks</th><th scope="col">Final matches</th><th scope="col">Extra pins</th></tr></thead><tbody id="heightRows"></tbody></table></div>
+<div class="tableScroll"><table><thead><tr><th scope="col" data-help="The dataset seed selects the six training plantings and three fresh test plantings in this repeat.">Seed</th><th scope="col" data-help="How tall a smoothed peak must be to become a candidate before the model scores it.">Min. height</th><th scope="col" data-help="Total known plant centers in the held-out scans with soil included.">Labeled plants</th><th scope="col" data-help="All candidate peaks above the height setting, before applying a model score or spacing nearby pins.">Height peaks</th><th scope="col" data-help="Labeled plants with a one-to-one match within 15 cm when every proposed peak is available.">Matched using all peaks</th><th scope="col" data-help="Labeled plants paired with a final pin within 15 cm after the model score and spacing rules.">Final matches</th><th scope="col" data-help="Final pins left without a labeled plant after one-to-one matching at the stated distance.">Extra pins</th></tr></thead><tbody id="heightRows"></tbody></table></div>
 <fieldset><legend id="heightQuestion">Which height produced fewer extra pins?</legend>
-<div class="action" id="heightAnswers"><button type="button" value="0.065">6.5 cm</button><button type="button" value="0.035">3.5 cm</button><button type="button" value="tie">Equal counts</button></div>
+<div class="action" id="heightAnswers"><button type="button" data-help="Choose the taller peak setting as the one with fewer extra pins on the first seed." value="0.065">6.5 cm</button><button type="button" data-help="Choose the shorter peak setting as the one with fewer extra pins on the first seed." value="0.035">3.5 cm</button><button type="button" data-help="Choose this if both settings produced the same number of extra pins on the first seed." value="tie">Equal counts</button></div>
 <p class="hint" role="status" id="heightAnswer"></p></fieldset>
 <p class="hint" id="heightRepeatHelp"></p>
 <div class="action" id="heightRepeats"></div>
 </section>
 <details id="modelBoxes" hidden>
-<summary id="pairTitle">Which plants did each model find?</summary>
+<summary id="pairTitle" data-help="Compare individual labeled plants and pins for the same scan and matching distance.">Which plants did each model find?</summary>
 <p>Each labeled plant can match one final pin within the selected distance. Pick a plant matched by just one fit to inspect its center in 3D.</p>
 <div class="pairControls">
 <label>Validation scan<select id="pairScan" data-help="Choose one held-out scan and compare the pins from both detectors on that same planting."></select></label>
 <label>Matching distance<select id="pairDistance" data-help="A pin earns one match if it lands within this horizontal distance of a labeled center. A smaller distance demands a more precise location."><option value="7.5">7.5 cm</option><option value="10">10 cm</option><option value="15" selected>15 cm</option></select></label>
 </div>
-<p id="heightTurnover" hidden></p>
+<p id="heightTurnover" data-help="Counts plant centers that changed from missed to found or from found to missed when the minimum peak height was lowered. Each planting is counted once with soil." data-help-label="Matches gained and lost" hidden></p>
 <div class="tableScroll"><table class="pairTable">
 <caption>Plant matches on the selected scan</caption>
-<thead><tr><th scope="col">Both fits</th><th scope="col" id="pairFirst">Logistic only</th><th scope="col" id="pairSecond">Neural only</th><th scope="col">Missed by both</th></tr></thead>
+<thead><tr><th scope="col" data-help="Number of labeled plants found by both detectors on this scan at the selected distance.">Both fits</th><th scope="col" id="pairFirst" data-help="Labeled plants found only by the first contender on this scan.">Logistic only</th><th scope="col" id="pairSecond" data-help="Labeled plants found only by the second contender on this scan.">Neural only</th><th scope="col" data-help="Labeled plants that neither detector matched on this scan.">Missed by both</th></tr></thead>
 <tbody><tr id="pairCounts"></tr></tbody></table></div>
-<p id="pairExtras" class="hint"></p>
-<div class="pairInspect"><label>Plant to inspect<select id="pairBox" data-help="Pick a plant that only one detector found, then open its scan to see where the pin landed."></select></label><a id="pairViewer">Open scan in 3D</a><a id="sharePair">Link to this inspection</a></div></details>
+<p id="pairExtras" data-help="These final pins could not be paired with a labeled plant on the selected scan within the chosen distance." data-help-label="Extra pins per fit" class="hint"></p>
+<div class="pairInspect"><label>Plant to inspect<select id="pairBox" data-help="Pick a plant that only one detector found, then open its scan to see where the pin landed."></select></label><a id="pairViewer" data-help="Open the selected soil view in the field generator. When a plant is selected, its labeled center is highlighted.">Open scan in 3D</a><a id="sharePair" data-help="Copy or open this address to repeat the experiment with the same scan, matching distance and plant selected.">Link to this inspection</a></div></details>
 <section id="densityStudy" hidden aria-labelledby="densityTitle">
 <h3 id="densityTitle">How much training data did each fit see?</h3>
 <p class="hint">Scanner capacity can cap the rays sampled per scan. The training examples are balanced candidate peaks from both soil variants. All fits at each seed used the same validation tiles.</p>
 <p id="mixedNote" class="hint" hidden>The alternating fit uses three plantings at 12,000 rays and three at 60,000 rays. Each planting keeps its budget across both soil scans.</p>
-<div class="tableScroll"><table><thead><tr><th>Seed</th><th>Rays requested per scan</th><th>Rays sampled per training scan</th><th>Training examples</th><th>Mean F1</th></tr></thead><tbody id="densityRows"></tbody></table></div>
+<div class="tableScroll"><table><thead><tr><th scope="col" data-help="The dataset seed selects the six training plantings and three fresh test plantings in this repeat.">Seed</th><th scope="col" data-help="Training ray budget before the selected layout applies its sampling limit.">Rays requested per scan</th><th scope="col" data-help="Ray positions actually sampled on a training scan. A range means the count varied across scans.">Rays sampled per training scan</th><th scope="col" data-help="Candidate peaks retained for fitting, balanced between positive and negative labels across both soil views.">Training examples</th><th scope="col" data-help="Average of the held-out F1 scores at 7.5, 10 and 15 cm. Each distance gets equal weight.">Mean F1</th></tr></thead><tbody id="densityRows"></tbody></table></div>
 <p id="densityCapNote" hidden></p>
 <p class="hint" id="densityRepeatHelp"></p>
 <div class="action" id="densityRepeats"></div>
@@ -126,31 +129,31 @@
 <section id="robustnessTable" hidden aria-labelledby="robustnessTitle">
 <h3 id="robustnessTitle">How well did each fit handle both densities?</h3>
 <p class="hint">Each row combines this run with the most recent run at the other budget in this tab, using the same fit settings and plantings. Each F1 averages the three matching distances across both soil settings. The last column gives the lower of the two values. Ray counts are requested budgets. Some layouts cap the number sampled.</p>
-<div class="tableScroll"><table><thead><tr><th>Seed</th><th id="fitSetting">Training rays</th><th>F1 at 12k rays</th><th>F1 at 60k rays</th><th>Lower F1</th></tr></thead><tbody id="robustnessRows"></tbody></table></div>
+<div class="tableScroll"><table><thead><tr><th scope="col" data-help="The dataset seed selects the six training plantings and three fresh test plantings in this repeat.">Seed</th><th id="fitSetting" scope="col" data-help="Requested ray budget used to train this fit before evaluating it at both validation densities.">Training rays</th><th scope="col" data-help="Mean F1 on the held-out scans at 12,000 requested rays per scan.">F1 at 12k rays</th><th scope="col" data-help="Mean F1 on the same held-out plantings at 60,000 requested rays per scan.">F1 at 60k rays</th><th scope="col" data-help="The smaller of the two validation scores. A higher value means the fit did better on its harder budget.">Lower F1</th></tr></thead><tbody id="robustnessRows"></tbody></table></div>
 </section>
 <details id="cutoffChanges" hidden="">
-<summary>What changes from the 0.50 cutoff?</summary>
+<summary data-help="See how accepting more or fewer candidates changes plant matches and extra pins on the same scans.">What changes from the 0.50 cutoff?</summary>
 <p>This table pools both scans of each planting. Compare each cutoff with 0.50. A positive number means more plants matched or more extra pins appeared.</p>
 <label>Matching distance<select id="cutoffDistance" data-help="Choose how close a pin must land to count as a match when you compare the score cutoffs."><option value="7.5">7.5 cm</option><option value="10">10 cm</option><option value="15" selected="">15 cm</option></select></label>
 <div class="tableScroll">
 <table aria-label="Changes relative to the 0.50 cutoff">
 <thead>
-<tr><th>Seed</th><th>Cutoff</th><th>Change in matched plants</th><th>Change in extra pins</th></tr></thead>
+<tr><th scope="col" data-help="The dataset seed selects the six training plantings and three fresh test plantings in this repeat.">Seed</th><th scope="col" data-help="A proposed plant needs at least this model score before the detector can keep its pin.">Cutoff</th><th scope="col" data-help="Number of matched plants at this cutoff minus the number matched at 0.50 on the same scans.">Change in matched plants</th><th scope="col" data-help="Number of unmatched final pins at this cutoff minus the number at 0.50. A positive value means more extra pins.">Change in extra pins</th></tr></thead>
 <tbody id="cutoffRows"></tbody></table></div>
 <h3>Which plants benefit from a lower cutoff?</h3>
 <p>Each column shows how many labeled plants received a matching pin. The bars show the fraction matched within each group. This table counts each planting once, with soil present. Extra pins are counted across the same scans.</p>
 <div class="tableScroll"><table aria-label="Matched plants by crop returns and score cutoff">
-<thead><tr><th scope="col">Crop returns per plant</th><th scope="col">Plants</th><th scope="col">At 0.35</th><th scope="col">At 0.50</th><th scope="col">At 0.65</th></tr></thead>
+<thead><tr><th scope="col" data-help="Groups plants by how many simulated laser points hit the plant in its soil-present scan.">Crop returns per plant</th><th scope="col" data-help="Number of labeled plants in this return group. Each planting is counted once with soil included.">Plants</th><th scope="col" data-help="How many plants in this return group got a matching pin at a score cutoff of 0.35. The bar shows the fraction found.">At 0.35</th><th scope="col" data-help="How many plants in this return group got a matching pin at a score cutoff of 0.50. The bar shows the fraction found.">At 0.50</th><th scope="col" data-help="How many plants in this return group got a matching pin at a score cutoff of 0.65. The bar shows the fraction found.">At 0.65</th></tr></thead>
 <tbody id="coverageRows"></tbody><tfoot id="coverageFoot"></tfoot></table></div></details>
 <details id="scoreDetails" hidden="">
-<summary>Scores at each matching distance</summary>
+<summary data-help="Inspect matches, extra pins and missed plants separately at 7.5, 10 and 15 cm.">Scores at each matching distance</summary>
 <div class="tableScroll">
 <table>
 <thead>
-<tr><th>Seed</th><th>Contender</th><th>Epochs</th><th>Cutoff</th><th>Tolerance</th><th>Precision</th><th>Recall</th><th>F1</th><th>Matched</th><th>Extra pins</th><th>Missed plants</th></tr></thead>
+<tr><th scope="col" data-help="The dataset seed selects the six training plantings and three fresh test plantings in this repeat.">Seed</th><th scope="col" data-help="The detector or setting being compared. Rows with the same dataset seed use the same held-out plantings.">Contender</th><th scope="col" data-help="How many passes the model made through the retained training examples.">Epochs</th><th scope="col" data-help="A proposed plant needs at least this model score before the detector can keep its pin.">Cutoff</th><th scope="col" data-help="Farthest horizontal distance allowed between a final pin and its labeled center. Each pin and plant can match only once.">Tolerance</th><th scope="col" data-help="Fraction of final pins that matched a labeled plant at this distance.">Precision</th><th scope="col" data-help="Fraction of all labeled plants that received a matching pin at this distance.">Recall</th><th scope="col" data-help="F1 combines precision and recall at this distance. A perfect 1 means every plant got a matching pin and every pin found a plant.">F1</th><th scope="col" data-help="Final pins paired with distinct labeled plants within this distance.">Matched</th><th scope="col" data-help="Final pins left without a labeled plant after one-to-one matching at the stated distance.">Extra pins</th><th scope="col" data-help="Labeled plants without a matching final pin at this distance.">Missed plants</th></tr></thead>
 <tbody id="scoreRows"></tbody></table></div></details>
 <details id="fieldDetails" hidden="">
-<summary>Compare contenders on each planting</summary>
+<summary data-help="Look for difficult fields hidden by the average. Both soil views of a field contribute to its score.">Compare contenders on each planting</summary>
 <p id="fieldGuide">Each row combines the scans with and without soil from one held-out planting. Select a field seed to inspect its soil-present scan in 3D.</p>
 <label>Field metric<select id="fieldMetric" data-help="F1 balances missed plants and extra pins. Count error compares the number of pins with the number of labeled plants."><option value="mean">Mean F1 across distances</option><option value="7.5">F1 at 7.5 cm</option><option value="10">F1 at 10 cm</option><option value="15">F1 at 15 cm</option><option value="meanAbsolute">Count error · absolute</option><option value="meanSigned">Count error · signed</option></select></label>
 <p id="countHelp" class="hint" hidden></p>
@@ -160,12 +163,12 @@
 <tr id="fieldHeading"></tr></thead>
 <tbody id="fieldRows"></tbody></table></div></details>
 
-<div class="reportActions"><button id="export" disabled="">Download benchmark JSON</button> <a id="replay" hidden="">Link to these settings</a></div>
+<div class="reportActions"><button id="export" data-help="Save a JSON report with the settings, field recipes, timings and detection scores from this run." disabled="">Download benchmark JSON</button> <a id="replay" data-help="Open or copy this address to repeat the experiment. Run it again to produce scores and timings on your device." hidden="">Link to these settings</a></div>
 </section>
-<p>Use the <a href="../trainer/">training shed</a> for individual runs, custom workloads, loss curves, weights and field-by-field overlays.</p>
+<p>Use the <a href="../trainer/" data-help="Open the sandbox to train a single model and save its weights.">training shed</a> for individual runs, custom workloads, loss curves, weights and field-by-field overlays.</p>
 </main>
 <footer class="siteFoot"><span>Created by Matthew Valancy</span>
-<div><a href="../AGENTS.md">Agent quickstart</a><a href="../#missions">Farm journal</a><a href="../LICENSE">MIT license</a></div></footer>
-<script type="module" src="main.js?v=field-desk1"></script>
+<div><a href="../AGENTS.md" data-help="Read how to reproduce browser experiments and run the project from the command line.">Agent quickstart</a><a href="../#missions" data-help="Open the farm challenges and check your progress.">Farm journal</a><a href="../LICENSE" data-help="Read the permission and attribution terms for the Crop Trainer source code.">MIT license</a></div><small class="contextHint"><span class="hoverHint">Hover or focus a button or score for help.</span><span class="touchHint">Tap a score or hold a button for help. A quick tap runs the action.</span></small></footer>
+<script type="module" src="main.js?v=context-help2"></script>
 </body>
 </html>

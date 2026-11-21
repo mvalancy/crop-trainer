@@ -1,4 +1,5 @@
 import {networkShape,featureNames} from '../models/network.js?v=field-test1';
+import {createNetworkDiagram} from './network-diagram.js?v=detector-flow1';
 export {featureNames};
 
 export const runPresets = {
@@ -34,18 +35,14 @@ function renderWidths() {
   $('widths').replaceChildren();
   for (let i = 0; i < Number($('depth').value); i++) {
     const label = document.createElement('label'), input = document.createElement('input');
-    input.type = 'number'; input.min = 1; input.max = 32; input.step = 1;
+    input.type = 'number'; input.inputMode = 'numeric'; input.min = 1; input.max = 32; input.step = 1;
     input.required = true; input.value = previous[i] ?? (i === 0 ? 4 : 8);
     input.dataset.helpLabel = 'Units in layer '+(i+1);
     input.dataset.help = 'Each unit learns its own weighted combination of the inputs. Increasing the width adds trainable weights. The diagram shows the new count before you run.';
     label.append('Layer '+(i+1)+' units',input); $('widths').append(label);
   }
 }
-function svg(tag, attributes) {
-  const element = document.createElementNS('http://www.w3.org/2000/svg',tag);
-  for (const [key,value] of Object.entries(attributes)) element.setAttribute(key,value);
-  return element;
-}
+let updateDiagram;
 export function renderNetwork() {
   const settings = modelSettings(), neural = settings.model === 'neural';
   $('designTitle').textContent=neural ? 'Design the model' : 'How this model scores';
@@ -53,29 +50,11 @@ export function renderNetwork() {
   $('hiddenEditor').hidden = !neural; $('hiddenEditor').disabled = !neural;
   $('momentumLabel').hidden = settings.optimizer !== 'momentum';
   $('momentum').disabled = settings.optimizer !== 'momentum';
-  const group = $('diagramLayers'); group.replaceChildren();
-  if (settings.hiddenLayers.some(n=>!Number.isInteger(n)||n<1||n>32)) {
-    $('shapeSummary').textContent = 'Choose 1–32 units for each hidden layer.'; return;
-  }
-  const sizes = [13,...settings.hiddenLayers,1], shape = networkShape(13,settings.hiddenLayers,settings.activation);
-  $('shapeSummary').textContent = sizes.join(' → ')+' · '+shape.count.toLocaleString()+' trainable parameters';
-  const columns = sizes.map((n,i) => {
-    const visible = Math.min(n,5);
-    return Array.from({length:visible},(_,j)=>({x:32+256*i/(sizes.length-1), y:54+(j-(visible-1)/2)*15}));
+  updateDiagram ??= createNetworkDiagram({
+    svg:$('diagramLayers').ownerSVGElement, layers:$('diagramLayers'), summary:$('shapeSummary'),
+    description:$('netDesc'), replayButton:$('replayNetwork'), replayLabel:$('networkReplayLabel'), stepLabel:$('networkStep')
   });
-  for (let i=1;i<columns.length;i++) {
-    for (const a of columns[i-1]) for (const b of columns[i]) {
-      group.append(svg('line',{x1:a.x,y1:a.y,x2:b.x,y2:b.y,class:'netWire'}));
-    }
-    const a = columns[i-1][Math.floor(columns[i-1].length/2)], b = columns[i][Math.floor(columns[i].length/2)];
-    group.append(svg('path',{d:'M'+a.x+' '+a.y+'L'+b.x+' '+b.y,class:'netPulse',pathLength:100}));
-  }
-  columns.forEach((column,i) => {
-    for (const {x,y} of column) group.append(svg('circle',{cx:x,cy:y,r:i===columns.length-1?7:4.5,class:i===columns.length-1?'netPin':'netUnit'}));
-    const text = svg('text',{x:column[0].x,y:111,'text-anchor':'middle'});
-    text.textContent = i===0?'13 in':i===sizes.length-1?'1 out':String(sizes[i]);
-    group.append(text);
-  });
+  updateDiagram(settings);
 }
 export function initSandbox(params) {
   if (params.get('model') === 'linear') $('architecture').value='linear';
@@ -103,6 +82,22 @@ export function trainInWorker(x,y,options,signal,onEpoch,onReady,onCheckpoint) {
   });
 }
 
+const inputHelp = {
+  'Smoothed peak height':'A weighted average of cell heights in a three-by-three window. The center has the most influence.',
+  'Center cell height':'The highest return in the 5 cm cell containing the peak before smoothing.',
+  'Mean inner height':'Average of the cell heights in the central three-by-three patch.',
+  'Mean middle height':'Average cell height in the next band around the central patch.',
+  'Mean outer height':'Average cell height in the outermost band, reaching about 20 cm from the peak.',
+  'Peak above outer mean':'Smoothed peak height minus the outer band’s average height. Large values indicate a peak standing above its surroundings.',
+  'High cells in middle ring':'Share of middle-band cells taller than both 7 cm and 65% of this peak’s smoothed height.',
+  'High cells in outer ring':'Share of outer-band cells taller than both 7 cm and 65% of this peak’s smoothed height.',
+  'Occupied inner cells':'Fraction of cells in the central patch that received at least one return.',
+  'Occupied outer cells':'Fraction of outer-band cells that received at least one return.',
+  'Log return count':'The logarithm of one plus the nearby return count. This compresses large differences in sampling density.',
+  'Shape asymmetry':'Compares how widely the nearby height signal spreads across X and Y. Elongated patches can score higher than round patches.',
+  'Peak above background':'The tallest nearby return minus a background estimate from the outer band. Background cell heights are capped at 8 cm for this estimate.'
+};
+
 export function inspectWeights(weights, hiddenLayers) {
   const {layers} = networkShape(featureNames.length,hiddenLayers);
   const select = $('weightLayer'), unit = $('weightUnit');
@@ -117,6 +112,9 @@ export function inspectWeights(weights, hiddenLayers) {
       const row=document.createElement('tr'), name=document.createElement('th');
       name.scope='row';
       name.textContent=i===layer.inputs?'Bias':index===0?featureNames[i]:'Unit '+(i+1);
+      if(i===layer.inputs) name.dataset.help='The learned offset added to this unit’s weighted sum, even when its other inputs are zero.';
+      else if(index===0) name.dataset.help=inputHelp[featureNames[i]];
+      else name.dataset.help='The output from this numbered unit of the previous hidden layer feeds the unit you are inspecting.';
       row.append(name);
       const cell=row.insertCell(), bar=document.createElement('span');
       bar.className='weightBar';bar.setAttribute('aria-hidden','true');

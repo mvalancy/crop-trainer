@@ -7,6 +7,7 @@ The little farm on the front page lives here. Open an SVG to see it move or open
 | Illustration | Where you’ll see it |
 | --- | --- |
 | [Crop Trainer leaf and LiDAR returns](crop-mark.svg) | Browser tab, mobile home screen and app navigation |
+| [Lettuce and weed at the same height](height-clues.svg) | [Watch one model update](https://mvalancy.github.io/crop-trainer/#learnWeight) |
 | [Lettuce under a scanning beam](title.svg) | [Repository welcome](../README.md) |
 | [From laser dots to lettuce pins](scan-learn-find.svg) | [Training shed guide](../trainer/README.md) |
 | [Two detectors, one planting](paired-field.svg) | [Benchmark guide](../benchmark/README.md) |

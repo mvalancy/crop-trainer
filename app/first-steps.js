@@ -1,3 +1,5 @@
+import {setupWeightLesson} from './weight-lesson.js';
+
 // The same two leaf silhouettes are both drawn and sampled in this side-view sketch.
 const plants = [
   {x:132, size:1, leaves:[[-63,22,27],[56,24,26],[-27,52,19],[24,47,20],[-8,59,14]]},
@@ -87,28 +89,12 @@ export function setupFirstSteps(openPractice) {
   }
   drawRow(Number(guide.querySelector('[name=rowDensity]:checked').value));
 
-  // One-feature logistic regression, x = 1, y = 1, fixed zero bias, learning rate 1.
-  // The held-out weed shares x, so it must receive the same score as the practice plant.
-  const learn = document.getElementById('oneUpdate'), reset = document.getElementById('resetWeight');
-  let weight = 0;
-  function showWeight(message) {
-    const score = 1/(1+Math.exp(-weight));
-    for (const meter of guide.querySelectorAll('meter')) {
-      meter.value = score;
-      meter.nextElementSibling.textContent = score.toFixed(2);
-    }
-    reset.disabled = weight === 0;
-    learn.disabled = weight !== 0;
-    document.getElementById('weightFinding').textContent = message;
+  setupWeightLesson();
+  function followLessonLink() {
+    if (location.hash !== '#learnWeight') return;
+    showTab(document.getElementById('fitTab'));
+    requestAnimationFrame(() => document.getElementById('learnWeight').scrollIntoView({block:'start'}));
   }
-  learn.addEventListener('click', () => {
-    weight += 1-1/(1+Math.exp(-weight));
-    showWeight('The weight rose from 0 to 0.5. Both scores rose to 0.62, including the weed’s. The full detector also measures the shape around each peak.');
-    reset.focus();
-  });
-  reset.addEventListener('click', () => {
-    weight = 0;
-    showWeight('Both scores start at 0.50. Which one will rise?');
-    learn.focus();
-  });
+  window.addEventListener('hashchange', followLessonLink);
+  followLessonLink();
 }

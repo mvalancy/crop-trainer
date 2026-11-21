@@ -12,6 +12,9 @@ export function enableViewerFullscreen(host, name) {
     host.classList.toggle('viewExpanded', expanded);
     button.textContent = expanded ? 'Exit fullscreen' : 'Fullscreen';
     button.setAttribute('aria-label', expanded ? 'Exit fullscreen' : 'View '+name+' fullscreen');
+    button.dataset.help = expanded
+      ? 'Return to the page at the same scroll position. Your current view stays in place.'
+      : 'Expand the '+name+' to fill your display. Use Exit fullscreen or Escape to return to the page.';
   }
   describe(false);
 

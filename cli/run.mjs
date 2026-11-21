@@ -13,7 +13,7 @@ const trainUsage = 'node cli/run.mjs train new-report.json [settings.json] [--we
 const cliUsage = 'node cli/run.mjs serve [port]\n'+trainUsage+
   '\nnode cli/run.mjs preflight [--peak-averaging occupied|zero-filled]\n  Train on CPU and replay the held-out synthetic scans through the field CLI. Prints JSON.';
 if(command==='serve'){
- const types={html:'text/html',js:'text/javascript',mjs:'text/javascript',css:'text/css',svg:'image/svg+xml',png:'image/png',webp:'image/webp',md:'text/plain'};
+ const types={html:'text/html',js:'text/javascript',mjs:'text/javascript',css:'text/css',svg:'image/svg+xml',png:'image/png',webp:'image/webp',md:'text/plain',json:'application/json',csv:'text/csv',ply:'application/octet-stream'};
  const port=Number(output||4173);
  if(!Number.isInteger(port)||port<1||port>65535)throw Error('Choose a port from 1 to 65535.');
  const server=createServer(async(req,res)=>{
@@ -23,7 +23,8 @@ if(command==='serve'){
    const forwarded=forwardAsset(path);
    if(!forwarded && !isPublicPath(path)){res.writeHead(404).end();return;}
    const data=forwarded ?? await readFile(new URL('../'+path,import.meta.url));
-   res.writeHead(200,{'Content-Type':(types[path.split('.').at(-1)]||'text/plain')+'; charset=utf-8'}).end(data);
+   const type=types[path.split('.').at(-1)]||'application/octet-stream';
+   res.writeHead(200,{'Content-Type':type.startsWith('text/')?type+'; charset=utf-8':type}).end(data);
   }catch{res.writeHead(404).end();}
  });
  server.listen(port,'127.0.0.1',()=>console.log('Open http://127.0.0.1:'+port+'/'));

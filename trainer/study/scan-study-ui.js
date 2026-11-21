@@ -116,13 +116,24 @@ export function initScanStudy(params) {
       let arm=layout;
       if(comparison.value==='damage')arm=(r.recipe.plantCondition==='healthy'?'Intact':'Damaged')+' · '+layout;
       if(comparison.value==='scaffolds')arm='v'+r.recipe.plantArchitecture+' · '+layout;
-      const methods=[['Height only',r.heightScores]];
-      methods.push(['Sampled cells',r.sampledHeightScores]);
-      if(r.orchardScores)methods.push(['Orchard base',r.orchardScores]);
-      for(const [name,scores] of methods)for(const s of scores){
+      const methods=[
+        ['Height only',r.heightScores,'Each empty grid cell counts as zero when averaging nearby heights. The detector keeps tall peaks that are far enough apart.'],
+        ['Sampled cells',r.sampledHeightScores,'The height average uses only cells where a ray recorded a point. This can expose short plants and can also give raised soil an extra pin.']
+      ];
+      if(r.orchardScores)methods.push(['Orchard base',r.orchardScores,'This rule looks for points at several heights around a tree base. It estimates the base from scan coordinates alone.']);
+      for(const [name,scores,help] of methods)for(const s of scores){
         const row=body.insertRow();
-        const cells=[name,arm,format(r.sampledRays),s.cm+' cm',s.tp,s.fp,s.fn,s.f1===null?'—':s.f1.toFixed(3)];
+        const methodCell=row.insertCell();
+        methodCell.textContent=name;
+        methodCell.dataset.help=help;
+        const cells=[arm,format(r.sampledRays),s.cm+' cm',s.tp,s.fp,s.fn];
         for(const value of cells)row.insertCell().textContent=value;
+        const f1=row.insertCell();
+        f1.textContent=s.f1===null?'—':s.f1.toFixed(3);
+        f1.dataset.helpLabel=name+' · F1 at '+s.cm+' cm';
+        f1.dataset.help=s.f1===null
+          ? 'The detector placed no pins and the field contains no plants, so this score is undefined.'
+          : 'F1 balances extra pins and missed plants on a scale from 0 to 1. This row has '+s.tp+' matches, '+s.fp+' extra pins and '+s.fn+' missed plants.';
       }
     }
     el('studyScores').hidden=false;

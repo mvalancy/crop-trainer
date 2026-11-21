@@ -1,0 +1,22 @@
+{
+  "crop": "lettuce",
+  "plantArchitecture": 3,
+  "plantForm": "mixed",
+  "plantCondition": "healthy",
+  "seed": 2718,
+  "trainFields": 8,
+  "valFields": 3,
+  "sensorMode": "reference",
+  "trainingRayBudget": 12000,
+  "validationRayBudget": 12000,
+  "model": "neural",
+  "hiddenLayers": [4],
+  "activation": "tanh",
+  "optimizer": "sgd",
+  "learningRate": 0.25,
+  "batchSize": 0,
+  "initSeed": 12345,
+  "epochs": 160,
+  "minimumHeight": 0.035,
+  "threshold": 0.5
+}

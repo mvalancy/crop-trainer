@@ -37,7 +37,9 @@ Under **Peak detection and scoring → Average height across**, the default coun
 
 ## Design a detector
 
-Open **Design the model** in the training shed. The diagram reads left to right. Every candidate peak has 13 measurements. Each hidden layer combines the preceding layer’s values. The final sigmoid gives one score between 0 and 1. Large layers show a sample of their nodes, with their full widths underneath.
+In **Your detector**, choose **Replay signal** to see how a prediction moves from left to right. Every candidate peak supplies 13 measurements. Each hidden unit combines values from the previous layer. The final unit turns its result into a score between 0 and 1. Wide layers show a few representative dots, with their full counts underneath. With reduced motion enabled, use **Next layer** to highlight a stage and read what it does. [Explore the diagram in the Training shed](https://mvalancy.github.io/crop-trainer/trainer/#detector)
+
+Open **Design the model** and try four hidden units. Each uses 13 input weights and one bias, which sets its starting level. The output uses four weights and one bias. That gives the starter **61 trainable parameters**. Switch to logistic regression and the diagram connects the 13 measurements directly to the output, with **14 parameters**. The animation illustrates the calculation order. For the actual values learned in your run, open **Explore learned weights** after validation.
 
 | Control | What changes |
 | --- | --- |
@@ -157,7 +159,9 @@ The detector keeps candidates at or above `model.threshold` and filters nearby p
 
 ## Test a plot of your own
 
-Open the [Field test in the Training shed](https://mvalancy.github.io/crop-trainer/trainer/#field-test). For a first practice run, download the PLY and its matching **Labels JSON** from the same generator plot. Use the most recent completed fit or load saved weights for that crop, select the scan and labels, leave metres and zeros selected, and press **Find plants**. This uses the saved normalization, peak floor, score cutoff, and crop spacing. A practice run can verify that your workflow works end to end. To measure generalization, reserve independent plots. For an apple plot, compare the saved model, spaced height peaks and the experimental orchard base locator on the same upload. The third method uses points distributed across several heights. [Orchard experiment and field checks](orchard-bases.md)
+For your first **Field test**, download the examples beside the file pickers. The weights describe a fitted lettuce detector. The PLY contains a separate synthetic planting, and the reference centers tell you where its plants grew. Choose the downloaded files, leave the units in metres and the coordinates at zero, then press **Find plants**. The CSV and labels JSON give the same reference centers. [Try the example files in Field test](https://mvalancy.github.io/crop-trainer/trainer/#field-test)
+
+To try another crop, use your most recent completed fit or load your own saved weights. Download a scan and its matching labels from the generator. Field test uses the detector’s saved normalization, peak floor, score cutoff and crop spacing. For apple, you can compare the saved model, spaced height peaks and the experimental orchard base locator on the same scan. To measure field accuracy, use independently surveyed plots. [Orchard experiment and field checks](orchard-bases.md)
 
 For a surveyed plot, choose metres, centimetres or millimetres and enter its fixed lower-left X and Y and the ground Z in those units. The detector measures height above that level. For a uniformly sloped bed, expand **Surveyed sloping ground** and enter measured signed grades along X and Y. A value of 5 represents a 5 cm rise per metre. Ground Z is the elevation at the entered origin. This keeps the survey’s horizontal XY coordinates intact. Crop larger scans and correct irregular terrain or scanner tilt before import. Each input must fit one 10 × 10 m footprint with Z increasing upward, at most 1 million returns and 32 MiB per PLY. The peak finder omits the outermost 5 cm grid cells. Supply all surveyed plant centers in a two-column CSV with header `x,y`, in the same source coordinates as the scan. A header-only file means you surveyed the plot and found it empty. Leave the labels field blank to inspect unscored predictions.
 

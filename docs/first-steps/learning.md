@@ -8,6 +8,8 @@ For every practice peak, the app finds the nearest labeled center. Under 9.5 cm 
 
 ## One update, then another
 
+Teach the model that one lettuce is a crop. Watch the height dial turn, then see what score the model gives a weed of the same height. Use **Replay update** to follow the signal a second time. [Play the illustrated lesson](https://mvalancy.github.io/crop-trainer/#learnWeight)
+
 The model makes a score using its current weights. **Loss** measures how much those scores disagree with the practice labels. For a positive example, giving 0.10 incurs more loss than giving 0.80. A confidently wrong answer costs more than a close call. The app averages this penalty over a group of examples.
 
 To update a weight, the trainer works out which direction would reduce the loss nearby. In a neural network it traces the influence of the output backward through the layers, a calculation called **backpropagation**. The **learning rate** controls the size of the step. A very small step can be slow. A very large one can overshoot. The next set of predictions uses the updated weights.

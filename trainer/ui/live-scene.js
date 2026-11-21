@@ -1,12 +1,12 @@
-import {enableViewerFullscreen} from './fullscreen.js';
+import {enableViewerFullscreen} from './fullscreen.js?v=context-help2';
 
 // Frames are bounded display samples in plot coordinates (metres). Keep rendering
 // off the optimizer's clock when several measurements arrive in one browser frame.
 export function createLiveScene(host, {zoomControl=false}={}) {
-  host.innerHTML = `<figcaption><strong></strong><span class="sceneMetric"></span></figcaption>
-    <canvas role="img"></canvas><div class="sceneLoss" hidden><span>Training loss</span>
+  host.innerHTML = `<figcaption><strong></strong><span class="sceneMetric" data-help-label="Current measurement"></span></figcaption>
+    <canvas role="img"></canvas><div class="sceneLoss" hidden data-help-label="Training loss" data-help="The line follows the average error on the training examples as the weights change. Lower loss means the scores fit those labels more closely."><span>Training loss</span>
     <svg viewBox="0 0 160 24" preserveAspectRatio="none" aria-hidden="true"><polyline/></svg></div><div class="sceneFooter"><span class="sceneLegend"></span>
-    <span class="sceneDetail"></span></div><div class="sceneTrack"><i></i></div>`;
+    <span class="sceneDetail" data-help-label="Field detail"></span></div><div class="sceneTrack" data-help-label="Stage progress" data-help="The filled part shows how far the current stage has progressed. A new stage starts its own count."><i></i></div>`;
   const canvas = host.querySelector('canvas'), ctx = canvas.getContext('2d');
   const title = host.querySelector('strong'), metric = host.querySelector('.sceneMetric');
   const detail = host.querySelector('.sceneDetail'), legend = host.querySelector('.sceneLegend');
@@ -16,10 +16,12 @@ export function createLiveScene(host, {zoomControl=false}={}) {
   if(zoomControl){
     const lens=document.createElement('button');
     lens.type='button';lens.className='sceneLens';lens.textContent='Close-up';
+    lens.dataset.help='Zoom in on the center of the preview. The full field still contributes to its measurements.';
     lens.setAttribute('aria-pressed','false');
     lens.onclick=()=>{
       zoom=zoom===1?2.5:1;
       lens.setAttribute('aria-pressed',String(zoom>1));
+      lens.dataset.help=zoom>1 ? 'Show the entire field again.' : 'Zoom in on the center of the preview. The full field still contributes to its measurements.';
       schedule();
     };
     host.append(lens);
@@ -86,6 +88,10 @@ export function createLiveScene(host, {zoomControl=false}={}) {
       host.hidden=false;state={...state,...frame};
       title.textContent=state.title;metric.textContent=state.metric;
       detail.textContent=state.detail;legend.textContent=state.legend;
+      const metricHelp=state.metricHelp || 'The current stage reports how much of its field generation, training or scoring work has finished.';
+      const detailHelp=state.detailHelp || 'Details of the field in the preview. A field seed lets you grow that same planting again.';
+      if(metric.dataset.help!==metricHelp)metric.dataset.help=metricHelp;
+      if(detail.dataset.help!==detailHelp)detail.dataset.help=detailHelp;
       canvas.setAttribute('aria-label',[state.title,state.metric,state.legend,state.detail].filter(Boolean).join('. '));
       track.style.width=(100*Math.min(1,Math.max(0,state.fraction || 0)))+'%';
       if(frame.loss){

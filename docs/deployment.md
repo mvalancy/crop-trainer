@@ -17,7 +17,7 @@ npm run test:pages -- /tmp/crop-trainer-pages
 
 Choose an empty output directory for the build. On a Linux machine that needs Chromium’s system libraries, use `npx --no-install playwright install --with-deps --only-shell chromium`. To use an existing Chromium installation, set `CHROMIUM_PATH` to its executable when running the browser test.
 
-The test starts a local server at the project path `/crop-trainer/` and opens the site at mobile width. It grows a second field, checks its downloaded recipe and opens and dismisses contextual help. On the apple orchard screen it switches to dormant foliage in the advanced settings and applies the change. It checks access to the scan summary, scrolling and fullscreen at desktop and mobile sizes. It then trains on CPU, downloads the weights and checks all three scoring distances. Finally, it runs a two-seed benchmark and verifies the exported scores at three cutoffs. This check exercises browser training and file downloads. A physical WebGPU measurement requires a GPU run on the target device.
+The test serves the built site at `/crop-trainer/`. It grows a field, downloads a recipe, teaches the height lesson and checks help, apple foliage, scrolling and fullscreen. In the Training shed it switches model families, checks the diagram at phone and laptop widths, traces layers with reduced motion enabled and fits a model on CPU. In Field test it downloads the example files and scores their scan with both reference formats. The two-seed benchmark also checks the exported scores at three cutoffs. A physical WebGPU timing requires a run on the target device.
 
 ## Publish a tested revision
 

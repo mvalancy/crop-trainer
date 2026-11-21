@@ -1,15 +1,15 @@
 import {encodePly} from '../trainer/field-test/ply.js?v=export1';
-import {setupFirstSteps} from './first-steps.js';
-import {initScanStudy} from '../trainer/study/scan-study-ui.js?v=damage-study1';
-import {createFieldLesson} from './field-lesson.js';
+import {setupFirstSteps} from './first-steps.js?v=context-help2';
+import {initScanStudy} from '../trainer/study/scan-study-ui.js?v=context-help2';
+import {createFieldLesson} from './field-lesson.js?v=context-help2';
 import {cropProfile} from '../trainer/generator/crops.js?v=systems1';
 import {scanSession} from '../trainer/generator/scan-session.js?v=plants3';
 import {makeRecipe} from '../trainer/models/data.js?v=plants3';
 import {formsFor} from '../trainer/plants/forms.js';
 import {setupFieldPlants} from '../trainer/plants/field-controls.js?v=drag-orbit1';
 import {getSensor, sensorOptions, sensorDetails, rayBudgetOptions, layoutCapacity, DEFAULT_GENERATOR_RAYS} from '../trainer/generator/sensors.js?v=dense1';
-import {createLiveScene} from '../trainer/ui/live-scene.js';
-import {createViewer} from './viewer.js?v=drag-orbit1';
+import {createLiveScene} from '../trainer/ui/live-scene.js?v=context-help2';
+import {createViewer} from './viewer.js?v=context-help2';
 
 const $ = id => document.getElementById(id);
 let fieldLesson;
@@ -201,14 +201,20 @@ async function showScan(recipe, url, selectedBox, expectedTile, checkReplay = fa
   const {signal}=scanController, session=scanSession(signal);
   live.reset();
   const name=cropProfile(recipe.crop).name;
-  const scene={title:name+' canopy',metric:'Preparing terrain',legend:'Sampled canopy and terrain',detail:'Seed '+recipe.seed,fraction:0};
+  const scene={title:name+' canopy',metric:'Preparing terrain',legend:'Sampled canopy and terrain',detail:'Seed '+recipe.seed,fraction:0,
+    metricHelp:'The generator is preparing the terrain and placing plants before it records points.',
+    detailHelp:'This field seed controls the planting. Keep the same seed when comparing scanner settings.'};
   live.show(scene);
   $('generationStatus').textContent = 'Building the scan…';
   if(!checkReplay && narrowField.matches) $('scan-viewer').scrollIntoView({block:'start'});
   try {
     const value=await session.generate(recipe,frame=>{
+      const finishing=frame.row===frame.rows;
       live.show({cloud:frame.cloud,metric:'Row '+frame.row+' / '+frame.rows,
-        detail:frame.row===frame.rows?'Applying scan settings':'Seed '+recipe.seed,fraction:frame.row/frame.rows});
+        metricHelp:'Completed planting rows out of the rows in this plot. Points appear as the generator builds the field.',
+        detail:finishing?'Applying scan settings':'Seed '+recipe.seed,
+        detailHelp:finishing?'The plant rows are complete. The generator is applying the selected noise and ground settings to the points.':scene.detailHelp,
+        fraction:frame.row/frame.rows});
     });
     if(signal.aborted)return;
     live.reset();
@@ -225,6 +231,19 @@ async function showScan(recipe, url, selectedBox, expectedTile, checkReplay = fa
   }finally{session.close();}
 }
 
+function showReadings(container, readings) {
+  const line = document.createDocumentFragment();
+  for (const [value, label, help] of readings) {
+    const stat=document.createElement('span');
+    stat.textContent=value;
+    stat.dataset.helpLabel=label;
+    stat.dataset.help=help;
+    if(line.childNodes.length) line.append(' · ');
+    line.append(stat);
+  }
+  container.replaceChildren(line);
+}
+
 function applyScan(value, recipe, url, selectedBox, expectedTile) {
   scan = value;
   const choices = scan.plantReturns.map((returns, box) => new Option('Box '+box+' · '+returns+' crop returns', String(box)));
@@ -238,8 +257,10 @@ function applyScan(value, recipe, url, selectedBox, expectedTile) {
   if (scan.parts) {
     let stemHits = 0;
     for (const part of scan.parts) if (part === 1) stemHits++;
-    $('stemSummary').textContent = (scan.skeleton.length/6).toLocaleString()+
-      ' modeled stem segments · '+stemHits.toLocaleString()+' scan returns hit stem or wood.';
+    showReadings($('stemSummary'), [
+      [(scan.skeleton.length/6).toLocaleString()+' modeled stem segments','Modeled stem segments','Short connected pieces trace stems and branches in the planting model, including wood that leaves hide from the scanner.'],
+      [stemHits.toLocaleString()+' scan returns hit stem or wood.','Stem or wood returns','Recorded points where a ray hit a stem or woody branch. Compare these with the full modeled structure.']
+    ]);
   }
   fieldLesson?.setScan(scan);
   url.searchParams.set('seed', recipe.seed);
@@ -260,7 +281,14 @@ function applyScan(value, recipe, url, selectedBox, expectedTile) {
     journal();
   }
   previousRayTrial = {key:trialKey, sampledRays:scan.sampledRays};
-  $('count').textContent = scan.labels.boxes.length+' '+(profile.system?profile.name:recipe.crop)+' plants · '+recipe.points.toLocaleString()+' rays requested · '+scan.sampledRays.toLocaleString()+' sampled · '+scan.cls.length.toLocaleString()+' returns · '+(ground+(recipe.ground?' included':' removed'))+' · seed '+recipe.seed;
+  showReadings($('count'), [
+    [scan.labels.boxes.length+' '+(profile.system?profile.name:recipe.crop)+' plants','Planted crops','Known plants in this field, including plants the scanner missed entirely.'],
+    [recipe.points.toLocaleString()+' rays requested','Rays requested','The ray budget for the plot. A scanner with fewer sample positions may use only part of this budget.'],
+    [scan.sampledRays.toLocaleString()+' sampled','Rays sampled','The number of positions the scanner actually sampled after applying the layout limit.'],
+    [scan.cls.length.toLocaleString()+' returns','Recorded returns','Number of XYZ points in the downloadable scan after adding noise and applying the ground setting.'],
+    [ground+(recipe.ground?' included':' removed'),'Ground returns','Whether points from the soil or greenhouse floor are included in this scan.'],
+    ['seed '+recipe.seed,'Field seed','Keep this number and the other recipe settings to reproduce the planting.']
+  ]);
   $('scanId').textContent = scan.labels.tile_id;
   $('fieldCaption').textContent = profile.name+' · '+scan.labels.boxes.length.toLocaleString()+' plants';
   const composition=$('plantComposition');
@@ -268,16 +296,30 @@ function applyScan(value, recipe, url, selectedBox, expectedTile) {
   if(!composition.hidden) {
     const forms=formsFor(recipe.crop);
     const text=forms.map(({id,label})=>[label,scan.labels.boxes.filter(b=>b.plant_form===id).length])
-      .filter(([,count])=>count).map(([name,count])=>count+' '+name.toLowerCase());
+      .filter(([,count])=>count).map(([name,count])=>[
+        count+' '+name.toLowerCase(),name+' plants','Number of planted crops that grew in the '+name.toLowerCase()+' form in this field.'
+      ]);
     const damaged=scan.labels.boxes.filter(b=>b.plant_condition==='damaged').length;
-    composition.textContent=text.join(' · ')+' · '+damaged+' damaged';
+    showReadings(composition, [...text,[damaged+' damaged','Damaged plants','Plants with simulated damage. Each of these plants is also counted under its growth form.']]);
   }
   const {zero, oneToFour, fiveOrMore} = scan.coverage;
-  $('plantCoverage').textContent = zero+' plants with zero crop returns · '+oneToFour+' with 1–4 · '+fiveOrMore+' with 5 or more';
-  const bins=[ground==='floor'?'Floor':'Soil','Crop','Weeds','Sticks','Boards','Stray'];
-  if(profile.fixtures) bins.push('Fixtures');
-  $('readouts').replaceChildren(...bins.map((name,i)=>{
+  showReadings($('plantCoverage'), [
+    [zero+' plants with zero crop returns','Plants with no crop returns','These plants have known centers even though no crop points survived in this scan.'],
+    [oneToFour+' with 1–4','Plants with 1–4 crop returns','Only a few points describe each of these plants. Their centers can be hard to locate from the scan.'],
+    [fiveOrMore+' with 5 or more','Plants with at least five crop returns','Each of these plants has at least five recorded crop points. A detector still has to locate its center.']
+  ]);
+  const bins=[
+    [ground==='floor'?'Floor':'Soil','Points recorded from the '+ground+'. Switching off ground returns removes these points from the scan.'],
+    ['Crop','Points that hit a simulated crop. A single plant can produce many points.'],
+    ['Weeds','Points from simulated weeds. They count as background when the detector looks for crop centers.'],
+    ['Sticks','Points from narrow pieces of wood placed on the ground. They can form peaks that resemble small crops.'],
+    ['Boards','Points from simulated boards. A board can intercept a ray before it reaches a plant.'],
+    ['Stray','Extra points scattered above or below the terrain by the scan-noise settings.']
+  ];
+  if(profile.fixtures) bins.push(['Fixtures','Points that hit growing equipment, such as posts, wires or benches. The simulator tracks these separately from the crops.']);
+  $('readouts').replaceChildren(...bins.map(([name,help],i)=>{
     const entry=document.createElement('div'), term=document.createElement('dt'), count=document.createElement('dd');
+    entry.dataset.helpLabel=name+' returns';entry.dataset.help=help;
     term.textContent=name; count.textContent=(scan.counts[i]||0).toLocaleString();entry.append(term,count);return entry;
   }));
   const training = new URLSearchParams({plan:'practice',crop:recipe.crop,sensor:recipe.sampling.key});

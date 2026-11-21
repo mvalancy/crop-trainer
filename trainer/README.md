@@ -6,6 +6,8 @@
 
 Field practice gives the model about 30 seconds to learn from 16 plantings. For a short architecture comparison, select **Quick check** and keep the fields and the 40-epoch budget fixed while changing the number of hidden layers. Compare the missed plants, then use **Download model weights** to take the detector with you. [Training settings](../docs/training.md) · [Try saved weights on a local scan](https://mvalancy.github.io/crop-trainer/trainer/#field-test)
 
+Curious what the detector learns? Choose **Replay signal** under **Your detector**. Follow one possible plant from 13 measurements to a single score. Add a hidden layer under **Design the model** and watch the route change. With reduced motion enabled, **Next layer** lets you trace the same example at your own pace. [Explore your detector →](https://mvalancy.github.io/crop-trainer/trainer/#detector)
+
 | Follow a plant through the app | Start here |
 | --- | --- |
 | Grow lettuce, apples and five other crop or growing-system profiles | [Illustrated plant guides](plants/README.md) |

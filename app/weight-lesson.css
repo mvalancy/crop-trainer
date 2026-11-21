@@ -1,0 +1,43 @@
+/* The illustrated learning step pairs the same height input with two predictions. */
+#learnWeight { align-items: center; }
+#learnWeight .weightFigure {
+  padding: 0; background: #132e29; border-color: #2a5140; border-radius: .9rem;
+  box-shadow: 0 .35rem 1.1rem #18342114;
+}
+.weightFigure #clueTitle {
+  margin: 0; padding: .8rem 1rem; font: 650 1rem/1.3 var(--sans);
+  color: #ebf5dc; background: #15352f; border-bottom: 1px solid #3b574b;
+}
+.clueScene { width: 100%; height: auto; display: block; }
+.clueScene text { text-anchor: middle; font-family: var(--sans); }
+.clueType { font-size: 19px; font-weight: 650; fill: #f0f5dd; }
+.clueAnnotation { font-size: 12px; fill: #b2d7c6; }
+.clueTrace { fill: none; stroke: #55796b; stroke-width: 1.5; }
+.clueSignal .labelSignal { stroke: #f3c575; }
+.clueSignal .resultSignal { stroke: #b7ed91; }
+.clueSignal use, .heightBeam { opacity: 0; }
+.dialName { font-size: 8px; font-weight: 700; letter-spacing: .8px; fill: #c4d7c5; }
+.clueNeedle { transform: rotate(-72deg); }
+.scoreLights { fill: #294439; stroke: #87a78b; stroke-width: 1.5; }
+.clueReadings { display: grid; grid-template-columns: 1fr 1fr 1fr; margin: 0; text-align: center; }
+.clueReadings > div { border-block: 1px solid #486052; background: #19372e; padding: .48rem .18rem .59rem; }
+.clueReadings > div + div { border-left: 1px solid #415d4e; }
+.clueReadings dt { color: #c8d9c9; font: 550 clamp(.75rem,1vw,.88rem)/1.35 var(--sans); }
+.clueReadings dd { margin: .12rem 0 0; color: #ecefd9; font: 600 clamp(1.2rem,2vw,1.5rem)/1.2 var(--mono); }
+.clueReadings > div:nth-child(2) dd { color: #f7cd86; }
+.clueFeedback { padding: .8rem 1rem 1rem; background: #f0f4e9; color: #19352b; }
+.clueFeedback #weightFinding { margin: 0; min-height: 3lh; line-height: 1.45; }
+.clueFeedback .weightActions { margin: .55rem 0 0; }
+.weightFigure:is([data-phase="label"],[data-phase="update"]) .heightBeam { opacity: .85; }
+.weightFigure:is([data-phase="update"],[data-phase="score"],[data-phase="done"]) .clueNeedle { transform: rotate(0deg); }
+.weightFigure[data-phase="done"] .scoreLights { fill: #bfec9a; }
+.weightFigure[data-phase="done"] :is(#practiceScore,#weedScore) { color: #c2ef9a; }
+@media (prefers-reduced-motion: no-preference) {
+  .weightFigure[data-phase="label"] .heightBeam { animation: readHeight 1s ease-out both; }
+  .weightFigure[data-phase="update"] .labelSignal { animation: sendLabel .75s ease-out both; }
+  .weightFigure[data-phase="update"] .clueNeedle { transition: transform .55s .25s ease-in-out; }
+  .weightFigure[data-phase="score"] .resultSignal { animation: sendScore 1s ease-out both; }
+  @keyframes readHeight { from { transform: translateY(54px); opacity: .1; } to { transform: translateY(0); opacity: .9; } }
+  @keyframes sendLabel { from { stroke-dasharray: 0 90; opacity: 0; } 20% { opacity: 1; } to { stroke-dasharray: 90 0; opacity: 1; } }
+  @keyframes sendScore { from { stroke-dasharray: 0 250; opacity: 0; } 20% { opacity: 1; } to { stroke-dasharray: 250 0; opacity: 1; } }
+}

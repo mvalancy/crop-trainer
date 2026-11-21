@@ -7,6 +7,8 @@ Open **Design the model** in the Training Shed and add a hidden layer. The diagr
 | To change | Open |
 | --- | --- |
 | The layer editor, model diagram, duration display or weight inspector | [Training sandbox](sandbox.js) |
+| Following a signal through the selected network | [Network diagram](network-diagram.js) and [diagram styles](network-diagram.css) |
+| Sizing and grouping training settings | [Training layout](training-layout.css) |
 | Live scan points and predicted pins during generation and training | [Live scene](live-scene.js) |
 | Entering and leaving an expanded viewer | [Fullscreen controls](fullscreen.js) |
 

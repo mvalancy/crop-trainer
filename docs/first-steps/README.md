@@ -6,6 +6,8 @@ Imagine walking a row with a clipboard. Someone hands you a map covered in dots 
 
 **Try the field lesson first.** In **Scan a row**, switch from 7 rays to 28 and watch the small seedling. In **Place a pin**, guess a plant’s center from the dots and check the distance. In **Train a model**, predict what will happen to the weed’s score when you teach the model about a plant of the same height. [Open the hands-on field lesson](https://mvalancy.github.io/crop-trainer/#guide)
 
+**Curious about a button or a number?** Hover over it or focus it with the keyboard. On a touchscreen, tap a score or hold a button to read its explanation. A quick tap runs the action. Use the arrow keys to explore neighboring table cells and Escape to close help.
+
 | Question | What you’ll do |
 | --- | --- |
 | **1 · What can a scanner see?** | Explore a 3D scan and find the same example plant used throughout the tour. |

@@ -6,201 +6,252 @@
 <link rel="icon" type="image/png" sizes="32x32" href="../art/crop-mark-32.png">
 <link rel="icon" type="image/svg+xml" sizes="any" href="../art/crop-mark.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="../art/crop-touch.png">
-<link rel="stylesheet" href="../app/farm.css?v=scan-workspace2">
-<link rel="stylesheet" href="../app/help.css?v=field-desk1">
-<script type="module" src="../app/help.js?v=field-desk1"></script>
+<link rel="stylesheet" href="../app/farm.css?v=context-help2">
+<link rel="stylesheet" href="../app/help.css?v=context-help2">
+<link rel="stylesheet" href="./ui/training-layout.css?v=shed-layout1">
+<link rel="stylesheet" href="./ui/network-diagram.css">
+<script type="module" src="../app/help.js?v=context-help2"></script>
 </head>
-<body class="shed"><a class="skip" href="#main">Skip to content</a>
+<body class="shed"><a data-help="Move keyboard focus past navigation to the Training Shed." class="skip" href="#main">Skip to content</a>
 <header class="siteBar">
-<div class="barInner"><a class="brand" href="../"><img class="mark" src="../art/crop-mark.svg" width="32" height="32" alt="">Crop Trainer</a>
-<nav aria-label="Main navigation"><a href="../#field">Field generator</a><a href="../trainer/" aria-current="page">Training shed</a><a href="../benchmark/">Benchmark</a></nav><a class="repoLink" href="https://github.com/mvalancy/crop-trainer" aria-label="Crop Trainer on GitHub">GitHub <span aria-hidden="true">↗</span></a></div></header>
+<div class="barInner"><a data-help-label="Crop Trainer" data-help="Return to the field generator to grow and inspect a plot." class="brand" href="../"><img class="mark" src="../art/crop-mark.svg" width="32" height="32" alt="">Crop Trainer</a>
+<nav aria-label="Main navigation"><a data-help="Choose a crop and scanner, generate a point cloud and inspect the planting in 3D." href="../#field">Field generator</a><a data-help="Open the browser workspace for fitting a detector and scoring it on held-out fields." href="../trainer/" aria-current="page">Training shed</a><a data-help="Compare two model or scanner settings on matched field seeds, then export the results." href="../benchmark/">Benchmark</a></nav><a data-help="Open the public source, experiment code and documentation on GitHub." class="repoLink" href="https://github.com/mvalancy/crop-trainer" aria-label="Crop Trainer on GitHub">GitHub <span aria-hidden="true">↗</span></a></div></header>
 <main id="main">
 <header class="pageIntro">
 <h1>Training shed</h1>
 <p>Can a detector find the center of a plant from laser dots? Pick a crop and press <strong>Generate, train &amp; score</strong> to try it.</p>
-<nav class="introLinks" aria-label="Training resources"><a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/first-steps/README.md">Illustrated first steps</a> <a href="#field-test">Test your own scan ↓</a></nav></header>
+<nav class="introLinks" aria-label="Training resources"><a data-help="Follow the illustrated lessons on scan measurements, learning, scoring and field tests." href="https://github.com/mvalancy/crop-trainer/blob/main/docs/first-steps/README.md">Illustrated first steps</a> <a data-help="Jump to Field test to run saved weights against a local PLY plot." href="#field-test">Test your own scan ↓</a></nav></header>
 <form id="controls" class="grid trainingWorkspace">
 <section class="setupPanel" aria-label="Run setup">
 <h2>Run setup</h2>
-<p id="gpu" class="adapter" role="status">Checking WebGPU…</p>
-<section class="modelCard" aria-labelledby="modelTitle">
-<h3 id="modelTitle">Your detector</h3>
-<figure class="networkFigure"><svg viewBox="0 0 320 122" role="img" aria-labelledby="netTitle shapeSummary"><title id="netTitle">Detector layers, from scan measurements to a plant score</title><g id="diagramLayers"></g></svg><figcaption id="shapeSummary"></figcaption></figure>
-<label>Model family<select id="architecture" data-help-label="Model family" data-help="Both models score a possible plant center from 13 measurements of the surrounding scan. Logistic regression uses a weighted sum. A neural network can learn combinations of those measurements in hidden layers."><option value="neural">Dense neural network</option><option value="linear">Logistic regression</option></select></label>
-<details id="modelOptions"><summary id="designTitle">Design the model</summary>
-<fieldset id="hiddenEditor"><legend>Hidden layers</legend>
-<label>Number of hidden layers<select id="depth" data-help-label="Hidden layers" data-help="Each layer combines the outputs of the previous one. Adding a layer gives the detector more combinations to learn. Compare its scores on fresh fields to see whether it helped."><option>1</option><option>2</option><option>3</option><option>4</option></select></label>
-<div id="widths" class="unitFields"></div>
-<label>Hidden activation<select id="activation" data-help-label="Hidden activation" data-help="This is the rule each hidden unit uses after adding its inputs. Tanh squashes values between −1 and 1. ReLU keeps positive values and turns negative ones into zero."><option value="tanh">Tanh</option><option value="relu">ReLU</option></select></label></fieldset>
-<p class="hint">Each input describes the shape around a peak. The output scores each possible plant center from 0 to 1. Counts show the full layer widths.</p></details></section>
-<div class="formPair">
+<p id="gpu" data-help-label="Training device" data-help="The browser checks whether it can use a WebGPU adapter. The completed run reports which backend actually fitted the weights." class="adapter" role="status">Checking WebGPU…</p>
+<div class="setupChoices">
 <label>Crop<select id="crop" data-help-label="Crop" data-help="Choose the plant the generator grows and the detector practices finding. Each crop has its own size and spacing, which affect how close two predicted centers can be."><option value="lettuce">Lettuce</option><option value="artichoke">Globe artichoke</option><option value="tomato">Young tomato</option><optgroup label="Experimental growing systems"><option value="apple">Apple orchard</option><option value="grapevine">Trellised vineyard</option><option value="bench-lettuce">Greenhouse bench lettuce</option><option value="high-wire-tomato">Greenhouse high-wire tomato</option></optgroup></select></label>
-<label>Train using<select id="engine" data-help-label="Training backend" data-help="Auto checks for a WebGPU adapter and falls back to the CPU when needed. This setting changes where the weights are fitted. The CPU generates and scores the fields."><option value="auto">Automatic</option><option value="cpu">CPU</option><option value="webgpu" disabled="">WebGPU (experimental)</option></select></label></div>
+<label>Train using<select id="engine" data-help-label="Training backend" data-help="Auto checks for a WebGPU adapter and falls back to the CPU when needed. This setting changes where the weights are fitted. The CPU generates and scores the fields."><option value="auto">Automatic</option><option value="cpu">CPU</option><option value="webgpu" disabled="">WebGPU (experimental)</option></select></label>
 <label>Run length<select id="runPreset" data-help-label="Run length" data-help="Quick check fits for 40 passes on six training fields. Field practice fits for about 30 seconds on 16 fields. Choose Custom to set your own field counts and run length.">
 <option value="practice">Field practice · 30 seconds</option>
 <option value="quick">Quick check · 40 epochs</option>
 <option value="custom">Custom schedule…</option></select></label>
+</div>
 <div class="action">
-<button type="submit" class="primary" id="run" disabled="">Generate, train &amp; score</button>
+<button type="submit" class="primary" id="run" data-help-label="Start a training run" data-help="Grow the selected practice and validation fields, fit the model on practice examples, then score it on the separate validation fields. A completed run unlocks model weights, settings and results." disabled="">Generate, train &amp; score</button>
 <button type="button" id="cancel" data-help-label="Cancel run" data-help="Stop this run without producing a scored model. To keep and evaluate the current weights during fitting, use Finish &amp; score now." disabled="">Cancel</button>
 <button type="button" id="estimate" data-help-label="Time a trial" data-help="Generate these fields, time 16 training passes, then score the validation fields. The estimate uses this device and setup. Time another trial after changing the model or the fields." disabled>Time a trial</button>
 <button type="button" id="finish" data-help-label="Finish and score now" data-help="Complete the current training step, then evaluate the weights learned so far. You can download them when scoring finishes." hidden>Finish &amp; score now</button></div>
-<div class="workloadLine"><p class="fine" id="workload"></p><a class="mobileShortcut" href="#monitorTitle">View training ↓</a></div>
-<p class="hint estimate" id="estimateText"></p>
+<div class="workloadLine"><p class="fine" id="workload" data-help-label="Requested workload" data-help="Each practice and validation planting produces two scans, with and without soil. The fit revisits the retained practice examples over multiple epochs."></p><a href="#settingsTitle" data-help="Jump to the controls for field counts, training schedule, scan layouts and detection rules.">Experiment settings ↓</a> <a data-help="Jump to the live scan and training progress on this page." class="mobileShortcut" href="#monitorTitle">View training ↓</a></div>
+<p class="hint estimate" id="estimateText" data-help-label="Estimated run time" data-help="A timing trial measures the generation, scoring and fitting costs for this setup on this device. Workload and device speed can change the final time."></p>
+
 </section>
+<section class="modelCard" id="detector" aria-labelledby="modelTitle">
+<h2 id="modelTitle">Your detector</h2>
+<figure class="networkFigure" aria-labelledby="modelTitle shapeSummary">
+<svg id="detectorDiagram" viewBox="0 0 560 225" role="img" aria-labelledby="netTitle netDesc shapeSummary">
+<title id="netTitle">From a scan measurement to a crop prediction</title>
+<desc id="netDesc">Follow a signal from the measurements at a possible plant center through the selected layers to the output score. Some units are sampled for display. The labels give the full layer sizes.</desc>
+<defs><pattern id="netGrid" width="16" height="16" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="0.85" fill="#98c4ad" opacity=".24"/></pattern></defs>
+<rect width="100%" height="100%" fill="url(#netGrid)"/>
+<g id="diagramLayers"></g></svg>
+<figcaption><div class="networkReadout"><strong id="shapeSummary" data-help-label="Network shape" data-help="Read from left to right. The numbers count scan measurements, units in each hidden layer, and the output score. Trainable parameters include the connection weights and biases."></strong>
+<span id="networkStep" role="status">Follow one example signal. The dots illustrate units, and the counts show each layer’s full size.</span></div>
+<button type="button" id="replayNetwork" data-help="Replay an illustrated prediction through your selected model. You can watch the diagram before fitting any weights."><span aria-hidden="true">↻</span><span id="networkReplayLabel">Replay signal</span></button>
+</figcaption></figure>
+<label>Model family<select id="architecture" data-help-label="Model family" data-help="Both models score a possible plant center from 13 measurements of the surrounding scan. Logistic regression uses a weighted sum. A neural network can learn combinations of those measurements in hidden layers."><option value="neural">Dense neural network</option><option value="linear">Logistic regression</option></select></label>
+<details id="modelOptions"><summary data-help="For a neural model, choose the number of hidden layers, units and activation, then inspect how the diagram changes. Logistic regression connects the measurements directly to one output." id="designTitle">Design the model</summary>
+<fieldset id="hiddenEditor"><legend>Hidden layers</legend>
+<label>Number of hidden layers<select id="depth" data-help-label="Hidden layers" data-help="Each layer combines the outputs of the previous one. Adding a layer gives the detector more combinations to learn. Compare its scores on fresh fields to see whether it helped."><option>1</option><option>2</option><option>3</option><option>4</option></select></label>
+<label>Hidden activation<select id="activation" data-help-label="Hidden activation" data-help="This is the rule each hidden unit uses after adding its inputs. Tanh squashes values between −1 and 1. ReLU keeps positive values and turns negative ones into zero."><option value="tanh">Tanh</option><option value="relu">ReLU</option></select></label><div id="widths" class="unitFields"></div></fieldset>
+<p class="hint">Each input describes the shape around a peak. The output scores each possible plant center from 0 to 1. Counts show the full layer widths.</p></details></section>
 <section class="monitorPanel" aria-labelledby="monitorTitle">
 <h2 id="monitorTitle">Training view</h2>
 <figure class="liveScene" id="trainingScene" hidden></figure>
 <figure id="firstRun" class="firstRun">
 <img src="../art/scan-learn-find.svg" width="620" height="206" alt="A laser scans a head of lettuce, a network learns from labeled peaks, and two pins land on plants in a new field.">
 <figcaption>The generator knows where it planted each crop. Your detector practices with that answer key, then places its own pins on a fresh field.</figcaption></figure>
-<div class="stage"><strong id="stage" role="status">Ready to start</strong>
-<div id="status">The field will appear here when you start.</div><progress id="progress" aria-label="Run progress" value="0" max="100"></progress></div>
-<a class="reviewLink" id="reviewLink" href="#resultsTitle" hidden>View scores and download weights ↓</a>
+<div class="stage"><strong id="stage" data-help-label="Run stage" data-help="Watch the run move from generating fields through fitting weights and validating plant centers. On completion, the results are ready to inspect and download." role="status">Ready to start</strong>
+<div id="status" data-help-label="Run status" data-help="During fitting, a pass over all practice examples counts as an epoch. The time remaining refers to the fit. Validation follows once it stops.">The field will appear here when you start.</div><progress id="progress" data-help-label="Overall run progress" data-help="Tracks generation, fitting and validation. During an epoch-limited fit, the training portion advances with completed epochs." aria-label="Run progress" value="0" max="100"></progress></div>
+<a data-help="Jump to the completed validation results and the three export choices." class="reviewLink" id="reviewLink" href="#resultsTitle" hidden>View scores and download weights ↓</a>
 <details class="method">
-<summary>How generation, training and validation work</summary><ol><li>Generate separate seeded fields for training and validation. Each is scanned with ground included and removed.</li><li>Project XYZ into a 5 cm grid. Measure 13 features at each candidate height peak. Nearby labeled centers supply positive examples and far-away peaks supply negatives.</li><li>Balance training examples and normalize them using training statistics. Fit the selected network or logistic model by minimizing binary cross-entropy.</li><li>Score peaks on unseen fields and retain those at or above the selected detection cutoff. Keep the higher-confidence pin when candidates fall inside the crop’s spacing filter. Match remaining pins to planted centers at three distances.</li><li>Field generation and scoring use the CPU. Model fitting uses your selected backend. An epoch is one pass over the training examples.</li></ol><p><a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/training.md">Training controls and weight-file guide →</a></p><p><a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/industry-practice.md">How agricultural teams train detectors →</a></p><p class="fine">To compare speeds, keep seed, field counts and epochs the same. Download the settings to repeat a finished experiment with the CPU command in the <a href="../AGENTS.md">agent guide</a>. The benchmark JSON also includes weights, timing and scores.</p>
+<summary data-help="Follow a simulated plot from laser returns through labeled examples to a scored prediction.">How generation, training and validation work</summary><ol><li>Generate separate seeded fields for training and validation. Each is scanned with ground included and removed.</li><li>Project XYZ into a 5 cm grid. Measure 13 features at each candidate height peak. Nearby labeled centers supply positive examples and far-away peaks supply negatives.</li><li>Balance training examples and normalize them using training statistics. Fit the selected network or logistic model by minimizing binary cross-entropy.</li><li>Score peaks on unseen fields and retain those at or above the selected detection cutoff. Keep the higher-confidence pin when candidates fall inside the crop’s spacing filter. Match remaining pins to planted centers at three distances.</li><li>Field generation and scoring use the CPU. Model fitting uses your selected backend. An epoch is one pass over the training examples.</li></ol><p><a data-help="Read how to reproduce settings and use exported detector weights." href="https://github.com/mvalancy/crop-trainer/blob/main/docs/training.md">Training controls and weight-file guide →</a></p><p><a data-help="Read the documented training methods and field-evaluation practices of agricultural teams." href="https://github.com/mvalancy/crop-trainer/blob/main/docs/industry-practice.md">How agricultural teams train detectors →</a></p><p class="fine">To compare speeds, keep seed, field counts and epochs the same. Download the settings to repeat a finished experiment with the CPU command in the <a data-help="Find the CPU replay command and instructions for an agent to run experiments on this project." href="../AGENTS.md">agent guide</a>. The benchmark JSON also includes weights, timing and scores.</p>
 <p class="fine">Each planting is scanned with and without soil. Both scans stay in the same split.</p></details>
 </section>
 <section class="advancedPanel" aria-labelledby="settingsTitle">
 <h2 id="settingsTitle">Experiment settings</h2>
-<div class="settingsGrid"><details id="fitOptions"><summary>Training schedule and optimizer</summary>
+<div class="settingsGrid"><details id="fitOptions"><summary data-help="Adjust how long training runs and how often or how far it updates the weights.">Training schedule and optimizer</summary>
 <div class="detailFields">
+<fieldset class="settingGroup"><legend>Stopping rule</legend>
+<div class="stopFields">
 <label>Stop after<select id="stopMode" data-help-label="Stopping rule" data-help="A fixed epoch count is useful for comparing settings or devices. A time limit gives each run a fitting budget and records how many epochs it completed."><option value="epochs">Number of epochs</option><option value="time" selected>Training time</option></select></label>
-<label id="epochsLabel" hidden>Epochs<input id="epochs" data-help-label="Epochs" data-help="One epoch shows the model every retained training example once. Increasing this value practices longer on the same fields. To see new plantings, increase Training fields." type="number" min="1" max="100000000" step="1" value="40" required disabled><span>One epoch uses every training example once.</span></label>
-<label id="minutesLabel">Training minutes<input id="minutes" data-help-label="Training minutes" data-help="For a two-hour fit, enter 120. Keep this tab open and the device awake. The timer covers fitting and stops at a completed training step. Allow extra time for generation and scoring." type="number" min="0.5" max="1440" step="0.5" value="0.5" required><span>30 seconds to 24 hours. Field generation and scoring take additional time. Keep this tab open and the device awake.</span></label>
-<label>Optimizer<select id="optimizer" data-help-label="Optimizer" data-help="Gradient descent adjusts weights in the direction that reduces the average error for a batch. Momentum carries part of the previous update into the next step."><option value="sgd">Gradient descent</option><option value="momentum">Gradient descent with momentum</option></select></label>
+<label id="epochsLabel" hidden>Epochs<input id="epochs" inputmode="numeric" data-help-label="Epochs" data-help="One epoch shows the model every retained training example once. Increasing this value practices longer on the same fields. To see new plantings, increase Training fields." type="number" min="1" max="100000000" step="1" value="40" required disabled><span>One epoch uses every training example once.</span></label>
+<label id="minutesLabel">Training minutes<input id="minutes" inputmode="decimal" data-help-label="Training minutes" data-help="For a two-hour fit, enter 120. Keep this tab open and the device awake. The timer covers fitting and stops at a completed training step. Allow extra time for generation and scoring." type="number" min="0.5" max="1440" step="0.5" value="0.5" required><span>0.5–1,440 minutes. Keep the tab open and the device awake.</span></label>
+</div>
+</fieldset>
+<fieldset class="settingGroup"><legend>Weight updates</legend>
+<div class="selectPair">
+<label>Optimizer<select id="optimizer" data-help-label="Optimizer" data-help="Gradient descent adjusts weights in the direction that reduces the average error for a batch. Momentum carries part of the previous update into the next step."><option value="sgd">Gradient descent</option><option value="momentum">With momentum</option></select></label>
 <label>Update weights after<select id="batchSize" data-help-label="Batch size" data-help="This is how many labeled peaks contribute to one weight update. With 1,000 examples, batches of 128 make eight updates per epoch, including a shorter final batch. All examples together make one update."><option value="0">All training examples</option><option value="32">32 examples</option><option value="128">128 examples</option><option value="512">512 examples</option></select><span>Smaller batches update more often during each epoch.</span></label>
-<label>Learning rate<input id="learningRate" data-help-label="Learning rate" data-help="This scales each weight update. Smaller values can make learning slow. If the training loss jumps or becomes unstable, reduce the rate and repeat with the same seeds." type="number" min="0.000001" max="2" step="any" value="0.25" required><span>How far each update moves the weights. When combining small batches with momentum, try 0.025 first.</span></label>
-<label id="momentumLabel" hidden>Momentum<input id="momentum" data-help-label="Momentum" data-help="The value is the fraction of the previous update carried forward. At 0.9 the optimizer keeps 90% of that update, which can accelerate a steady direction or overshoot it." type="number" min="0" max="0.9999" step="any" value="0.9" required></label>
-<label id="initLabel">Weight initialization seed<input id="initSeed" data-help-label="Weight initialization seed" data-help="Fix this seed to start each neural fit with the same weights for a given architecture. Change the dataset seed separately to test a different set of fields." type="number" min="0" max="4294967295" value="12345" required><span>Neural weights start from this seed. Logistic weights start at zero.</span></label>
+</div>
+<div class="numberRow">
+<label>Learning rate<input id="learningRate" inputmode="decimal" data-help-label="Learning rate" data-help="This scales each weight update. Smaller values can make learning slow. If the training loss jumps or becomes unstable, reduce the rate and repeat with the same seeds." type="number" min="0.000001" max="2" step="any" value="0.25" required><span>For small batches with momentum, try 0.025.</span></label>
+<label id="momentumLabel" hidden>Momentum<input id="momentum" inputmode="decimal" data-help-label="Momentum" data-help="The value is the fraction of the previous update carried forward. At 0.9 the optimizer keeps 90% of that update, which can accelerate a steady direction or overshoot it." type="number" min="0" max="0.9999" step="any" value="0.9" required></label>
+</div>
+</fieldset>
+<fieldset class="settingGroup"><legend>Starting weights</legend>
+<label id="initLabel">Weight initialization seed<input id="initSeed" inputmode="numeric" data-help-label="Weight initialization seed" data-help="Fix this seed to start each neural fit with the same weights for a given architecture. Change the dataset seed separately to test a different set of fields." type="number" min="0" max="4294967295" value="12345" required><span>Repeat a neural fit from the same weights.</span></label>
+</fieldset>
 </div></details>
-<details id="datasetOptions"><summary>Fields and dataset seed</summary><div class="detailFields"><label>Dataset seed<input id="seed" data-help-label="Dataset seed" data-help="A seed is the number used to repeat the same random planting choices. Keep it fixed to compare model settings on the same fields. Change it to try a fresh set." type="number" min="0" max="4294967295" step="1" value="27" required=""></label>
+<details id="datasetOptions"><summary data-help="Choose the number of plantings and the shapes, conditions and seeds used to grow them.">Fields and dataset seed</summary><div class="detailFields">
+<fieldset class="settingGroup"><legend>Plot counts and seed</legend>
+<div class="countFields">
+<label>Training fields<input id="train" inputmode="numeric" data-help-label="Training fields" data-help="Each new planting supplies possible plant and background examples. The trainer scans it with and without soil. The results show how many examples from each planting actually reached the fit." type="number" min="2" max="256" step="1" value="16" required=""></label>
+<label>Validation fields<input id="validation" inputmode="numeric" data-help-label="Validation fields" data-help="These separately seeded plantings measure how well the fitted detector places pins on unseen fields. Both soil variants stay together in validation." type="number" min="1" max="128" step="1" value="8" required=""></label>
+<label>Dataset seed<input id="seed" inputmode="numeric" data-help-label="Dataset seed" data-help="A seed is the number used to repeat the same random planting choices. Keep it fixed to compare model settings on the same fields. Change it to try a fresh set." type="number" min="0" max="4294967295" step="1" value="27" required=""></label>
+</div>
+</fieldset>
+<fieldset class="settingGroup"><legend>Plantings</legend>
+<div class="selectPair">
 <label>Plant architecture<select id="plantArchitecture" data-help-label="Plant architecture" data-help="Select the generator version that builds stems, foliage and branches. This changes the shape being scanned. Use the same version to replay a previous field." required><option value="3" selected>Connected plants · v3</option><option value="4" hidden>Variable apple scaffolds · v4</option><option value="2">Structured plants · v2</option><option value="1">Original plants · v1</option></select></label>
+<label>Plant condition<select id="plantCondition" data-help-label="Plant condition" data-help="Choose intact or damaged plants for both splits. In the seeded mix, each plant has about a one-in-four chance of a modeled break or missing tissue." required><option value="healthy">Healthy</option><option value="mixed">Seeded damage · ~1 in 4</option><option value="damaged">All damaged</option></select></label>
+</div>
+<div class="selectPair">
 <label>Training plant form<select id="plantForm" data-help-label="Training plant form" data-help="Practice on one growth stage or shape, or choose a seeded mix of forms. This determines which plants supply examples for updating the weights." required><option value="mixed">Seeded mix</option></select></label>
 <label>Validation plant form<select id="validationPlantForm" data-help-label="Validation plant form" data-help="Choose the shape used only for the held-out fields. For example, train on tomato transplants and validate on seedlings to measure how well the detector handles the smaller plants." aria-describedby="validationFormHint" required><option value="follow">Same as training</option></select><span id="validationFormHint">Try another form to see how well your detector finds plants it did not practice on.</span></label>
-<a id="formsBench" href="../benchmark/?comparison=forms" hidden>Compare this training form with a mix</a>
-<label>Plant condition<select id="plantCondition" data-help-label="Plant condition" data-help="Choose intact or damaged plants for both splits. In the seeded mix, each plant has about a one-in-four chance of a modeled break or missing tissue." required><option value="healthy">Healthy</option><option value="mixed">Seeded damage · about 1 in 4</option><option value="damaged">All damaged</option></select></label>
-<label>Training fields<input id="train" data-help-label="Training fields" data-help="Each new planting supplies possible plant and background examples. The trainer scans it with and without soil. The results show how many examples from each planting actually reached the fit." type="number" min="2" max="256" step="1" value="16" required=""></label>
-<label>Validation fields<input id="validation" data-help-label="Validation fields" data-help="These separately seeded plantings measure how well the fitted detector places pins on unseen fields. Both soil variants stay together in validation." type="number" min="1" max="128" step="1" value="8" required=""></label>
-<button type="button" id="stress" data-help-label="Load stress settings" data-help="Set 128 training fields, 64 validation fields, 5,000 epochs and mixed scan layouts. Review the settings and time a trial before starting.">Load stress settings</button></div></details>
+</div>
+<a data-help="Open a matched benchmark of a single training form against a seeded mix. Both fits are measured on the chosen validation form." id="formsBench" href="../benchmark/?comparison=forms" hidden>Compare this training form with a mix</a>
+</fieldset>
+<button type="button" id="stress" data-help-label="Load stress settings" data-help="Set 128 training fields, 64 validation fields, 5,000 epochs and mixed scan layouts. Review the settings and time a trial before starting.">Load stress settings</button>
+</div></details>
 <details id="scanOptions">
-<summary>Scanner and ray budgets</summary>
+<summary data-help="Choose where rays land and how many to request for each practice or validation scan.">Scanner and ray budgets</summary>
 <div class="detailFields">
+<fieldset class="settingGroup"><legend>Practice scans</legend>
+<div class="selectPair">
 <label>Training LiDAR layout<select id="scanner" data-help-label="Training LiDAR layout" data-help="The layout sets where simulated rays pass through a field. A regular grid and a ring scanner can collect different evidence from the same plant at the same requested ray count."><option value="reference">Reference scanner only</option><option value="mixed" selected="">Mixed profiles (14)</option></select><span id="scannerInfo"></span></label>
-<label>Validation LiDAR layout<select id="validationSensor" data-help-label="Validation LiDAR layout" data-help="Keep the training measurements fixed and choose the scanner that collects the held-out scans. A different layout tests whether the detector handles another sampling pattern."></select><span>Choose a different layout to rescan the same held-out plantings. The training examples and their normalization stay fixed.</span></label>
-<label>Training ray budget<select id="trainingRayBudget" data-help-label="Training ray budget" data-help="This sets the requested rays for each training scan. A ray can miss a plant. Ring layouts can also reach their sampling limit before using the entire budget."></select><span>The alternating option switches between 12k and 60k rays on successive plantings. Both soil variants share the same budget.</span></label>
+<label>Training ray budget<select id="trainingRayBudget" data-help-label="Training ray budget" data-help="This sets the requested rays for each training scan. A ray can miss a plant. Ring layouts can also reach their sampling limit before using the entire budget."></select><span>Alternating budgets switch between 12k and 60k rays each planting.</span></label>
+</div>
+</fieldset>
+<fieldset class="settingGroup"><legend>Held-out scans</legend>
+<div class="selectPair">
+<label>Validation LiDAR layout<select id="validationSensor" data-help-label="Validation LiDAR layout" data-help="Keep the training measurements fixed and choose the scanner that collects the held-out scans. A different layout tests whether the detector handles another sampling pattern."></select><span>Change the layout to rescan the same held-out plantings.</span></label>
 <label>Validation ray budget<select id="validationRayBudget" data-help-label="Validation ray budget" data-help="Change the held-out scan density while keeping training fixed. A lower budget can leave a plant with too few returns to create a candidate peak."></select><span>Each budget requests rays per scan. The selected layout can cap the sampled count.</span></label>
-<a id="densityBench" href="../benchmark/?comparison=density">Compare 12k and 60k training rays</a></div></details>
+</div>
+</fieldset>
+<a data-help="Compare two training scan densities while holding the validation scans fixed." id="densityBench" href="../benchmark/?comparison=density">Compare 12k and 60k training rays</a>
+</div></details>
 <details id="detectorOptions">
-<summary>Peak detection and scoring</summary>
+<summary data-help="Set which height peaks reach the model and which scored candidates can become final pins.">Peak detection and scoring</summary>
 <div class="detailFields">
-
-<label>Minimum peak height<select id="peakHeight" data-help-label="Minimum peak height" data-help="A local height peak must reach this floor before the detector can score it. A lower floor can admit short seedlings along with raised soil and clutter."><option value="0.065">6.5 cm · standard</option><option value="0.035" selected="">3.5 cm · include lower peaks</option></select><span>Find peaks at this height during training and validation. The 3.5 cm setting includes shorter and more sparsely sampled plants.</span></label>
+<fieldset class="settingGroup"><legend>Candidate peaks</legend>
+<div class="selectPair">
+<label>Minimum peak height<select id="peakHeight" data-help-label="Minimum peak height" data-help="A local height peak must reach this floor before the detector can score it. A lower floor can admit short seedlings along with raised soil and clutter."><option value="0.065">6.5 cm · standard</option><option value="0.035" selected="">3.5 cm · include lower peaks</option></select><span>The 3.5 cm floor admits shorter peaks.</span></label>
 <label>Average height across
 <select id="peakAveraging" data-help-label="Peak height averaging" data-help="Each peak uses a three-by-three window of 5 cm cells. With all cells, a gap contributes zero height. Averaging only sampled cells can lift both seedlings and soil bumps above the floor." aria-label="Average height across" aria-describedby="averagingHint"><option value="zero-filled">All cells</option><option value="occupied">Sampled cells only</option></select>
 <span id="averagingHint">All cells counts gaps as zero, which can hide short seedlings. The sampled-cell rule is experimental. Ignoring gaps can also add pins on bare soil.</span></label>
-<label>Detection score cutoff<input id="threshold" data-help-label="Detection score cutoff" data-help="A peak needs at least this model score to reach the spacing filter. Lowering the cutoff can recover missed plants and can also add extra pins." type="number" min="0" max="1" step="any" value="0.5" required=""><span>A lower cutoff keeps more candidate pins before spacing. Use the cutoff benchmark to compare extra pins and missed plants.</span></label>
-<details class="peakHelp" id="averagingStudy"><summary>Try the height rule on two scan patches</summary>
+</div>
+</fieldset>
+<fieldset class="settingGroup"><legend>Final pins</legend>
+<label>Detection score cutoff<input id="threshold" inputmode="decimal" data-help-label="Detection score cutoff" data-help="A peak needs at least this model score to reach the spacing filter. Lowering the cutoff can recover missed plants and can also add extra pins." type="number" min="0" max="1" step="any" value="0.5" required=""><span>A lower score keeps more candidates for spacing.</span></label>
+</fieldset>
+<details class="peakHelp" id="averagingStudy"><summary data-help="See how your chosen averaging rule and height floor affect one measured seedling patch and one bare-soil patch.">Try the height rule on two scan patches</summary>
 <figure class="peakWindows" id="peakWindows" hidden>
 <figcaption>Two 3 × 3 patches from one synthetic ring scan. Filled cells caught a laser return.</figcaption>
 <div class="windowReadings" aria-live="polite" aria-atomic="true">
-<p class="windowScale">Bar scale 0–10 cm · line at <strong id="windowMinimum"></strong></p>
+<p class="windowScale">Bar scale 0–10 cm · line at <strong id="windowMinimum" data-help-label="Minimum height line" data-help="The line is the selected peak-height floor. A patch must reach that height as well as being a local maximum to become a candidate."></strong></p>
 <div class="windowPatch" data-cells="000111001" data-all="5.06" data-sampled="8.99">
 <span class="windowCells" role="img" aria-label="Four of nine cells received returns"></span>
-<div><strong>Tomato seedling</strong><div class="windowTrack" aria-hidden="true"></div><span class="windowReading"></span></div></div>
+<div><strong>Tomato seedling</strong><div class="windowTrack" aria-hidden="true"></div><span class="windowReading" data-help-label="Patch height" data-help="The smoothed height for these nine measured cells under the selected rule. Crossing the floor lets the patch compete with its neighbors to become a peak."></span></div></div>
 <div class="windowPatch soilWindow" data-cells="110111000" data-all="4.60" data-sampled="6.70">
 <span class="windowCells" role="img" aria-label="Five of nine cells received returns"></span>
-<div><strong>Bare soil</strong><div class="windowTrack" aria-hidden="true"></div><span class="windowReading"></span></div></div>
+<div><strong>Bare soil</strong><div class="windowTrack" aria-hidden="true"></div><span class="windowReading" data-help-label="Patch height" data-help="The smoothed height for these nine measured cells under the selected rule. Crossing the floor lets the patch compete with its neighbors to become a peak."></span></div></div>
 </div></figure>
-<p class="fine">A patch above the line can become a peak. The model scores those peaks before nearby pins are thinned out. <a href="../art/seedling-peak-window.svg">See the measured cell heights</a></p>
-<p class="fine">On eight clean grid scans, the sampled-cell height rule found 257 of 821 seedlings within 15 cm. Two networks trained with that rule each found 19. <a href="https://github.com/mvalancy/crop-trainer/blob/main/docs/seedling-peaks.md#can-training-reject-the-extra-soil-peaks">Compare grid and ring results</a></p></details>
-<a id="averagingBench" href="../benchmark/?comparison=averaging">Compare both peak rules on matched scans</a>
+<p class="fine">A patch above the line can become a peak. The model scores those peaks before nearby pins are thinned out. <a data-help="Open the diagram with the measured heights around a seedling and a soil bump." href="../art/seedling-peak-window.svg">See the measured cell heights</a></p>
+<p class="fine">On eight clean grid scans, the sampled-cell height rule found 257 of 821 seedlings within 15 cm. Two networks trained with that rule each found 19. <a data-help="Read the measured outcomes, including extra pins on bare soil, from the seedling height-rule experiment." href="https://github.com/mvalancy/crop-trainer/blob/main/docs/seedling-peaks.md#can-training-reject-the-extra-soil-peaks">Compare grid and ring results</a></p></details>
+<a data-help="Open the benchmark to train and score the two peak-averaging rules on the same field seeds." id="averagingBench" href="../benchmark/?comparison=averaging">Compare both peak rules on matched scans</a>
 <details class="peakHelp">
-<summary>Which height should I try?</summary>
+<summary data-help="Read the results of a matched lettuce experiment at the two minimum peak heights.">Which height should I try?</summary>
 <p>Lower peaks can recover plants with sparse returns. For the original lettuce geometry (v1) with the starter neural model and mixed scans, lowering the cutoff from 6.5 to 3.5 cm raised mean F1 from 0.650 to 0.749 on seed 27 and from 0.575 to 0.704 on seed 28.</p>
-<p>Both cutoffs used six training fields, three unseen fields and 40 epochs per seed. Try a fresh seed to see whether the gain holds.</p></details><a id="heightBench" href="../benchmark/?comparison=heights">Compare 6.5 and 3.5 cm peak heights</a><a id="epochBench" href="../benchmark/?comparison=epochs">Compare 10, 40 and 100 training epochs</a><a id="cutoffBench" href="../benchmark/?comparison=cutoffs">Compare three cutoffs at this training duration</a></div></details>
+<p>Both cutoffs used six training fields, three unseen fields and 40 epochs per seed. Try a fresh seed to see whether the gain holds.</p></details><a data-help="Run both candidate height floors on matched fields and compare missed plants with extra pins." id="heightBench" href="../benchmark/?comparison=heights">Compare 6.5 and 3.5 cm peak heights</a><a data-help="Train for three fixed durations on the same dataset to measure whether additional passes improve validation scores." id="epochBench" href="../benchmark/?comparison=epochs">Compare 10, 40 and 100 training epochs</a><a data-help="Score one fit at three confidence cutoffs to see how the balance of extras and misses changes." id="cutoffBench" href="../benchmark/?comparison=cutoffs">Compare three cutoffs at this training duration</a></div></details>
 </div></section>
 </form>
 <section id="runReview" class="panel runReview" aria-labelledby="resultsTitle" hidden>
 <h2 id="resultsTitle">Run results</h2>
 <div id="scored" hidden>
-<p id="formStory" class="fine" hidden></p>
-<p id="matchStory"></p><a class="reviewLink" href="#fieldMapTitle">Explore a scored field ↓</a>
+<p id="formStory" data-help-label="Plant forms in this run" data-help="The training form supplied labeled practice examples. The validation form grew on separate fields used to evaluate the fitted weights." class="fine" hidden></p>
+<p id="matchStory" data-help-label="Validation matches" data-help="Each predicted pin can match one labeled plant within 15 cm. Unmatched pins are extras. Labeled centers left without a match are misses."></p><a data-help="Jump to the map of a held-out field and trace the final pins against its labels." class="reviewLink" href="#fieldMapTitle">Explore a scored field ↓</a>
 <h3 class="scoreHeading" data-help-label="F1 score" data-help="If several pins land around a plant, only one can match. F1 rewards finding the plants while avoiding extra pins. A score of 1 means every plant and pin matched at that distance.">F1 by matching distance</h3>
 <p class="fine">Precision is the share of pins that found a plant. Recall is the share of plants that got a pin. F1 balances both. At 7.5 cm a pin must land closer to the center than at 15 cm.</p>
 <div class="cards" aria-label="Synthetic validation scores">
-<div><small>7.5 cm</small><b id="s75">—</b><span class="fine" id="d75"></span></div>
-<div><small>10 cm</small><b id="s10">—</b><span class="fine" id="d10"></span></div>
-<div><small>15 cm</small><b id="s15">—</b><span class="fine" id="d15"></span></div></div>
+<div><small>7.5 cm</small><b id="s75" data-help-label="F1 within 7.5 cm" data-help="Matches within 7.5 cm must pair one pin with one labeled plant. This F1 balances extra pins against missed plants, using counts pooled across the validation scans.">—</b><span class="fine" id="d75" data-help-label="Precision and recall at 7.5 cm" data-help="Precision is matched pins divided by all pins. Recall is matched plants divided by all labeled plants. Both use the 7.5 cm matching distance."></span></div>
+<div><small>10 cm</small><b id="s10" data-help-label="F1 within 10 cm" data-help="Matches within 10 cm must pair one pin with one labeled plant. This F1 balances extra pins against missed plants, using counts pooled across the validation scans.">—</b><span class="fine" id="d10" data-help-label="Precision and recall at 10 cm" data-help="Precision is matched pins divided by all pins. Recall is matched plants divided by all labeled plants. Both use the 10 cm matching distance."></span></div>
+<div><small>15 cm</small><b id="s15" data-help-label="F1 within 15 cm" data-help="Matches within 15 cm must pair one pin with one labeled plant. This F1 balances extra pins against missed plants, using counts pooled across the validation scans.">—</b><span class="fine" id="d15" data-help-label="Precision and recall at 15 cm" data-help="Precision is matched pins divided by all pins. Recall is matched plants divided by all labeled plants. Both use the 15 cm matching distance."></span></div></div>
 </div>
 <section class="trainingReceipt" aria-labelledby="fitDataTitle">
 <h3 id="fitDataTitle">What went into this fit?</h3>
-<p id="fitCounts"></p>
-<figure class="contributionPlot"><div aria-hidden="true" id="fieldBars"></div><figcaption id="fieldRange"></figcaption></figure>
-<details id="fieldContributions"><summary>See examples from each planting</summary>
+<p id="fitCounts" data-help-label="Examples and parameters" data-help="An example is one labeled peak with 13 measurements. Example visits count repetitions over epochs. Parameters are the weights and biases the fit can change."></p>
+<figure class="contributionPlot"><div aria-hidden="true" id="fieldBars"></div><figcaption id="fieldRange" data-help-label="Examples per planting" data-help="Each bar is one practice planting. Taller bars contributed more retained examples per epoch. Both scans of the planting contribute to its total."></figcaption></figure>
+<details id="fieldContributions"><summary data-help="See how many plant and background examples from each seed reached each training epoch.">See examples from each planting</summary>
 <p>Each row combines the two scans of a planting. Open a field seed to inspect its soil-present scan. The trainer pools the labeled peaks, then selects equal numbers of plant and background examples, up to 48,000 examples in total.</p>
-<div class="tableScroll"><table><caption>Examples retained for each epoch</caption><thead><tr><th scope="col">Field seed</th><th scope="col">Plant</th><th scope="col">Background</th><th scope="col">Total</th></tr></thead><tbody id="fitFields"></tbody></table></div></details></section>
+<div class="tableScroll"><table><caption>Examples retained for each epoch</caption><thead><tr><th data-help="Identifies one practice planting. Open its seed to inspect the scan that includes soil." scope="col">Field seed</th><th data-help="Retained practice peaks less than 9.5 cm from a labeled plant center. They teach the model what a positive example looks like." scope="col">Plant</th><th data-help="Retained practice peaks more than 15 cm from every labeled plant center. They teach the model what a background example looks like." scope="col">Background</th><th data-help="The two example classes added together for this planting. This many rows from it enter each training epoch." scope="col">Total</th></tr></thead><tbody id="fitFields"></tbody></table></div></details></section>
 <dl id="benchmark" class="bench" hidden="">
-<div><dt>Backend used</dt><dd id="bEngine"></dd></div>
-<div><dt>Field generation</dt><dd id="bGenerate"></dd></div>
-<div><dt>Training</dt><dd id="bTrain"></dd></div>
-<div><dt>Validation</dt><dd id="bScore"></dd></div>
-<div><dt>Total</dt><dd id="bTotal"></dd></div>
-<div><dt>Training speed</dt><dd id="bSpeed"></dd></div>
-<div><dt>Training examples</dt><dd id="bSamples"></dd></div></dl>
+<div><dt>Backend used</dt><dd id="bEngine" data-help-label="Backend used" data-help="The device computation path used to fit these weights. Field generation and validation still run on the CPU."></dd></div>
+<div><dt>Field generation</dt><dd id="bGenerate" data-help-label="Field generation time" data-help="Elapsed time to grow and scan the practice and validation fields, find peaks, label examples and prepare the dataset for fitting."></dd></div>
+<div><dt>Training</dt><dd id="bTrain" data-help-label="Training time" data-help="Elapsed time during the fit, from handing the prepared data to the trainer through receiving its learned weights."></dd></div>
+<div><dt>Validation</dt><dd id="bScore" data-help-label="Validation time" data-help="Elapsed time to apply the fitted weights on held-out scans, filter nearby pins and match the results to labeled plants."></dd></div>
+<div><dt>Total</dt><dd id="bTotal" data-help-label="Total run time" data-help="Elapsed time across dataset generation, fitting and validation for this run. The fitting time budget covers only the middle stage."></dd></div>
+<div><dt>Training speed</dt><dd id="bSpeed" data-help-label="Training speed" data-help="Completed epochs divided by fitting time in seconds. Compare runs with the same retained examples, model and batch size to make this speed meaningful."></dd></div>
+<div><dt>Training examples</dt><dd id="bSamples" data-help-label="Training examples" data-help="The number of labeled peaks retained in one epoch after balancing plant and background examples. Each appears again in subsequent epochs."></dd></div></dl>
 <div class="downloads">
 <button type="button" id="downloadWeights" data-help-label="Download model weights" data-help="Use this file in Field test to place pins on another scan without training again. It includes the learned weights, input scaling, model shape and detection rules." hidden>Download model weights</button>
 <button type="button" id="downloadRun" data-help-label="Download benchmark JSON" data-help="Save evidence of this completed run, including field recipes, timing, loss, fitted weights and validation scores. Use it to compare or audit an experiment." hidden="">Download benchmark JSON</button>
 <button type="button" id="downloadSettings" data-help-label="Download run settings" data-help="Use this small JSON file with the command-line trainer to generate the fields and fit fresh weights. For a timed run it records the completed epoch count." hidden="">Download run settings</button></div>
-<a class="reviewLink" href="https://github.com/mvalancy/crop-trainer/blob/main/docs/edge-deployment.md">Run your saved detector on a Raspberry Pi or Jetson →</a>
-<details id="weightInspector" hidden><summary>Explore learned weights</summary>
+<a data-help="Open the setup and replay guide for running an exported detector on a field computer." class="reviewLink" href="https://github.com/mvalancy/crop-trainer/blob/main/docs/edge-deployment.md">Run your saved detector on a Raspberry Pi or Jetson →</a>
+<details id="weightInspector" hidden><summary data-help="Inspect the signed weights and bias feeding a hidden unit or the final plant score.">Explore learned weights</summary>
 <div class="formPair"><label>Layer<select id="weightLayer" data-help-label="Inspect a layer" data-help="Start with the first layer to see its weights on the 13 scan measurements. Later layers combine the outputs of the units just before them."></select></label><label>Unit<select id="weightUnit" data-help-label="Inspect a unit" data-help="Choose one unit to see its incoming weights and bias. A weight scales an input, and the bias shifts the sum before activation."></select></label></div>
 <p class="hint">Each weight scales one input. Bias shifts the total before activation. Bar lengths are relative to the largest magnitude in this unit.</p>
-<div class="tableScroll"><table><thead><tr><th scope="col">Input</th><th scope="col">Weight</th></tr></thead><tbody id="weightRows"></tbody></table></div>
+<div class="tableScroll"><table><thead><tr><th data-help="The measured feature or preceding unit that supplies this input. The bias is a learned offset added to the sum." scope="col">Input</th><th data-help="The signed multiplier for this input in the selected unit. Bar lengths compare absolute magnitudes within that unit." scope="col">Weight</th></tr></thead><tbody id="weightRows"></tbody></table></div>
 </details>
 <details id="exportText" class="export" hidden="">
-<summary>Copy benchmark JSON instead</summary><textarea id="reportText" aria-label="Benchmark JSON" rows="4" readonly="" spellcheck="false"></textarea>
-<button type="button" id="copyReport">Copy JSON</button></details>
-<p id="harvest" aria-live="polite"></p>
-<p class="fine" id="resultNote">Scores appear after the detector runs on the held-out synthetic fields.</p>
+<summary data-help="Open the completed run as plain text to copy the full report.">Copy benchmark JSON instead</summary><textarea id="reportText" data-help-label="Benchmark JSON" data-help="The full machine-readable run is available here after scoring. Select and copy this text if a download is inconvenient." aria-label="Benchmark JSON" rows="4" readonly="" spellcheck="false"></textarea>
+<button type="button" id="copyReport" data-help-label="Copy benchmark JSON" data-help="Copy the entire completed run to your clipboard, including weights, timings and field scores. You can paste it into an experiment log or share it with an agent.">Copy JSON</button></details>
+<p id="harvest" data-help-label="Farm journal" data-help="Completing runs, trying mixed scan layouts and changing the dataset seed unlock journal entries saved in this browser." aria-live="polite"></p>
+<p class="fine" id="resultNote" data-help-label="Plant count error" data-help="For each held-out scan, take the absolute difference between its number of pins and its number of labeled plants. The result averages those differences across scans.">Scores appear after the detector runs on the held-out synthetic fields.</p>
 <details id="groundStudy" class="peakHelp" hidden="">
-<summary>Compare scans with and without soil</summary>
-<p id="groundSummary"></p>
+<summary data-help="Inspect how removing simulated soil returns changes detection scores or plant counts for the same seed.">Compare scans with and without soil</summary>
+<p id="groundSummary" data-help-label="Paired soil comparison" data-help="The two columns use the same plantings and fitted weights. Soil-present and soil-removed scans are paired by field seed."></p>
 <label>Metric <select id="soilMetric" data-help-label="Soil comparison metric" data-help="Compare the same planted centers in scans with and without generated soil. Signed count error shows under- or over-counting. Absolute error measures how far the count is off in either direction."><option value="recall">Recall</option><option value="precision">Precision</option><option value="f1">F1</option><option value="meanAbsolute">Plant count · absolute error</option><option value="meanSigned">Plant count · signed error</option></select></label>
 <p id="soilMetricHelp" class="fine"></p>
 <div class="tableScroll">
 <table>
 <thead>
-<tr><th scope="col" id="soilRowHeading">Match distance</th><th scope="col">With soil</th><th scope="col">Soil removed</th><th scope="col">Change</th></tr></thead>
+<tr><th data-help="How close a pin must lie to a plant for a one-to-one match at this tolerance." scope="col" id="soilRowHeading">Match distance</th><th data-help="Value of the selected metric on scans retaining simulated soil returns." scope="col">With soil</th><th data-help="Value of the same metric after removing simulated soil returns from the same plantings." scope="col">Soil removed</th><th data-help="Value without soil minus the value with soil. Detection rates use percentage points and count errors use plants per scan." scope="col">Change</th></tr></thead>
 <tbody id="groundRows"></tbody></table></div>
 <p>The generator removes known soil points from each scan. <span id="soilUnits">Changes are in percentage points.</span></p>
 </details>
 <div id="stageAudit" hidden="">
 <h2>Where centers disappear</h2>
 <label for="auditField">Validation field and ground setting</label><select id="auditField" data-help-label="Validation field" data-help="Select a held-out scan to trace where a planted center was lost. The stage counts show which centers had a nearby peak, passed the score cutoff and survived spacing."></select>
-<button type="button" id="pairedScan">Switch soil setting for this field</button> <a id="inspectScan" target="_blank" rel="noopener">Open this scan in the 3D viewer (new tab)</a>
-<p class="fine" id="scanCounts"></p>
-<p id="scanPlantCount"></p>
-<p id="plantCoverage"></p>
+<button type="button" id="pairedScan" data-help-label="Switch soil setting" data-help="Show the other scan of this same planting. The seed and plant positions stay fixed so you can inspect how retaining soil returns affects the pins.">Switch soil setting for this field</button> <a data-help="Open the selected validation scan in a new tab with its original seed, scanner and soil setting." id="inspectScan" target="_blank" rel="noopener">Open this scan in the 3D viewer (new tab)</a>
+<p class="fine" id="scanCounts" data-help-label="Selected scan measurements" data-help="Requested rays give the budget, sampled rays show how many the layout supported, and returns count surviving XYZ points. The tile ID identifies the scan for replay."></p>
+<p id="scanPlantCount" data-help-label="Count and location" data-help="The count compares all final pins with all labeled plants. A correct total can still include an extra pin in one place and a missed plant elsewhere."></p>
+<p id="plantCoverage" data-help-label="Plant visibility" data-help="These groups count scan points traced to each simulated plant. Zero returns means the plant supplied no direct scan evidence."></p>
 <p class="fine">Coverage counts the surviving returns from each simulated plant. The detector only sees XYZ. Nearby clutter can still create a matching peak.</p>
 <p class="fine">Each row counts how many labeled plants can be matched to one center within 15 cm. The field with the lowest final recall appears first.</p>
 <div class="tableScroll">
 <table>
 <thead>
-<tr><th>Detector stage</th><th>Centers</th><th>Plants matched</th><th>Recall</th></tr></thead>
+<tr><th data-help="Successive steps find candidate peaks, keep those above the score cutoff and remove nearby duplicates.">Detector stage</th><th data-help="Number of candidate or predicted XY positions remaining after this stage on the selected scan.">Centers</th><th data-help="Labeled plants matched one to one to a remaining candidate or pin within 15 cm.">Plants matched</th><th data-help="Matched plants divided by all labeled plants in this scan. A drop between stages shows where coverage was lost.">Recall</th></tr></thead>
 <tbody id="auditRows"></tbody></table></div></div>
 <div class="viz" hidden="" id="charts">
 <article class="lossChart"><h3 data-help-label="Training loss" data-help="This measures how far the model scores are from the known plant and background labels during fitting. Check validation F1 as well to see whether the fitted detector finds centers on fresh fields.">Training loss</h3><canvas id="loss" aria-label="Training loss by epoch" role="img"></canvas>
-<p id="lossText">No epochs yet.</p></article>
+<p id="lossText" data-help-label="Epoch and loss" data-help="An epoch revisits all retained practice examples. Loss measures how closely their predicted scores agree with their known labels.">No epochs yet.</p></article>
 <article class="fieldInspector"><h3 id="fieldMapTitle">Selected field</h3>
 <div class="mapWorkspace"><div class="mapTools">
 <label class="fine">Map overlay<select id="overlayStage" data-help-label="Map overlay" data-help="Compare all possible peaks, peaks passing the model cutoff, or final pins after spacing. Choose Missed plants to investigate where a particular center was lost."><option value="selected">Final detections</option><option value="misses">Missed plants</option><option value="accepted">Passed score cutoff</option><option value="proposals">All height peaks</option></select></label>
 <div id="missControls" hidden="">
 <label class="fine">Matching distance<select id="missDistance" data-help-label="Matching distance" data-help="Each predicted pin can match one plant, within the chosen horizontal distance. A smaller tolerance demands better localization and may turn a near hit into a miss."><option value="7.5">7.5 cm</option><option value="10">10 cm</option><option value="15" selected="">15 cm</option></select></label>
 <label class="fine">Crop returns per plant<select id="missBand" data-help-label="Crop returns per plant" data-help="Group misses by the number of surviving scan points that actually came from each simulated plant. Use zero returns to inspect plants the scanner did not see."><option value="all">All plants</option><option value="zero">0 returns</option><option value="oneToFour">1–4 returns</option><option value="fiveOrMore">5 or more returns</option></select></label>
-<label class="fine">Highlight a missed plant<select id="missBox" data-help-label="Highlight a missed plant" data-help="Choose a missed plant to inspect candidate peaks around its center. The 3D link opens the original scan with that plant selected."></select></label><a id="inspectBox" target="_blank" rel="noopener" hidden="">Inspect highlighted plant in 3D (new tab)</a></div></div>
+<label class="fine">Highlight a missed plant<select id="missBox" data-help-label="Highlight a missed plant" data-help="Choose a missed plant to inspect candidate peaks around its center. The 3D link opens the original scan with that plant selected."></select></label><a data-help="Open the scan with this missed plant selected so you can inspect its returns and nearby clutter." id="inspectBox" target="_blank" rel="noopener" hidden="">Inspect highlighted plant in 3D (new tab)</a></div></div>
 <figure class="fieldMap"><canvas id="preview" aria-label="Top-down predicted and true centers" role="img"></canvas>
-<figcaption id="previewText">Labeled plants appear as green rings and detections as red dots.</figcaption></figure></div>
+<figcaption id="previewText" data-help-label="Selected field map" data-help="The overlay uses one held-out field. Change the stage or misses filter to see where the detector kept or lost individual candidates.">Labeled plants appear as green rings and detections as red dots.</figcaption></figure></div>
 <section id="peakTrace" class="peakTrace" aria-labelledby="peakTitle" hidden>
 <h4 id="peakTitle"></h4>
 <div class="traceLayout"><figure>
@@ -209,18 +260,36 @@
 <circle r="80" class="matchRadius"/><g id="peakMarks"></g><path class="plantCross" d="M-5 0H5 M0 -5V5"/>
 </svg>
 <figcaption id="peakLegend">The cross marks the plant center. The circle marks the matching distance. Dots are peaks, squares passed the cutoff, and rings are final pins.</figcaption></figure>
-<div><dl><div><dt>Height peaks</dt><dd id="nearProposals"></dd></div><div><dt>Passed cutoff</dt><dd id="nearAccepted"></dd></div><div><dt>Final pins</dt><dd id="nearSelected"></dd></div></dl>
-<p id="traceText" role="status"></p></div></div></section></article></div>
+<div><dl><div><dt>Height peaks</dt><dd id="nearProposals" data-help-label="Height peaks" data-help="Number of local height maxima found within the selected matching distance of this labeled plant. More than one can occur around the same plant."></dd></div><div><dt>Passed cutoff</dt><dd id="nearAccepted" data-help-label="Peaks passing the cutoff" data-help="Number of nearby candidates that reached the selected minimum model score, before closely spaced pins were filtered."></dd></div><div><dt>Final pins</dt><dd id="nearSelected" data-help-label="Final nearby pins" data-help="Number of pins still in the circle after spacing. A one-to-one match can assign a nearby pin to a different plant."></dd></div></dl>
+<p id="traceText" data-help-label="Missed plant trace" data-help="Follow the selected plant from nearby peaks through the score cutoff and final spacing filter to find the first stage lacking a match." role="status"></p></div></div></section></article></div>
 
 </section>
 <section id="field-test" class="fieldTest panel" aria-labelledby="fieldTestTitle">
 <div class="sectionHead"><h2 id="fieldTestTitle">Field test</h2><p>See where your detector places pins in a scan of your own plot. Add surveyed plant centers to count misses and extra pins. Your files stay in this browser.</p></div>
 <form id="fieldTestForm">
-<div class="testInputs">
+<div class="testSource">
 <label>Detector<select id="testModelSource" data-help-label="Field test detector" data-help="Choose the completed fit in this tab, or load a weights JSON from an earlier run. The same detector can be used on multiple plot scans."><option value="file">Saved weights JSON</option><option value="current" disabled>Most recent completed fit</option></select></label>
-<label id="testWeightsLabel">Weights file<input type="file" id="testWeights" data-help-label="Weights file" data-help="Use the file from Download model weights. It supplies the model shape, weights and input scaling needed to make predictions." accept=".json,application/json" required></label>
-<label>Plot scan<input type="file" id="testPly" data-help-label="Plot scan" data-help="Use a Z-up point cloud cropped to one plot no larger than 10 m on either side. The detector reads XYZ coordinates from your PLY file." accept=".ply" required><span>ASCII or little-endian binary PLY. One Z-up plot up to 10 × 10 m, 32 MiB and 1 million returns.</span></label>
-<label>Reference centers (optional)<input type="file" id="testLabels" data-help-label="Reference centers" data-help="Use one independently measured center per plant in the same coordinate system as the scan. These positions score the predictions. Leave this empty to inspect pins without measuring accuracy." accept=".csv,.json"><span>Survey every plant in the plot. Use CSV with header <code>x,y</code>, or the generator’s matching labels JSON.</span></label>
+<p class="hint">To try the lettuce example, select <strong>Saved weights JSON</strong>. Download the weights, scan and either center file. Choose those files below, keep the default coordinates and select <strong>Find plants</strong>.</p>
+</div>
+<div class="testInputs testUploads">
+<div class="testUpload" id="testWeightsLabel">
+<label>Weights file<input type="file" id="testWeights" data-help-label="Weights file" data-help="Use the file from Download model weights. It supplies the model shape, weights and input scaling needed to make predictions." accept=".json,application/json" aria-describedby="weightsFormat" required></label>
+<div class="testExamples"><a id="exampleWeights" href="./field-test/example/weights.json" download="weights.json" data-help-label="Download example weights" data-help="Save a small neural network trained on synthetic lettuce. Choose the downloaded JSON in Weights file to use it on the example scan.">Download example weights</a></div>
+<p class="hint" id="weightsFormat">A model weights JSON from the Training Shed.</p>
+</div>
+<div class="testUpload">
+<label>Plot scan<input type="file" id="testPly" data-help-label="Plot scan" data-help="Use a Z-up point cloud cropped to one plot no larger than 10 m on either side. The detector reads XYZ coordinates from your PLY file." accept=".ply" aria-describedby="plyFormat" required></label>
+<div class="testExamples"><a id="examplePly" href="./field-test/example/c0545a3786c57a89.ply" download="c0545a3786c57a89.ply" data-help-label="Download example scan" data-help="Save a PLY with 11,178 simulated laser returns from one 10 × 10 m lettuce plot. The coordinates are in metres with level ground at zero.">Download example scan</a></div>
+<p class="hint" id="plyFormat">ASCII or little-endian binary PLY. One Z-up plot up to 10 × 10 m, 32 MiB and 1 million returns.</p>
+</div>
+<div class="testUpload">
+<label>Reference centers (optional)<input type="file" id="testLabels" data-help-label="Reference centers" data-help="Use one independently measured center per plant in the same coordinate system as the scan. These positions score the predictions. Leave this empty to inspect pins without measuring accuracy." accept=".csv,.json" aria-describedby="centersFormat"></label>
+<div class="testExamples">
+<a id="exampleCentersCsv" href="./field-test/example/centers.csv" download="centers.csv" aria-label="Download example centers CSV" data-help-label="Download centers CSV" data-help="Save a spreadsheet-friendly list of the 217 known plant centers in the example scan. Each row gives the X and Y position in metres.">Download CSV</a>
+<a id="exampleLabelsJson" href="./field-test/example/labels.json" download="labels.json" aria-label="Download example labels JSON" data-help-label="Download labels JSON" data-help="Save the generator labels for the same 217 plants. Field Test reads their centers and checks that the scan identity matches the labels.">Download JSON</a>
+</div>
+<p class="hint" id="centersFormat">Both examples mark the same plants. For your own plot, survey every plant and use a CSV with header <code>x,y</code>, or supply the generator’s matching labels JSON.</p>
+</div>
 </div>
 <p id="testExtent" class="hint"></p>
 <fieldset class="testFrame"><legend>Scan coordinates</legend>
@@ -258,7 +327,7 @@
 </section>
 </main>
 <footer class="siteFoot"><span>Created by Matthew Valancy</span>
-<div><a href="../AGENTS.md">Agent quickstart</a><a href="../#missions">Farm journal</a><a href="../LICENSE">MIT license</a></div></footer>
-<script type="module" src="./main.js?v=field-desk1"></script>
+<div><a data-help="Open commands and reproducibility instructions for an agent working with Crop Trainer." href="../AGENTS.md">Agent quickstart</a><a data-help="View the farming challenges and achievements stored on this device." href="../#missions">Farm journal</a><a data-help="Read the terms for using and sharing Crop Trainer’s source code." href="../LICENSE">MIT license</a></div><small class="contextHint"><span class="hoverHint">Hover or focus a button or score for help.</span><span class="touchHint">Tap a score or hold a button for help. A quick tap runs the action.</span></small></footer>
+<script type="module" src="./main.js?v=context-help2"></script>
 </body>
 </html>

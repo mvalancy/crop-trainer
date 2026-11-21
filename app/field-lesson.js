@@ -41,29 +41,29 @@ export function createFieldLesson(root) {
   root.classList.add('field-lesson');
   root.innerHTML = `
     <figure class="fl-figure">
-      <figcaption class="fl-head"><strong>Top-down scan</strong><span data-lesson="size"></span></figcaption>
-      <button type="button" class="fl-board" data-lesson="board" aria-label="Aim and place a plant pin" aria-describedby="${helpId}" disabled>
+      <figcaption class="fl-head"><strong>Top-down scan</strong><span data-lesson="size" data-help-label="Patch scale" data-help="Width and height of this part of the field, followed by the distance between grid lines."></span></figcaption>
+      <button type="button" class="fl-board" data-lesson="board" aria-label="Aim and place a plant pin" aria-describedby="${helpId}" data-help="Tap where a plant looks centered, or aim with the arrow keys and press Enter. Your pin is measured against the nearest labeled plant." disabled>
         <svg viewBox="0 0 480 288" aria-hidden="true" focusable="false">
           <g data-lesson="grid"></g><g data-lesson="points"></g><g data-lesson="marks"></g>
           <g class="fl-aim" data-lesson="aim" fill="none" stroke="#fff" stroke-width="1.7"><circle r="8" stroke-dasharray="3 2"/><path d="M-14 0h5m18 0h5M0 -14v5m0 18v5"/></g>
         </svg>
       </button>
-      <p class="fl-status" data-lesson="status" role="status" aria-live="polite" aria-atomic="true">Waiting for a scan.</p>
+      <p class="fl-status" data-lesson="status" role="status" aria-live="polite" aria-atomic="true" data-help-label="Your pin" data-help="After placing a pin, read its distance to the nearest known center. A distance of 15 cm or less earns a match.">Waiting for a scan.</p>
       <div class="fl-key">
-        <span>Height · Low 0 cm <i class="fl-ramp" aria-hidden="true"></i><span data-lesson="height"></span></span>
+        <span data-help-label="Height colors" data-help="Brighter dots are higher. The brightest color also represents points above the upper value shown here.">Height · Low 0 cm <i class="fl-ramp" aria-hidden="true"></i><span data-lesson="height"></span></span>
         <span><b class="fl-diamond" aria-hidden="true">◇</b> Your pin</span>
         <span><b class="fl-cross" aria-hidden="true">+</b> Label</span>
-        <span data-lesson="sample" hidden></span>
+        <span data-lesson="sample" data-help-label="Points shown" data-help="A dense patch displays a sample of its points. The comparison still uses the known plant positions in the patch." hidden></span>
       </div>
     </figure>
     <div class="fl-actions">
-      <button type="button" data-lesson="reveal" aria-pressed="false" disabled>Show labels</button>
-      <button type="button" data-lesson="next" disabled>New patch</button>
-      <button type="button" data-lesson="clear" hidden>Clear pin</button>
+      <button type="button" data-lesson="reveal" aria-pressed="false" data-help="Show or hide the known plant centers as crosses. Use them to check what you saw in the laser dots." disabled>Show labels</button>
+      <button type="button" data-lesson="next" data-help="Move to another patch of the same generated scan and try finding a center there." disabled>New patch</button>
+      <button type="button" data-lesson="clear" data-help="Remove your guess from this patch so you can aim again." hidden>Clear pin</button>
     </div>
-    <details class="fl-list" data-lesson="locations" hidden><summary>Read label positions</summary>
+    <details class="fl-list" data-lesson="locations" hidden><summary data-help="Read the horizontal positions of the known plant centers as numbers measured from this patch’s lower-left corner.">Read label positions</summary>
       <p>Distances from the lower-left corner of this patch.</p><ol></ol></details>
-    <details class="fl-help"><summary>Keyboard controls</summary>
+    <details class="fl-help"><summary data-help="Read how to aim by small or large steps and place a pin with the keyboard.">Keyboard controls</summary>
       <p id="${helpId}">Focus the scan and use the arrows to explore in 5 cm steps. Hold Shift for 25 cm steps. Press Enter or Space to place a pin.</p></details>`;
   const el = name => root.querySelector('[data-lesson="'+name+'"]');
   const board = el('board'), svg = board.querySelector('svg'), status = el('status');

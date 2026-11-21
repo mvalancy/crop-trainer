@@ -1,12 +1,17 @@
 // The local server and Pages build expose the same static app and reading material.
 const entryFiles = new Set(['index.html', 'README.md', 'AGENTS.md', 'LICENSE', '.nojekyll', 'art/crop-mark-32.png', 'art/crop-touch.png']);
+// Only these generated tutorial files are included in public builds.
+for (const name of ['c0545a3786c57a89.ply', 'weights.json', 'centers.csv', 'labels.json', 'settings.json', 'README.md']) {
+  entryFiles.add('trainer/field-test/example/' + name);
+}
 const publicDirectories = new Map([
   ['app', ['js', 'css', 'md']],
   ['art', ['svg', 'webp', 'md']], ['art/plants', ['svg', 'md']],
-  ['benchmark', ['html', 'js', 'md']], ['benchmark/studies', ['mjs', 'md']],
+  ['benchmark', ['html', 'js', 'css', 'md']], ['benchmark/studies', ['mjs', 'md']],
   ['docs', ['md']], ['docs/first-steps', ['md']],
   ['trainer', ['html', 'js', 'md']], ['trainer/plants', ['js', 'css', 'md']],
-  ...['generator', 'models', 'field-test', 'study', 'ui'].map(name => ['trainer/' + name, ['js', 'md']])
+  ['trainer/ui', ['js', 'css', 'md']],
+  ...['generator', 'models', 'field-test', 'study'].map(name => ['trainer/' + name, ['js', 'md']])
 ]);
 
 export function isPublicPath(path) {
