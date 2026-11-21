@@ -1,1 +1,21 @@
-{"name":"crop-trainer","version":"1.0.0","private":true,"type":"module","license":"MIT","scripts":{"start":"node run.mjs serve","test":"node --test"},"engines":{"node":">=22"}}
+{
+  "name": "crop-trainer",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node cli/run.mjs serve",
+    "train": "node cli/run.mjs train",
+    "preflight": "node cli/run.mjs preflight",
+    "test": "node --test",
+    "build:pages": "node ci/build-pages.mjs",
+    "test:pages": "node ci/smoke-pages.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.65.1"
+  }
+}

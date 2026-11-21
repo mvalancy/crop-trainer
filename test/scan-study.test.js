@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {makeRecipe} from '../trainer/data.js';
-import {field} from '../trainer/field.js';
-import {getSensor} from '../trainer/sensors.js';
-import {analyzeStudyScan,checkStudyPair,studyRecipes} from '../trainer/scan-study.js';
+import {makeRecipe} from '../trainer/models/data.js';
+import {field} from '../trainer/generator/field.js';
+import {getSensor} from '../trainer/generator/sensors.js';
+import {analyzeStudyScan,checkStudyPair,studyRecipes} from '../trainer/study/scan-study.js';
 
 function seedlingRecipe(sensor) {
   const recipe=makeRecipe(216917,true,getSensor(sensor),'tomato',2,'seedling');
@@ -96,4 +96,21 @@ test('orchard damage gives a nearest distance even when the pin misses the 15 cm
   }
   const soil={...field(source),xyz:new Float32Array([0,0,0])};
   assert.ok(analyzeStudyScan(soil).plants.every(p=>!p.orchard&&p.nearestOrchardPinM===null));
+});
+
+test('scaffold widths vary orchard wood returns while preserving the planted bases and scan settings',()=>{
+  const source={...makeRecipe(7412177,true,getSensor('reference'),'apple',2,'open-vase','healthy'),
+    appleCanopy:'dormant', points:60000, weeds:false, sticks:false, boards:false, scanNoise:null};
+  const recipes=studyRecipes(source,'scaffolds');
+  assert.deepEqual(recipes,[3,4].map(plantArchitecture=>({...source,plantArchitecture})));
+  assert.throws(()=>studyRecipes(seedlingRecipe('reference'),'scaffolds'),/apple orchard/);
+  const [a,b]=recipes.map(recipe=>analyzeStudyScan(field(recipe),'scaffolds'));
+  checkStudyPair(a,b);
+  const observations=[a,b].map(r=>[r.tileId,r.sampledRays,r.plants.length,r.orchardWoodReturns,r.orchardScores.at(-1).tp]);
+  assert.deepEqual(observations,[
+    ['6969fb9f0b8de2f7',60000,11,1571,10],
+    ['5bc2b4c1837d611a',60000,11,1240,9]
+  ]);
+  assert.equal(source.plantArchitecture,2);
+  assert.ok(!('orchardWoodReturns' in analyzeStudyScan(field(recipes[0]),'damage')));
 });

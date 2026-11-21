@@ -1,0 +1,39 @@
+// The local server and Pages build expose the same static app and reading material.
+const entryFiles = new Set(['index.html', 'README.md', 'AGENTS.md', 'LICENSE', '.nojekyll']);
+const publicDirectories = new Map([
+  ['app', ['js', 'css', 'md']],
+  ['art', ['svg', 'webp', 'md']], ['art/plants', ['svg', 'md']],
+  ['benchmark', ['html', 'js', 'md']], ['benchmark/studies', ['mjs', 'md']],
+  ['docs', ['md']], ['docs/first-steps', ['md']],
+  ['trainer', ['html', 'js', 'md']], ['trainer/plants', ['js', 'css', 'md']],
+  ...['generator', 'models', 'field-test', 'study', 'ui'].map(name => ['trainer/' + name, ['js', 'md']])
+]);
+
+export function isPublicPath(path) {
+  if (entryFiles.has(path) || ['ci/README.md','cli/README.md','test/README.md'].includes(path)) return true;
+  const slash = path.lastIndexOf('/');
+  const filename = path.slice(slash + 1);
+  if (!/^[a-z][a-z0-9-]*\.[a-z]+$/i.test(filename)) return false;
+  return publicDirectories.get(path.slice(0, slash))?.includes(filename.split('.').pop()) ?? false;
+}
+
+// Browsers can retain yesterday's HTML or worker imports during a rollout.
+// Serve tiny forwarders at the old asset URLs without keeping source files there.
+export const movedAssets = new Map();
+function moved(directory, destination, filenames) {
+  for (const filename of filenames.split(' ')) movedAssets.set(directory + filename, destination + '/' + filename);
+}
+moved('', 'app', 'farm.js farm.css viewer.js first-steps.js field-lesson.js');
+moved('trainer/', 'trainer/generator', 'crops.js field.js generate-worker.js growing-systems.js plant-version.js scan-session.js sensors.js');
+moved('trainer/', 'trainer/models', 'data.js fit-worker.js model.js network.js neural.js orchard.js');
+moved('trainer/', 'trainer/field-test', 'field-test-ui.js field-test-worker.js inference.js ply.js references.js score-scan.js');
+moved('trainer/', 'trainer/study', 'scan-study.js scan-study-map.js scan-study-ui.js scan-study-worker.js');
+moved('trainer/', 'trainer/ui', 'live-scene.js sandbox.js');
+moved('benchmark/', 'benchmark/studies', 'canopy-size.mjs ground-reference.mjs orchard-bases.mjs orchard-branch-caliber.mjs orchard-damage.mjs orchard-visibility.mjs paired-evidence.mjs plant-forms.mjs prepare-vineyard.mjs seedling-density.mjs seedling-peak-fit.mjs seedling-peaks.mjs seedling-stages.mjs');
+
+export function forwardAsset(path) {
+  const target = movedAssets.get(path);
+  if (!target) return;
+  const relative = './' + target.slice(path.lastIndexOf('/') + 1);
+  return path.endsWith('.css') ? `@import url("${relative}");\n` : `export * from "${relative}";\n`;
+}

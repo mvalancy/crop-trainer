@@ -3,8 +3,8 @@
 With Node.js 22 or newer you can run the detector on a local point cloud from the repository directory. All inputs stay on the computer. Use **Download model weights** in the Training shed, or fit and export a model with the command below. Supply an ASCII or binary little-endian PLY scan with scalar vertex properties named `x`, `y` and `z`. A generator PLY and its matching labels export make a quick first test.
 
 ```sh
-node run.mjs train harvest.json --weights weights.json
-node score-scan.mjs weights.json plot.ply field-01.json
+node cli/run.mjs train harvest.json --weights weights.json
+node cli/score-scan.mjs weights.json plot.ply field-01.json
 ```
 
 The first command trains the default lettuce detector on synthetic fields using the CPU. To replay a saved browser configuration, supply its settings file before `--weights`. The detailed training report and reusable weights each need a new filename.
@@ -18,13 +18,13 @@ For board setup, a practice run, and the steps from scanner to pins, see [Take a
 Use one Z-up, 10 × 10 metre plot. Express its lower-left XY corner and the ground elevation at that corner in the original scan coordinates. The default is metres with origin `0,0,0`. This example uses centimetres, a lower-left corner at (5000, 2000) and ground at Z = 18.
 
 ```sh
-node score-scan.mjs weights.json plot-cm.ply field-02.json --unit cm --origin 5000,2000,18 --labels centers.csv
+node cli/score-scan.mjs weights.json plot-cm.ply field-02.json --unit cm --origin 5000,2000,18 --labels centers.csv
 ```
 
 If the ground slopes across the plot, enter the measured rise along each positive horizontal axis. For example, `--grade-percent 5,-2` means the ground rises 5 cm per metre toward +X and falls 2 cm per metre toward +Y. The percentages work with any input units. The default `0,0` treats the ground as level.
 
 ```sh
-node score-scan.mjs weights.json plot-cm.ply slope.json --unit cm --origin 5000,2000,18 --grade-percent 5,-2 --labels centers.csv
+node cli/score-scan.mjs weights.json plot-cm.ply slope.json --unit cm --origin 5000,2000,18 --grade-percent 5,-2 --labels centers.csv
 ```
 
 The detector subtracts that ground plane from each Z coordinate before finding height peaks. Crop larger surveys and rotate tilted sensor coordinates into a Z-up frame before import. A single plane assumes a consistent grade across the plot.

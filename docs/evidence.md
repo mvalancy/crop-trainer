@@ -40,7 +40,7 @@ Calibration recovered recall at the cost of precision. This used labeled example
 From the repository root, run this command with Node.js 22 or later.
 
 ```sh
-node benchmark/paired-evidence.mjs > evidence.ndjson
+node benchmark/studies/paired-evidence.mjs > evidence.ndjson
 ```
 
 Each output line is JSON. The six crop/layout rows and tomato follow-up include per-distance match counts, precision, recall, F1 and count error. The last line records elapsed generation, fitting and validation time on the local CPU, including the calibration sweep. In one replay on Node 24.22.1, these phases took 51.1 s, 1.6 s and 10.0 s respectively. Generation includes rebuilding the training inputs to verify that they are identical across layouts.

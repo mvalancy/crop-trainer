@@ -23,9 +23,17 @@ Each pin update gives the epoch that produced it. The CPU or WebGPU trainer can 
 
 The starter learns all weights in a four-unit tanh hidden layer and a sigmoid output. A logistic baseline uses the same inputs and validation split. Precision measures how many pins match plants. Recall measures how many plants received a pin. Mean F1 combines both over three matching distances. Each run learns a detector for the selected crop and estimates how well it locates whole plants on new synthetic fields.
 
+### Test on a different plant form
+
+Open **Fields and dataset seed** and choose a structured plant architecture. **Training plant form** selects the plants that supply examples and feature scaling. **Validation plant form** defaults to **Same as training**. For young tomato, train on **Leafy transplant** and test on **First true leaves** to ask whether a detector trained on larger plants locates smaller ones. Check recall at 15 cm and the number of labeled plants with zero crop returns. A growth stage with few recorded points can be hard to locate even with a fitted model.
+
+At seed 197391, the four-unit starter trained for 40 epochs on six v3 transplant plantings. With 60,000 reference rays per scan, it located **561 of 658** plant centers within 15 cm on the three held-out transplant plantings, counting the scans with and without soil. Changing just the held-out form to seedlings gave **58 of 658** with the same fitted weights. [Replay the seedling test](https://mvalancy.github.io/crop-trainer/trainer/?plan=quick&crop=tomato&plantArchitecture=3&plantForm=transplant&validationPlantForm=seedling&sensor=reference&seed=197391&trainingRayBudget=60000&validationRayBudget=60000&epochs=40&engine=cpu)
+
+Keep the dataset seed, sensor, ray budget and epoch count fixed when comparing test forms. Selecting another validation form redraws only the held-out plants. Downloaded run settings preserve a differing `validationPlantForm`. The weight file describes the form used to fit the detector. The scored-field viewer opens the actual test scan. Results measure transfer between modeled forms on synthetic fields.
+
 ### When a scan has gaps
 
-Under **Peak detection and scoring → Average height across**, the default counts empty cells as zero when smoothing local heights. The experimental **Sampled cells only** rule averages only neighboring cells with returns and proposes pins only at sampled cells. Measured ground still contributes. This can reveal a seedling that only caught one ray or raise a clump of soil above the peak threshold. The rule changes the examples before either model learns, so train and score with the same setting. **Compare both peak rules** fits the benchmark’s starter network separately with each rule on identical scans at a 0.5 detection cutoff. To check export and scoring on your computer, `node run.mjs preflight --peak-averaging occupied` fits a fresh model and replays six generated scans. [Try the height rule on a seedling and bare soil](https://mvalancy.github.io/crop-trainer/trainer/?crop=tomato&minimumHeight=0.065#averagingStudy) · [Synthetic seedling experiments](seedling-peaks.md#can-training-reject-the-extra-soil-peaks)
+Under **Peak detection and scoring → Average height across**, the default counts empty cells as zero when smoothing local heights. The experimental **Sampled cells only** rule averages only neighboring cells with returns and proposes pins only at sampled cells. Measured ground still contributes. This can reveal a seedling that only caught one ray or raise a clump of soil above the peak threshold. The rule changes the examples before either model learns, so train and score with the same setting. **Compare both peak rules** fits the benchmark’s starter network separately with each rule on identical scans at a 0.5 detection cutoff. To check export and scoring on your computer, `node cli/run.mjs preflight --peak-averaging occupied` fits a fresh model and replays six generated scans. [Try the height rule on a seedling and bare soil](https://mvalancy.github.io/crop-trainer/trainer/?crop=tomato&minimumHeight=0.065#averagingStudy) · [Synthetic seedling experiments](seedling-peaks.md#can-training-reject-the-extra-soil-peaks)
 
 ## Design a detector
 
@@ -62,7 +70,7 @@ After two epochs with batches of 32, learning rate 0.125 and initialization seed
 Open the Training shed and paste this into the browser console. Of 1,057 rows, only the last has a nonzero input. Flipping its label from 0 to 1 changes the input weight by the learning rate divided by the number of rows in its update. With batches of 32, the final update contains one row. In full-batch mode, it contains all 1,057.
 
 ```js
-const {trainNetworkGPU} = await import('./neural.js');
+const {trainNetworkGPU} = await import('./models/neural.js');
 const x = new Float32Array(1057);
 x[1056] = 1;
 const labels = new Float32Array(x.length);
@@ -136,8 +144,8 @@ After validation, expand **Explore learned weights** and choose any layer and un
 For inference in a local checkout, `features` converts a generator tile into candidate positions and raw feature rows. The helper applies the saved scaling and returns one score per position.
 
 ```js
-import {features} from './trainer/data.js';
-import {savedPeakAveraging, scoreSavedWeights} from './trainer/network.js';
+import {features} from './trainer/models/data.js';
+import {savedPeakAveraging, scoreSavedWeights} from './trainer/models/network.js';
 
 // model is the parsed weights JSON. tile is a field from the generator.
 const averaging = savedPeakAveraging(model);

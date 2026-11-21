@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
-import {field} from '../trainer/field.js';
-import {makeRecipe, buildDataset, features} from '../trainer/data.js';
-import {getSensor} from '../trainer/sensors.js';
-import {cropProfile} from '../trainer/crops.js';
+import {field} from '../trainer/generator/field.js';
+import {makeRecipe, buildDataset, features} from '../trainer/models/data.js';
+import {getSensor} from '../trainer/generator/sensors.js';
+import {cropProfile} from '../trainer/generator/crops.js';
 import {formsFor} from '../trainer/plants/forms.js';
 
 // Archived unversioned recipe outputs measured at dc6d21d. Comparing the scan

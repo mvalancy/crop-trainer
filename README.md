@@ -26,4 +26,4 @@ Have a scan of your own? [Try your detector on a local PLY](https://mvalancy.git
 
 [Field guide and experiments](docs/README.md) · [Agent quickstart](AGENTS.md) · [MIT license](LICENSE)
 
-**Browse the repo** · [Training shed](trainer/README.md) · [Benchmark](benchmark/README.md) · [Test plot](test/README.md) · [Illustrations](art/README.md)
+**Browse the repo** · [Browser app](app/README.md) · [Plant gallery](trainer/plants/README.md) · [Training shed](trainer/README.md) · [Experiments](benchmark/studies/README.md) · [Command-line tools](cli/README.md) · [Tests and deployment](docs/deployment.md)

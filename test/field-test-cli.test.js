@@ -7,11 +7,11 @@ import {join} from 'node:path';
 import test from 'node:test';
 import {fileURLToPath} from 'node:url';
 import {promisify} from 'node:util';
-import {runFieldTest} from '../trainer/score-scan.js';
-import {encodePly} from '../trainer/ply.js';
+import {runFieldTest} from '../trainer/field-test/score-scan.js';
+import {encodePly} from '../trainer/field-test/ply.js';
 
 const invoke = promisify(execFile);
-const entry = fileURLToPath(new URL('../score-scan.mjs',import.meta.url));
+const entry = fileURLToPath(new URL('../cli/score-scan.mjs',import.meta.url));
 const model = {
   format:'crop-trainer-weights-v1',featureSchema:'crop-peak-13-v1',crop:'lettuce',
   inputs:13,output:'sigmoid',threshold:.9,minimumHeight:.035,pinSeparation:.125,
@@ -85,8 +85,8 @@ test('simultaneous runs keep exactly one complete report, and invalid inputs nev
 });
 
 test('CLI trains and saves a portable model that reproduces its held-out validation counts', async t=>{
-  const {field} = await import('../trainer/field.js');
-  const train = fileURLToPath(new URL('../run.mjs',import.meta.url));
+  const {field} = await import('../trainer/generator/field.js');
+  const train = fileURLToPath(new URL('../cli/run.mjs',import.meta.url));
   const cwd = await mkdtemp(join(tmpdir(),'crop-trainer-weights-test-'));
   t.after(()=>rm(cwd,{recursive:true,force:true}));
   const run = (...args)=>invoke(process.execPath,[train,'train',...args],{cwd});
@@ -153,7 +153,7 @@ test('a known two-axis grade recovers the level control in metres and centimetre
 test('preflight replays both soil variants with exported weights and leaves the caller’s directory empty', async t=>{
   const cwd = await mkdtemp(join(tmpdir(),'crop-trainer-preflight-test-'));
   t.after(()=>rm(cwd,{recursive:true,force:true}));
-  const cli = fileURLToPath(new URL('../run.mjs',import.meta.url));
+  const cli = fileURLToPath(new URL('../cli/run.mjs',import.meta.url));
   const {stdout} = await invoke(process.execPath,[cli,'preflight'],{cwd});
   const result = JSON.parse(stdout);
   assert.equal(result.passed,true);

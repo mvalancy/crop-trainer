@@ -6,7 +6,7 @@ In one clean synthetic ring scan, the standard height filter found 10 of 93 toma
 
 ## What changed?
 
-Both methods take the highest XYZ return in each 5 cm cell, smooth a three-by-three neighborhood, then keep local peaks at or above 6.5 cm. They rank the peaks by height and require 22 cm between selected pins. The standard filter divides by the full kernel weight of 16. The experimental filter divides by the weights of cells that received a return and requires a measured center cell. In both filters a measured soil return at zero height counts as a genuine measurement. These height rules rank peaks without fitting weights. The Training Shed also lets you train a neural detector on either set of peaks under **Peak detection and scoring → Average height across**. A weight export records which rule to use when scoring a new scan. [Peak extraction](../trainer/data.js) · [Scanner geometry](scanners.md)
+Both methods take the highest XYZ return in each 5 cm cell, smooth a three-by-three neighborhood, then keep local peaks at or above 6.5 cm. They rank the peaks by height and require 22 cm between selected pins. The standard filter divides by the full kernel weight of 16. The experimental filter divides by the weights of cells that received a return and requires a measured center cell. In both filters a measured soil return at zero height counts as a genuine measurement. These height rules rank peaks without fitting weights. The Training Shed also lets you train a neural detector on either set of peaks under **Peak detection and scoring → Average height across**. A weight export records which rule to use when scoring a new scan. [Peak extraction](../trainer/models/data.js) · [Scanner geometry](scanners.md)
 
 The illustration uses two neighborhoods from a 60,000-ray synthetic ring scan at seed `1370561`. The center bin weighs four, each side neighbor two and each corner one. Near plant 8, at XY (5.475, 0.675) m, the computed height rose from 5.06 to 8.99 cm. A soil patch at (5.875, 1.025) m also crossed the gate, from 4.60 to 6.70 cm, over 36 cm from the nearest label. [Replay plant 8 on the paired scans](https://mvalancy.github.io/crop-trainer/?crop=tomato&plantArchitecture=2&plantForm=seedling&plantCondition=healthy&sensor=reference&budget=60000&seed=1370561&noise=clean&weeds=off&sticks=off&boards=off&studyMode=layouts&studyMetric=sampledPins&studyBox=8#scan-study)
 
@@ -60,16 +60,16 @@ Raising the neural cutoff to 0.75 removed every true detection from the 6.5 cm s
 ## Reproduce the comparison
 
 ```sh
-node benchmark/seedling-peaks.mjs > seedling-peaks.json
+node benchmark/studies/seedling-peaks.mjs > seedling-peaks.json
 ```
 
-The JSON contains the recipe settings and seeds, scan IDs, proposal coverage before spacing, final true/false/missed counts at every tolerance, and accidental matches on negative controls. One Node.js 24.22.1 CPU run on an AMD EPYC 7763 used 1.91 s for generation, 0.06 s to extract controls, 0.55 s for the standard filter and spacing, 0.75 s for the sampled-cell method, and 0.65 s for matching. These timings include scoring the control clouds and lower-gate variants. [Benchmark source](../benchmark/seedling-peaks.mjs) · [Why scan density matters for seedlings](seedling-density.md)
+The JSON contains the recipe settings and seeds, scan IDs, proposal coverage before spacing, final true/false/missed counts at every tolerance, and accidental matches on negative controls. One Node.js 24.22.1 CPU run on an AMD EPYC 7763 used 1.91 s for generation, 0.06 s to extract controls, 0.55 s for the standard filter and spacing, 0.75 s for the sampled-cell method, and 0.65 s for matching. These timings include scoring the control clouds and lower-gate variants. [Benchmark source](../benchmark/studies/seedling-peaks.mjs) · [Why scan density matters for seedlings](seedling-density.md)
 
 
 Run the separate classifier experiment on the eight held-out fields with Node.js 22 or later.
 
 ```sh
-node benchmark/seedling-peak-fit.mjs > seedling-peak-fit.json
+node benchmark/studies/seedling-peak-fit.mjs > seedling-peak-fit.json
 ```
 
-The report includes the test seeds and scan IDs, fit hashes, 7.5 / 10 / 15 cm counts, matched box IDs at 15 cm, soil and noncrop controls, and both sensitivity checks. For the first clean field on each layout it checks each fitted weight export against the app’s Field Test scorer. One Node.js 24.22.1 CPU run on an AMD EPYC 7763 took 5.07 s to prepare training data, 0.70 s to fit the 16 networks, 1.43 s to generate the held-out scans and 2.52 s to score them and the controls. The browser benchmark uses its own validation planting recipe. Use the command above to reproduce this table. [Classifier experiment source](../benchmark/seedling-peak-fit.mjs)
+The report includes the test seeds and scan IDs, fit hashes, 7.5 / 10 / 15 cm counts, matched box IDs at 15 cm, soil and noncrop controls, and both sensitivity checks. For the first clean field on each layout it checks each fitted weight export against the app’s Field Test scorer. One Node.js 24.22.1 CPU run on an AMD EPYC 7763 took 5.07 s to prepare training data, 0.70 s to fit the 16 networks, 1.43 s to generate the held-out scans and 2.52 s to score them and the controls. The browser benchmark uses its own validation planting recipe. Use the command above to reproduce this table. [Classifier experiment source](../benchmark/studies/seedling-peak-fit.mjs)

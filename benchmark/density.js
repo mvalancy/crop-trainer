@@ -1,4 +1,4 @@
-import {DENSITY_BUDGETS} from '../trainer/sensors.js?v=dense1';
+import {DENSITY_BUDGETS} from '../trainer/generator/sensors.js?v=dense1';
 
 export const CLASSIC_TRAINING_PAIR = '12k-60k';
 export const TRAINING_RAY_PAIRS = new Map([

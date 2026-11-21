@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {buildDataset, features, validateModel} from '../trainer/data.js';
-import {field} from '../trainer/field.js';
-import {runFieldTest} from '../trainer/score-scan.js';
-import {detectScan} from '../trainer/inference.js';
-import {predictNetwork, trainNetworkCPU} from '../trainer/neural.js';
+import {buildDataset, features, validateModel} from '../trainer/models/data.js';
+import {field} from '../trainer/generator/field.js';
+import {runFieldTest} from '../trainer/field-test/score-scan.js';
+import {detectScan} from '../trainer/field-test/inference.js';
+import {predictNetwork, trainNetworkCPU} from '../trainer/models/neural.js';
 
 function weights(overrides = {}) {
   return {

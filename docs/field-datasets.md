@@ -25,6 +25,7 @@ We could verify apple LiDAR scans and published trunk surveys. None of the relea
 
 - **Trzebnica, Poland.** Hadas and colleagues surveyed the bottoms of 50 selected apple stems with about 3 cm horizontal accuracy. The public deposit describes 476 trees and its two apple archives contain normalized ground and above-ground point clouds. A team could inspect how many low returns reach the stems today. To score pins, it would also need the original base coordinates and the boundary of a fully surveyed patch. The deposit is CC BY 4.0. [Field methods, §2.3](https://isprs-archives.copernicus.org/articles/XLII-2/407/2018/isprs-archives-XLII-2-407-2018.pdf) · [Data and file manifest](https://zenodo.org/records/15831891) · [License](https://api.datacite.org/dois/10.5281/zenodo.15831891)
 - **OrchardQuant-3D, England.** The authors positioned 1,104 apple trees using row-end centroids and row geometry, with interpolation at gaps. The v1.2 RTK archive contains four region-of-interest points in `roi_points.shp`. These can help locate a plot, but they cannot establish the position of each trunk. The stated BSD license covers the code and algorithms. [Study methods](https://doi.org/10.1111/pbi.70229) · [Release and RTK archive](https://github.com/The-Zhou-Lab/OrchardQuant-3D/releases/tag/V1.2)
+- **Tree-SLAM, Netherlands.** Researchers measured all 65 trees in one apple row with an RTK survey pole. They took a reading on each side of each trunk and averaged the opposite readings to locate its center. Their public CC BY 4.0 archive contains 8,917 images and 8,917 YOLO label files for apple and pear trunk segmentation. Replaying the apple location test would require the separate mapping recordings, the 65 surveyed coordinates and their shared frame. [Survey method and row counts, §2.2](https://arxiv.org/html/2507.12093v1#S2.SS2) · [Versioned data and license](https://doi.org/10.4121/5b453456-60ef-4fc7-a3af-d6609906d85c.v1)
 
 For a new survey, record the center of each trunk where it enters the soil, including trunks hidden by foliage or guards. Save the plot boundary, coordinate frame and registration error alongside the coordinates. A count from the whole orchard cannot tell whether individual pins land within 15 cm. [Field validation protocol](field-validation.md) · [Synthetic apple locator results](orchard-bases.md)
 
@@ -45,9 +46,9 @@ The learned count of 21 looks close to 18. The map shows why counts alone can hi
 
 ```sh
 echo '{"seed":32137,"crop":"grapevine","trainFields":6,"valFields":3,"sensorMode":"mixed","minimumHeight":0.065,"threshold":0.5,"epochs":40}' > vine-settings.json
-node run.mjs train vine-training.json vine-settings.json --weights vine-weights.json
-node benchmark/prepare-vineyard.mjs /path/to/extracted-dataset vine-strip
-node score-scan.mjs vine-weights.json vine-strip/plot.ply vine-score.json --labels vine-strip/trunks.csv --origin 34453,180304,490.04084483709477 --grade-percent -1.491114864874099,6.625270270267329
+node cli/run.mjs train vine-training.json vine-settings.json --weights vine-weights.json
+node benchmark/studies/prepare-vineyard.mjs /path/to/extracted-dataset vine-strip
+node cli/score-scan.mjs vine-weights.json vine-strip/plot.ply vine-score.json --labels vine-strip/trunks.csv --origin 34453,180304,490.04084483709477 --grade-percent -1.491114864874099,6.625270270267329
 ```
 
 3. To inspect the pins visually, open **Training shed → Field test**, select the weights, PLY and CSV, and enter the metre origin and grade percentages from `vine-strip/frame.json`. [Open Field test](https://mvalancy.github.io/crop-trainer/trainer/#field-test)

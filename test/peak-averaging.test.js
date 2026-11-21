@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {buildDataset,features,rescanValidation} from '../trainer/data.js';
-import {field} from '../trainer/field.js';
+import {buildDataset,features,rescanValidation} from '../trainer/models/data.js';
+import {field} from '../trainer/generator/field.js';
 
 test('an unsampled neighbour and a measured soil return contribute different weights in the occupied filter',()=>{
   const isolated={xyz:[2.025,3.025,.125]};

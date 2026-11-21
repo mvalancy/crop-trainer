@@ -1,5 +1,5 @@
 // These two illustrations draw the generator's organs before the LiDAR samples them.
-import {growOrgans} from './index.js?v=plants3';
+import {growOrgans} from './index.js?v=field-desk1';
 import {plantTraits} from './traits.js';
 
 export function specimenPair(crop, forms, settings) {

@@ -1,5 +1,5 @@
-import {BENCH_HEIGHT_M, TROUGH_HEIGHT_M} from '../growing-systems.js?v=plants3';
-import {apple} from './apple.js';
+import {BENCH_HEIGHT_M, TROUGH_HEIGHT_M} from '../generator/growing-systems.js?v=plants3';
+import {apple} from './apple.js?v=field-desk1';
 import {grapevine} from './grapevine.js';
 import {highWireTomato} from './high-wire-tomato.js';
 import {lettuce, benchLettuce} from './lettuce.js?v=plants3';

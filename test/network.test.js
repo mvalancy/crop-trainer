@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {trainNetworkCPU,predictNetwork} from '../trainer/neural.js';
-import {initializeFit,networkShape,trackFit,scoreSavedWeights} from '../trainer/network.js';
+import {trainNetworkCPU,predictNetwork} from '../trainer/models/neural.js';
+import {initializeFit,networkShape,trackFit,scoreSavedWeights} from '../trainer/models/network.js';
 
 const x = Float32Array.of(-1,.3,.4,.7,1,-.8);
 const y = Float32Array.of(0,1,1);

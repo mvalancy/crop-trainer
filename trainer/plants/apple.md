@@ -40,8 +40,36 @@ The modeled trees overlap the shorter end of the Cornell sample. Both model mean
 
 **Branch thickness varies too little within the modeled vase.** Purdue measured the diameter of primary branches attached directly to the trunk, about 2.5 inches (6.35 cm) along each branch from its origin. In Figure 4 the shortest blue caliper bar is about **35%** of the tallest for Tree1 and **29%** for Tree3. The vertical axes have no unit label, so the comparison uses within-chart ratios. The authors plotted the reconstructed branches from the front, lower portion of each tree. Including more branches could widen that within-tree spread. [Akbar et al., measurement protocol and Figure 4](https://openaccess.thecvf.com/content_cvpr_2016_workshops/w9/papers/Akbar_A_Novel_Benchmark_CVPR_2016_paper.pdf#page=7)
 
-![Calipers span a primary branch 6.35 cm from its attachment. Within each tree, the thinnest measured branch was about 35% and 29% of the thickest in two Purdue trees, compared with roughly 53% for simulated central leaders and nearly 100% for simulated open vases.](../../art/plants/apple-calipers.svg)
+![Calipers span a primary branch 6.35 cm from its attachment. Two Purdue trees had within-tree diameter ratios of about 35% and 29%. Across 91 synthetic trees per form, the median ratio dropped from 52.6% to 42.9% for central leaders and 99.6% to 59.1% for open vases when switching from v3 to v4.](../../art/plants/apple-calipers.svg)
 
-We took a cross section perpendicular to each simulated primary branch, 6.35 cm along its axis from the trunk centerline attachment. For each tree we divided its thinnest branch diameter by its thickest. The eight central-leader ratios were **52–54%**. The open-vase ratios were **99.6–100%**. Starting at the outer trunk surface instead gave **52–54%** and **96–98%**, respectively. Adding thin trunk-attached laterals alongside the main scaffolds would let the simulator express the spread seen in those two physical trees. Purdue’s published comparison does not match these simulated trees by age or pruning system. Detector accuracy requires separate scan-and-survey trials.
+We took a cross section perpendicular to each simulated primary branch, 6.35 cm along its axis from the trunk centerline attachment. For each tree we divided its thinnest branch diameter by its thickest. The eight central-leader ratios were **52–54%**. The open-vase ratios were **99.6–100%**. Starting at the outer trunk surface instead gave **52–54%** and **96–98%**, respectively. Purdue’s published comparison does not match these simulated trees by age or pruning system. Detector accuracy requires separate scan-and-survey trials.
 
-Run `node benchmark/orchard-branch-caliber.mjs` from the repository root to see the first-tree seed, height, individual synthetic diameters and ratios for each form. The script reads the same organs used in the paired browser portraits. [Reproduce the measurement](../../benchmark/orchard-branch-caliber.mjs)
+Run `node benchmark/studies/orchard-branch-caliber.mjs` from the repository root to see the first-tree seed, height, individual synthetic diameters and ratios for each form. The script reads the same organs used in the paired browser portraits. [Reproduce the measurement](../../benchmark/studies/orchard-branch-caliber.mjs)
+
+## What changes with variable scaffold thickness?
+
+The optional **v4** apple geometry keeps the same limbs but gives them different diameters. In each tree, one scaffold keeps its v3 thickness. Another retains 35–80% of its own v3 thickness, and the remaining scaffolds retain intermediate fractions. A seeded shuffle assigns those sizes to limbs. Upper tiers of central leaders still taper. Attached shoots scale with the supporting limb, and a broken scaffold ends at the diameter of the surviving stub. Try the paired scan on field `11043331`. With the same 60,000 rays over 12 dormant open-vase trees, the trunk locator matched 11 bases in v3 and nine in v4. Select **Compare scans** to see the two maps. [Compare scaffold widths on the same trees](https://mvalancy.github.io/crop-trainer/?crop=apple&plantArchitecture=3&plantForm=open-vase&plantCondition=healthy&appleCanopy=dormant&seed=11043331&sensor=reference&budget=60000&ground=true&noise=clean&weeds=off&sticks=off&boards=off&studyMode=scaffolds&studyMetric=orchard#scan-study)
+
+Eight fresh field seeds contained 91 planting positions. We grew both tree forms at every position and measured all 732 central-leader scaffolds and 323 open-vase scaffolds in each version. We measured intact, dormant wood 6.35 cm along each branch from the trunk centerline. Each percentage below divides one tree’s thinnest branch diameter by its thickest. Lower percentages mean the same tree carries a wider spread of branch sizes.
+
+| Form | v3 median (range) | v4 median (range) | Mean dormant height, v3 → v4 |
+| --- | ---: | ---: | ---: |
+| Central leader | 52.6% (49.9–54.3%) | 42.9% (25.8–63.2%) | 2.566 → 2.566 m |
+| Open vase | 99.6% (99.3–99.9%) | 59.1% (35.2–79.5%) | 2.355 → 2.354 m |
+
+Measuring from the outside of the bark gave v4 medians of 42.7% and 59.3%. Every matched tree kept the same woody centerlines. The highest surface of a dormant tree moved by at most 2.5 mm. The two published Purdue trees illustrate how much branch thickness can vary. A representative distribution for either form requires measurements of more trees of known age and training system.
+
+### Can the locator still find the trunk?
+
+We scanned both forms with foliage on and off, with scaffolds intact and damaged. A reference grid and simulated OS1-64 rings each sampled 60,000 rays over a clean 10 × 10 m plot with soil. Each v3/v4 pair used identical ray XY coordinates and planted bases. Across 128 scans per version, thinner modeled wood returned fewer points. Woody hits fell from **140,638** in v3 to **109,075** in v4. Repeated scans of the same trees contributed to these totals.
+
+| Base detector | Geometry | F1 at 7.5 cm | F1 at 10 cm | F1 at 15 cm |
+| --- | --- | ---: | ---: | ---: |
+| Orchard locator | v3 | 0.497 | 0.646 | 0.789 |
+| Orchard locator | v4 | 0.473 | 0.622 | 0.758 |
+| Height-only pins | v3 | 0.087 | 0.110 | 0.132 |
+| Height-only pins | v4 | 0.120 | 0.142 | 0.161 |
+
+At 15 cm, the orchard locator found **1,150 of 1,456** base appearances in v3 and **1,094** in v4. Extra pins rose from 309 to 335. Its F1 on intact trees went from 0.882 to 0.830, and on damaged trees from 0.696 to 0.685. The scores pool one-to-one matches at each distance. Actual tree dimensions, ground clutter and sensor viewpoints require independent field measurements before drawing conclusions about a physical orchard.
+
+Run `node benchmark/studies/orchard-architecture.mjs > orchard-architecture.json` to repeat the check. On a Linux x64 AMD EPYC 7763 CPU with Node 24.22.1, measuring the branches took 0.07 s. Generating 256 scans took 6.24 s, running the orchard locator took 1.81 s, the height-only method took 0.77 s and matching the pins took 0.06 s. The JSON includes field seeds, tile IDs, measurements and per-field scores. [Experiment code](../../benchmark/studies/orchard-architecture.mjs)

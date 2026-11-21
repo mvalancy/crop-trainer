@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import test from 'node:test';
-import {weightArtifact,savedPeakAveraging,scoreSavedWeights} from '../trainer/network.js';
-import {features,buildDataset,validateModel} from '../trainer/data.js';
-import {field} from '../trainer/field.js';
-import {detectScan} from '../trainer/inference.js';
-import {trainNetworkCPU,predictNetwork} from '../trainer/neural.js';
+import {weightArtifact,savedPeakAveraging,scoreSavedWeights} from '../trainer/models/network.js';
+import {features,buildDataset,validateModel} from '../trainer/models/data.js';
+import {field} from '../trainer/generator/field.js';
+import {detectScan} from '../trainer/field-test/inference.js';
+import {trainNetworkCPU,predictNetwork} from '../trainer/models/neural.js';
 
 test('original model bytes remain stable and mismatched feature schemas fail closed',()=>{
   const settings={crop:'tomato',hiddenLayers:[],activation:'tanh',minimumHeight:.065,threshold:.5};

@@ -9,11 +9,11 @@ A young tomato can start as a few leaves and later form a branching canopy. Can 
 Use Node.js 22 or later from the repository root. The first command tests one crop. The second includes all seven.
 
 ```sh
-node benchmark/plant-forms.mjs tomato > tomato-forms.json
-node benchmark/plant-forms.mjs > plant-forms.json
+node benchmark/studies/plant-forms.mjs tomato > tomato-forms.json
+node benchmark/studies/plant-forms.mjs > plant-forms.json
 ```
 
-Each crop gets one CPU fit. Every held-out scan goes through the same exported weights and Field Test scorer. The height baseline keeps the tallest candidate first and enforces the same minimum pin spacing as the trained model. In either detector, only one pin can match each reference plant. [Benchmark code](../benchmark/plant-forms.mjs) · [Field Test scoring](../trainer/score-scan.js)
+Each crop gets one CPU fit. Every held-out scan goes through the same exported weights and Field Test scorer. The height baseline keeps the tallest candidate first and enforces the same minimum pin spacing as the trained model. In either detector, only one pin can match each reference plant. [Benchmark code](../benchmark/studies/plant-forms.mjs) · [Field Test scoring](../trainer/field-test/score-scan.js)
 
 ## What changed across the three plantings?
 

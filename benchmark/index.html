@@ -3,7 +3,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Benchmark · Crop Trainer</title>
-<link rel="stylesheet" href="../farm.css?v=plant-study3">
+<link rel="stylesheet" href="../app/farm.css?v=field-desk1">
+
+<link rel="stylesheet" href="../app/help.css?v=field-desk1">
+<script type="module" src="../app/help.js?v=field-desk1"></script>
 </head>
 <body class="benchmark"><a class="skip" href="#main">Skip to content</a>
 <header class="siteBar">
@@ -16,36 +19,37 @@
 <section class="panel benchSetup">
 <form id="benchForm" class="benchForm">
 <fieldset><legend>Choose a comparison</legend><div class="benchFields">
-<label class="comparisonChoice">Question<select id="comparison"><option value="models" selected>Which model places more accurate pins?</option><option value="backend">How fast does WebGPU train compared with CPU?</option><option value="heights">Does including shorter peaks help?</option><option value="epochs">Does training for longer help?</option><option value="density">Does training on denser scans help?</option><option value="layouts">Does the scan layout change which plants we find?</option><option value="averaging">Does ignoring gaps help a trained detector?</option><option value="cutoffs">What happens when we accept lower scores?</option></select></label>
-<label>Crop<select id="crop"><option value="lettuce">Lettuce</option><option value="artichoke">Globe artichoke</option><option value="tomato">Young tomato</option><optgroup label="Experimental growing systems"><option value="apple">Apple orchard</option><option value="grapevine">Trellised vineyard</option><option value="bench-lettuce">Greenhouse bench lettuce</option><option value="high-wire-tomato">Greenhouse high-wire tomato</option></optgroup></select></label>
+<label class="comparisonChoice">Question<select id="comparison" data-help="Pick one question. The benchmark repeats it on two sets of plantings so you can see whether the result holds on fresh fields."><option value="models" selected>Which model places more accurate pins?</option><option value="backend">How fast does WebGPU train compared with CPU?</option><option value="heights">Does including shorter peaks help?</option><option value="epochs">Does training for longer help?</option><option value="density">Does training on denser scans help?</option><option value="forms">Does mixing plant forms during training help?</option><option value="layouts">Does the scan layout change which plants we find?</option><option value="averaging">Does ignoring gaps help a trained detector?</option><option value="cutoffs">What happens when we accept lower scores?</option></select></label>
+<label>Crop<select id="crop" data-help="Choose what grows on both sides of the comparison. Each crop has its own plant shapes and typical spacing."><option value="lettuce">Lettuce</option><option value="artichoke">Globe artichoke</option><option value="tomato">Young tomato</option><optgroup label="Experimental growing systems"><option value="apple">Apple orchard</option><option value="grapevine">Trellised vineyard</option><option value="bench-lettuce">Greenhouse bench lettuce</option><option value="high-wire-tomato">Greenhouse high-wire tomato</option></optgroup></select></label>
 </div></fieldset>
 <p id="comparisonHelp" class="hint"></p>
 <div class="action">
-<label class="check"><input type="checkbox" id="livePreview" checked> Live view</label>
+<label class="check"><input type="checkbox" id="livePreview" data-help="Watch the scans and pins appear while the test runs. Switch this off when measuring speed to leave out the drawing work." checked> Live view</label>
 <button id="run" class="primary" disabled="">Run benchmark</button>
 <button type="button" id="cancel" disabled="">Cancel</button></div>
 <details id="benchOptions"><summary>Seeds, training and scan settings</summary><div>
 <fieldset><legend>Detector settings</legend><div class="benchFields">
-<label>Plant architecture<select id="plantArchitecture" required><option value="3" selected>Connected plants · v3</option><option value="2">Structured plants · v2</option><option value="1">Original plants · v1</option></select></label>
-<label>Plant form<select id="plantForm" required><option value="mixed">Seeded mix</option></select></label>
-<label>Plant condition<select id="plantCondition" required><option value="healthy">Healthy</option><option value="mixed">Seeded damage · about 1 in 4</option><option value="damaged">All damaged</option></select></label>
-<label>First seed<input type="number" id="seed" value="27" min="0" max="4294967294" step="1" required=""></label>
+<label>Plant architecture<select id="plantArchitecture" data-help="Chooses the plant generator version. Use the same version as a saved run to regrow its shapes." required><option value="3" selected>Connected plants · v3</option><option value="4" hidden>Variable apple scaffolds · v4</option><option value="2">Structured plants · v2</option><option value="1">Original plants · v1</option></select></label>
+<label>Training plant form<select id="plantForm" data-help="Choose one shape or growth stage for training. In the mixed-form comparison, the second detector sees several forms." required><option value="mixed">Seeded mix</option></select></label>
+<label>Plant condition<select id="plantCondition" data-help="Damaged plants can have missing or bent parts. A seeded mix grows healthy and damaged plants together." required><option value="healthy">Healthy</option><option value="mixed">Seeded damage · about 1 in 4</option><option value="damaged">All damaged</option></select></label>
+<label>First seed<input type="number" id="seed" data-help="This number fixes the random plantings. The benchmark repeats the experiment using the next number." value="27" min="0" max="4294967294" step="1" required=""></label>
 <div id="epochControl">
-<label>Epochs per fit<input id="fitEpochs" type="number" min="1" max="5000" step="1" value="40" required=""></label></div>
-<label id="heightControl">Minimum peak height<select id="minimumHeight"><option value="default">Crop default</option><option value="0.065">6.5 cm</option><option value="0.035">3.5 cm</option></select></label>
-<label id="averagingControl">Peak averaging<select id="peakAveraging" required><option value="zero-filled">All cells · standard</option><option value="occupied">Sampled cells only · experimental</option></select></label>
+<label>Epochs per fit<input id="fitEpochs" data-help="One epoch is one pass through the retained training examples. More passes give the model more chances to adjust its weights." type="number" min="1" max="5000" step="1" value="40" required=""></label></div>
+<label id="heightControl">Minimum peak height<select id="minimumHeight" data-help="A bump must reach this height to become a possible plant. Lower values can reveal seedlings and pick up more soil bumps."><option value="default">Crop default</option><option value="0.065">6.5 cm</option><option value="0.035">3.5 cm</option></select></label>
+<label id="averagingControl">Peak averaging<select id="peakAveraging" data-help="Smooth nearby heights before looking for peaks. With sparse scans, ignoring empty cells can reveal small plants and extra soil peaks." required><option value="zero-filled">All cells · standard</option><option value="occupied">Sampled cells only · experimental</option></select></label>
 </div></fieldset>
 <fieldset><legend>Training scans</legend><div class="benchFields">
-<label>Training layout<select id="sensor"></select></label>
-<label id="trainingBudgetControl">Training ray budget<select id="trainingRayBudget"></select></label>
-<label id="trainingPairControl" hidden>Training ray budgets<select id="trainingPair" required aria-describedby="trainingPairHelp"></select></label>
+<label>Training layout<select id="sensor" data-help="Chooses how rays cross the training fields. A grid covers the plot evenly while rings can leave gaps between rows of returns."></select></label>
+<label id="trainingBudgetControl">Training ray budget<select id="trainingRayBudget" data-help="How many rays to attempt on each training scan. Some patterns reach their sampling limit before this number."></select></label>
+<label id="trainingPairControl" hidden>Training ray budgets<select id="trainingPair" data-help="Both detectors train on the same plantings at different ray budgets. The test scans use a shared budget." required aria-describedby="trainingPairHelp"></select></label>
 <p class="hint" id="trainingPairHelp" hidden>Reference grid can sample the full million rays. Other layouts may reach their scanner limit sooner.</p>
-<label id="mixedControl" class="check" hidden><input id="includeMixed" type="checkbox"> Include a mixed-density fit</label>
+<label id="mixedControl" class="check" hidden><input id="includeMixed" data-help="Adds a detector that alternates training scan densities across plantings. It takes one more fit per seed." type="checkbox"> Include a mixed-density fit</label>
 </div></fieldset>
 <fieldset><legend>Validation scans</legend><div class="benchFields">
-<label id="validationLayoutControl">Validation layout<select id="validationSensor"></select></label>
-<label id="validationBudgetControl">Validation ray budget<select id="validationRayBudget"></select></label>
-<label id="layoutBudgetControl" hidden>Rays per scan on both layouts<select id="layoutBudget" required><option value="12000">12,000</option><option value="30000" selected>30,000</option><option value="60000">60,000</option></select></label>
+<label>Validation plant form<select id="validationPlantForm" data-help="Choose what grows on the fresh test fields. To test whether a model recognizes older plants, train on seedlings and test on branching plants." required><option value="follow">Same as training</option></select></label>
+<label id="validationLayoutControl">Validation layout<select id="validationSensor" data-help="Chooses the ray pattern for the fresh test scans. Change it to test how well training transfers to a different scan layout."></select></label>
+<label id="validationBudgetControl">Validation ray budget<select id="validationRayBudget" data-help="How many rays to attempt on each fresh test scan. Fix this value when comparing how much training data each detector sees."></select></label>
+<label id="layoutBudgetControl" hidden>Rays per scan on both layouts<select id="layoutBudget" data-help="Both layouts get the same number of rays. Changes in matches can then reveal how ray placement affects detection." required><option value="12000">12,000</option><option value="30000" selected>30,000</option><option value="60000">60,000</option></select></label>
 </div></fieldset>
 </div></details>
 </form>
@@ -59,6 +63,7 @@
 <li><a href="?comparison=heights&amp;crop=tomato&amp;seed=2221&amp;sensor=mixed&amp;validationSensor=os1-64&amp;validationRayBudget=12000">Test shorter peaks on sparse tomatoes</a></li>
 <li><a href="?comparison=heights&amp;crop=lettuce&amp;seed=2121&amp;sensor=mixed&amp;validationSensor=os1-64&amp;validationRayBudget=12000&amp;pairSeed=2122&amp;pairTile=39c12665d375fbb9&amp;pairDistance=7.5&amp;pairBox=1#modelBoxes">Inspect a missed lettuce plant in 3D</a></li>
 <li><a href="?comparison=models&amp;crop=artichoke&amp;seed=1551&amp;sensor=mixed&amp;validationSensor=os1-64&amp;validationRayBudget=12000&amp;fieldMetric=meanAbsolute">Compare artichoke counts by model</a></li>
+<li><a href="?comparison=forms&amp;crop=tomato&amp;plantArchitecture=2&amp;plantForm=seedling&amp;validationPlantForm=branching&amp;seed=82173&amp;sensor=reference&amp;trainingRayBudget=60000&amp;validationRayBudget=60000">Train on seedlings or a mix, then find branching tomatoes</a></li>
 <li><a href="?comparison=layouts&amp;crop=tomato&amp;plantArchitecture=2&amp;plantForm=seedling&amp;plantCondition=healthy&amp;sensor=reference&amp;trainingRayBudget=30000&amp;validationRayBudget=30000&amp;seed=82173">Scan the same tomato seedlings in a grid and in rings</a></li>
 <li><a href="?comparison=density&amp;trainingPair=30k-1m&amp;crop=tomato&amp;plantArchitecture=2&amp;plantForm=seedling&amp;plantCondition=healthy&amp;sensor=reference&amp;validationRayBudget=1000000&amp;seed=82173">Train on sparse and dense seedling scans</a></li>
 <li><a href="../?crop=tomato&amp;plantArchitecture=2&amp;plantForm=seedling&amp;sensor=reference&amp;seed=216917&amp;noise=clean&amp;weeds=off&amp;sticks=off&amp;boards=off&amp;studyLow=30000&amp;studyHigh=1000000#scan-study">See which seedlings a denser scan reveals</a></li>
@@ -79,7 +84,7 @@
 <div class="tableScroll">
 <table>
 <thead>
-<tr><th>Seed</th><th>Contender</th><th>Epochs</th><th>Cutoff</th><th>Generation</th><th>Training</th><th>Scoring</th><th>Training loss</th><th>Mean F1</th><th>Precision / recall at 15 cm</th></tr></thead>
+<tr><th>Seed</th><th>Contender</th><th>Epochs</th><th><span data-help="Minimum score a candidate needs before the detector will consider placing a pin.">Cutoff</span></th><th>Generation</th><th>Training</th><th>Scoring</th><th><span data-help="How far the fitted scores were from the training labels on the last pass. Check fresh-field scores to see how well the fit travels.">Training loss</span></th><th><span data-help="Average F1 for matches within 7.5, 10 and 15 cm. Higher scores mean fewer misses and stray pins.">Mean F1</span></th><th><span data-help="Precision asks how many pins found a plant. Recall asks how many labeled plants received a pin. Both use a 15 cm matching distance.">Precision / recall at 15 cm</span></th></tr></thead>
 <tbody id="results"></tbody></table></div>
 <details class="timingGuide"><summary>How to read timings and scores</summary><p>Generation time covers the training and validation fields. Rows that share a dataset also share its generation time. The density and peak-height comparisons build a separate set of training examples for each fit. The cutoff experiment shares training time across its three rows. The layout experiment fits once per seed. Its second generation time covers only rescanning the validation fields, and “Reused” means it kept the first fit. Training time includes model initialization, GPU setup and readback where applicable. Training loss is the cross-entropy measured before the last weight update. Mean F1 averages the three held-out F1 scores at 7.5, 10 and 15 cm.</p></details>
 <section id="heightStudy" hidden aria-labelledby="heightTitle">
@@ -96,8 +101,8 @@
 <summary id="pairTitle">Which plants did each model find?</summary>
 <p>Each labeled plant can match one final pin within the selected distance. Pick a plant matched by just one fit to inspect its center in 3D.</p>
 <div class="pairControls">
-<label>Validation scan<select id="pairScan"></select></label>
-<label>Matching distance<select id="pairDistance"><option value="7.5">7.5 cm</option><option value="10">10 cm</option><option value="15" selected>15 cm</option></select></label>
+<label>Validation scan<select id="pairScan" data-help="Choose one held-out scan and compare the pins from both detectors on that same planting."></select></label>
+<label>Matching distance<select id="pairDistance" data-help="A pin earns one match if it lands within this horizontal distance of a labeled center. A smaller distance demands a more precise location."><option value="7.5">7.5 cm</option><option value="10">10 cm</option><option value="15" selected>15 cm</option></select></label>
 </div>
 <p id="heightTurnover" hidden></p>
 <div class="tableScroll"><table class="pairTable">
@@ -105,7 +110,7 @@
 <thead><tr><th scope="col">Both fits</th><th scope="col" id="pairFirst">Logistic only</th><th scope="col" id="pairSecond">Neural only</th><th scope="col">Missed by both</th></tr></thead>
 <tbody><tr id="pairCounts"></tr></tbody></table></div>
 <p id="pairExtras" class="hint"></p>
-<div class="pairInspect"><label>Plant to inspect<select id="pairBox"></select></label><a id="pairViewer">Open scan in 3D</a><a id="sharePair">Link to this inspection</a></div></details>
+<div class="pairInspect"><label>Plant to inspect<select id="pairBox" data-help="Pick a plant that only one detector found, then open its scan to see where the pin landed."></select></label><a id="pairViewer">Open scan in 3D</a><a id="sharePair">Link to this inspection</a></div></details>
 <section id="densityStudy" hidden aria-labelledby="densityTitle">
 <h3 id="densityTitle">How much training data did each fit see?</h3>
 <p class="hint">Scanner capacity can cap the rays sampled per scan. The training examples are balanced candidate peaks from both soil variants. All fits at each seed used the same validation tiles.</p>
@@ -123,7 +128,7 @@
 <details id="cutoffChanges" hidden="">
 <summary>What changes from the 0.50 cutoff?</summary>
 <p>This table pools both scans of each planting. Compare each cutoff with 0.50. A positive number means more plants matched or more extra pins appeared.</p>
-<label>Matching distance<select id="cutoffDistance"><option value="7.5">7.5 cm</option><option value="10">10 cm</option><option value="15" selected="">15 cm</option></select></label>
+<label>Matching distance<select id="cutoffDistance" data-help="Choose how close a pin must land to count as a match when you compare the score cutoffs."><option value="7.5">7.5 cm</option><option value="10">10 cm</option><option value="15" selected="">15 cm</option></select></label>
 <div class="tableScroll">
 <table aria-label="Changes relative to the 0.50 cutoff">
 <thead>
@@ -144,7 +149,7 @@
 <details id="fieldDetails" hidden="">
 <summary>Compare contenders on each planting</summary>
 <p id="fieldGuide">Each row combines the scans with and without soil from one held-out planting. Select a field seed to inspect its soil-present scan in 3D.</p>
-<label>Field metric<select id="fieldMetric"><option value="mean">Mean F1 across distances</option><option value="7.5">F1 at 7.5 cm</option><option value="10">F1 at 10 cm</option><option value="15">F1 at 15 cm</option><option value="meanAbsolute">Count error · absolute</option><option value="meanSigned">Count error · signed</option></select></label>
+<label>Field metric<select id="fieldMetric" data-help="F1 balances missed plants and extra pins. Count error compares the number of pins with the number of labeled plants."><option value="mean">Mean F1 across distances</option><option value="7.5">F1 at 7.5 cm</option><option value="10">F1 at 10 cm</option><option value="15">F1 at 15 cm</option><option value="meanAbsolute">Count error · absolute</option><option value="meanSigned">Count error · signed</option></select></label>
 <p id="countHelp" class="hint" hidden></p>
 <div class="tableScroll">
 <table aria-label="Paired field metrics">
@@ -158,6 +163,6 @@
 </main>
 <footer class="siteFoot"><span>Created by Matthew Valancy</span>
 <div><a href="../AGENTS.md">Agent quickstart</a><a href="../#missions">Farm journal</a><a href="../LICENSE">MIT license</a></div></footer>
-<script type="module" src="main.js?v=peak1"></script>
+<script type="module" src="main.js?v=field-desk1"></script>
 </body>
 </html>

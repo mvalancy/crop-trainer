@@ -17,17 +17,17 @@ We counted how many trees had **at least one woody return** within 10 cm horizon
 
 The comparisons use the same 38 planting positions across three seeds, `876019`, `876137` and `876437`. Ground was present. Added weeds, sticks, boards and scan noise were disabled. At 60,000 rays the leafy open-vase plots had more direct evidence near the low trunk, but 12 bases still had none. A visible crown gives a detector another cue. A guess from the crown still needs an independent base label to establish its accuracy.
 
-Run `node benchmark/orchard-visibility.mjs` from the repository root for the table totals and the number of nearby woody returns at each planting position. [Visibility experiment](../benchmark/orchard-visibility.mjs)
+Run `node benchmark/studies/orchard-visibility.mjs` from the repository root for the table totals and the number of nearby woody returns at each planting position. [Visibility experiment](../benchmark/studies/orchard-visibility.mjs)
 
 ## How the detectors place a pin
 
 The starter network scores local height peaks and filters nearby pins. For apples it was trained to recognize peaks close to known planting bases. Its inputs and candidate locations still depend on where the canopy has a local maximum. [How the network works](training.md)
 
-The geometric challenger reads metric XYZ in a ground-referenced 10 m square. It marks occupied 5 cm cells in five height bands starting at 0.48, 0.78, 1.12, 1.55 and 2.04 m. A candidate gets support from several heights nearby and from canopy on multiple sides. Candidates with an index of at least 4 compete for a pin, at a nominal minimum spacing of 1.05 m before final position refinement. The score is a geometric index. Regions with too little support receive no pin. This method needs no stem classifications, tree count, planting grid or surveyed bases at prediction time. Its lowest band starts above most of the region in the visibility audit. [Locator implementation](../trainer/orchard.js)
+The geometric challenger reads metric XYZ in a ground-referenced 10 m square. It marks occupied 5 cm cells in five height bands starting at 0.48, 0.78, 1.12, 1.55 and 2.04 m. A candidate gets support from several heights nearby and from canopy on multiple sides. Candidates with an index of at least 4 compete for a pin, at a nominal minimum spacing of 1.05 m before final position refinement. The score is a geometric index. Regions with too little support receive no pin. This method needs no stem classifications, tree count, planting grid or surveyed bases at prediction time. Its lowest band starts above most of the region in the visibility audit. [Locator implementation](../trainer/models/orchard.js)
 
 ## What changed on held-out synthetic trees?
 
-On six new plots the geometric locator matched **1,113 of 2,112 tree appearances** within 15 cm, with 483 extra pins. That gives 69.7% precision and 52.7% recall. A four-unit network trained on both leafy and dormant examples matched 227. Even the geometric locator missed nearly half the appearances. [Reproducible benchmark](../benchmark/orchard-bases.mjs)
+On six new plots the geometric locator matched **1,113 of 2,112 tree appearances** within 15 cm, with 483 extra pins. That gives 69.7% precision and 52.7% recall. A four-unit network trained on both leafy and dormant examples matched 227. Even the geometric locator missed nearly half the appearances. [Reproducible benchmark](../benchmark/studies/orchard-bases.mjs)
 
 | Method | F1 at 7.5 cm | F1 at 10 cm | F1 at 15 cm | Mean absolute count error per scan |
 | --- | ---: | ---: | ---: | ---: |
@@ -49,7 +49,7 @@ To try your own scan, choose apple weights in the Training shed’s **Field test
 To replay all four benchmark methods, run the following command from the repository root. The JSON includes seeds, recipe settings, timings and per-scan counts at all three distances.
 
 ```sh
-node benchmark/orchard-bases.mjs > orchard-bases.json
+node benchmark/studies/orchard-bases.mjs > orchard-bases.json
 ```
 
 ## What happens when a tree loses one scaffold?
@@ -81,7 +81,7 @@ Each cell lists matched trees, extra pins and missed trees, in that order. The J
 | Spaced height peaks, intact | 105 / 1,469 / 631 | 131 / 1,443 / 605 | 160 / 1,414 / 576 |
 | Spaced height peaks, damaged | 105 / 1,288 / 631 | 131 / 1,262 / 605 | 163 / 1,230 / 573 |
 
-Run `node benchmark/orchard-damage.mjs > orchard-damage.json` from the project root. One Node 24 CPU replay took 3.27 s to generate the scans, 1.02 s for the orchard locator, 0.45 s for the height baseline and 0.035 s to score them. A second replay reproduced the tile IDs, counts and distances. [Experiment code and fixed seeds](../benchmark/orchard-damage.mjs)
+Run `node benchmark/studies/orchard-damage.mjs > orchard-damage.json` from the project root. One Node 24 CPU replay took 3.27 s to generate the scans, 1.02 s for the orchard locator, 0.45 s for the height baseline and 0.035 s to score them. A second replay reproduced the tile IDs, counts and distances. [Experiment code and fixed seeds](../benchmark/studies/orchard-damage.mjs)
 
 </details>
 

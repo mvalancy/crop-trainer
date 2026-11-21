@@ -1,5 +1,5 @@
-import {createLiveScene} from '../trainer/live-scene.js';
-import {sampleCloud} from '../trainer/field.js?v=live1';
+import {createLiveScene} from '../trainer/ui/live-scene.js';
+import {sampleCloud} from '../trainer/generator/field.js?v=live1';
 
 export function benchmarkView(host) {
   const scene=createLiveScene(host.querySelector('.liveScene'),{zoomControl:true});

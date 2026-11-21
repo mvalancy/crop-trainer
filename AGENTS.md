@@ -8,13 +8,13 @@ From a fresh clone, use Node.js 22 or later. The app has zero package dependenci
 
 ```sh
 node --test
-node run.mjs train harvest-27.json
-node run.mjs serve
+node cli/run.mjs train harvest-27.json
+node cli/run.mjs serve
 ```
 
 Open http://127.0.0.1:4173/ to inspect a field and its training run in the browser. The command-line trainer uses the CPU. Training shed can use WebGPU on a supported browser and adapter. Auto checks for an adapter and uses CPU if one is unavailable. Training examples, weights and farm progress stay on the device. A teammate who uses a chat-only agent can export and attach a benchmark JSON themselves.
 
-To reproduce a completed browser experiment, choose **Download run settings**, then pass that JSON as the second filename, for example `node run.mjs train replay.json crop-settings-27.json`. A replay generates the same fields and trains fresh weights. CPU and WebGPU floating-point results can differ slightly.
+To reproduce a completed browser experiment, choose **Download run settings**, then pass that JSON as the second filename, for example `node cli/run.mjs train replay.json crop-settings-27.json`. A replay generates the same fields and trains fresh weights. CPU and WebGPU floating-point results can differ slightly.
 
 Browser settings exports include `hiddenLayers`, `activation`, `initSeed`, `optimizer`, `batchSize`, `learningRate` and `momentum`. Earlier settings files select the original four-unit tanh net or the logistic baseline. A time-limited run records its completed epoch count so the CLI can repeat the same number of updates. For the weight format and an inference example, see [the training guide](docs/training.md).
 
@@ -22,7 +22,7 @@ The initial browser schedule, **Field practice**, sets 16 training and eight val
 
 ### Reproduce a crop form or an injury
 
-Use `plantArchitecture: 3` for new structured-plant experiments. Version 3 joins lettuce blades to their stems, grounds vegetative artichokes, seats artichoke bracts and meets greenhouse support heights. Keep the recorded architecture when replaying an export. Version 2 reproduces the first organ models and version 1 reproduces original canopies. Choose a named `plantForm` from the [catalog](trainer/plants/forms.js) or use `mixed`. Set `plantCondition` to `healthy`, `mixed` or `damaged`. All three settings travel with the recipe, training settings and benchmark replay. Keep the seed and scanner fixed when comparing conditions. Field export boxes report each resolved form and condition. Apple leaf-on and dormant form an additional paired inspection in the field generator. For the visual rule, photo references and limitations, open the [seven illustrated generator guides](trainer/plants/README.md).
+Use `plantArchitecture: 3` for connected plants. For apple trees, v4 varies the thickness of scaffold branches while preserving the branch centerlines. Version 3 joins lettuce blades to their stems, grounds vegetative artichokes, seats artichoke bracts and meets greenhouse support heights. Keep the recorded architecture when replaying an export. Version 2 reproduces the first organ models and version 1 reproduces original canopies. Choose a named `plantForm` from the [catalog](trainer/plants/forms.js) or use `mixed`. Set `plantCondition` to `healthy`, `mixed` or `damaged`. All three settings travel with the recipe, training settings and benchmark replay. Keep the seed and scanner fixed when comparing conditions. Field export boxes report each resolved form and condition. Apple leaf-on and dormant form an additional paired inspection in the field generator. For the visual rule, photo references and limitations, open the [seven illustrated generator guides](trainer/plants/README.md).
 
 ### Check the actual training set
 
@@ -36,11 +36,11 @@ For timing comparisons, run both contenders through the same Benchmark entry poi
 
 ## Test a detector outside the generator
 
-Use a model exported by the Training shed and a local plot scan. If the user supplies an independently surveyed center CSV, run `node score-scan.mjs weights.json plot.ply new-result.json --labels centers.csv`. With no survey, omit `--labels` and describe the resulting pins as predictions. Use the same frame, scan and one-to-one matching for the trained detector and its height-only baseline. The output includes SHA-256 hashes and both source and local coordinates. See the [file and frame contract](docs/scan-cli.md) and [field validation protocol](docs/field-validation.md).
+Use a model exported by the Training shed and a local plot scan. If the user supplies an independently surveyed center CSV, run `node cli/score-scan.mjs weights.json plot.ply new-result.json --labels centers.csv`. With no survey, omit `--labels` and describe the resulting pins as predictions. Use the same frame, scan and one-to-one matching for the trained detector and its height-only baseline. The output includes SHA-256 hashes and both source and local coordinates. See the [file and frame contract](docs/scan-cli.md) and [field validation protocol](docs/field-validation.md).
 
-To check a fresh field computer offline after setup, run `node run.mjs preflight`. The CPU runner round-trips exported weights and held-out synthetic PLY files. Record the revision, Node version, OS and board when reporting results. See [board setup and field capture](docs/edge-deployment.md) and the [published research behind these experiments](docs/research-evidence.md).
+To check a fresh field computer offline after setup, run `node cli/run.mjs preflight`. The CPU runner round-trips exported weights and held-out synthetic PLY files. Record the revision, Node version, OS and board when reporting results. See [board setup and field capture](docs/edge-deployment.md) and the [published research behind these experiments](docs/research-evidence.md).
 
-To reproduce the four-detector comparison on separate synthetic plantings, run `node benchmark/paired-evidence.mjs`. It also calibrates tomato on separate fields and evaluates the frozen cutoff on fresh plantings. [Study design and results](docs/evidence.md)
+To reproduce the four-detector comparison on separate synthetic plantings, run `node benchmark/studies/paired-evidence.mjs`. It also calibrates tomato on separate fields and evaluates the frozen cutoff on fresh plantings. [Study design and results](docs/evidence.md)
 
 ## Run a paired experiment
 
@@ -50,12 +50,12 @@ Write settings into a local JSON file. This example uses the default settings. T
 {"crop":"lettuce","seed":27,"trainFields":6,"valFields":3,"epochs":40,"model":"neural","sensorMode":"mixed","minimumHeight":0.035,"threshold":0.5}
 ```
 
-1. Save this as control.json. Run `node run.mjs train control-27.json control.json`.
-2. Copy the settings to variant.json and change just minimumHeight to 0.065. Run `node run.mjs train variant-27.json variant.json`.
+1. Save this as control.json. Run `node cli/run.mjs train control-27.json control.json`.
+2. Copy the settings to variant.json and change just minimumHeight to 0.065. Run `node cli/run.mjs train variant-27.json variant.json`.
 3. Repeat both configurations at a fresh seed. Use new output filenames. Compare meanF1, each scores entry, and the same seed and ground setting in tiles. For each tile, stages15cm shows losses before classification, after the selected score cutoff and after spacing.
 4. Report the direction and size of the difference on each seed, wall time if measured, and which stage explains the change. The two ground variants share one field and belong in the same split.
 
-Valid settings include 2–256 training fields, 1–128 validation fields, 1–100,000,000 epochs in Training shed and the CPU runner, unsigned 32-bit seeds, neural or linear, mixed sampling or any exact scanner key in trainer/sensors.js, and 0.035 or 0.065 metres for minimumHeight. The optional threshold accepts a number from 0 through 1 and defaults to 0.5, including when replaying older settings. It applies to validation after fitting. Crop keys are lettuce, artichoke, tomato, apple, grapevine, bench-lettuce and high-wire-tomato. Omitting minimumHeight selects the crop default (0.035 m for lettuce and 0.065 m for artichoke and tomato). Large runs can take substantially longer. Browser report times include generation, optimization and validation. Use training-set normalization for every validation tile.
+Valid settings include 2–256 training fields, 1–128 validation fields, 1–100,000,000 epochs in Training shed and the CPU runner, unsigned 32-bit seeds, neural or linear, mixed sampling or any exact scanner key in trainer/generator/sensors.js, and 0.035 or 0.065 metres for minimumHeight. The optional threshold accepts a number from 0 through 1 and defaults to 0.5, including when replaying older settings. It applies to validation after fitting. Crop keys are lettuce, artichoke, tomato, apple, grapevine, bench-lettuce and high-wire-tomato. Omitting minimumHeight selects the crop default (0.035 m for lettuce and 0.065 m for artichoke and tomato). Large runs can take substantially longer. Browser report times include generation, optimization and validation. Use training-set normalization for every validation tile.
 
 For a browser benchmark, open `/benchmark/`, select the crop, scanner and first seed, and run the comparison. Model, backend, epoch and cutoff comparisons share one dataset per seed. Training density builds a separate dataset for each training budget and pairs the held-out tiles. Expand **Scores at each matching distance** to see which pins matched, which were extra, and which plants were missed. Use **Link to these settings** after a run to open the same setup on another browser. The JSON includes this URL, timings and tile IDs. A localhost link uses the local server address. GPU rows include available adapter metadata. A software adapter exercises WebGPU kernels on the CPU. Record the device separately when reporting a physical GPU timing.
 
@@ -63,7 +63,7 @@ To isolate the score cutoff, select **Detection score cutoffs**. This fits one C
 
 For the cutoff, model and backend comparisons, **Epochs per fit** sets the training budget for every contender. Links without an epoch setting use 40. For example, open `/benchmark/?comparison=cutoffs&crop=artichoke&seed=621&epochs=100`. Under **What changes from the 0.50 cutoff?**, change the match distance to see the differences in matched plants and extra pins. Click a cutoff in Results to replay that CPU fit in the Training Shed. The replay preserves the cutoff, epoch count, crop, seed and scan layouts.
 
-To compare plant coverage, use `cutoffDistance=7.5`, `10` or `15` on the cutoff benchmark URL. The return-count table pools both dataset seeds, using one soil-present scan per validation planting. For a local replay, group the exported rows by threshold, flatten their soil-present tiles, and call `coverageAtDistance(tiles, cm)` from `trainer/data.js`. Each group reports its labeled and matched plant counts. The helper also returns the number of extra pins across the selected scans. Tile order can differ between runs. Check the tile ID sets across cutoffs, divide matched by labeled plants for recall, and leave an empty group’s rate undefined. Earlier reports without `missedByCoverage` require a replay for this table.
+To compare plant coverage, use `cutoffDistance=7.5`, `10` or `15` on the cutoff benchmark URL. The return-count table pools both dataset seeds, using one soil-present scan per validation planting. For a local replay, group the exported rows by threshold, flatten their soil-present tiles, and call `coverageAtDistance(tiles, cm)` from `trainer/models/data.js`. Each group reports its labeled and matched plant counts. The helper also returns the number of extra pins across the selected scans. Tile order can differ between runs. Check the tile ID sets across cutoffs, divide matched by labeled plants for recall, and leave an empty group’s rate undefined. Earlier reports without `missedByCoverage` require a replay for this table.
 
 To compare cutoffs at two training durations, run the same seed pair at 10 and 100 epochs. Check that both reports have the same tile IDs and field seeds. Within each report, all three cutoff rows for one seed share their fit and training time. Compare the change from 0.50 to 0.65 separately at each duration. Use a fresh seed pair to see whether the result repeats.
 
@@ -81,7 +81,7 @@ To repeat the test at two validation densities, open **Try an experiment → Tes
 
 ### Pair scanner layouts on identical plantings
 
-Set `sensorMode` to the training layout and `validationSensorMode` to the layout to score. Omitting the second key uses the training selection for validation, including for older settings files. Both accept `mixed` or any key in `trainer/sensors.js`. For a scanner comparison:
+Set `sensorMode` to the training layout and `validationSensorMode` to the layout to score. Omitting the second key uses the training selection for validation, including for older settings files. Both accept `mixed` or any key in `trainer/generator/sensors.js`. For a scanner comparison:
 
 1. Use seed 211, a mixed training layout and the reference validation grid. Copy the settings and change just `validationSensorMode` to `os1-64`.
 2. Run both with the CLI. Check that training tile IDs, scaling parameters and CPU weights match. Pair validation tiles by field seed and ground setting. Each layout has its own tile ID. The manifest records each tile’s recipe and final return count.
@@ -121,7 +121,7 @@ In the Training Shed, run the detector, choose **Missed plants** in the field ma
 
 In a CLI report or browser benchmark row, find the tile by `tile_id`, then select `missesByTolerance` by `cm`. Each `boxIndices` entry indexes `boxes` and `crop_returns_per_box` in that tile’s generator label download. Its length equals the corresponding false-negative count. `withCropReturns` counts the missed boxes that have one or more returns. For each return group, divide `missedByCoverage[group]` by the same tile’s `coverage[group]` to get its miss rate. An empty group has no rate. Pool numerator and denominator separately across soil-present tiles to count each planting once. For reports with box indices but no group counts, regenerate the tile and group the missed indices by `crop_returns_per_box`. Reports predating box indices require rescoring for an exact breakdown.
 
-For an individual miss, select the box in the field map and read the close-up. To reproduce it from JavaScript, call `nearbyPeaks(validation.previews.get(tileId), boxIndex, cm)` from `trainer/data.js` after `validateModel`. The arrays `proposals`, `accepted` and `selected` contain XY coordinates in metres inside the inclusive matching distance. `bestScore` is the highest unrounded score among those proposals, or `null` if none exist. The previews live in memory. Rebuild a saved run from its settings to inspect one. To check whether a lower cutoff recovered a box, compare its membership in the two missed-index lists.
+For an individual miss, select the box in the field map and read the close-up. To reproduce it from JavaScript, call `nearbyPeaks(validation.previews.get(tileId), boxIndex, cm)` from `trainer/models/data.js` after `validateModel`. The arrays `proposals`, `accepted` and `selected` contain XY coordinates in metres inside the inclusive matching distance. `bestScore` is the highest unrounded score among those proposals, or `null` if none exist. The previews live in memory. Rebuild a saved run from its settings to inspect one. To check whether a lower cutoff recovered a box, compare its membership in the two missed-index lists.
 
 To compare cutoffs, check the weights and tile IDs, then take the set difference between the two missed-index lists for the same tile and distance. This gives the boxes that gained or lost a match under the scorer’s assignment. A pin can be close to two labels. The scorer chooses a deterministic maximum-cardinality assignment and can reassign a pin to fit another match.
 
@@ -151,15 +151,15 @@ Read `countError.meanAbsolute` and `countError.meanSigned` in each benchmark row
 
 Run `/benchmark/?comparison=models&crop=lettuce&seed=1121&sensor=mixed&validationSensor=os1-64&validationRayBudget=12000`. Open **Which plants did each model find?** The scan picker includes both soil variants for each dataset seed. Choose a distance and one of the boxes exclusive to either model. Follow the 3D link to inspect the highlighted center.
 
-For a local agent, import `compareMatchedBoxes` from `trainer/data.js`. Pair the logistic and neural rows by dataset seed, and their tiles by `tile_id`. Call `compareMatchedBoxes(logisticTile, neuralTile, 15)` on reports containing `missesByTolerance`. The result includes counts `both` and `neither`, zero-based box index arrays `firstOnly` and `secondOnly`, and extra pin counts `firstFP` and `secondFP`. Row order reverses on the second seed. The helper takes distances in centimetres. Sum both shared counts and the two array lengths to recover the label count. For earlier reports, reproduce the run to obtain the assigned box indices.
+For a local agent, import `compareMatchedBoxes` from `trainer/models/data.js`. Pair the logistic and neural rows by dataset seed, and their tiles by `tile_id`. Call `compareMatchedBoxes(logisticTile, neuralTile, 15)` on reports containing `missesByTolerance`. The result includes counts `both` and `neither`, zero-based box index arrays `firstOnly` and `secondOnly`, and extra pin counts `firstFP` and `secondFP`. Row order reverses on the second seed. The helper takes distances in centimetres. Sum both shared counts and the two array lengths to recover the label count. For earlier reports, reproduce the run to obtain the assigned box indices.
 
 A generator URL can include `box=0` or another zero-based box index. Include the matching `tile` value when building links from a report. This prevents a stale tile link highlighting an unrelated plant. Box highlighting affects only the camera overlay and shared URL.
 
 ### Compare two scans on one planting
 
-In the field generator, expand **Compare two scans of this field**. Choose **Ray budget** to vary density on the displayed layout, or **Scan layout** to scan the same planting with 60,000 reference-grid rays and 60,000 simulated OS1-64 rays. Select a marked plant to open it in either 3D scan. The downloaded JSON records each full recipe, tile ID, actual sampled rays, per-plant returns, matched proposals and scored pins. The map can show up to 9,000 example points per scan. All acquired points enter scoring. The apple option includes a geometric base locator. Replay the multi-field studies with `node benchmark/seedling-density.mjs` and `node benchmark/orchard-bases.mjs`. [Seedling results](docs/seedling-density.md) · [Orchard results](docs/orchard-bases.md)
+In the field generator, expand **Compare two scans of this field**. Choose **Ray budget** to vary density on the displayed layout, or **Scan layout** to scan the same planting with 60,000 reference-grid rays and 60,000 simulated OS1-64 rays. Select a marked plant to open it in either 3D scan. The downloaded JSON records each full recipe, tile ID, actual sampled rays, per-plant returns, matched proposals and scored pins. The map can show up to 9,000 example points per scan. All acquired points enter scoring. The apple option includes a geometric base locator. Replay the multi-field studies with `node benchmark/studies/seedling-density.mjs` and `node benchmark/studies/orchard-bases.mjs`. [Seedling results](docs/seedling-density.md) · [Orchard results](docs/orchard-bases.md)
 
-Choose **Height pin · sampled cells only** on the maps to inspect another height detector. Its kernel omits empty cells and still counts a measured zero-height return. Compare extra pins as well as matches. The soil-only check can be replayed with `node benchmark/seedling-peaks.mjs`. [Measured peak and soil examples](docs/seedling-peaks.md)
+Choose **Height pin · sampled cells only** on the maps to inspect another height detector. Its kernel omits empty cells and still counts a measured zero-height return. Compare extra pins as well as matches. The soil-only check can be replayed with `node benchmark/studies/seedling-peaks.mjs`. [Measured peak and soil examples](docs/seedling-peaks.md)
 
 ### Replay a model trained with a different peak rule
 
@@ -171,22 +171,26 @@ Open `/benchmark/?comparison=epochs&crop=artichoke&seed=551`. Each seed generate
 
 Group exported rows by `seed` and `epochs`. Read the duration from the row. The report's shared settings omit a single epoch value for this comparison. `trainingLoss` is the loss on the final pass before its update, while `scores` use the updated weights. For a CLI replay, copy the crop, layouts, field counts and peak height from `settings`, then set the specific row's seed and epochs in your settings JSON. Check the tile IDs and per-tolerance counts. In the browser, clicking the epoch count opens the matching Training Shed setup on CPU.
 
+### Train on one growth stage and score on another
+
+Set `plantForm` to the training form and `validationPlantForm` to the held-out form. Omitting the latter uses the training form on both splits. The browser benchmark’s **Does mixing plant forms during training help?** comparison trains one detector on a named form and one on a seeded mix. Both score the same held-out tile IDs. For the fixed clean tomato study, run `node benchmark/studies/tomato-stage-training.mjs`. [Measurements and replay](docs/tomato-stage-training.md)
+
 ## Where to change the app
 
 | File | Role |
 | --- | --- |
-| trainer/crops.js and trainer/sensors.js | Crop shapes, default peak heights and duplicate spacing, plus shared scanner layouts. |
-| viewer.js | Interactive XYZ orbit camera, pan, zoom, touch and keyboard controls. |
+| trainer/generator/crops.js and trainer/generator/sensors.js | Crop shapes, default peak heights and duplicate spacing, plus shared scanner layouts. |
+| [app/viewer.js](app/viewer.js) | Interactive XYZ orbit camera, pan, zoom, touch and keyboard controls. |
 | benchmark/main.js | Two-seed paired CPU/WebGPU and model comparisons with timing and scoring export. |
-| trainer/field.js | Generates original plant surfaces, synthetic XYZ returns and plant boxes. Coordinates use metres. |
-| trainer/data.js | Assigns split-specific field seeds, finds height peaks, extracts 13 features, balances examples, standardizes inputs, filters duplicate pins and scores matches. |
-| trainer/model.js | Linear logistic baseline, including CPU and WebGPU implementations. |
-| trainer/neural.js and trainer/network.js | Dense network layouts, seeded weights, CPU backpropagation, shape-specific WebGPU kernels and exported-weight inference. |
-| trainer/sandbox.js and trainer/fit-worker.js | Visual network editor and background CPU fitting. |
+| trainer/generator/field.js | Generates original plant surfaces, synthetic XYZ returns and plant boxes. Coordinates use metres. |
+| trainer/models/data.js | Assigns split-specific field seeds, finds height peaks, extracts 13 features, balances examples, standardizes inputs, filters duplicate pins and scores matches. |
+| trainer/models/model.js | Linear logistic baseline, including CPU and WebGPU implementations. |
+| trainer/models/neural.js and trainer/models/network.js | Dense network layouts, seeded weights, CPU backpropagation, shape-specific WebGPU kernels and exported-weight inference. |
+| trainer/ui/sandbox.js and trainer/models/fit-worker.js | Visual network editor and background CPU fitting. |
 | trainer/main.js | Training form, backend selection, progress, per-field maps and JSON export. |
-| farm.css | Shared navigation, forms, responsive layouts, viewer, and score tables for all three app pages. |
-| farm.js | Seeded farm preview, scan and label downloads, and local mission stamps. |
-| run.mjs | Dependency-free local server and CPU experiment entry point. |
+| [app/farm.css](app/farm.css) | Shared navigation, forms, responsive layouts, viewer, and score tables for all three app pages. |
+| [app/farm.js](app/farm.js) | Seeded farm preview, scan and label downloads, and local mission stamps. |
+| cli/run.mjs | Dependency-free local server and CPU experiment entry point. |
 
 A training candidate within 9.5 cm of a label is positive. A candidate beyond 15 cm is negative. The trainer skips intermediate distances. Labels enter training and scoring. Candidate features come solely from XYZ. Evaluation uses one-to-one horizontal matching at 7.5, 10 and 15 cm, pools counts across tiles and averages the three F1 scores equally. Keep validation comparisons separate from claims about physical farms.
 

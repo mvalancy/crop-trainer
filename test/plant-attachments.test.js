@@ -1,13 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
-import {field} from '../trainer/field.js';
-import {makeRecipe} from '../trainer/data.js';
-import {getSensor} from '../trainer/sensors.js';
+import {field} from '../trainer/generator/field.js';
+import {makeRecipe} from '../trainer/models/data.js';
+import {getSensor} from '../trainer/generator/sensors.js';
 import {formsFor} from '../trainer/plants/forms.js';
 import {growOrgans} from '../trainer/plants/index.js';
 import {seededRandom} from '../trainer/plants/traits.js';
-import {scanFixtures} from '../trainer/growing-systems.js';
+import {scanFixtures} from '../trainer/generator/growing-systems.js';
 
 function recipe(crop, seed, version, form, condition) {
   return makeRecipe(seed, true, getSensor('reference'), crop, version, form, condition);

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {runPresets, startingPreset} from '../trainer/sandbox.js';
+import {runPresets, startingPreset} from '../trainer/ui/sandbox.js';
 
 test('new Shed visits practice for 30 seconds and benchmark replays keep their field and epoch budgets', () => {
   const preset = query => runPresets[startingPreset(new URLSearchParams(query))];

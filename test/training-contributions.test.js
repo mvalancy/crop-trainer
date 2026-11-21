@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {buildDataset} from '../trainer/data.js';
+import {buildDataset} from '../trainer/models/data.js';
 
 // Distinct peak heights identify the original planting after the class shuffles.
 // The two soil variants are separate scans with the same peak heights.

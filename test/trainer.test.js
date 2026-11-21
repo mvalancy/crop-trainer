@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {buildDataset,rescanValidation,validateModel,matchedCount,compareMatchedBoxes,coverageAtDistance,nearbyPeaks} from '../trainer/data.js';
-import {trainNetworkCPU,predictNetwork} from '../trainer/neural.js';
-import {trainCPU} from '../trainer/model.js';
+import {buildDataset,rescanValidation,validateModel,matchedCount,compareMatchedBoxes,coverageAtDistance,nearbyPeaks} from '../trainer/models/data.js';
+import {trainNetworkCPU,predictNetwork} from '../trainer/models/neural.js';
+import {trainCPU} from '../trainer/models/model.js';
 
 test('a label can match only one pin',()=>{
  assert.equal(matchedCount([[0,0],[.01,0]],[[0,0]],.075),1);
@@ -24,9 +24,9 @@ test('both CPU models train and each preview follows its scored tile',async()=>{
 });
 
 test('crop selection controls geometry, labels and duplicate filtering', async () => {
-  const {makeRecipe, detectionStages} = await import('../trainer/data.js');
-  const {getSensor} = await import('../trainer/sensors.js');
-  const {field} = await import('../trainer/field.js');
+  const {makeRecipe, detectionStages} = await import('../trainer/models/data.js');
+  const {getSensor} = await import('../trainer/generator/sensors.js');
+  const {field} = await import('../trainer/generator/field.js');
   const ids = new Set();
   for (const key of ['lettuce', 'artichoke', 'tomato']) {
     const recipe = makeRecipe(27, true, getSensor('os1-64'), key);
@@ -48,7 +48,7 @@ test('crop selection controls geometry, labels and duplicate filtering', async (
 });
 
 test('the cutoff includes equal scores and applies before crop spacing', async () => {
-  const {detectionStages} = await import('../trainer/data.js');
+  const {detectionStages} = await import('../trainer/models/data.js');
   const tile = {pos:[[1,1], [1.01,1], [3,3]], recipe:{crop:'lettuce'}};
   const scores = [.75, .50, .35];
   assert.deepEqual(detectionStages(tile,scores), detectionStages(tile,scores,.5));
@@ -65,7 +65,7 @@ test('changing only the validation scanner preserves training samples and held-o
   const settings = {crop:'tomato', seed:211, trainFields:2, valFields:1, sensorMode:'mixed'};
   const original = await buildDataset(settings);
   const ring = await buildDataset({...settings, validationSensorMode:'os1-64'});
-  const {field} = await import('../trainer/field.js');
+  const {field} = await import('../trainer/generator/field.js');
   const rescannedSeeds = [];
   const alternate = await rescanValidation(original, 'os1-64', {generate:recipe=>{
     rescannedSeeds.push(recipe.seed);
@@ -158,9 +158,9 @@ test('validation ray budgets change scan density while preserving plants and tra
 });
 
 test('plant coverage follows final crop returns through occlusion, dropout and clustered copies', async () => {
-  const {field} = await import('../trainer/field.js');
-  const {makeRecipe} = await import('../trainer/data.js');
-  const {getSensor} = await import('../trainer/sensors.js');
+  const {field} = await import('../trainer/generator/field.js');
+  const {makeRecipe} = await import('../trainer/models/data.js');
+  const {getSensor} = await import('../trainer/generator/sensors.js');
   const recipe = makeRecipe(921, true, getSensor('os1-64'), 'tomato');
   const clean = {...recipe, points:12000, boards:false, scanNoise:undefined};
   const clear = field(clean);
@@ -318,9 +318,9 @@ test('count error measures each scan before averaging and is independent of pin 
 });
 
 test('the soil pair preserves each surviving non-soil return in acquisition order', async () => {
-  const {field} = await import('../trainer/field.js');
-  const {makeRecipe} = await import('../trainer/data.js');
-  const {getSensor} = await import('../trainer/sensors.js');
+  const {field} = await import('../trainer/generator/field.js');
+  const {makeRecipe} = await import('../trainer/models/data.js');
+  const {getSensor} = await import('../trainer/generator/sensors.js');
   const recipe = makeRecipe(1652, true, getSensor('os1-64'), 'tomato');
   Object.assign(recipe, {points:12000, weeds:true, boards:true, sticks:true});
   Object.assign(recipe.scanNoise, {xy:1, z:1, density:12, gaps:2, stray:.2, cluster:14});
@@ -342,9 +342,9 @@ test('the soil pair preserves each surviving non-soil return in acquisition orde
 });
 
 test('row previews sample actual returns and preserve the exported scan', async () => {
- const {field,sampleCloud}=await import('../trainer/field.js');
- const {makeRecipe}=await import('../trainer/data.js');
- const {getSensor}=await import('../trainer/sensors.js');
+ const {field,sampleCloud}=await import('../trainer/generator/field.js');
+ const {makeRecipe}=await import('../trainer/models/data.js');
+ const {getSensor}=await import('../trainer/generator/sensors.js');
  const recipe=makeRecipe(725,false,getSensor('reference'),'lettuce');
  const control=field(recipe),frames=[];
  const live=field(recipe,frame=>frames.push(frame));

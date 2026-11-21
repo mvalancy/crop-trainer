@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {encodePly,parsePly,MAX_PLY_BYTES} from '../trainer/ply.js';
-import {field} from '../trainer/field.js';
+import {encodePly,parsePly,MAX_PLY_BYTES} from '../trainer/field-test/ply.js';
+import {field} from '../trainer/generator/field.js';
 
 const text = new TextEncoder();
 const axis = 'property float x\nproperty float y\nproperty float z';

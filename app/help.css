@@ -1,0 +1,103 @@
+/* Contextual help shares the visible control label while keeping the help button outside it. */
+.helpGroup {
+  --help-size: 1.75rem;
+  min-width: 0;
+}
+.helpField {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+}
+.helpField > label,
+.helpField > .helpTrigger {
+  grid-area: 1 / 1;
+}
+.helpField > .helpTrigger { justify-self: end; align-self: start; }
+.helpField label > .helpCaption {
+  color: inherit;
+  font: inherit;
+  display: flex;
+  align-items: center;
+  min-height: var(--help-size);
+  padding-inline-end: calc(var(--help-size) + .3rem);
+}
+.helpAction {
+  display: inline-flex;
+  align-items: center;
+  gap: .2rem;
+  max-width: 100%;
+}
+.helpAction > :first-child { min-width: 0; }
+.helpTerm { display: inline; white-space: nowrap; }
+.helpGroup:has(> :first-child[hidden]),
+.helpGroup:has(> label > [data-help][hidden]) { display: none; }
+.helpGroup:has(> .comparisonChoice) { grid-column: 1 / -1; }
+.pairInspect .helpField, .pairControls .helpField:first-child { flex: 1 1 19rem; }
+.helpGroup > button.helpTrigger {
+  display: inline-grid;
+  place-content: center;
+  position: relative;
+  vertical-align: middle;
+  flex: none;
+  inline-size: var(--help-size);
+  min-inline-size: var(--help-size);
+  block-size: var(--help-size);
+  min-block-size: var(--help-size);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: .45rem;
+  color: #365746;
+  background: transparent;
+  box-shadow: none;
+}
+.helpTrigger::before {
+  content: '?';
+  display: grid;
+  place-items: center;
+  inline-size: 1.05rem;
+  block-size: 1.05rem;
+  border: 1px solid #78927e;
+  border-radius: 50%;
+  background: #f3f8ed;
+  font: 700 .76rem/1 system-ui, sans-serif;
+  letter-spacing: 0;
+}
+.helpGroup > .helpTrigger:is(:hover, :focus-visible, [aria-expanded=true]) { background: #deeadb; }
+.helpTrigger:focus-visible { outline: 2px solid #366849; outline-offset: 1px; }
+.helpBubble {
+  position: fixed;
+  z-index: 1000;
+  box-sizing: border-box;
+  display: grid;
+  gap: .25em;
+  width: max-content;
+  max-width: min(20rem, calc(100vw - 1rem));
+  padding: .7rem .85rem;
+  border: 1px solid #4d6655;
+  border-radius: .55rem;
+  background: #193d2d;
+  color: #fbfff7;
+  box-shadow: 0 .35rem .9rem #1326192b;
+  font: 400 .91rem/1.45 var(--sans, system-ui, sans-serif);
+  text-align: start;
+  overflow: auto;
+  overflow-wrap: anywhere;
+  overscroll-behavior: contain;
+}
+.helpBubble strong { color: #d4efb9; font-size: .86rem; }
+.helpBubble[hidden] { display: none; }
+@media (pointer: coarse) {
+  .helpGroup { --help-size: 2.25rem; }
+}
+@media (max-width: 740px) {
+  #controls .action > .helpGroup:has(> .primary), .pairInspect > .helpField { grid-column: 1 / -1; }
+  .reportActions .helpAction > button:first-child { flex: 1; }
+}
+@media (max-width: 400px) {
+  #controls .action { grid-template-columns: minmax(0, 1fr); }
+  #controls .action .helpAction > button:first-child { flex: 1; }
+}
+@media (forced-colors: active) {
+  .helpBubble, .helpTrigger::before { border-color: CanvasText; }
+}

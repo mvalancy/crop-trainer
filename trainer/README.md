@@ -6,11 +6,13 @@
 
 Field practice gives the model about 30 seconds to learn from 16 plantings. For a short architecture comparison, select **Quick check** and keep the fields and the 40-epoch budget fixed while changing the number of hidden layers. Compare the missed plants, then use **Download model weights** to take the detector with you. [Training settings](../docs/training.md) · [Try saved weights on a local scan](https://mvalancy.github.io/crop-trainer/trainer/#field-test)
 
-| Follow a plant through the code | Start here |
+| Follow a plant through the app | Start here |
 | --- | --- |
-| Grow the canopy and sample its surface | [Seven crop generators and illustrated guides](plants/README.md) · [Field sampler](field.js) · [Fixtures](growing-systems.js) · [Scanner layouts](sensors.js) |
-| Find candidate peaks, extract features and score pins | [Training data and scoring](data.js) |
-| Change what the model can learn | [Logistic model](model.js) · [Neural training](neural.js) · [Network and weight format](network.js) |
-| Connect a setting to the browser | [Training form](index.html) · [Run controls](main.js) · [Network editor](sandbox.js) |
+| Grow lettuce, apples and five other crop or growing-system profiles | [Illustrated plant guides](plants/README.md) |
+| Send rays through a seeded field and export the returns | [Generator](generator/README.md) |
+| Compare two scans of the same planting | [Paired scan studies](study/README.md) |
+| Fit a detector and inspect its scoring rules | [Models](models/README.md) |
+| Change the layer diagram or live training display | [Interface](ui/README.md) |
+| Run saved weights on a local XYZ scan | [Field test](field-test/README.md) |
 
-[Crop Trainer home](../README.md) · [Compare two runs](../benchmark/README.md)
+[Training page](index.html) · [Page controller](main.js) · [Crop Trainer home](../README.md) · [Compare two runs](../benchmark/README.md)

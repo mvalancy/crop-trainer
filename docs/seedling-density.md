@@ -17,7 +17,7 @@ Each row scores the same 635 planting positions and seedling shapes. The detecto
 | 100,000 | 5 | 247 | 3–23 | 3–23 | 0.009–0.063 | 0.475 |
 | 1,000,000 | 0 | 583 | 401–422 | 399–421 | 0.705–0.724 | 0.842 |
 
-At 100,000 rays nearly every seedling generated a crop return. Only 247 had a usable peak nearby, and only a handful survived classification. At one million rays, the first model produced 399 correct pins, 98 extra pins and 236 misses. Its F1 was 0.701 at 7.5 cm, 0.705 at 10 cm and 0.705 at 15 cm. The second model produced 421 correct pins, 107 extra pins and 214 misses at 15 cm. The height baseline ranks those same proposed peaks by height and applies the same 22 cm pin spacing. [Field Test scorer](../trainer/score-scan.js)
+At 100,000 rays nearly every seedling generated a crop return. Only 247 had a usable peak nearby, and only a handful survived classification. At one million rays, the first model produced 399 correct pins, 98 extra pins and 236 misses. Its F1 was 0.701 at 7.5 cm, 0.705 at 10 cm and 0.705 at 15 cm. The second model produced 421 correct pins, 107 extra pins and 214 misses at 15 cm. The height baseline ranks those same proposed peaks by height and applies the same 22 cm pin spacing. [Field Test scorer](../trainer/field-test/score-scan.js)
 
 **Plant stage mattered at the same scan density.** On the paired leafy transplants at 30,000 rays, just one plant had zero returns, 607 had a candidate peak, and 351–393 matched the final pins. Model F1 at 15 cm was 0.682–0.716. At one million rays it reached 0.905–0.918. The two forms use the exact same XY rays at each budget. Their scored box midpoints can differ because the leaves change shape. [Young tomato growing guide](../trainer/plants/young-tomato.md)
 
@@ -51,7 +51,7 @@ The linked browser preset runs 40 epochs per fit. With its own held-out scans, m
 To repeat the comparison, run the optional mode below. It trains four seedling-only networks. The JSON keeps the original six fields and the four confirmation seeds (`793803`, `901213`, `1047581`, `1200833`) in separate result groups.
 
 ```sh
-node benchmark/seedling-density.mjs --match-training-density > seedling-training-density.json
+node benchmark/studies/seedling-density.mjs --match-training-density > seedling-training-density.json
 ```
 
 ## Do those seedling models transfer to a different layout?
@@ -75,7 +75,7 @@ The table pools counts at 15 cm across the eight fields. Each range covers the t
 The synthetic ring lattice has 1,024 columns and 64 rings. Asking it for one million rays yields 65,536, so we generated a grid with **exactly 65,536** samples for that pair. The one-million-ray grid shows what dense reference coverage can do on those same plants. The simulator redraws each grid density, so an individual plant reached at 60,000 rays can fall between rays at 65,536. This is a comparison of two overhead sampling patterns. Performance on a mounted spinning scanner requires a physical test. [Scan layouts and limitations](scanners.md)
 
 ```sh
-node benchmark/seedling-density.mjs --layout-transfer > seedling-layout.json
+node benchmark/studies/seedling-density.mjs --layout-transfer > seedling-layout.json
 ```
 
 For an interactive run, use the browser benchmark to train on dense reference scans and compare layouts at 60,000 validation rays. It generates separate validation plantings with seeded noise and both soil settings. The Node command above replays the fixed clean fields in the table. [Run the layout comparison](https://mvalancy.github.io/crop-trainer/benchmark/?comparison=layouts&crop=tomato&plantArchitecture=2&plantForm=seedling&plantCondition=healthy&sensor=reference&trainingRayBudget=1000000&validationRayBudget=60000&seed=82173)
@@ -94,7 +94,7 @@ We trained on either the reference grid or OS1-inspired rings at **60,000 sample
 Each pair lists results for training seeds `82173` and `379331`, in that order. On rings, switching the training layout recovered zero additional seedlings for the first fit and one for the second. Both ring-trained fits and the height baseline found all 38 reachable plants, placed zero extra pins and missed 384. Of those misses, **334 plants had a crop return**. Per-plot ring-trained F1 ranged from 0.052 to 0.359. On these plots, finding more seedlings requires generating candidate positions near more plants.
 
 ```sh
-node benchmark/seedling-density.mjs --match-training-layout > seedling-trained-layouts.json
+node benchmark/studies/seedling-density.mjs --match-training-layout > seedling-trained-layouts.json
 ```
 
 The next experiment changed how the detector treats empty cells. On four confirmation plots its height-only baseline recovered more seedlings and also marked more bare soil. [Inspect the two peak rules on the same scans](seedling-peaks.md)
@@ -114,10 +114,10 @@ Training on denser scans helped both models find small seedlings on six fresh pl
 
 Each pair lists training seeds `82173` and `379331`. F1 uses the pooled counts of correct, extra and missed pins at 15 cm. The height-only baseline uses the same candidate peaks and spacing rule. On branching plants in the grid, all 633 targets had a candidate nearby. With training seed `82173`, the 30k model found 603 plants and placed 160 extra pins. The 1M model placed fewer extra pins (116), but found only 229 plants. On transplants, which training density worked better depended on the test layout.
 
-The script verifies the SHA-256 of each original model, including weights, feature scaling and detection settings, before opening a test field. Changing growth stage keeps planting positions and ray XY coordinates fixed within a layout. Each form is scored against the midpoint of its own canopy box. Those midpoints moved up to 7.4 cm relative to the seedling stage. The ring pattern is an overhead simulation. The report includes tile IDs, zero-return counts, scoring times and results at 7.5, 10 and 15 cm. [Stage-transfer experiment](../benchmark/seedling-stages.mjs)
+The script verifies the SHA-256 of each original model, including weights, feature scaling and detection settings, before opening a test field. Changing growth stage keeps planting positions and ray XY coordinates fixed within a layout. Each form is scored against the midpoint of its own canopy box. Those midpoints moved up to 7.4 cm relative to the seedling stage. The ring pattern is an overhead simulation. The report includes tile IDs, zero-return counts, scoring times and results at 7.5, 10 and 15 cm. [Stage-transfer experiment](../benchmark/studies/seedling-stages.mjs)
 
 ```sh
-node benchmark/seedling-stages.mjs > seedling-stages.json
+node benchmark/studies/seedling-stages.mjs > seedling-stages.json
 ```
 
 ## Reproduce the original scan-density sweep
@@ -125,11 +125,11 @@ node benchmark/seedling-stages.mjs > seedling-stages.json
 Run this from the repository root with Node.js 22 or later.
 
 ```sh
-node benchmark/seedling-density.mjs > seedling-density.json
+node benchmark/studies/seedling-density.mjs > seedling-density.json
 ```
 
 - Train four small CPU networks on v2 healthy young tomato plants drawn from the seeded mix of seedling, transplant and branching forms. Use dataset seeds `82173` and `379331`, six training plantings per seed (both soil variants), 30,000 reference rays, both peak gates and unchanged initialization. Each fit uses four tanh hidden units, full-batch SGD, learning rate 0.25, 40 epochs and a 0.5 detection cutoff.
 - Freeze the weights, feature scaling and spacing for the entire survey. Generate fresh plantings from seeds `110821`, `216917`, `337013`, `449047`, `551099` and `669073`. Score healthy seedling and transplant forms with soil present. Disable extra weeds, boards, sticks and scan-noise controls. The standard terrain and generator jitter still apply. Within a form, the target boxes are identical across ray budgets. Changing density redraws the reference sampling grid.
 - Read the per-field IDs, counts, stages and scores in `fields`. Read the counts pooled across six plantings in `pooled`. The 48 scans reuse those plantings. The two training fits evaluate the same targets. No validation plot contributes to fitting, and the simulator’s organ and return labels are reserved for measurement and the soil-only diagnostic.
 
-On Linux x64 with Node.js 24.22.1 and an AMD EPYC 7763 CPU, preparing the four training sets took 2.21 s and fitting took 0.27 s. Drawing the held-out scans took 3.97 s, scoring all four detectors took 2.93 s, and the soil control took another 0.67 s. These rates apply to this CPU run. The density sweep models overhead coverage under synthetic conditions. Actual acquisition time, viewpoint, terrain and target visibility require field measurements. [Benchmark code](../benchmark/seedling-density.mjs) · [Seven-crop form comparison](crop-form-benchmark.md)
+On Linux x64 with Node.js 24.22.1 and an AMD EPYC 7763 CPU, preparing the four training sets took 2.21 s and fitting took 0.27 s. Drawing the held-out scans took 3.97 s, scoring all four detectors took 2.93 s, and the soil control took another 0.67 s. These rates apply to this CPU run. The density sweep models overhead coverage under synthetic conditions. Actual acquisition time, viewpoint, terrain and target visibility require field measurements. [Benchmark code](../benchmark/studies/seedling-density.mjs) · [Seven-crop form comparison](crop-form-benchmark.md)

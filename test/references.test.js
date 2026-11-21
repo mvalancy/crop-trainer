@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {makeRecipe} from '../trainer/data.js';
-import {field} from '../trainer/field.js';
-import {getSensor} from '../trainer/sensors.js';
-import {parseReferences, evaluatePins, MAX_REFERENCE_BYTES} from '../trainer/references.js';
+import {makeRecipe} from '../trainer/models/data.js';
+import {field} from '../trainer/generator/field.js';
+import {getSensor} from '../trainer/generator/sensors.js';
+import {parseReferences, evaluatePins, MAX_REFERENCE_BYTES} from '../trainer/field-test/references.js';
 
 const nativeFrame = {unit:'m', origin:[0, 0, 0]};
 const local = (localX, localY) => ({localX, localY});

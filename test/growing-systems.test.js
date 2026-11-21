@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {makeRecipe,buildDataset} from '../trainer/data.js';
-import {field} from '../trainer/field.js';
-import {getSensor} from '../trainer/sensors.js';
-import {parseReferences} from '../trainer/references.js';
+import {makeRecipe,buildDataset} from '../trainer/models/data.js';
+import {field} from '../trainer/generator/field.js';
+import {getSensor} from '../trainer/generator/sensors.js';
+import {parseReferences} from '../trainer/field-test/references.js';
 
 for (const crop of ['apple','grapevine','bench-lettuce','high-wire-tomato']) {
   test(crop+' preserves planting IDs and targets across ground and fixture treatments', async () => {

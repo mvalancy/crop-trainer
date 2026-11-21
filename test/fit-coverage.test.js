@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {trainNetworkCPU} from '../trainer/neural.js';
+import {trainNetworkCPU} from '../trainer/models/neural.js';
 
 test('changing only the final label contributes its exact logistic gradient', async () => {
   const count = 1057; // 33 complete batches of 32 and one final row.

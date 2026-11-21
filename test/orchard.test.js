@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {detectOrchardBases} from '../trainer/orchard.js';
-import {runFieldTest} from '../trainer/score-scan.js';
+import {detectOrchardBases} from '../trainer/models/orchard.js';
+import {runFieldTest} from '../trainer/field-test/score-scan.js';
 
 function syntheticColumn(x,y) {
   const xyz=[];

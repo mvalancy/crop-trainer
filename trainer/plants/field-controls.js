@@ -1,10 +1,10 @@
 import {formsFor, plantGuide} from './forms.js';
-import {setupPlantControls} from '../plant-version.js?v=plants3';
-import {cropProfile} from '../crops.js';
-import {makeRecipe} from '../data.js?v=plants3';
+import {setupPlantControls} from '../generator/plant-version.js?v=plants3';
+import {cropProfile} from '../generator/crops.js';
+import {makeRecipe} from '../models/data.js?v=plants3';
 import {plantingRow} from './planting.js';
 import {seededRandom} from './traits.js';
-import {specimenPair, compareSpecimens} from './portrait.js?v=plants3';
+import {specimenPair, compareSpecimens} from './portrait.js?v=field-desk1';
 
 function lookFor(crop, form, dormant) {
   switch (crop) {
@@ -65,7 +65,7 @@ export function setupFieldPlants(params) {
     const structured=selectedVersion >= 2, apple=structured && crop.value==='apple';
     canopy.disabled=!apple;
     for (const control of [form,condition,canopy]) control.parentElement.hidden=control.disabled;
-    card.hidden=!structured || !form.value || !condition.value || !seed.validity.valid || (apple && !canopy.value);
+    card.hidden=!structured || !version.validity.valid || !form.value || !condition.value || !seed.validity.valid || (apple && !canopy.value);
     const guide=plantGuide(crop.value), profile=cropProfile(crop.value);
     el('plantGuide').href='https://github.com/mvalancy/crop-trainer/blob/main/trainer/plants/'+guide+'.md';
     el('plantGuide').textContent=profile.name+' growing guide ↗';

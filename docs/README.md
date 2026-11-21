@@ -28,7 +28,9 @@ See what a laser measures, try a two-clue model by hand, and check whether a pin
 | Design a test on real farms | [Field validation](field-validation.md) |
 | Compare the sandbox with agricultural technology teams’ methods | [Industry practices and missing experiments](industry-practice.md) |
 | Read the papers and check dataset licenses | [Datasets and research](research.md) |
+| Test whether learning several growth stages helps | [Seedlings, transplants and branching tomatoes](tomato-stage-training.md) |
 | Run locally or replay a browser experiment | [Local setup](local-setup.md) |
+| Check how a change reaches the public app | [Tests and Pages deployment](deployment.md) |
 
 ## Pick a question
 

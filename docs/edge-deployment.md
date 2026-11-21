@@ -22,7 +22,7 @@ git clone https://github.com/mvalancy/crop-trainer.git
 cd crop-trainer
 node -p "process.version + ' / ' + process.platform + ' / ' + process.arch"
 git rev-parse HEAD
-node run.mjs preflight
+node cli/run.mjs preflight
 ```
 
 On the board, Node should report `linux / arm64`. Look for `"passed": true` in the preflight result. It trains a small synthetic detector, saves its weights and scores six held-out scans from three plantings. It checks the matches at all three distances and the identities of the missed plants at 15 cm. Run it before connecting a sensor. After setup, scoring works offline and has no npm or Python dependencies.
@@ -47,7 +47,7 @@ scp weights.json plot.ply centers.csv grower@fieldpi.local:crop-run/
 **On the board**, run the scorer from the repository directory. This example assumes a level plot in metres with its lower-left corner and soil at `(0,0,0)`. Substitute your measured origin and signed X/Y grades for a physical plot.
 
 ```sh
-time node score-scan.mjs ~/crop-run/weights.json ~/crop-run/plot.ply \
+time node cli/score-scan.mjs ~/crop-run/weights.json ~/crop-run/plot.ply \
   ~/crop-run/plot-01-result.json --unit m --origin 0,0,0 \
   --grade-percent 0,0 --labels ~/crop-run/centers.csv
 ```
