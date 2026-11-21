@@ -6,6 +6,7 @@ The little farm on the front page lives here. Open an SVG to see it move or open
 
 | Illustration | Where you’ll see it |
 | --- | --- |
+| [A leaf with missing depth pixels](depth-window.svg) · [Overlapping plant boxes](plant-boxes.svg) | [Camera measurements from field datasets](../docs/field-datasets.md) |
 | [One plant seen in dots and pixels](two-views.svg) | [Sensing methods](../docs/README.md#choose-a-sensing-method) |
 | [Six pins and a missed lettuce](count-and-locate.svg) | [Inspecting detections](../docs/field-inspection.md) |
 | [A little leaf between rays](ray-budget.svg) | [Scan density](../docs/scanners.md) |
