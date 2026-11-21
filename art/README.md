@@ -12,6 +12,7 @@ The little farm on the front page lives here. Open an SVG to see it move or open
 | [From laser dots to lettuce pins](scan-learn-find.svg) | [Training shed guide](../trainer/README.md) |
 | [Two detectors, one planting](paired-field.svg) | [Benchmark guide](../benchmark/README.md) |
 | [From a surveyed plot to a local detector](field-deployment.svg) | [Field deployment guide](../docs/edge-deployment.md) |
+| [Two peaks, both about 5 cm](tomato-local-ground.svg) | [A measured seedling and a soil bump](../docs/tomato-local-ground.md) |
 | [How empty cells affect peak height](seedling-peak-window.svg) | [Seedling peaks and false alarms](../docs/seedling-peaks.md) |
 | [Which seedlings received a pin?](seedling-density.svg) | [Paired density experiment](../docs/seedling-density.md) |
 | [One seedling on a grid and a ring layout](seedling-layouts.svg) | [How a ray layout samples a leaf](../docs/scanners.md#why-can-the-same-ray-budget-miss-a-seedling) |

@@ -23,3 +23,9 @@ Next restore the original scan layout and change only the condition to damaged. 
 In a three-planting synthetic replay at 30,000 requested rays, seedlings averaged about one crop return per plant. Only 2% of targets had a candidate peak within 15 cm, and the fitted detector matched none there. The same weights reached 0.508 F1 on transplants and 0.834 on branching plants at that tolerance. Extra fitting cannot place pins where the candidate detector found no peak. Replay with `node benchmark/studies/plant-forms.mjs tomato`. [Experiment design and scores](../../docs/crop-form-benchmark.md) · [Paired benchmark code](../../benchmark/studies/plant-forms.mjs)
 
 See how many seedlings produced a laser return, a height peak and a correctly placed pin on six plots. The guide includes an interactive replay of one field at 30,000 and one million rays. [Seedling density experiment](../../docs/seedling-density.md)
+
+## Can you spot the soil bump?
+
+![Two synthetic scan patches with similar smoothed peak heights. The tallest central returns rise 7.7 and 2.4 cm above their surroundings.](../../art/tomato-local-ground.svg)
+
+These patches come from a healthy seedling field with soil present. One peak lands near plant 8. The other is over 38 cm from the nearest plant. Each square in the center or ring marks a 5 cm cell with at least one return. How much a peak rises above its neighbors helps distinguish this pair. Read the experiment to see how many seedlings still go undetected across whole fields. [Open the pictured ring scan](https://mvalancy.github.io/crop-trainer/?crop=tomato&plantArchitecture=2&plantForm=seedling&plantCondition=healthy&sensor=os1-64&seed=1370561&budget=60000&ground=true&weeds=off&sticks=off&boards=off&noise=clean&tile=cb233b1e0e3f65f8) · [Try both feature sets](../../docs/tomato-local-ground.md)
