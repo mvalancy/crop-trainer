@@ -1,4 +1,5 @@
 // Serve only the built artifact at the same project path used by GitHub Pages.
+import {checkFieldFilm} from './studio-film.mjs';
 import {checkStudioLayout,checkDrawer,openSection,closeOverlay} from './studio-layout.mjs';
 import assert from 'node:assert/strict';
 import {readFile,stat} from 'node:fs/promises';
@@ -12,7 +13,7 @@ const root=resolve(process.argv[2]);
 await stat(resolve(root,'index.html'));
 const prefix='/crop-trainer/';
 const types={'.html':'text/html','.css':'text/css','.js':'text/javascript','.mjs':'text/javascript',
-  '.svg':'image/svg+xml','.webp':'image/webp','.json':'application/json','.csv':'text/csv','.png':'image/png'};
+  '.svg':'image/svg+xml','.webp':'image/webp','.mp3':'audio/mpeg','.json':'application/json','.csv':'text/csv','.png':'image/png'};
 const server=createServer(async(req,res)=>{
   try {
     const path=decodeURIComponent(new URL(req.url,'http://localhost').pathname);
@@ -141,6 +142,8 @@ try {
     assert.ok(tilt.y > 2 && Math.abs(tilt.x) < 1, 'downward drag should still tilt the near tree down without sideways movement');
     console.log('The rendered tree followed left and right drags and retained its vertical tilt direction.');
   }
+
+  await checkFieldFilm(browser,base);
 
   // The studio owns navigation and preserves each active instrument across task switches.
   await page.goto(new URL('studio/',base).href);

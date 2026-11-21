@@ -30,11 +30,11 @@ html:has(.studio) {scroll-behavior:auto;}
   .studioBar .themeChoice {flex-direction:row;font-size:.8rem;}
 }
 #film {height:100%;overflow:auto;background:#10251f;color:#f7f6e8;display:flex;flex-direction:column;}
-.filmScreen {position:relative;isolation:isolate;flex:1;min-height:22rem;overflow:hidden;display:flex;align-items:end;}
+.filmScreen {position:relative;isolation:isolate;flex:1 0 auto;min-height:22rem;overflow:hidden;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:end;}
 .filmArt {position:absolute;inset:0;z-index:-1;width:100%;height:100%;}
 .shot {opacity:0;transition:opacity .7s ease;}
 [data-shot="0"] .shotField,[data-shot="1"] .shotCloud,[data-shot="2"] .shotHeight {opacity:1;}
-.filmCaption {padding:clamp(1.5rem,5vw,5.2rem);width:min(56%,43rem);text-shadow:0 2px 16px #081b12;}
+.filmCaption {grid-area:1/1;min-width:0;padding:clamp(1.3rem,3.4vw,3.8rem);width:100%;text-shadow:0 2px 16px #081b12;}
 .filmSeries {font:600 .9rem var(--sans);letter-spacing:.05em;color:#d1ebad;}
 #shotTitle {font:500 clamp(2.75rem,5.6vw,6.1rem)/.99 var(--serif);letter-spacing:-.045em;margin:.4em 0 .28em;color:#fffbe9;}
 #shotText {font-size:clamp(1rem,1.3vw,1.25rem);line-height:1.5;color:#f0f2e6;max-width:35ch;}
@@ -45,7 +45,36 @@ html:has(.studio) {scroll-behavior:auto;}
 .shotList {display:flex;gap:.35rem;flex-wrap:wrap;}
 .shotList button {border:0;}
 .shotList [aria-pressed=true] {box-shadow:inset 0 -2px #d6eaa9;color:#d6eaa9;}
+.predictionPane {grid-area:1/2;align-self:stretch;display:grid;place-items:center;min-height:0;min-width:0;
+  padding:clamp(.6rem,2vw,2rem);opacity:0;pointer-events:none;}
+.predictionArt {display:block;width:100%;max-width:43rem;max-height:100%;aspect-ratio:400/154;}
+[data-shot="2"] .predictionPane {opacity:1;}
+.filmMix {display:flex;align-items:center;flex-wrap:wrap;gap:.35rem .8rem;margin-inline-start:auto;}
+.filmMix label {display:inline-flex;align-items:center;gap:.4rem;min-height:44px;margin:0;color:#e5eee0;cursor:pointer;}
+.filmMix input {width:1rem;height:1rem;margin:0;accent-color:#bfdf96;}
+#filmAudioNotice:empty {display:none;}
+#filmAudioNotice {flex-basis:100%;color:#f0f2e6;font-size:.9rem;}
+@media(max-height:550px) and (orientation:landscape){
+  .filmScreen {min-height:min-content;}
+  .filmControls button {font-size:.82rem;padding-inline:.45rem;}
+  .filmMix {gap:.4rem;}
+  .filmMix label {font-size:.82rem;gap:.25rem;}
+  .filmCaption {padding:.55rem 1rem;}
+  .filmSeries {margin:0;font-size:.8rem;}
+  #film #shotTitle {margin:.15em 0;font-size:clamp(1.45rem,3.7vw,2.35rem);}
+  #film #shotText {margin:.3rem 0;font-size:.92rem;line-height:1.35;}
+  .studio #film #tryShot {min-height:44px;margin-top:0;padding:.3rem .7rem;}
+  .filmControls {gap:.25rem .5rem;padding:.25rem .65rem;}
+}
+@media(max-height:370px) and (orientation:landscape){
+  .filmCaption {padding:.25rem .75rem;}
+  .filmSeries {display:none;}
+}
+@media(max-width:650px){
+  .filmMix {margin-inline-start:0;}
+}
 @media(prefers-reduced-motion:no-preference){
+ .predictionPane {transition:opacity .7s ease;}
  .playing .leafRays {animation:sampleLeaves 3.5s ease-in-out infinite;}
  @keyframes sampleLeaves {0%,100% {opacity:.2;} 48%,70% {opacity:1;}}
  .playing .pinHalo {animation:findCenter 3s ease-in-out infinite;transform-box:fill-box;transform-origin:center;}
@@ -54,17 +83,19 @@ html:has(.studio) {scroll-behavior:auto;}
  @keyframes measureHeight {to {stroke-dashoffset:-36;}}
 }
 @media(prefers-reduced-motion:reduce){.shot{transition:none;}}
-@media(max-width:760px){
- .filmScreen {display:flex;flex-direction:column;justify-content:end;align-items:stretch;min-height:min(28rem,66dvh);}
- .filmArt {height:60%;width:100%;}
+@media (orientation:portrait) and (max-width:1100px), (max-width:500px){
+ .filmScreen {grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(8rem,1fr) auto;min-height:min-content;}
+ .filmArt {grid-area:1/1;height:100%;}
  .filmShade {display:none;}
- .filmCaption {width:100%;padding:2rem 1.15rem 1rem;background:linear-gradient(transparent,#10251f 2.2rem);}
- .filmSeries {margin-top:1rem;}
+ .filmCaption {grid-area:2/1;padding:.9rem 1.15rem 1rem;background:#10251f;}
+ .filmSeries {margin:0;}
+ .filmScreen .predictionPane {grid-area:1/1;}
  #shotTitle {font-size:clamp(2.1rem,8vw,3.7rem);margin:.2em 0;}
  #shotText {font-size:.97rem;margin:.35rem 0;}
  .studio #tryShot {min-height:42px;padding:.5rem .8rem;margin-top:.5rem;}
  .filmControls {gap:.4rem;padding:.5rem .7rem;}
- .filmControls button {font-size:.82rem;padding:.4rem .55rem;min-height:40px;}
+ .filmControls button {font-size:.82rem;padding:.35rem .4rem;min-height:44px;}
+ .shotList {gap:0;}
 }
 @media(max-width:420px){
  .studioBar.barInner {gap:.5rem;padding-inline:.65rem;}
@@ -73,6 +104,11 @@ html:has(.studio) {scroll-behavior:auto;}
  .studioBar .themeChoice select {font-size:.83rem;}
 }
 
+@media(max-width:420px) and (max-height:680px){
+  .filmCaption {padding:.6rem .85rem;}
+  #shotTitle {font-size:1.85rem;}
+  #shotText {font-size:.92rem;}
+}
 .studioFrame:not([data-styled]) {visibility:hidden;}
 #activityMenu {display:none;}
 @media(max-width:760px) {

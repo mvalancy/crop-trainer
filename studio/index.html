@@ -28,11 +28,15 @@
 <g class="shot shotCloud"><rect width="600" height="400" fill="url(#scanGlow)"/><rect width="600" height="400" fill="url(#filmGrid)"/><g id="filmReturns"></g>
 <g transform="translate(430 196)" fill="none" stroke="#f3ce76" stroke-width="1.6"><circle class="pinHalo" r="29"/><path d="M-9 0H9M0 -9V9"/></g></g>
 <g class="shot shotHeight"><rect width="600" height="400" fill="#143630"/><rect width="600" height="400" fill="url(#filmGrid)"/>
-<svg x="284" y="90" width="302" height="202" viewBox="0 0 400 188"><image href="../art/height-clues.svg" width="400" height="188"/></svg>
-<path class="heightLine" d="M311 166H560" stroke="#f1cf79" stroke-width="2" stroke-dasharray="5 4"/></g>
+</g>
 <rect width="600" height="400" fill="url(#filmShade)" class="filmShade"/></svg>
+<div class="predictionPane"><svg class="predictionArt" viewBox="0 18 400 154" aria-hidden="true">
+<image href="../art/height-clues.svg#plants" width="400" height="188"/>
+<path class="heightLine" d="M23 62H377" stroke="#f1cf79" stroke-width="1.8" stroke-dasharray="5 4"/></svg></div>
 <div class="filmCaption" aria-live="polite"><p class="filmSeries">Follow one lettuce</p><h2 id="shotTitle">Where does the light land?</h2><p id="shotText">A laser samples the first surface it meets. Trace a ray down to the edge of a leaf.</p><a id="tryShot" class="primary" href="?view=learn&amp;step=lessons">Try scanning a row</a></div></div>
-<div class="filmControls"><button type="button" id="playFilm">Play story</button><div class="shotList" role="group" aria-label="Choose a scene"><button data-shot-index="0" aria-pressed="true">Leaf</button><button data-shot-index="1" aria-pressed="false">Returns</button><button data-shot-index="2" aria-pressed="false">Prediction</button></div></div>
+<div class="filmControls"><button type="button" id="playFilm">Play story</button><div class="shotList" role="group" aria-label="Choose a scene"><button data-shot-index="0" aria-pressed="true">Leaf</button><button data-shot-index="1" aria-pressed="false">Returns</button><button data-shot-index="2" aria-pressed="false">Prediction</button></div>
+<div class="filmMix" role="group" aria-label="Story audio"><label><input type="checkbox" data-audio-track="narration" checked>Narration</label><label><input type="checkbox" data-audio-track="ambience" checked>Ambience</label></div>
+<span id="filmAudioNotice" role="status"></span></div>
 </section></div>
 <noscript><a href="../#guide">Open the field lessons</a></noscript></main>
 <div id="drawerShade" hidden></div>

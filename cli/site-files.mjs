@@ -6,7 +6,7 @@ for (const name of ['c0545a3786c57a89.ply', 'weights.json', 'centers.csv', 'labe
 }
 const publicDirectories = new Map([
   ['app', ['js', 'css', 'md']],
-  ['art', ['svg', 'webp', 'md']], ['art/plants', ['svg', 'md']],
+  ['art', ['svg', 'webp', 'md']], ['art/audio', ['mp3']], ['art/plants', ['svg', 'md']],
   ['benchmark', ['html', 'js', 'css', 'md']], ['benchmark/studies', ['mjs', 'md']],
   ['docs', ['md']], ['docs/first-steps', ['md']],
   ['trainer', ['html', 'js', 'md']], ['trainer/plants', ['js', 'css', 'md']],
@@ -20,7 +20,7 @@ export function isPublicPath(path) {
   if (entryFiles.has(path) || ['ci/README.md','cli/README.md','test/README.md'].includes(path)) return true;
   const slash = path.lastIndexOf('/');
   const filename = path.slice(slash + 1);
-  if (!/^[a-z][a-z0-9-]*\.[a-z]+$/i.test(filename)) return false;
+  if (!/^[a-z][a-z0-9-]*\.[a-z][a-z0-9]*$/i.test(filename)) return false;
   return publicDirectories.get(path.slice(0, slash))?.includes(filename.split('.').pop()) ?? false;
 }
 

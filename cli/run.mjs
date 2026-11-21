@@ -13,7 +13,7 @@ const trainUsage = 'node cli/run.mjs train new-report.json [settings.json] [--we
 const cliUsage = 'node cli/run.mjs serve [port]\n'+trainUsage+
   '\nnode cli/run.mjs preflight [--peak-averaging occupied|zero-filled] [--feature-mode absolute|local-ground]\n  Train on CPU and replay the held-out synthetic scans through the field CLI. Prints JSON.';
 if(command==='serve'){
- const types={html:'text/html',js:'text/javascript',mjs:'text/javascript',css:'text/css',svg:'image/svg+xml',png:'image/png',webp:'image/webp',md:'text/plain',json:'application/json',csv:'text/csv',ply:'application/octet-stream'};
+ const types={html:'text/html',js:'text/javascript',mjs:'text/javascript',css:'text/css',svg:'image/svg+xml',png:'image/png',webp:'image/webp',mp3:'audio/mpeg',md:'text/plain',json:'application/json',csv:'text/csv',ply:'application/octet-stream'};
  const port=Number(output||4173);
  if(!Number.isInteger(port)||port<1||port>65535)throw Error('Choose a port from 1 to 65535.');
  const {loadGuide,renderGuide}=await import('./guide.mjs');
