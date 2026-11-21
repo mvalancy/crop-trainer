@@ -1,5 +1,6 @@
 import {plantSettings} from '../generator/plant-version.js';
 import {cropProfile} from '../generator/crops.js?v=systems1';
+import {checkFeatureMode} from './terrain-features.js?v=terrain1';
 
 // Each layer stores output neurons in order, with incoming weights followed by bias.
 export const MAX_SANDBOX_EPOCHS = 100_000_000;
@@ -102,39 +103,72 @@ export const featureNames = ['Smoothed peak height','Center cell height','Mean i
   'Mean outer height','Peak above outer mean','High cells in middle ring','High cells in outer ring',
   'Occupied inner cells','Occupied outer cells','Log return count','Shape asymmetry','Peak above background'];
 
-const peakSchemas = {'zero-filled':'crop-peak-13-v1',occupied:'crop-peak-13-occupied-v1'};
+const groundFeatureNames = [...featureNames];
+groundFeatureNames[1] = 'Peak above local ground';
+groundFeatureNames[12] = 'Surrounding height spread';
 
-export function savedPeakAveraging(model) {
-  const mode = Object.keys(peakSchemas).find(key => peakSchemas[key] === model?.featureSchema);
-  if (!mode) throw Error('Unsupported saved peak feature schema. Use weights exported by a compatible Crop Trainer.');
-  if (model.peakAveraging !== undefined && model.peakAveraging !== mode) {
+export function featureNamesFor(featureMode) {
+  return checkFeatureMode(featureMode) === 'local-ground' ? groundFeatureNames : featureNames;
+}
+
+// Each ID fixes both the candidate rule and the meaning of all 13 columns.
+const peakSchemas = {
+  'crop-peak-13-v1': {peakAveraging:'zero-filled', featureMode:'absolute'},
+  'crop-peak-13-occupied-v1': {peakAveraging:'occupied', featureMode:'absolute'},
+  'crop-peak-13-local-ground-v1': {peakAveraging:'zero-filled', featureMode:'local-ground'},
+  'crop-peak-13-occupied-local-ground-v1': {peakAveraging:'occupied', featureMode:'local-ground'}
+};
+
+export function savedFeatureSettings(model) {
+  const id=model?.featureSchema;
+  if (typeof id !== 'string' || !Object.hasOwn(peakSchemas,id)) {
+    throw Error('Unsupported saved peak feature schema. Use weights exported by a compatible Crop Trainer.');
+  }
+  const {peakAveraging,featureMode}=peakSchemas[id];
+  if (model.peakAveraging !== undefined && model.peakAveraging !== peakAveraging) {
     throw Error('The saved peak averaging rule disagrees with its feature schema.');
   }
-  return mode;
+  if (model.featureMode !== undefined && model.featureMode !== featureMode) {
+    throw Error('The saved feature mode disagrees with its feature schema.');
+  }
+  return {peakAveraging,featureMode};
+}
+
+export function savedPeakAveraging(model) {
+  return savedFeatureSettings(model).peakAveraging;
 }
 
 // Both training entry points export the same inference metadata for a completed fit.
 export function weightArtifact({settings,scaling,weights,trainer,epochs,stats}) {
   const {peakAveraging='zero-filled'} = settings;
-  if (typeof peakAveraging !== 'string' || !Object.hasOwn(peakSchemas,peakAveraging)) {
+  const featureMode=checkFeatureMode(settings.featureMode);
+  const featureSchema=Object.keys(peakSchemas).find(id=>
+    peakSchemas[id].peakAveraging===peakAveraging && peakSchemas[id].featureMode===featureMode);
+  if (!featureSchema) {
     throw Error('Unsupported peak averaging rule for weight export.');
   }
-  if (stats && peakAveraging !== (stats.peakAveraging ?? 'zero-filled')) {
+  if (stats && peakAveraging !== (stats.peakAveraging === undefined ? 'zero-filled' : stats.peakAveraging)) {
     throw Error('The requested peak averaging rule differs from the fitted dataset.');
   }
+  if (stats && featureMode !== checkFeatureMode(stats.featureMode)) {
+    throw Error('The requested feature mode differs from the fitted dataset.');
+  }
   return {
-    format:'crop-trainer-weights-v1', trainer, featureSchema:peakSchemas[peakAveraging],
+    format:'crop-trainer-weights-v1', trainer, featureSchema,
     ...(peakAveraging === 'occupied' ? {peakAveraging} : {}),
-    inputs:featureNames.length, featureNames, hiddenLayers:settings.hiddenLayers,
+    ...(featureMode === 'local-ground' ? {featureMode} : {}),
+    inputs:featureNames.length, featureNames:featureNamesFor(featureMode), hiddenLayers:settings.hiddenLayers,
     activation:settings.activation, output:'sigmoid', layout:'layer-major, neuron-major, incoming weights then bias',
     crop:settings.crop, ...plantSettings(settings), minimumHeight:settings.minimumHeight, threshold:settings.threshold,
     pinSeparation:cropProfile(settings.crop).pinSeparation, scaling, weights:Array.from(weights), epochs
   };
 }
 
-// The original two-argument call declares standard zero-filled feature rows.
-export function scoreSavedWeights(rawFeatures, model, peakAveraging='zero-filled') {
-  if (savedPeakAveraging(model) !== peakAveraging) throw Error('Extract the candidate rows with the saved peak averaging rule.');
+// The original two-argument call declares absolute, zero-filled feature rows.
+export function scoreSavedWeights(rawFeatures, model, peakAveraging='zero-filled', featureMode='absolute') {
+  const saved=savedFeatureSettings(model);
+  if (saved.peakAveraging !== peakAveraging) throw Error('Extract the candidate rows with the saved peak averaging rule.');
+  if (saved.featureMode !== featureMode) throw Error('Extract the candidate rows with the saved feature mode.');
   if (model?.format !== 'crop-trainer-weights-v1' || model.inputs !== 13 ||
       model.scaling?.means?.length !== 13 || model.scaling?.std?.length !== 13 ||
       !model.scaling.means.every(Number.isFinite) || !model.scaling.std.every(v => Number.isFinite(v) && v > 0) ||

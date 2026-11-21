@@ -1,13 +1,20 @@
-import {detectScan} from './inference.js?v=peak1';
-import {measureStages} from '../models/data.js?v=systems1';
+import {detectScan} from './inference.js?v=terrain1';
+import {checkScoreThreshold,measureStages} from '../models/data.js?v=terrain1';
 import {parseReferences,evaluatePins} from './references.js?v=systems1';
 import {MAX_PLY_POINTS} from './ply.js';
 
-export function runFieldTest({model,xyz,alignment,labels=null,tileId}) {
+export function runFieldTest({model,xyz,alignment,labels=null,tileId,thresholdOverride}) {
   if (!xyz || xyz.length/3 > MAX_PLY_POINTS) throw Error('Choose a scan with up to 1,000,000 points.');
+  let detector = model;
+  if (thresholdOverride !== undefined) {
+    checkScoreThreshold(model?.threshold);
+    checkScoreThreshold(thresholdOverride);
+    detector = {...model,threshold:thresholdOverride};
+  }
   let learnedStages;
   const captureStages = stages => { learnedStages = stages; };
-  const result = detectScan(xyz,model,alignment,labels === null ? undefined : captureStages);
+  const result = detectScan(xyz,detector,alignment,labels === null ? undefined : captureStages);
+  if (thresholdOverride !== undefined) result.detector.savedThreshold = model.threshold;
   if (labels === null) return {...result,references:null,evaluation:null,baselineEvaluation:null,stages15cm:null,
     ...(result.orchard ? {orchardEvaluation:null} : {})};
   if (typeof labels?.text !== 'string' || typeof labels.filename !== 'string')

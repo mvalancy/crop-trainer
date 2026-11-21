@@ -2,6 +2,7 @@ import {cropProfile} from '../generator/crops.js?v=systems1';
 import {field, returnBand} from '../generator/field.js?v=board-placement1';
 import {plantSettings} from '../generator/plant-version.js?v=plants3';
 import {predict} from './model.js';
+import {checkFeatureMode,localSurfaceFeatures} from './terrain-features.js';
 
 export const PEAK_HEIGHTS = [0.065, 0.035];
 export const FIELD_LIMITS={train:256,validation:128};
@@ -34,13 +35,16 @@ export function targetCenters(boxes){return boxes.map(({min,max,base_xy_m})=>bas
 function checkPeakAveraging(averaging) {
  if (averaging !== 'zero-filled' && averaging !== 'occupied') throw new Error('Choose zero-filled or occupied peak averaging.');
 }
-export function features(tile, minimumHeight=.065, averaging='zero-filled'){
+export function features(tile, minimumHeight=.065, averaging='zero-filled', featureMode='absolute'){
  // Only XYZ, never the synthetic return classes or supplied training boxes.
  checkPeakAveraging(averaging);
+ checkFeatureMode(featureMode);
  const xy=tile.xyz,N=SIZE*SIZE, max=new Float32Array(N), count=new Uint32Array(N);
+ const minima=featureMode==='local-ground' ? new Float32Array(N).fill(Infinity) : null;
  for(let i=0;i<xy.length;i+=3){
   let x=clamp(Math.floor(xy[i]/STEP),0,SIZE-1),y=clamp(Math.floor(xy[i+1]/STEP),0,SIZE-1),j=at(x,y);
   max[j]=Math.max(max[j],xy[i+2]);count[j]++;
+  if(minima) minima[j]=Math.min(minima[j],xy[i+2]);
  }
  // The sampled-cell rule averages only the bins the scan visited.
  // A measured ground return still contributes its weight to the denominator.
@@ -76,15 +80,16 @@ export function features(tile, minimumHeight=.065, averaging='zero-filled'){
   }
   const f=ring.map((a,i)=>a/Math.max(1,n[i]));
   pos.push([(x+.5+clamp(wx/(w||1),-1,1))*STEP,(y+.5+clamp(wy/(w||1),-1,1))*STEP]);
-  vec.push(h,max[j],f[0],f[1],f[2],h-f[2],high[1]/Math.max(1,n[1]),
+  const local=minima ? localSurfaceFeatures(minima,max,SIZE,x,y) : null;
+  vec.push(h,local ? local[0] : max[j],f[0],f[1],f[2],h-f[2],high[1]/Math.max(1,n[1]),
     high[2]/Math.max(1,n[2]),occupied[0]/Math.max(1,n[0]),occupied[2]/Math.max(1,n[2]),
-    Math.log1p(nums),Math.abs(crossX-crossY)/(w||1),extreme-bg/Math.max(1,n[2]));
+    Math.log1p(nums),Math.abs(crossX-crossY)/(w||1),local ? local[1] : extreme-bg/Math.max(1,n[2]));
  }
  return{X:Float32Array.from(vec),pos};
 }
-function prepareScan(scan, minimumHeight, validation, peakAveraging) {
+function prepareScan(scan, minimumHeight, validation, peakAveraging, featureMode) {
  const {p:recipe, labels, sampledRays, coverage} = scan;
- const tile = {...features(scan, minimumHeight, peakAveraging), truth:targetCenters(labels.boxes), coverage,
+ const tile = {...features(scan, minimumHeight, peakAveraging, featureMode), truth:targetCenters(labels.boxes), coverage,
   seed:recipe.seed, ground:recipe.ground, recipe, sampledRays, tile_id:labels.tile_id, returnCount:labels.num_points, points:[]};
  if (validation) {
   tile.plantReturns = scan.plantReturns;
@@ -109,10 +114,11 @@ export function validationFormSettings({crop,plantArchitecture=1,plantForm='mixe
  plantSettings({crop,plantArchitecture,plantForm:validationPlantForm});
  return validationPlantForm===plantForm ? {} : {validationPlantForm};
 }
-export async function buildDataset({seed=27,crop='lettuce',plantArchitecture=1,plantForm='mixed',plantCondition='healthy',validationPlantForm,trainFields=6,valFields=3,sensorMode='reference',validationSensorMode=sensorMode,trainingRayBudget=0,validationRayBudget=0,minimumHeight=.065,peakAveraging='zero-filled',sampleLimit=SAMPLE_LIMIT,selectPositiveRows,generate,onScan,onProgress=()=>{},signal}={}){
+export async function buildDataset({seed=27,crop='lettuce',plantArchitecture=1,plantForm='mixed',plantCondition='healthy',validationPlantForm,trainFields=6,valFields=3,sensorMode='reference',validationSensorMode=sensorMode,trainingRayBudget=0,validationRayBudget=0,minimumHeight=.065,peakAveraging='zero-filled',featureMode='absolute',sampleLimit=SAMPLE_LIMIT,selectPositiveRows,generate,onScan,onProgress=()=>{},signal}={}){
  const geometry = plantSettings({crop,plantArchitecture,plantForm,plantCondition});
  const holdout = validationFormSettings({crop,plantArchitecture,plantForm,validationPlantForm});
  checkPeakAveraging(peakAveraging);
+ checkFeatureMode(featureMode);
  if (!Number.isInteger(sampleLimit) || sampleLimit<24 || sampleLimit>SAMPLE_LIMIT || sampleLimit%2) {
   throw new Error('Choose an even training sample limit from 24 to 48,000.');
  }
@@ -139,7 +145,7 @@ export async function buildDataset({seed=27,crop='lettuce',plantArchitecture=1,p
    if (rayBudget) recipe.points = rayBudget;
    const step={split:trainingField?'Training':'Validation',done:2*k+v+1,total,firstValidation:k===trainFields && v===0};
    const t=generate ? await generate(recipe,step) : field(recipe);
-   const item=prepareScan(t,minimumHeight,!trainingField,peakAveraging);
+   const item=prepareScan(t,minimumHeight,!trainingField,peakAveraging,featureMode);
    if(onScan) onScan(t,step);
    (trainingField?training:validation).push(item);
    onProgress({done:2*k+v+1,total,stage:'data'});await pause();
@@ -202,7 +208,7 @@ export async function buildDataset({seed=27,crop='lettuce',plantArchitecture=1,p
  for(let j=0;j<DIMS;j++)std[j]=Math.max(.00001,Math.sqrt(std[j]/Y.length));
  normalizeFeatures(X,means,std);for(const t of validation)normalizeFeatures(t.X,means,std);
  return{X,Y,dims:DIMS,validation,scaling:{means:Array.from(means),std:Array.from(std)},
-  stats:{crop,...geometry,...holdout,...(peakAveraging==='occupied'?{peakAveraging}:{}),trainFields,valFields,trainTiles:training.length,valTiles:validation.length,minimumHeight,samples:Y.length,sampleLimit,trainingExamplesByField:[...bySeed.values()],sensorMode,validationSensorMode,trainingRayBudget,validationRayBudget,fieldSeeds:{training:trainSeeds,validation:valSeeds},generator:'crop-trainer-v1'},
+  stats:{crop,...geometry,...holdout,...(peakAveraging==='occupied'?{peakAveraging}:{}),...(featureMode==='local-ground'?{featureMode}:{}),trainFields,valFields,trainTiles:training.length,valTiles:validation.length,minimumHeight,samples:Y.length,sampleLimit,trainingExamplesByField:[...bySeed.values()],sensorMode,validationSensorMode,trainingRayBudget,validationRayBudget,fieldSeeds:{training:trainSeeds,validation:valSeeds},generator:'crop-trainer-v1'},
   manifest:[...training.map(t=>manifestTile(t,'train')),...validation.map(t=>manifestTile(t,'validation'))]};
 }
 // Change only the held-out layout. Preserve the fitted feature scale and
@@ -214,7 +220,7 @@ export async function rescanValidation(set, validationSensorMode, {generate, onS
   const recipe = {...original.recipe, sampling};
   const step = {split:'Validation', done:index+1, total:set.validation.length};
   const scan = generate ? await generate(recipe,step) : field(recipe);
-  const tile = prepareScan(scan,set.stats.minimumHeight,true,set.stats.peakAveraging);
+  const tile = prepareScan(scan,set.stats.minimumHeight,true,set.stats.peakAveraging,set.stats.featureMode);
   if (tile.truth.length !== original.truth.length || tile.truth.some(([x,y],i) =>
       x !== original.truth[i][0] || y !== original.truth[i][1])) {
    throw new Error('A second scan changed a labeled plant center.');

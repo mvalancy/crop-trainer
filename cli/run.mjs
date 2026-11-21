@@ -11,7 +11,7 @@ import {trainNetworkCPU,predictNetwork} from '../trainer/models/neural.js';
 const [command,output,...args]=process.argv.slice(2);
 const trainUsage = 'node cli/run.mjs train new-report.json [settings.json] [--weights new-weights.json]';
 const cliUsage = 'node cli/run.mjs serve [port]\n'+trainUsage+
-  '\nnode cli/run.mjs preflight [--peak-averaging occupied|zero-filled]\n  Train on CPU and replay the held-out synthetic scans through the field CLI. Prints JSON.';
+  '\nnode cli/run.mjs preflight [--peak-averaging occupied|zero-filled] [--feature-mode absolute|local-ground]\n  Train on CPU and replay the held-out synthetic scans through the field CLI. Prints JSON.';
 if(command==='serve'){
  const types={html:'text/html',js:'text/javascript',mjs:'text/javascript',css:'text/css',svg:'image/svg+xml',png:'image/png',webp:'image/webp',md:'text/plain',json:'application/json',csv:'text/csv',ply:'application/octet-stream'};
  const port=Number(output||4173);
@@ -29,17 +29,23 @@ if(command==='serve'){
  });
  server.listen(port,'127.0.0.1',()=>console.log('Open http://127.0.0.1:'+port+'/'));
 }else if(command==='preflight'){
- if(output !== undefined && (output!=='--peak-averaging' || args.length!==1 || !['occupied','zero-filled'].includes(args[0]))) {
-  throw Error('Use node cli/run.mjs preflight with no arguments or with --peak-averaging occupied|zero-filled.');
+ const flags = process.argv.slice(3), options = new Map();
+ const values = {'--peak-averaging':['occupied','zero-filled'], '--feature-mode':['absolute','local-ground']};
+ for (let i=0;i<flags.length;i+=2) {
+  const [name,value]=flags.slice(i,i+2);
+  if (!Object.hasOwn(values,name) || !values[name].includes(value) || options.has(name)) {
+   throw Error('Use node cli/run.mjs preflight with no arguments or with --peak-averaging occupied|zero-filled and/or --feature-mode absolute|local-ground.');
+  }
+  options.set(name,value);
  }
  const {preflight} = await import('./preflight.mjs');
- console.log(JSON.stringify(await preflight(args[0]),null,2));
+ console.log(JSON.stringify(await preflight(options.get('--peak-averaging'),options.get('--feature-mode')),null,2));
 }else if(command==='train'&&output){
  const configuration = args[0] && !args[0].startsWith('--') ? args.shift() : null;
  if (output.startsWith('--') || (args.length && (args.length !== 2 || args[0] !== '--weights' || !args[1] || args[1].startsWith('--')))) throw Error(trainUsage);
  const weightsPath = args[1];
  await checkOutputPaths(weightsPath ? [output,weightsPath] : [output]);
- const defaults={crop:'lettuce',plantArchitecture:1,plantForm:undefined,plantCondition:undefined,seed:27,trainFields:6,valFields:3,epochs:40,model:'neural',hiddenLayers:[4],activation:'tanh',optimizer:'sgd',batchSize:0,momentum:.9,learningRate:.25,initSeed:12345,sensorMode:'mixed',validationSensorMode:undefined,trainingRayBudget:0,validationRayBudget:0,minimumHeight:.035,threshold:.5,peakAveraging:undefined,validationPlantForm:undefined};
+ const defaults={crop:'lettuce',plantArchitecture:1,plantForm:undefined,plantCondition:undefined,seed:27,trainFields:6,valFields:3,epochs:40,model:'neural',hiddenLayers:[4],activation:'tanh',optimizer:'sgd',batchSize:0,momentum:.9,learningRate:.25,initSeed:12345,sensorMode:'mixed',validationSensorMode:undefined,trainingRayBudget:0,validationRayBudget:0,minimumHeight:.035,threshold:.5,peakAveraging:undefined,featureMode:undefined,validationPlantForm:undefined};
  const config=configuration?JSON.parse(await readFile(configuration,'utf8')):{};
  if(!config||typeof config!=='object'||Array.isArray(config))throw Error('Expected a JSON settings object.');
  for(const key of Object.keys(config))if(!Object.hasOwn(defaults,key))throw Error('Unknown setting '+key);
