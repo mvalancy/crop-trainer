@@ -74,6 +74,23 @@ With live preview off in Chromium, the 16 CPU Benchmark fits took 0.84–2.73 s 
 
 </details>
 
+## Can a second detector fill the gaps between standard pins?
+
+This test kept every pin from the standard mixed-stage fit. A second model, trained with the 3.5 cm floor, could add pins only at peaks from 3.5 cm up to 6.5 cm. We took its candidates in descending score order at the same 0.50 cutoff. Each addition had to be at least 22 cm from every pin already placed. We fixed the rule and six fresh test plantings before scoring.
+
+**It gained seedling matches only on scans with the soil removed.** Across both fitted model pairs, the fallback added 26 matches on grids and 22 on rings at 15 cm. On their soil-present twins, seven additional grid pins and 12 additional ring pins yielded zero new matches. One fitted pair accounted for 42 of the 48 gains. For branching plants, precision slipped from 88.8% to 88.0% on grids and from 86.8% to 85.2% on rings. Every previously matched plant on these scans still had a match at 15 cm.
+
+| Test plants | Standard F1 | Low-floor F1 | Fallback F1 | Fallback matched / extra at 15 cm |
+| --- | --- | --- | --- | ---: |
+| Seedlings, grid | .020 / .032 / .052 | .046 / .056 / .095 | .033 / .046 / .069 | 101 / 227 |
+| Seedlings, rings | .015 / .029 / .044 | .035 / .053 / .084 | .026 / .043 / .058 | 86 / 258 |
+| Branching, grid | .705 / .821 / .888 | .641 / .754 / .825 | .700 / .817 / .886 | 2,330 / 319 |
+| Branching, rings | .599 / .703 / .800 | .579 / .699 / .796 | .595 / .700 / .801 | 1,974 / 342 |
+
+Each F1 triplet uses 7.5, 10 and 15 cm in that order. Each row pools two fits on the same 653 plants with two soil variants, giving 2,612 decisions. At 15 cm the plain height rule on the lower peak list scored .292 / .286 for seedlings on grids / rings, and .541 / .580 for branching plants. This rule can place many extra pins. On seedling grids it matched 603 of 1,306 appearances and added 2,227 extra pins on its single pass through the scans.
+
+To repeat the test, run `node benchmark/studies/tomato-low-fallback.mjs > fallback.json`. It rebuilds the previous four fits, generates 48 held-out scans once each and scores every contender on the same returns. A CPU run took 4.67 s to prepare the fit datasets, 0.46 s to fit, 3.58 s to generate the held-out scans and 1.10 s for inference and scoring. The output includes the six reserved field seeds, each tile’s counts at all three distances and the gains and losses relative to the standard pins. [Fallback study](../benchmark/studies/tomato-low-fallback.mjs)
+
 ## Reproduce the measurements
 
 ```sh
