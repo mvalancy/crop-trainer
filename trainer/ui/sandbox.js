@@ -12,7 +12,7 @@ export function startingPreset(params) {
   if (params.has('epochs') || params.get('plan') === 'quick') return 'quick';
   if (params.get('plan') === 'practice') return 'practice';
   const experimentKeys = ['embed', 'engine', 'seed', 'model', 'crop', 'sensor', 'validationSensor',
-    'trainingRayBudget', 'validationRayBudget', 'threshold', 'minimumHeight', 'soilMetric', 'missBand', 'featureMode', 'trainFields', 'valFields'];
+    'trainingRayBudget', 'validationRayBudget', 'threshold', 'minimumHeight', 'soilMetric', 'missBand', 'featureMode', 'trainFields', 'valFields', 'positiveSampling', 'sampleLimit'];
   return experimentKeys.some(key => params.has(key)) ? 'quick' : 'practice';
 }
 

@@ -94,6 +94,10 @@ Each line prints the adapter, measured change and expected change. Run the CPU e
 
 </details>
 
+### Which peaks get a place in training?
+
+Under **Fields and dataset seed**, **Example limit** sets how many candidate peaks can enter one training set. A limit of 600 gives the model up to 300 peaks near known plants and 300 background peaks. It sees those examples again on every pass. **How to choose plant examples** can give scarce growth forms more places and include examples with and without ground returns. The fit summary shows how many peaks each group offered and how many were used. If every eligible positive already fits, the draw uses them all either way. [Try a 600-example tomato fit](https://mvalancy.github.io/crop-trainer/trainer/?plan=quick&crop=tomato&plantArchitecture=2&plantForm=mixed&seed=443731&positiveSampling=form-soil&sampleLimit=600&minimumHeight=0.035&featureMode=local-ground&sensor=reference&trainingRayBudget=60000) · [See the two draws and their held-out scores](tomato-soil-sampling.md)
+
 ### Do more practice fields improve a score?
 
 We compared 2, 6 and 24 practice fields on three fresh dataset seeds using the v1 canopy generator. Each column kept the same six validation plantings (12 scans), verified by tile ID. The smaller training sets shared their raw scans with the start of the larger sets. Every fit built its own balanced pool and scaling from its training fields.

@@ -84,7 +84,7 @@
 }
 #controls .settingGroup:has(#initLabel[hidden]) { display: none; }
 #controls .settingGroup label { margin: 0; }
-#controls .detailFields > button { justify-self: start; }
+#controls .detailFields > button, #controls #stress { justify-self: start; }
 #controls :is(.selectPair, .stopFields, .countFields, .numberRow) {
   display: grid;
   align-items: start;
@@ -191,7 +191,7 @@
 }
 .detectorStudies a { justify-self: start; }
 @media (min-width: 55rem) {
-  #controls .settingsGrid > details[open]:not(#detectorOptions) > .detailFields {
+  #controls .settingsGrid > details[open]:not(#detectorOptions, #datasetOptions) > .detailFields {
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
     align-items: start;
   }
@@ -213,3 +213,28 @@
 #localGroundGuide figure { margin: .75rem 0; }
 #localGroundGuide img { display: block; width: min(100%, 24rem); height: auto; }
 #localGroundGuide figcaption { margin-top: .5rem; }
+
+#controls #sampleSettings { align-content: start; }
+#sampleSettings .hint { margin: 0; }
+#sampleLimit { --digits: 5; }
+.samplingBody {
+  display: grid;
+  gap: .7rem 1.6rem;
+  align-items: start;
+  padding-block: .4rem .6rem;
+}
+.samplingBody p { margin: .35rem 0; }
+.samplingTable { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.samplingTable :is(th, td):not(:first-child) { text-align: right; }
+.samplingTable :is(th, td):first-child { text-align: left; }
+.samplingTable tbody th { width: 64%; font-weight: 600; }
+.samplingTable small { display: block; color: var(--muted); font-weight: 400; }
+.samplingBar { display: block; height: .45rem; margin-top: .35rem; background: #c5d7b6; border-radius: .2rem; overflow: hidden; }
+.samplingBar i { display: block; height: 100%; background: #316952; }
+@media (min-width: 55rem) {
+  #controls .settingsGrid > #datasetOptions[open] > .detailFields {
+    grid-template-columns: minmax(0,.85fr) minmax(0,1.6fr) minmax(0,1fr);
+    align-items: start;
+  }
+  .samplingBody { grid-template-columns: minmax(14rem, .75fr) minmax(0, 1.4fr); }
+}

@@ -4,6 +4,7 @@ import {initScanStudy} from '../trainer/study/scan-study-ui.js?v=board-placement
 import {createFieldLesson} from './field-lesson.js?v=generator-guide3';
 import {cropProfile} from '../trainer/generator/crops.js?v=systems1';
 import {scanSession} from '../trainer/generator/scan-session.js?v=board-placement1';
+import {validSampleLimit} from '../trainer/models/positive-sampling.js';
 import {makeRecipe} from '../trainer/models/data.js?v=board-placement1';
 import {formsFor} from '../trainer/plants/forms.js';
 import {setupFieldPlants} from '../trainer/plants/field-controls.js?v=drag-orbit1';
@@ -190,9 +191,11 @@ function grow(checkReplay = false) {
   const url = new URL('./', location.href);
   for (const [id, key] of replaySelects) url.searchParams.set(key, $(id).value);
   if (!recipe.boardPlacement) url.searchParams.delete('boardPlacement');
-  for (const [key, value] of [['peakAveraging', 'occupied'], ['featureMode', 'local-ground']]) {
+  for (const [key, value] of [['peakAveraging', 'occupied'], ['featureMode', 'local-ground'], ['positiveSampling', 'form-soil']]) {
     if (requested.get(key) === value) url.searchParams.set(key, value);
   }
+  const cap = Number(requested.get('sampleLimit'));
+  if (validSampleLimit(cap)) url.searchParams.set('sampleLimit', cap);
   for(const [key,value] of Object.entries(plants)) url.searchParams.set(key,value);
   url.searchParams.set('budget', $('budget').value);
   if(recipe.infrastructure===false) url.searchParams.set('fixtures','off');
@@ -333,7 +336,7 @@ function applyScan(value, recipe, url, selectedBox, expectedTile) {
   const training = new URLSearchParams({plan:'practice',crop:recipe.crop,sensor:recipe.sampling.key});
   const budget = url.searchParams.get('budget');
   training.set('plantArchitecture',recipe.plantArchitecture??1);
-  for (const key of ['peakAveraging', 'featureMode']) {
+  for (const key of ['peakAveraging', 'featureMode', 'positiveSampling', 'sampleLimit']) {
     if (url.searchParams.has(key)) training.set(key, url.searchParams.get(key));
   }
   if(recipe.plantArchitecture>=2){

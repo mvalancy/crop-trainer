@@ -14,6 +14,8 @@ export function densitySnapshot(report) {
   const {settings, datasets, rows} = report;
   if (![12000, 60000].includes(settings.validationRayBudget)) return null;
   const experiment = [settings.crop, settings.minimumHeight];
+  if (settings.sampleLimit !== undefined) experiment.push(['sampleLimit',settings.sampleLimit]);
+  if (settings.positiveSampling) experiment.push(['positiveSampling',settings.positiveSampling]);
   if (settings.featureMode === 'local-ground') experiment.push(['featureMode','local-ground']);
   if (settings.peakAveraging === 'occupied') experiment.push(['peakAveraging','occupied']);
   const scores = rows.map(row => {

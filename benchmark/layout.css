@@ -3,6 +3,12 @@
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 16.5rem), 1fr));
 }
 #benchForm .helpField:has(.comparisonChoice) { grid-column: auto; }
+#benchForm .helpField > label.comparisonChoice { grid-area: 1 / 1; }
+.benchSetup > .benchContext { align-self: start; }
+@media (max-width: 740px) {
+  #benchForm .action { grid-template-columns: auto auto; justify-content: start; }
+  #benchForm .action > :has(#livePreview) { grid-column: 1 / -1; justify-self: start; }
+}
 #benchForm select { padding-inline: .45rem .2rem; }
 #benchOptions select { min-height: 44px; }
 
@@ -148,4 +154,40 @@
   .distanceScores td:nth-child(5) { display: block; }
   .distanceScores td:nth-child(10),
   .distanceScores td:nth-child(11) { border: none; padding-top: 0; }
+}
+
+#samplingOptions { grid-column: 1 / -1; margin: 0; }
+.samplingControls { display: grid; gap: .5rem; }
+.samplingControls input { width: 7rem; min-height: 44px; font: inherit; }
+#samplingOptions .hint { margin: .5rem 0 0; }
+#samplingMix .helpField:has(#samplingSeed) { width: min(100%, 12rem); }
+#samplingMix select { min-height: 44px; }
+.samplingMixTable { width: min(100%, 52rem); table-layout: fixed; }
+.samplingMixTable th, .samplingMixTable td { white-space: normal; text-align: right; padding: .45rem .65rem; }
+.samplingMixTable th:first-child { width: 37%; text-align: left; }
+.samplingMixTable th small { display: block; font-weight: normal; color: var(--muted); }
+.samplingFraction {
+  display: block;
+  height: .26rem;
+  margin-top: .2rem;
+  border-radius: 2px;
+  background: linear-gradient(to right, var(--bar, #62816b) var(--kept), #dce5db var(--kept));
+}
+.samplingMixTable td:last-child { --bar: #195a3d; }
+#samplingMix { container: sampling-receipt / inline-size; }
+@container sampling-receipt (max-width: 24rem) {
+  .samplingMixTable, .samplingMixTable thead, .samplingMixTable tbody { display: block; }
+  .samplingMixTable thead th:not(:focus) {
+    position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%);
+  }
+  .samplingMixTable tbody { display: grid; gap: .5rem; }
+  .samplingMixTable tbody tr {
+    display: grid; grid-template-columns: repeat(3,minmax(0,1fr));
+    gap: .35rem; padding: .45rem; border: 1px solid var(--line); border-radius: .5rem;
+  }
+  .samplingMixTable th[scope=row] { grid-column: 1 / -1; width: auto; background: transparent; }
+  .samplingMixTable tbody :is(th,td) { padding: 0; border: 0; text-align: left; }
+  .samplingMixTable td::before {
+    content: attr(data-label) / ""; display: block; font-size: .73rem; color: var(--muted);
+  }
 }

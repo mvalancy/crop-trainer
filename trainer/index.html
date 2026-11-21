@@ -8,7 +8,7 @@
 <link rel="apple-touch-icon" sizes="180x180" href="../art/crop-touch.png">
 <link rel="stylesheet" href="../app/farm.css?v=context-help2">
 <link rel="stylesheet" href="../app/help.css?v=context-help2">
-<link rel="stylesheet" href="./ui/training-layout.css?v=terrain1">
+<link rel="stylesheet" href="./ui/training-layout.css?v=sampling1">
 <link rel="stylesheet" href="./ui/network-diagram.css">
 <script type="module" src="../app/help.js?v=context-help2"></script>
 </head>
@@ -107,6 +107,7 @@
 <label>Validation fields<input id="validation" inputmode="numeric" data-help-label="Validation fields" data-help="These separately seeded plantings measure how well the fitted detector places pins on unseen fields. Both soil variants stay together in validation." type="number" min="1" max="128" step="1" value="8" required=""></label>
 <label>Dataset seed<input id="seed" inputmode="numeric" data-help-label="Dataset seed" data-help="A seed is the number used to repeat the same random planting choices. Keep it fixed to compare model settings on the same fields. Change it to try a fresh set." type="number" min="0" max="4294967295" step="1" value="27" required=""></label>
 </div>
+<button type="button" id="stress" data-help-label="Load stress settings" data-help="Set 128 training fields, 64 validation fields, 5,000 epochs and mixed scan layouts. Review the settings and time a trial before starting.">Load stress settings</button>
 </fieldset>
 <fieldset class="settingGroup"><legend>Plantings</legend>
 <div class="selectPair">
@@ -119,7 +120,12 @@
 </div>
 <a data-help="Open a matched benchmark of a single training form against a seeded mix. Both fits are measured on the chosen validation form." id="formsBench" href="../benchmark/?comparison=forms" hidden>Compare this training form with a mix</a>
 </fieldset>
-<button type="button" id="stress" data-help-label="Load stress settings" data-help="Set 128 training fields, 64 validation fields, 5,000 epochs and mixed scan layouts. Review the settings and time a trial before starting.">Load stress settings</button>
+<fieldset class="settingGroup" id="sampleSettings"><legend>Training examples</legend>
+<label>How to choose plant examples<select id="positiveSampling" required aria-describedby="samplingHint" data-help="The trainer labels peaks within 9.5 cm of a known plant center as plant examples. It shuffles these peaks together or shares places across plant forms and scans with or without ground. Both rules use the same background examples."><option value="ordinary" selected>Shuffle all plant examples</option><option value="form-soil">Balance by form and soil</option></select></label>
+<label>Example limit<input type="number" id="sampleLimit" min="24" max="48000" step="2" value="48000" required inputmode="numeric" data-help="Maximum total examples used each epoch across all training fields. Enter an even number from 24 to 48,000."><span>Across all training fields, half the places go to peaks near plant centers and half to background.</span></label>
+<p id="samplingHint" class="hint">The trainer shuffles peaks from all training fields together. At a small limit, common plant forms can take most of the places.</p>
+<a id="samplingBench" href="../benchmark/?comparison=sampling&amp;sampleLimit=600" data-help="Run the starter network twice on the same six training and three validation fields per seed, at a 0.50 cutoff. Only the choice of plant examples changes.">Compare both rules at 600 examples</a>
+</fieldset>
 </div></details>
 <details id="scanOptions">
 <summary data-help="Choose where rays land and how many to request for each practice or validation scan.">Scanner and ray budgets</summary>
@@ -202,8 +208,14 @@
 <h3 id="fitDataTitle">What went into this fit?</h3>
 <p id="fitCounts" data-help-label="Examples and parameters" data-help="An example is one labeled peak with 13 measurements. Example visits count repetitions over epochs. Parameters are the weights and biases the fit can change."></p>
 <figure class="contributionPlot"><div aria-hidden="true" id="fieldBars"></div><figcaption id="fieldRange" data-help-label="Examples per planting" data-help="Each bar is one practice planting. Taller bars contributed more retained examples per epoch. Both scans of the planting contribute to its total."></figcaption></figure>
+<details id="samplingReceipt" hidden><summary data-help="Check which plant forms had eligible height peaks and how many of those peaks entered each training epoch.">Which plant examples made the cut?</summary>
+<div class="samplingBody"><div><p id="samplingTotals"></p>
+<p class="hint">Any peak within 9.5 cm of a labeled plant center can qualify, including a bump in nearby soil. A plant can have several peaks or none.</p>
+<p class="hint">The full bar shows how many peaks qualified. Its dark part shows how many reached training.</p></div>
+<table class="samplingTable" aria-label="Peaks near labeled plant centers available and used in training"><thead><tr><th scope="col">Plant form and scan</th><th scope="col" data-help="Labeled peaks in this group that entered each training epoch.">Used</th><th scope="col" data-help="All eligible peaks near labeled plant centers in this group before sampling.">Available</th></tr></thead><tbody id="samplingRows"></tbody></table></div>
+</details>
 <details id="fieldContributions"><summary data-help="See how many plant and background examples from each seed reached each training epoch.">See examples from each planting</summary>
-<p>Each row combines the two scans of a planting. Open a field seed to inspect its soil-present scan. The trainer pools the labeled peaks, then selects equal numbers of plant and background examples, up to 48,000 examples in total.</p>
+<p>Each row combines the two scans of a planting. Open a field seed to inspect its soil-present scan. The trainer pools the labeled peaks, then selects equal numbers of plant and background examples, up to the example limit you set.</p>
 <div class="tableScroll"><table><caption>Examples retained for each epoch</caption><thead><tr><th data-help="Identifies one practice planting. Open its seed to inspect the scan that includes soil." scope="col">Field seed</th><th data-help="Retained practice peaks less than 9.5 cm from a labeled plant center. They teach the model what a positive example looks like." scope="col">Plant</th><th data-help="Retained practice peaks more than 15 cm from every labeled plant center. They teach the model what a background example looks like." scope="col">Background</th><th data-help="The two example classes added together for this planting. This many rows from it enter each training epoch." scope="col">Total</th></tr></thead><tbody id="fitFields"></tbody></table></div></details></section>
 <dl id="benchmark" class="bench" hidden="">
 <div><dt>Backend used</dt><dd id="bEngine" data-help-label="Backend used" data-help="The device computation path used to fit these weights. Field generation and validation still run on the CPU."></dd></div>
@@ -346,6 +358,6 @@
 </main>
 <footer class="siteFoot"><span>Created by Matthew Valancy</span>
 <div><a data-help="Open commands and reproducibility instructions for an agent working with Crop Trainer." href="../AGENTS.md">Agent quickstart</a><a data-help="View the farming challenges and achievements stored on this device." href="../#missions">Farm journal</a><a data-help="Read the terms for using and sharing Crop Trainer’s source code." href="../LICENSE">MIT license</a></div><small class="contextHint"><span class="hoverHint">Hover or focus a button or score for help.</span><span class="touchHint">Tap a score or hold a button for help. A quick tap runs the action.</span></small></footer>
-<script type="module" src="./main.js?v=terrain-cutoff1"></script>
+<script type="module" src="./main.js?v=sampling1"></script>
 </body>
 </html>

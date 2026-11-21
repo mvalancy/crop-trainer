@@ -1,8 +1,9 @@
+import {samplingLabels, setupSamplingControls, checkSamplingPair, displaySamplingMix} from './sampling.js';
 import {benchmarkView} from './watch.js?v=context-help2';
 import {scanSession} from '../trainer/generator/scan-session.js?v=plants3';
 import {setupPlantControls, setupValidationPlantForm, plantSettings} from '../trainer/generator/plant-version.js?v=orchard4';
-import {CLASSIC_TRAINING_PAIR, TRAINING_RAY_PAIRS, DENSITY_HISTORY_KEY, HEIGHT_HISTORY_KEY, densitySnapshot, pairDensityScores} from './density.js?v=terrain1';
-import {buildDataset, rescanValidation, validateModel, compareMatchedBoxes, coverageAtDistance, PEAK_HEIGHTS} from '../trainer/models/data.js?v=terrain1';
+import {CLASSIC_TRAINING_PAIR, TRAINING_RAY_PAIRS, DENSITY_HISTORY_KEY, HEIGHT_HISTORY_KEY, densitySnapshot, pairDensityScores} from './density.js?v=sampling1';
+import {buildDataset, rescanValidation, validateModel, compareMatchedBoxes, coverageAtDistance, PEAK_HEIGHTS} from '../trainer/models/data.js?v=sampling1';
 import {trainNetworkCPU, trainNetworkGPU, predictNetwork} from '../trainer/models/neural.js';
 import {trainCPU, MAX_EPOCHS} from '../trainer/models/model.js';
 import {cropProfile} from '../trainer/generator/crops.js?v=systems1';
@@ -19,11 +20,12 @@ let controller, report, gpuState = 'checking', showingSetup = true;
 sensorOptions($('sensor'), true);
 validationSensorOptions($('validationSensor'));
 const requested = new URLSearchParams(location.search);
-$('benchOptions').open = ['plantArchitecture','plantForm','validationPlantForm','plantCondition','seed','sensor','validationSensor','trainingRayBudget','validationRayBudget','epochs','minimumHeight','peakAveraging','featureMode','trainingPair','includeMixed'].some(key=>requested.has(key));
+const samplingControls = setupSamplingControls(requested);
+$('benchOptions').open = ['plantArchitecture','plantForm','validationPlantForm','plantCondition','seed','sensor','validationSensor','trainingRayBudget','validationRayBudget','epochs','minimumHeight','peakAveraging','featureMode','sampleLimit','positiveSampling','trainingPair','includeMixed'].some(key=>requested.has(key));
 // Earlier shared comparisons omit a geometry version. Keep their plantings
 // reproducible. A fresh Benchmark uses the current plant architecture.
 const replayKeys = ['comparison','crop','sensor','seed','epochs','trainingRayBudget','validationRayBudget',
-  'validationSensor','minimumHeight','peakAveraging','featureMode','trainingPair','includeMixed','fieldMetric','cutoffDistance','live'];
+  'validationSensor','minimumHeight','peakAveraging','featureMode','sampleLimit','positiveSampling','trainingPair','includeMixed','fieldMetric','cutoffDistance','live'];
 function revealSettingsAnchor(hash) {
   const target = document.getElementById(hash.slice(1));
   const disclosure = target?.closest('#benchOptions,#benchExamples');
@@ -55,7 +57,7 @@ for (const id of ['comparison', 'crop', 'sensor', 'validationSensor', 'minimumHe
   if ([...$(id).options].some(option => option.value === value)) $(id).value = value;
 }
 const readPlantControls = setupPlantControls($('crop'), $('plantArchitecture'), $('plantForm'), $('plantCondition'),
-  requested, replayKeys.some(key => requested.has(key)) && !['forms','features'].includes(requested.get('comparison')) ? 1 : 3);
+  requested, replayKeys.some(key => requested.has(key)) && !['forms','features','sampling'].includes(requested.get('comparison')) ? 1 : 3);
 const readValidationForm = setupValidationPlantForm($('validationPlantForm'), $('crop'), $('plantArchitecture'), $('plantForm'), requested);
 trainingRayOptions($('trainingRayBudget'), requested.get('trainingRayBudget'));
 rayBudgetOptions($('validationRayBudget'), requested.get('validationRayBudget'));
@@ -111,6 +113,7 @@ async function discoverGpu() {
   if (showingSetup) showReadyState();
 }
 function explainComparison() {
+  samplingControls.show($('comparison').value === 'sampling');
   const compareForms = $('comparison').value === 'forms';
   const structured = Number($('plantArchitecture').value) >= 2;
   const form = $('plantForm'), heldOut = $('validationPlantForm');
@@ -144,9 +147,12 @@ function explainComparison() {
   const compareDurations = $('comparison').value === 'epochs';
   $('epochControl').hidden = compareDurations;
   $('fitEpochs').disabled = compareDurations;
+  const limit = $('sampleLimit');
+  const budget = limit.validity.valid ? 'up to '+limit.valueAsNumber.toLocaleString()+' distinct examples' : 'the same example limit';
   const descriptions = {
     forms: structured ? 'Train one network on '+(form.selectedOptions[0]?.textContent ?? 'one form')+' alone and another on a mix. Both get six training fields. Test both on identical fresh fields of '+(heldOut.value === 'follow' ? form.selectedOptions[0]?.textContent : heldOut.selectedOptions[0]?.textContent)+'.'
       : 'Choose connected or structured plants in the settings to compare a single training form with a mix.',
+    sampling: 'Give two networks the same scans and '+budget+' each. One shuffles peaks near labeled plants together. The other shares their slots across growth forms with ground returns included and removed. Both see the same background peaks.',
     features: 'Train two CPU networks on identical peak locations. One uses the usual height measurements. The other measures how far each peak rises above nearby low returns and how uneven that surface is. Repeat on two sets of plantings.',
     averaging: 'Train two CPU networks on the same scans. One averages heights across every cell. The other averages only cells that received a point. Each learns from the peaks its own rule found.',
     heights: 'Both detectors look for high points in the same scans. One starts at 6.5 cm and one at 3.5 cm. Check whether including shorter peaks recovers plants or adds stray pins.',
@@ -161,6 +167,7 @@ function explainComparison() {
   $('comparisonHelp').textContent = descriptions[$('comparison').value];
 }
 trainingPair.addEventListener('change', explainComparison);
+$('sampleLimit').addEventListener('input', explainComparison);
 for (const id of ['crop','plantArchitecture','plantForm','validationPlantForm']) $(id).addEventListener('change', explainComparison);
 $('comparison').addEventListener('change', () => {
   explainComparison();
@@ -182,6 +189,7 @@ function contenderLabel(row, comparison) {
   if (comparison === 'heights') return (100 * row.minimumHeight).toFixed(1)+' cm peaks';
   if (comparison === 'density') return row.trainingRayBudget === ALTERNATING_BUDGET ? 'Alternating 12k / 60k' : row.trainingRayBudget.toLocaleString()+' training rays';
   if (comparison === 'layouts') return layoutNames.get(row.validationSensorMode);
+  if (comparison === 'sampling') return samplingLabels.get(row.positiveSampling);
   if (comparison === 'features') return featureLabels.get(row.featureMode);
   if (comparison === 'averaging') return averagingNames.get(row.peakAveraging);
   if (comparison === 'epochs') return row.epochs+' epochs';
@@ -250,6 +258,7 @@ function showOutcome(rows, comparison, crop) {
     const name = [...$('validationPlantForm').options].find(option => option.value === form)?.textContent ?? form;
     guide.textContent += ' Both fits were tested on '+name.toLowerCase()+'.';
   }
+  if (comparison === 'sampling') guide.textContent += ' Open “Which examples reached the fit?” to see which groups gained or lost training examples.';
   if (comparison === 'features') guide.textContent += ' Both fits scored the same peak locations. Their height inputs and fitted weights can change which pins survive.';
   if (comparison === 'layouts') guide.textContent += ' Counts are per layout. Scores describe these simulated patterns. A field-mounted scanner has its own viewpoint and occlusion.';
   const list = document.createElement('ul');
@@ -264,9 +273,9 @@ function showOutcome(rows, comparison, crop) {
     count.dataset.helpLabel = entry.label + ' matches and extra pins';
     count.textContent = entry.matched.toLocaleString()+' of '+entry.labels.toLocaleString()+' centers found · '+entry.extra.toLocaleString()+' extra pins';
     item.append(title,count);
-    if (comparison === 'forms') {
+    if (comparison === 'forms' || comparison === 'sampling') {
       const samples = document.createElement('span');
-      samples.dataset.help = 'Retained positive and negative candidate peaks for fitting, shown separately for the two seeds. Plant shapes can change this count.';
+      samples.dataset.help = 'Retained positive and negative candidate peaks for fitting, shown separately for each seed.';
       samples.dataset.helpLabel = 'Examples used for training';
       samples.textContent = 'Training examples on each seed · '+groups.get(entry.label).map(row => row.trainingSamples.toLocaleString()).join(' / ');
       item.append(samples);
@@ -332,19 +341,21 @@ function appendRow(row, comparison, settings) {
   const widest=row.scores.at(-1);
   tr.insertCell().textContent = row.seed;
   const modelCell = tr.insertCell();
-  const modelLabel = ['density','heights','layouts','averaging','features','forms'].includes(comparison) ? contenderLabel(row, comparison) : row.model+' / '+row.backend;
+  const modelLabel = ['density','heights','layouts','averaging','features','sampling','forms'].includes(comparison) ? contenderLabel(row, comparison) : row.model+' / '+row.backend;
   modelCell.textContent = modelLabel;
   const duration = tr.insertCell();
   const cutoff = tr.insertCell();
   duration.textContent = row.epochs;
   cutoff.textContent = row.threshold;
-  if (['density','epochs','cutoffs','heights','layouts','averaging','features','forms'].includes(comparison)) {
+  if (['density','epochs','cutoffs','heights','layouts','averaging','features','sampling','forms'].includes(comparison)) {
     const query = new URLSearchParams({
       crop:settings.crop, ...plantSettings(settings), sensor:settings.sensorMode, seed:row.seed, epochs:row.epochs, threshold:row.threshold, engine:'cpu'
     });
     if (comparison === 'forms') query.set('plantForm', row.plantForm);
     if (settings.validationPlantForm) query.set('validationPlantForm',settings.validationPlantForm);
     query.set('minimumHeight', row.minimumHeight);
+    if (settings.sampleLimit !== undefined) query.set('sampleLimit',settings.sampleLimit);
+    if (row.positiveSampling) query.set('positiveSampling',row.positiveSampling);
     if (row.featureMode) query.set('featureMode', row.featureMode);
     if (row.peakAveraging === 'occupied') query.set('peakAveraging',row.peakAveraging);
     if (row.trainingRayBudget) query.set('trainingRayBudget', row.trainingRayBudget);
@@ -354,7 +365,7 @@ function appendRow(row, comparison, settings) {
     const link = document.createElement('a');
     link.href = '../trainer/?'+query;
     link.dataset.help = 'Open the Training shed with these settings to fit this contender again and inspect or export its weights.';
-    const cell = {heights:modelCell, density:modelCell, layouts:modelCell, averaging:modelCell, features:modelCell, forms:modelCell, epochs:duration, cutoffs:cutoff}[comparison];
+    const cell = {heights:modelCell, density:modelCell, layouts:modelCell, averaging:modelCell, features:modelCell, sampling:modelCell, forms:modelCell, epochs:duration, cutoffs:cutoff}[comparison];
     link.textContent = cell.textContent;
     link.setAttribute('aria-label', 'Replay '+modelLabel+' on seed '+row.seed+' with '+row.epochs+' epochs and cutoff '+row.threshold);
     cell.replaceChildren(link);
@@ -422,6 +433,8 @@ function displayValidationComparison() {
   // an independent 30k/1M training comparison in this browser tab.
   let key = heights ? HEIGHT_HISTORY_KEY : DENSITY_HISTORY_KEY;
   if (!heights && report.settings.trainingPair !== CLASSIC_TRAINING_PAIR) key += '-'+report.settings.trainingPair;
+  if (report.settings.sampleLimit !== undefined) key += '-cap-'+report.settings.sampleLimit;
+  if (report.settings.positiveSampling) key += '-'+report.settings.positiveSampling;
   if (report.settings.featureMode === 'local-ground') key += '-local-ground';
   if (report.settings.peakAveraging === 'occupied') key += '-occupied';
   const snapshot = densitySnapshot(report);
@@ -584,6 +597,8 @@ function fieldViewerUrl(settings, {seed, sensor, ground, tile}) {
   if (settings.validationPlantForm) query.set('plantForm', settings.validationPlantForm);
   if (settings.validationRayBudget) query.set('budget', settings.validationRayBudget);
   // A shared scan can carry settings that apply to both fitted models.
+  if (settings.positiveSampling) query.set('positiveSampling',settings.positiveSampling);
+  if (settings.sampleLimit !== undefined) query.set('sampleLimit',settings.sampleLimit);
   if (settings.featureMode) query.set('featureMode', settings.featureMode);
   if (settings.peakAveraging) query.set('peakAveraging', settings.peakAveraging);
   return '../?'+query+'#field';
@@ -689,6 +704,7 @@ $('fieldMetric').addEventListener('change', () => {
 // Give each fit a stable column even when execution order reverses on seed two.
 function boxFits(seed) {
   const rows = report.rows.filter(row => row.seed === seed);
+  if (report.comparison === 'sampling') return [...samplingLabels.keys()].map(mode => rows.find(row => row.positiveSampling === mode));
   if (report.comparison === 'features') return [...featureLabels.keys()].map(mode => rows.find(row => row.featureMode === mode));
   if (report.comparison === 'forms') return report.settings.trainingForms.map(form => rows.find(row => row.plantForm === form));
   if (report.comparison === 'heights') return PEAK_HEIGHTS.map(height => rows.find(row => row.minimumHeight === height));
@@ -770,7 +786,8 @@ $('benchForm').onsubmit = async event => {
   const validationRayBudget = Number((compareLayouts ? layoutBudget : $('validationRayBudget')).value);
   const geometry = readPlantControls();
   const compareForms = comparison === 'forms';
-  const settings={seed,crop,...geometry,...readValidationForm(),sensorMode,validationSensorMode,trainingRayBudget,validationRayBudget,trainFields:6,valFields:3};
+  const compareSampling = comparison === 'sampling';
+  const settings={seed,crop,...geometry,...samplingControls.settings(compareSampling),...readValidationForm(),sensorMode,validationSensorMode,trainingRayBudget,validationRayBudget,trainFields:6,valFields:3};
   if (compareForms) {
     settings.trainingForms = [geometry.plantForm, 'mixed'];
     settings.validationPlantForm = $('validationPlantForm').value === 'follow' ? geometry.plantForm : $('validationPlantForm').value;
@@ -795,6 +812,7 @@ $('benchForm').onsubmit = async event => {
     backend: [neuralCPU, {model:'neural', backend:'WebGPU', train:trainNetworkGPU}],
     models: [{model:'linear', backend:'CPU', train:trainCPU}, neuralCPU],
     cutoffs: [neuralCPU],
+    sampling: [...samplingLabels.keys()].map(positiveSampling => ({...neuralCPU,positiveSampling})),
     features: [...featureLabels.keys()].map(featureMode => ({...neuralCPU,featureMode})),
     averaging: [...averagingNames.keys()].map(peakAveraging=>({...neuralCPU,peakAveraging})),
     layouts: [...layoutNames.keys()].map(validationSensorMode=>({...neuralCPU,validationSensorMode})),
@@ -814,6 +832,7 @@ $('benchForm').onsubmit = async event => {
   $('replay').hidden = true;
   $('robustnessTable').hidden = true;
   $('heightStudy').hidden = true;
+  $('samplingMix').hidden = true;
   $('densityStudy').hidden = true;
   $('cutoffChanges').hidden = true;
   $('cutoffChanges').open = false;
@@ -837,24 +856,26 @@ $('benchForm').onsubmit = async event => {
       for(const contender of order){
         signal.throwIfAborted();
         const {model, backend, train, epochs = settings.epochs, minimumHeight = settings.minimumHeight, trainingRayBudget = settings.trainingRayBudget, peakAveraging = settings.peakAveraging, featureMode = settings.featureMode} = contender;
+        const positiveSampling = contender.positiveSampling ?? settings.positiveSampling;
         const validationLayout = contender.validationSensorMode ?? validationSensorMode;
         const reuseFit = compareLayouts && Boolean(fit);
-        if (!set || comparison === 'density' || comparison === 'heights' || comparison === 'averaging' || comparison === 'features' || compareForms || compareLayouts) {
+        if (!set || comparison === 'density' || comparison === 'heights' || comparison === 'averaging' || comparison === 'features' || compareSampling || compareForms || compareLayouts) {
           $('status').textContent = reuseFit ? 'Rescanning the held-out fields on '+layoutNames.get(validationLayout)+'…' : 'Growing fields for seed '+runSeed+'…';
           view?.growing(runSeed);
           const start=performance.now();
           const scanOptions = {signal, ...(view?{generate:recipe=>scans.generate(recipe),onScan:view.scan}:{})};
           set = reuseFit ? await rescanValidation(set,validationLayout,scanOptions) :
-            await buildDataset({...settings,seed:runSeed,plantForm:contender.plantForm ?? geometry.plantForm,trainingRayBudget,minimumHeight,peakAveraging,featureMode,validationSensorMode:validationLayout,...scanOptions});
+            await buildDataset({...settings,seed:runSeed,plantForm:contender.plantForm ?? geometry.plantForm,trainingRayBudget,minimumHeight,peakAveraging,featureMode,positiveSampling,auditPositiveSampling:compareSampling,validationSensorMode:validationLayout,...scanOptions});
           generationMs=performance.now()-start;
           if (compareLayouts && set.validation.some(tile=>tile.sampledRays!==validationRayBudget || tile.recipe.points!==validationRayBudget)) {
             throw new Error('The layouts did not sample the same requested ray budget.');
           }
-          const pairedScans = compareLayouts ? set.manifest.filter(tile=>tile.split==='train') : ['heights','averaging','features'].includes(comparison) ? set.manifest : set.validation;
+          const pairedScans = compareLayouts ? set.manifest.filter(tile=>tile.split==='train') : ['heights','averaging','features','sampling'].includes(comparison) ? set.manifest : set.validation;
           const ids = pairedScans.map(tile => tile.tile_id);
           if (pairedIds && (ids.length !== pairedIds.length || ids.some((id,i) => id !== pairedIds[i]))) {
             throw new Error('The fits have different scans in their paired comparison.');
           }
+          if (compareSampling && pairedIds) checkSamplingPair(datasets[datasetIndex].stats, set.stats);
           pairedIds=ids;
           datasetIndex=datasets.length;
           datasets.push({seed:runSeed,stats:set.stats,recipeManifest:set.manifest});
@@ -879,6 +900,8 @@ $('benchForm').onsubmit = async event => {
           });
           const row = {
             ...(compareForms ? {plantForm:contender.plantForm,validationPlantForm:settings.validationPlantForm,trainingLabel:contender.trainingLabel,trainingSamples:set.stats.samples} : {}),
+            ...(positiveSampling ? {positiveSampling} : {}),
+            ...(settings.sampleLimit !== undefined ? {sampleLimit:settings.sampleLimit,trainingSamples:set.stats.samples} : {}),
             ...(featureMode ? {featureMode} : {}),
             ...(peakAveraging ? {peakAveraging} : {}),
             ...(compareLayouts?{validationSensorMode:validationLayout,sharedFitSeed:runSeed,reusedFit:reuseFit}:{}),
@@ -899,6 +922,8 @@ $('benchForm').onsubmit = async event => {
     if(!livePreview)replay.searchParams.set('live','off');
     if ($('fieldMetric').value !== 'mean') replay.searchParams.set('fieldMetric', $('fieldMetric').value);
     if (comparison !== 'heights' && $('minimumHeight').value !== 'default') replay.searchParams.set('minimumHeight', settings.minimumHeight);
+    if (settings.sampleLimit !== undefined) replay.searchParams.set('sampleLimit',settings.sampleLimit);
+    if (settings.positiveSampling) replay.searchParams.set('positiveSampling',settings.positiveSampling);
     if (settings.featureMode) replay.searchParams.set('featureMode',settings.featureMode);
     if (settings.peakAveraging) replay.searchParams.set('peakAveraging',settings.peakAveraging);
     if (settings.trainingPair && settings.trainingPair !== CLASSIC_TRAINING_PAIR) replay.searchParams.set('trainingPair', settings.trainingPair);
@@ -912,12 +937,17 @@ $('benchForm').onsubmit = async event => {
     $('replay').href = replay.href;
     $('replay').hidden = false;
     report={schema:1,elapsedMs:performance.now()-benchStart,livePreview,domain:'synthetic',comparison,thresholds,settings,replayUrl:replay.href,datasets,rows};
+    if (compareSampling) {
+      displaySamplingMix(report);
+      $('samplingMix').hidden = false;
+    }
     if (comparison === 'heights') displayHeightStudy();
     if (comparison === 'density') displayDensityStudy();
     if (comparison === 'heights' || comparison === 'density') displayValidationComparison();
-    if (comparison === 'models' || comparison === 'heights' || comparison === 'features' || compareForms) {
+    if (comparison === 'models' || comparison === 'heights' || comparison === 'features' || compareSampling || compareForms) {
       const heights = comparison === 'heights';
       $('pairTitle').textContent = heights ? 'Which plants changed match when the peak height dropped?' :
+        compareSampling ? 'Which plants did each training sample find?' :
         comparison === 'features' ? 'Which plants changed match with local ground?' :
         compareForms ? 'Which plants did each training mix find?' : 'Which plants did each model find?';
       $('heightTurnover').hidden = !heights;

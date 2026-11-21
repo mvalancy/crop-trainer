@@ -553,7 +553,7 @@ try {
 
   // Re-run one of the shed's own held-out scans from its saved scan and weights.
   // This catches a mismatch between training, the downloadable model and Field Test extraction.
-  await open('trainer/?plan=quick&engine=cpu&crop=tomato&plantArchitecture=2&plantForm=mixed&validationPlantForm=seedling&seed=23671943&sensor=reference&validationSensor=os1-64&epochs=3&featureMode=local-ground');
+  await open('trainer/?plan=quick&engine=cpu&crop=tomato&plantArchitecture=2&plantForm=mixed&validationPlantForm=seedling&seed=687139&sensor=reference&validationSensor=os1-64&epochs=3&minimumHeight=0.035&featureMode=local-ground&sampleLimit=600&positiveSampling=form-soil&valFields=1');
   const mode=page.locator('#featureMode');
   assert.equal(await mode.inputValue(),'local-ground');
   const guide=page.locator('#localGroundGuide');
@@ -581,7 +581,15 @@ try {
   const savedModel=JSON.parse(modelFile.buffer.toString('utf8'));
   assert.equal(savedModel.featureSchema,'crop-peak-13-local-ground-v1');
   assert.equal(savedModel.featureMode,'local-ground');
-  assert.equal((await downloadJSON(page.locator('#downloadSettings'))).featureMode,'local-ground');
+  const replaySettings=await downloadJSON(page.locator('#downloadSettings'));
+  assert.equal(replaySettings.featureMode,'local-ground');
+  assert.equal(replaySettings.positiveSampling,'form-soil');
+  assert.equal(replaySettings.sampleLimit,600);
+  assert.equal(heldOutRun.stats.samples,600);
+  const composition=heldOutRun.stats.positiveExamplesByFormSoil;
+  assert.equal(composition.reduce((count,group)=>count+group.selected,0),300);
+  assert.ok(composition.every(group=>group.selected<=group.available));
+  assert.equal(await page.locator('#samplingRows tr').count(),composition.length);
   const tileLink=new URL(await page.locator('#inspectScan').evaluate(link=>link.href));
   const replayTile=heldOutRun.tiles.find(tile=>tile.tile_id===tileLink.searchParams.get('tile'));
   assert.ok(replayTile,'the inspection link should point to a scored holdout tile');
@@ -614,7 +622,7 @@ try {
 
   await open('benchmark/');
   await page.locator('#benchOptions > summary').click();
-  for (const [crop,comparison] of [['lettuce','models'],['apple','forms'],['high-wire-tomato','density'],['tomato','features']]) {
+  for (const [crop,comparison] of [['lettuce','models'],['apple','forms'],['high-wire-tomato','density'],['tomato','features'],['tomato','sampling']]) {
     await page.locator('#crop').selectOption(crop);
     await page.locator('#comparison').selectOption(comparison);
     for (const width of [320,390,608,844,1024,1440]) {
@@ -685,8 +693,41 @@ try {
       }),'the contender should replay in the Training shed with its original seed and features');
     }
   }
-  assert.deepEqual(errors,[]);
   console.log('Both tomato feature sets shared every scan and replayed from their benchmark rows.');
+
+  await open('benchmark/?comparison=sampling&sampleLimit=240&crop=tomato&plantArchitecture=2&plantForm=mixed&seed=687139&sensor=reference&validationSensor=os1-64&validationPlantForm=seedling&epochs=3&minimumHeight=0.035&featureMode=local-ground&live=off');
+  assert.equal(await page.locator('#sampleLimit').inputValue(),'240');
+  await page.locator('#run').click();
+  const sampling=await downloadJSON(page.locator('#export'));
+  assert.equal(sampling.comparison,'sampling');
+  const rowLinks=await page.locator('#results a').evaluateAll(anchors=>anchors.map(a=>a.href));
+  for (const seed of [687139,687140]) {
+    const arms=sampling.rows.filter(row=>row.seed===seed);
+    assert.deepEqual(arms.map(row=>row.positiveSampling).sort(),['form-soil','ordinary']);
+    const sets=arms.map(row=>sampling.datasets[row.datasetIndex]);
+    assert.deepEqual(sets[0].recipeManifest,sets[1].recipeManifest);
+    for (const [index,arm] of arms.entries()) {
+      const stats=sets[index].stats;
+      assert.equal(stats.samples,240);
+      assert.equal(stats.positiveExamplesByFormSoil.reduce((n,group)=>n+group.selected,0),stats.samples/2);
+      assert.ok(rowLinks.some(href=>{
+        const q=new URL(href).searchParams;
+        return Number(q.get('seed'))===seed && q.get('positiveSampling')===arm.positiveSampling && q.get('sampleLimit')==='240';
+      }),'the replay link should restore this sampler, field seed and exact row budget');
+    }
+  }
+  const balancedRow=sampling.rows.find(row=>row.positiveSampling==='form-soil');
+  const balancedLink=rowLinks.find(href=>{
+    const q=new URL(href).searchParams;
+    return Number(q.get('seed'))===balancedRow.seed && q.get('positiveSampling')==='form-soil';
+  });
+  await page.goto(balancedLink);
+  await page.locator('#run:enabled').click();
+  const repeated=await downloadJSON(page.locator('#downloadRun'));
+  assert.deepEqual(repeated.recipeManifest,sampling.datasets[balancedRow.datasetIndex].recipeManifest);
+  assert.deepEqual(repeated.scores,balancedRow.scores,'refitting from a benchmark row should reproduce its held-out scores');
+  console.log('Both sampling rules used equal budgets, and the Training shed reproduced a benchmark row on the same scans.');
+  assert.deepEqual(errors,[]);
   console.log('Direct file and result help worked with hover, touch and keyboard; the first export tap downloaded its file.');
 } finally {
   try {await browser?.close();} finally {await new Promise(done=>server.close(done));}

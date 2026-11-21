@@ -177,6 +177,12 @@ Open `/benchmark/?comparison=features` to fit the starter network twice on ident
 
 Training URLs accept `trainFields` and `valFields` to replay exact split sizes. Each field supplies a soil-present and a soil-removed scan. The weights identify both the averaging rule and the features. Local-ground models use `crop-peak-13-local-ground-v1` or `crop-peak-13-occupied-local-ground-v1` with sampled-cell averaging. Field Test reads those choices from the weights. To check an offline round trip, run `node cli/run.mjs preflight --feature-mode local-ground`. To reproduce the held-out tomato comparisons, run `node benchmark/studies/tomato-local-ground.mjs confirmation`. [Study, seeds and controls](docs/tomato-local-ground.md)
 
+### Change which positive examples enter training
+
+Use Training Shed URLs or settings JSON with `positiveSampling=form-soil` and `sampleLimit=600` to allocate a capped draw across growth forms and ground settings. In JSON, supply the limit as an even number from 24 to 48,000. Repeat with `positiveSampling=ordinary` for a simple shuffled control. Fix the seed, fields, cap, feature mode and optimizer. Both draws keep equal numbers of positive and background examples. The available class counts can limit the actual total. Inspect `stats.positiveExamplesByFormSoil` and `stats.samples` before interpreting the scores.
+
+Use `/benchmark/?comparison=sampling&sampleLimit=600` for two matched CPU runs. Replay individual rows in Training Shed. The fixed-field study also includes a growth-form-only control and a separate sample-budget experiment. [Tomato study, code and browser presets](docs/tomato-soil-sampling.md)
+
 ### Compare training duration
 
 Open `/benchmark/?comparison=epochs&crop=artichoke&seed=551`. Each seed generates one dataset. Three neural fits start from the same initial weights with the same examples, scaling, learning rate (0.25) and score cutoff (0.50). Each fit runs from scratch so its training time covers its entire duration. The second seed runs the budgets in reverse order.

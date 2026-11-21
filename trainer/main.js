@@ -2,7 +2,8 @@ import {scanSession} from './generator/scan-session.js?v=plants3';
 import {setupPlantControls, setupValidationPlantForm, plantSettings} from './generator/plant-version.js?v=orchard4';
 import {createLiveScene} from './ui/live-scene.js?v=context-help2';
 import {initFieldTest} from './field-test/field-test-ui.js?v=cutoff1';
-import {initSandbox, modelSettings, duration, trainInWorker, inspectWeights, runPresets, startingPreset} from './ui/sandbox.js?v=terrain1';
+import {initSandbox, modelSettings, duration, trainInWorker, inspectWeights, runPresets, startingPreset} from './ui/sandbox.js?v=sampling1';
+import {showSamplingReceipt} from './ui/sampling-receipt.js';
 import {MAX_SANDBOX_EPOCHS, trainerId, weightArtifact} from './models/network.js?v=terrain1';
 import {returnBand,sampleCloud} from './generator/field.js?v=plants3';
 import {cropProfile} from './generator/crops.js?v=systems1';
@@ -34,6 +35,27 @@ function showFeatureGuide() { $('localGroundGuide').hidden = featureSelect.value
 featureSelect.addEventListener('input', showFeatureGuide);
 showFeatureGuide();
 if (location.hash === '#localGroundGuide' && !$('localGroundGuide').hidden) $('localGroundGuide').open = true;
+const samplingSelect = $('positiveSampling'), limitInput = $('sampleLimit');
+let samplingChosen = params.has('positiveSampling'), limitChosen = params.has('sampleLimit');
+if (samplingChosen) {
+ samplingSelect.value = params.get('positiveSampling');
+ if (!samplingSelect.value) samplingSelect.prepend(new Option('Choose a supported sampling rule', '', true, true));
+}
+if (limitChosen) limitInput.value = params.get('sampleLimit');
+function describeSampling() {
+ $('samplingHint').textContent = samplingSelect.value === 'form-soil'
+  ? 'Each plant form gets a turn with ground and without. A group with too few peaks gives its spare places to the others. If all eligible peaks near plants fit, both rules keep them all.'
+  : 'The trainer shuffles peaks from all training fields together. At a small limit, common plant forms can take most of the places.';
+}
+samplingSelect.addEventListener('input', () => { samplingChosen = true; describeSampling(); });
+limitInput.addEventListener('input', () => { limitChosen = true; });
+describeSampling();
+function samplingSettings() {
+ const settings = {};
+ if (samplingChosen || samplingSelect.value === 'form-soil') settings.positiveSampling = samplingSelect.value;
+ if (limitChosen || limitInput.valueAsNumber !== Number(limitInput.max)) settings.sampleLimit = limitInput.valueAsNumber;
+ return settings;
+}
 const sampledPeaks = params.get('peakAveraging') === 'occupied';
 if (sampledPeaks) $('peakAveraging').value = 'occupied';
 $('averagingStudy').open = location.hash === '#averagingStudy';
@@ -47,7 +69,7 @@ const readValidationForm = setupValidationPlantForm($('validationPlantForm'), $(
 for (const [key,id] of [['trainFields','train'],['valFields','validation']]) {
  if (params.has(key)) $(id).value = params.get(key);
 }
-if (['validationPlantForm','trainFields','valFields'].some(key => params.has(key))) $('datasetOptions').open = true;
+if (['validationPlantForm','trainFields','valFields','positiveSampling','sampleLimit'].some(key => params.has(key))) $('datasetOptions').open = true;
 function selectCropDefault() { $('peakHeight').value = String(cropProfile($('crop').value).peakHeight); }
 $('crop').addEventListener('change', selectCropDefault);
 selectCropDefault();
@@ -99,8 +121,16 @@ function updateBenchmarkLinks() {
  const validSeed = Number.isInteger(seed) && seed >= 0 && seed < 0xffffffff;
  const validForms = ['plantArchitecture','plantForm','validationPlantForm','plantCondition'].every(id=>$(id).validity.valid);
  const geometry = {...readPlantControls(), ...readValidationForm()};
- for (const [id, comparison] of [['cutoffBench', 'cutoffs'], ['epochBench', 'epochs'], ['densityBench', 'density'], ['heightBench','heights'], ['averagingBench','averaging'], ['featuresBench','features'], ['formsBench','forms']]) {
+ const sampling = samplingSettings();
+ for (const [id, comparison] of [['cutoffBench', 'cutoffs'], ['epochBench', 'epochs'], ['densityBench', 'density'], ['heightBench','heights'], ['averagingBench','averaging'], ['featuresBench','features'], ['formsBench','forms'], ['samplingBench','sampling']]) {
   const query = new URLSearchParams({comparison, crop:$('crop').value, ...geometry, sensor:$('scanner').value, seed});
+  if (comparison === 'sampling') {
+   const pairedCap = sampling.sampleLimit ?? 600;
+   query.set('sampleLimit', pairedCap);
+   $(id).textContent = 'Compare both rules at '+pairedCap.toLocaleString()+' examples';
+  } else {
+   for (const [key, value] of Object.entries(sampling)) query.set(key, value);
+  }
   if (comparison === 'forms') query.set('validationPlantForm', geometry.validationPlantForm ?? geometry.plantForm ?? 'mixed');
   if (comparison !== 'features' && featureSelect.value === 'local-ground') query.set('featureMode', 'local-ground');
   if (comparison !== 'averaging' && $('peakAveraging').value === 'occupied') query.set('peakAveraging', 'occupied');
@@ -111,8 +141,8 @@ function updateBenchmarkLinks() {
   if ($('validationSensor').value !== 'follow') query.set('validationSensor', $('validationSensor').value);
   const link = $(id);
   const fixedEpochs = $('stopMode').value === 'epochs' && $('epochs').validity.valid && $('epochs').valueAsNumber <= 5000;
-  const starterEpochs = ['averaging','forms','features'].includes(comparison);
-  link.hidden = !validSeed || !validForms || (!featureSelect.validity.valid && comparison !== 'features') || (comparison === 'forms' && (!geometry.plantForm || geometry.plantForm === 'mixed')) ||
+  const starterEpochs = ['averaging','forms','features','sampling'].includes(comparison);
+  link.hidden = !validSeed || !validForms || !limitInput.validity.valid || (!samplingSelect.validity.valid && comparison !== 'sampling') || (!featureSelect.validity.valid && comparison !== 'features') || (comparison === 'forms' && (!geometry.plantForm || geometry.plantForm === 'mixed')) ||
     (comparison !== 'epochs' && !starterEpochs && !fixedEpochs);
   if (comparison === 'features') {
    link.textContent = fixedEpochs ? 'Compare both feature sets on matched scans' : 'Compare both feature sets at 40 epochs';
@@ -129,7 +159,7 @@ function updateBenchmarkLinks() {
 }
 $('crop').addEventListener('change', updateBenchmarkLinks);
 $('plantArchitecture').addEventListener('change', updateBenchmarkLinks);
-for (const id of ['plantForm','validationPlantForm','plantCondition','peakHeight','peakAveraging','featureMode','scanner','validationSensor','trainingRayBudget','validationRayBudget','seed','epochs','stopMode']) $(id).addEventListener('input', updateBenchmarkLinks);
+for (const id of ['plantForm','validationPlantForm','plantCondition','peakHeight','peakAveraging','featureMode','positiveSampling','sampleLimit','scanner','validationSensor','trainingRayBudget','validationRayBudget','seed','epochs','stopMode']) $(id).addEventListener('input', updateBenchmarkLinks);
 // File uploads work independently of training imports and GPU discovery.
 const setFieldTestModel=initFieldTest(downloadJSON);
 initSandbox(params);
@@ -156,7 +186,7 @@ async function checkAdapter() {
  updateRunAvailability();
 }
 try {
- deps=await Promise.all([import('./models/data.js?v=terrain1'),import('./models/model.js?v=benchmark1'),import('./models/neural.js?v=live1')]);
+ deps=await Promise.all([import('./models/data.js?v=sampling1'),import('./models/model.js?v=benchmark1'),import('./models/neural.js?v=live1')]);
  $('epochs').max=MAX_SANDBOX_EPOCHS;
  const epochsParam = params.get('epochs');
  if (/^\d+$/.test(epochsParam) && Number(epochsParam) >= 1 && Number(epochsParam) <= MAX_SANDBOX_EPOCHS) {
@@ -186,7 +216,7 @@ function status(stage,detail,value){
 }
 const requestedBand = params.get('missBand');
 const replayMisses = [...$('missBand').options].some(option => option.value === requestedBand);
-let auditTiles=[],fieldViews=new Map(),auditThreshold=.5, auditRayBudget=0, auditPeakAveraging, auditFeatureMode;
+let auditTiles=[],fieldViews=new Map(),auditThreshold=.5, auditRayBudget=0, auditInputs={};
 function showField(){
  const field=auditTiles[Number($('auditField').value)];
  lastPreview=fieldViews.get(field?.tile_id);
@@ -276,8 +306,9 @@ $('overlayStage').addEventListener('change',showField);
 function scanViewerLink(tile, budget = auditRayBudget) {
  const scanQuery = new URLSearchParams({crop:tile.crop, ...plantSettings(tile), seed:tile.seed, sensor:tile.sensor, ground:tile.ground, tile:tile.tile_id});
  if (budget) scanQuery.set('budget', budget);
- if (auditFeatureMode === 'local-ground') scanQuery.set('featureMode', auditFeatureMode);
- if (auditPeakAveraging === 'occupied') scanQuery.set('peakAveraging', 'occupied');
+ for (const key of ['peakAveraging','featureMode','positiveSampling','sampleLimit']) {
+  if (auditInputs[key] !== undefined) scanQuery.set(key, auditInputs[key]);
+ }
  return '../?'+scanQuery+'#field';
 }
 function showStages(){
@@ -395,7 +426,9 @@ function showFitData(set,weightCount,epochs) {
  const used = fields.filter(f=>f.usedPositive + f.usedNegative > 0).length;
  $('fitCounts').textContent = used+' of '+stats.trainFields+' practice fields contributed '+stats.samples.toLocaleString()+
    ' examples per epoch. Each example has 13 measurements around one height peak. The model fitted '+weightCount.toLocaleString()+
-   ' weights and biases over '+(epochs*stats.samples).toLocaleString()+' example visits. '+stats.valFields+' separate fields were reserved for scoring.';
+   ' weights and biases over '+(epochs*stats.samples).toLocaleString()+' example visits. The score uses '+stats.valFields+
+   (stats.valFields === 1 ? ' separate field.' : ' separate fields.');
+ showSamplingReceipt(stats);
  $('fieldContributions').open = false;
  $('fitFields').replaceChildren(...fields.map(field=>{
    const row = document.createElement('tr');
@@ -491,7 +524,7 @@ $('soilMetric').addEventListener('change', () => {
  if (lastRun) displayGroundStudy(lastRun);
 });
 function display(v,settings){
- const {threshold,validationRayBudget,peakAveraging,validationPlantForm}=settings;
+ const {threshold,validationRayBudget,validationPlantForm}=settings;
  $('formStory').hidden=!validationPlantForm;
  if (validationPlantForm) {
   const formLabel=id=>[...$('plantForm').options].find(option=>option.value===id).textContent;
@@ -499,8 +532,7 @@ function display(v,settings){
  }
  $('runReview').hidden=false;$('reviewLink').hidden=false;$('scored').hidden=false;
  auditRayBudget=validationRayBudget;
- auditPeakAveraging=peakAveraging;
- auditFeatureMode=settings.featureMode;
+ auditInputs=settings;
  auditThreshold=threshold;
  displayGroundStudy(v);
  if (requestedSoilMetric === $('soilMetric').value) $('groundStudy').open = true;
@@ -553,6 +585,7 @@ function readSettings() {
  const model = modelSettings();
  return {...model,crop:$('crop').value,...readPlantControls(),...readValidationForm(),
   ...(featureSelect.value === 'local-ground' ? {featureMode:'local-ground'} : {}),
+  ...samplingSettings(),
   ...($('peakAveraging').value === 'occupied' ? {peakAveraging:'occupied'} : {}),seed:$('seed').valueAsNumber,
   trainFields:$('train').valueAsNumber,valFields:$('validation').valueAsNumber,sensorMode:$('scanner').value,
   validationSensorMode:$('validationSensor').value === 'follow' ? undefined : $('validationSensor').value,
@@ -646,7 +679,8 @@ async function runFit(trial){
  try{
   const start=performance.now();
   const scans=scanSession(signal);
-  const set=await buildDataset({...settings,signal,generate:(recipe,step)=>{
+  const auditPositiveSampling = settings.sampleLimit !== undefined || settings.positiveSampling !== undefined;
+  const set=await buildDataset({...settings,signal,auditPositiveSampling,generate:(recipe,step)=>{
    const showRows=step.done===1 || recipe.points>100000;
    return scans.generate(recipe,showRows ? frame=>live.show({title:step.split+' field',cloud:frame.cloud,
     metric:'Row '+frame.row+' / '+frame.rows,legend:'Building the canopy',detail:'Seed '+recipe.seed,
