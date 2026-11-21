@@ -5,13 +5,15 @@ export async function readPlotColumns(path, originXY, onPoint) {
   const cells = 200;
   const handle = await open(path, 'r');
   try {
-    const header = Buffer.alloc(227);
+    const header = Buffer.alloc(375);
     const first = await handle.read(header, 0, header.length, 0);
-    if (first.bytesRead !== header.length || header.toString('ascii',0,4) !== 'LASF' || header[104] > 5) {
-      throw Error('Expected the original uncompressed LAS with legacy point records.');
+    const extended = header[24] === 1 && header[25] === 4 && header[104] === 7;
+    if (first.bytesRead < 227 || header.toString('ascii',0,4) !== 'LASF' ||
+        (header[104] > 5 && (!extended || first.bytesRead < 375))) {
+      throw Error('Expected uncompressed LAS with legacy coordinates or LAS 1.4 point format 7.');
     }
     const start = header.readUInt32LE(96), stride = header.readUInt16LE(105);
-    const sourcePoints = header.readUInt32LE(107);
+    const sourcePoints = extended ? Number(header.readBigUInt64LE(247)) : header.readUInt32LE(107);
     if (stride < 20 || !sourcePoints || start + stride*sourcePoints > (await handle.stat()).size) {
       throw Error('Invalid LAS record lengths.');
     }

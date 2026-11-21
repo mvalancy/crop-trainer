@@ -28,7 +28,7 @@
     <text x="259" y="133">Try a 25 cm shift east.</text>
     <text x="259" y="153">A different pin can match.</text>
   </g>
-  <text x="18" y="187" class="heading">Recorded trunks matched on the Spanish laser scan</text>
+  <text x="18" y="187" class="heading">Recorded trunks matched on the B7 drone laser scan</text>
   <g class="label"><text x="18" y="221">Recorded XY</text><text x="18" y="259">25 cm east</text></g>
   <g stroke-linecap="round" stroke-width="6">
     <path d="M145 208h55M145 248h85" stroke="#237161"/>

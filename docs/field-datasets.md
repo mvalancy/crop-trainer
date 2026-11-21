@@ -287,10 +287,41 @@ At 15 cm, the column rule matched more survey records than the model in **14 of 
 
 **Where are the alignment checkpoints?** EscaYard’s 16 released files include trunk positions, a plant health table, smartphone photographs, ten photo-derived clouds and two orthomosaics. VineLiDAR supplies ten laser clouds. We found no B7 target-ID/XYZ pairs or measured horizontal checkpoint residuals in either release. The reflectance panel in the imaging methods calibrates image brightness. A related 2021 deposit does supply surveyed black-and-white targets in `GCPs.zip`. All seven PointZ coordinates fall outside the July B7 clouds, the nearest about **143 m** beyond their bounds. They were photographed at the neighboring B9 site. [EscaYard inventory and methods](https://doi.org/10.1016/j.dib.2024.110497) · [VineLiDAR inventory](https://zenodo.org/records/8113105) · [Surveyed targets](https://zenodo.org/records/7383601) · [Marker photograph and survey method](https://doi.org/10.1016/j.dib.2022.108876)
 
-**Replay locally.** Extract `trunk_locations_VineyardB7.zip` and download the red B7 LAS from EscaYard. Get the July 14, 30 m B7 LAZ from VineLiDAR. LASzip decompresses the laser file into LAS. Train `vine-weights.json` using the CPU command under “Replay the vineyard test” above. The study selects grid squares using the survey, fits a plane in each from scan heights alone, and matches predictions across plot boundaries. The final CPU passes took about 10 seconds for the photo cloud and 56 seconds for the laser cloud on this machine, excluding download and LAZ decompression. Both deposits are by Vélez and colleagues and use CC BY 4.0. [EscaYard files](https://zenodo.org/records/10362568) · [VineLiDAR files](https://zenodo.org/records/8113105) · [LASzip](https://laszip.org/) · [Local comparison code](../benchmark/studies/vineyard-b7.mjs)
+**What can those seven targets check?** VineLiDAR’s September 16, 2021 flight at 30 m over B9 matches the date and block of the published checkerboard survey. Its 15,166,707 colorized returns use local coordinates. The LAS header contains no map projection, and its reported horizontal bounds are all zero. Reading the actual points gave X from −0.10 to 78.67 m and Y from −3.56 to 120.90 m. The nominal coordinate published for the vineyard describes the site. It does not locate the cloud’s origin. [September data and flight dates](https://doi.org/10.1016/j.dib.2023.109686) · [Survey and marker photograph, Fig. 3](https://doi.org/10.1016/j.dib.2022.108876)
+
+We visually inspected all seven search windows for a square with alternating light and dark quarters. Six identifiable targets appeared. ID 1 had no resolved checker. At ID 4 an elongated blue object was brighter than the marker. We used the second-ranked patch with the checker pattern. We estimated only a horizontal translation, using IDs 2, 3 and 4. At IDs 5, 6 and 7 the horizontal residuals were **3.5, 0.8 and 7.9 cm** (5.0 cm root mean square). Those three markers were inspected before we chose the split and were excluded from the fit. The result checks manual marker identification and relative alignment for one B9 flight. The sample is too small for a site-wide accuracy estimate. No tree coordinates entered the calculation, and the July B7 comparison uses its own published coordinates.
+
+To replay, decompress the September 16, 30 m B9 LAZ to point-format-7 LAS and extract the neighboring survey’s `GCPs.dbf`. The code counts bright, near-neutral blue returns in 4 cm cells within 8 m search windows and estimates a center from the occupied bright cells around each reviewed patch. Giving a new output directory as a third argument writes the local color previews for inspection. [Survey files](https://zenodo.org/records/7383601) · [Laser flights](https://zenodo.org/records/8113105) · [Checkpoint measurement and reviewed IDs](../benchmark/studies/vineyard-b9-checkpoints.mjs)
+
+```sh
+laszip -i 20210916_FLEXIGROBOTS_L1_PRO_30M_4MS_B9.laz -o b9-september.las
+node benchmark/studies/vineyard-b9-checkpoints.mjs b9-september.las GCPs.dbf b9-previews
+```
+
+**Replay the B7 detector comparison.** Extract `trunk_locations_VineyardB7.zip` and download the red B7 LAS from EscaYard. Get the July 14, 30 m B7 LAZ from VineLiDAR. LASzip decompresses the laser file into LAS. Train `vine-weights.json` using the CPU command under “Replay the vineyard test” above. The study selects grid squares using the survey, fits a plane in each from scan heights alone, and matches predictions across plot boundaries. The final CPU passes took about 10 seconds for the photo cloud and 56 seconds for the laser cloud on this machine, excluding download and LAZ decompression. Both deposits are by Vélez and colleagues and use CC BY 4.0. [EscaYard files](https://zenodo.org/records/10362568) · [VineLiDAR files](https://zenodo.org/records/8113105) · [LASzip](https://laszip.org/) · [Local comparison code](../benchmark/studies/vineyard-b7.mjs)
 
 ```sh
 laszip -i 20220714_FLEXIGROBOTS_L1_PRO_30M_4MS_B7.laz -o b7-laser.las
 node benchmark/studies/vineyard-b7.mjs 20220714_FLEXIGROBOTS_B7_30M0G_MS_PRO_Red_densified_point_cloud.las trunk_locations_VineyardB7.shp vine-weights.json
 node benchmark/studies/vineyard-b7.mjs b7-laser.las trunk_locations_VineyardB7.shp vine-weights.json
+```
+
+### Does the B7 result hold in the neighboring vineyard?
+
+We froze the three-marker B9 translation before scoring a single trunk. The separate `Trunk_locations.zip` contains 121 distinct RTK coordinates. The survey covered three selected rows, and two records are just 7 mm apart. Across the 28 grid squares that contain those records, the 30 m laser flight supplied **11,678,611 returns**. All squares had sufficient ground-plane samples. We kept the Portuguese weights, the 15–55 cm height band and the 65 cm pin spacing. Three of the 28 squares had too few separated candidate positions for the column rule to fill the model’s pin count. [September survey and methods](https://doi.org/10.1016/j.dib.2022.108876) · [Same-day drone laser acquisition](https://doi.org/10.1016/j.dib.2023.109686)
+
+| Frozen method | Pins placed | Survey records matched at 7.5 / 10 / 15 cm | Survey records missed at 15 cm |
+| --- | ---: | ---: | ---: |
+| Synthetic-trained model | 1,536 | 3 / 6 / 11 | 110 |
+| Ground footprint | 1,495 | 4 / 4 / 8 | 113 |
+| Vertical columns | 1,475 | 0 / 0 / 2 | 119 |
+
+The column rule lost to the model in nine squares at 15 cm, won in one and tied in 18. After seeing that the geometric rules sometimes ran out of candidates, we repeated the comparison with exactly the same number of pins in each square for all methods. That left 1,475 pins per method and reproduced every match count in the table. Extra pins outside the reference rows could land on other vines. A false-alarm rate requires a complete survey of the scored area.
+
+All **121** survey coordinates had an occupied 5 cm ground cell within 15 cm when returns at every height were counted. Restricting cells to returns 15–55 cm above the estimated soil left just **64** coordinates with a candidate nearby. The rule placed a matching pin at two. Both the availability of low returns and the choice among nearby candidates deserve attention. With each of the four prespecified survey shifts (25 cm east, west, north or south), the column rule matched 13, 7, 7 and 6 records at 15 cm. The model matched 8, 7, 5 and 11. We kept the checkpoint-based alignment for the main result. The difference between the B7 and B9 results could arise from plot structure, acquisition geometry, season, registration or their combination.
+
+**Replay B9 locally.** Use the same September LAS and `GCPs.dbf` as for the checkpoint check. Add `Trunks.shp` from the survey deposit and the CPU-generated `vine-weights.json` from “Replay the vineyard test.” The command recalculates the translation from checkerboards before loading trunk positions. One CPU run took about 3 seconds for registration and 21 seconds for the detector comparison, excluding download and decompression. [Survey files, CC BY 4.0](https://zenodo.org/records/7383601) · [Laser files, CC BY 4.0](https://zenodo.org/records/8113105) · [Scoring code](../benchmark/studies/vineyard-b9.mjs)
+
+```sh
+node benchmark/studies/vineyard-b9.mjs b9-september.las GCPs.dbf Trunks.shp vine-weights.json
 ```
