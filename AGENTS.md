@@ -20,9 +20,15 @@ The public app serves the illustrated reader under `guide/`. The small **WIP** l
 
 The **Explore** sections and first-steps chapters share the illustrated experiments in `app/field-investigation.js`. Keep the drawing and its calculation together. The ray lesson draws the first intersections from `app/row-sampling.js`. The pin lessons use the same one-to-one matcher as the trainer. Label illustrative scores and use the actual run counts when explaining a learner’s results. The film starts with narration. A listener can enable the quiet field ambience independently.
 
+For a new scene, give the learner something specific to notice in the picture, one plain-language question and one action that changes the experiment. Let the learner pause, replay or move one scene at a time. Check the illustration, controls and captions on a phone and on a desktop, with both themes and reduced motion. Keep each tool’s work in progress when a learner visits another activity.
+
+## Which languages should a new lesson support?
+
+![A line measures fourteen centimeters from a lettuce center to a pin. A sound wave and two written labels describe the same distance.](art/narrated-measurement.svg)
+
 English is the primary language and Arabic is the second priority. For each new lesson, check the English and Arabic captions, voices and controls first. Keep that order in the language selector. For a new visual, describe what changes and the exact quantity it represents. Put its spoken words in the caption. Arabic uses right-to-left page flow while scan coordinates stay in the instrument’s original frame. Verify the native language names, heading order, keyboard focus and matching counts in both directions. Shared controls and reviewed scripts live in `app/language-core.js`, language catalogs in `art/languages/`, and the voice sources in `art/audio/neural/sources.txt`.
 
-For a new scene, give the learner something specific to notice in the picture, one plain-language question and one action that changes the experiment. Let the learner pause, replay or move one scene at a time. Check the illustration, controls and captions on a phone and on a desktop, with both themes and reduced motion. Keep each tool’s work in progress when a learner visits another activity.
+The classic app and the studio share the language controls and audio published from the verified development branch. The globe beside Theme selects English, العربية, Español, 简体中文 or Français. The additional film questions, captions and practice destinations live in `app/film-lessons.js`. Keep the spoken script and the visible measurement together when updating a scene.
 
 ## Find the current sensing workflow
 

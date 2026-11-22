@@ -139,6 +139,8 @@ for(const line of Object.values(filmLines))labels[line[0]]=line.slice(1);
 Object.assign(labels,{
  'Crop Trainer':['Crop Trainer','Crop Trainer','Crop Trainer','Crop Trainer'],
  'Follow one lettuce':['رحلة مع نبتة خسّ','Sigue una lechuga','跟随一棵生菜','Suivre une laitue'],
+ 'Which languages should a new lesson support?':['ما اللغات التي ينبغي أن يدعمها الدرس الجديد؟','¿Qué idiomas debe admitir una lección nueva?','新课程应该支持哪些语言？','Quelles langues une nouvelle leçon doit-elle prendre en charge ?'],
+ 'A line measures fourteen centimeters from a lettuce center to a pin. A sound wave and two written labels describe the same distance.':['يقيس خطّ مسافة أربعة عشر سنتيمترًا من مركز الخسّة إلى العلامة. تصف موجة صوتية وتسميتان مكتوبتان المسافة نفسها.','Una línea mide catorce centímetros desde el centro de una lechuga hasta un marcador. Una onda sonora y dos etiquetas escritas describen la misma distancia.','从生菜中心到标记的距离为十四厘米。声波和两个文字标签表示的是同一段距离。','Une ligne mesure quatorze centimètres entre le centre d’une laitue et un repère. Une onde sonore et deux légendes écrites décrivent la même distance.'],
  'Film captions':['نصّ الفيلم','Subtítulos de la película','影片字幕','Sous-titres du film'],
  'Test this detector on a plot':['اختبر هذا الكاشف على قطعة أرض','Prueba este detector en una parcela','在地块上测试这个检测器','Tester ce détecteur sur une parcelle'],
  'Story audio':['صوت الفيلم','Audio de la película','影片音频','Son du film'],
