@@ -52,8 +52,15 @@ export async function checkSiteHeader(browser, base) {
           if (width===320) {
             await page.evaluate(()=>document.documentElement.style.fontSize='200%');
             assert.deepEqual(await measureControls(page,context+' at 200%'),reference);
-            assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),
-              context+' overflows the page with enlarged text');
+            const overflow=await page.evaluate(()=>{
+              if (document.documentElement.scrollWidth<=innerWidth+1) return [];
+              const outside=[...document.querySelectorAll('main *')].filter(el=>{
+                const r=el.getBoundingClientRect();
+                return r.width && (r.right>innerWidth+1 || r.left < -1);
+              });
+              return [document.documentElement.scrollWidth,...outside.slice(0,6).map(el=>el.id || el.className || el.tagName)];
+            });
+            assert.deepEqual(overflow,[],context+' overflows the page with enlarged text: '+overflow.join(', '));
             await page.evaluate(()=>document.documentElement.style.removeProperty('font-size'));
           }
           assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),context+' overflows the page');
