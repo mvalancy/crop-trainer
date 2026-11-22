@@ -62,7 +62,9 @@ try {
     await page.getByRole('button',{name:'Close narration'}).click();
     if(await article.locator('h1').count() && await page.locator('#siteLanguage').count()){
       await page.goto(new URL('guide/',base).href);
-      await page.locator('#siteLanguage').selectOption('ar');
+      const language=page.locator('#siteLanguage');
+      assert.deepEqual(await language.locator('option').allTextContents(),['English','العربية','Español','简体中文','Français']);
+      await language.selectOption('ar');
       await page.locator('html[lang=ar][dir=rtl]').waitFor({state:'attached'});
       await page.getByRole('button',{name:'استمع إلى هذا النشاط'}).waitFor();
       await page.locator('#siteLanguage').selectOption('en');

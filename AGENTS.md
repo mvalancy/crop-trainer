@@ -20,6 +20,14 @@ The public app serves the illustrated reader under `guide/`. The small **WIP** l
 
 For a new scene, give the learner something specific to notice in the picture, one plain-language question and one action that changes the experiment. Let the learner pause, replay or move one scene at a time. Check the illustration, controls and captions on a phone and on a desktop, with both themes and reduced motion. Keep each tool’s work in progress when a learner visits another activity.
 
+## Which languages should a new lesson support?
+
+![A line measures fourteen centimeters from a lettuce center to a pin. A sound wave and two written labels describe the same distance.](art/narrated-measurement.svg)
+
+English is the primary language and Arabic is the second priority. For each new lesson, check the English and Arabic captions, voices and controls first. Keep that order in the language selector. Check Arabic at phone widths with enlarged text and make sure a spoken score names the same number as the visible result. Keep diagram coordinates fixed when page direction changes.
+
+The classic app and the studio share the language controls and audio published from the verified development branch. On `dev`, edit the film scripts in `app/language-core.js`, translated passages in `art/languages/` and activity introductions in `app/studio-voiceovers.js`. The guide and activities use the globe beside Theme to select English, العربية, Español, 简体中文 or Français.
+
 ## Find the current sensing workflow
 
 ![A plant, a sketch of laser returns and a color pixel grid show how two sensors observe the same subject.](art/two-views.svg)
