@@ -66,7 +66,7 @@ export async function checkFieldFilm(browser, base) {
         if (target) assert.ok(near(target.x+target.width/2,center.x) && near(target.y+target.height/2,center.y),message);
         if (marking) assert.ok(near(marking.x+marking.width/2,center.x),message);
         assert.ok(topLeft.x >= pane.left-1 && topLeft.y >= pane.top-1 && bottomRight.x <= pane.right+1 && bottomRight.y <= pane.bottom+1,message);
-        assert.ok(bottomRight.x-topLeft.x > 100,message);
+        assert.ok(bottomRight.x-topLeft.x > 100,message+' painted width '+(bottomRight.x-topLeft.x)+' in '+pane.width+'×'+pane.height);
         assert.ok(caption.right <= pane.left+1 || caption.top >= pane.bottom-1,message);
         assert.ok(controls.bottom <= height+1 && layout.overflow < 1 && caption.bottom <= controls.top+1,message);
         if (lastStage) assert.deepEqual(pane,lastStage,'Changing scenes moved the stage at '+message);

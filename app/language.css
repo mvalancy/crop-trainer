@@ -50,3 +50,10 @@ html[dir=rtl] :is(.shotTitle,.shotText,.labPage h2,.guideChapter h1,.guideChapte
   .studioBar #listenSlot:empty {display:block;flex:0 0 44px;}
   .studioBar .studioListen .listenToggle {width:44px;padding-inline:0;}
 }
+@media(orientation:portrait) and (max-width:480px) and (max-height:710px) {
+  /* Reserve space for the plant when longer captions or larger fonts need to scroll. */
+  .filmScreen {grid-template-rows:minmax(144px,1fr) minmax(0,auto);}
+  .filmCaption {align-self:stretch;min-height:0;padding-block:.35rem;overflow-y:auto;overscroll-behavior:contain;}
+  .sceneCaption {align-self:safe end;}
+  #film .filmSeries {display:none;}
+}
