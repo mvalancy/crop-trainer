@@ -1,0 +1,6 @@
+art/audio/neural/*.bin binary
+art/audio/neural/*.wasm binary
+art/audio/neural/*.data binary
+art/audio/neural/*.js -diff linguist-vendored
+art/audio/neural/*-notices.txt -diff linguist-vendored
+art/audio/neural/*-license.txt -diff linguist-vendored
