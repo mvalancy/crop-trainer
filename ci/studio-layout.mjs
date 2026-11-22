@@ -1,5 +1,13 @@
 import assert from 'node:assert/strict';
 
+async function waitForSharedScan(frame,key,value) {
+  // The outer URL opens the studio and its nested replay URL carries the exact planting.
+  await frame.locator('#scanLink[href*="'+encodeURIComponent(key+'='+value)+'"]').waitFor({state:'attached'});
+  const link = new URL(await frame.locator('#scanLink').getAttribute('href'));
+  assert.equal(link.searchParams.get('view'),'scan');
+  assert.equal(new URL(link.searchParams.get('open'),link).searchParams.get(key),value);
+}
+
 export async function checkActivityMenu(browser,base) {
   const page=await browser.newPage({viewport:{width:390,height:844},hasTouch:true});
   const heldImages=[];
@@ -33,7 +41,7 @@ export async function checkActivityMenu(browser,base) {
       }
       await action.tap();
       if (view==='scan') {
-        await frame.locator('#scanLink[href*="seed=307"]').waitFor({state:'attached'});
+        await waitForSharedScan(frame,'seed','307');
       } else {
         await frame.locator('#cancel:enabled').waitFor();
         await frame.locator('#cancel').tap();
@@ -128,7 +136,7 @@ export async function checkStudioLayout(page, base) {
     await closeOverlay(page,instrument);
     await recordGeometry(instrument);
     await instrument.getByRole('button',{name:'Scan field',exact:true}).click();
-    await instrument.locator('#scanLink[href*="seed=307"]').waitFor({state:'attached'});
+    await waitForSharedScan(instrument,'seed','307');
     await checkGeometry(instrument,'Scan',width);
     await openSection(page,instrument,'Findings');
     await closeOverlay(page,instrument);
@@ -223,6 +231,6 @@ export async function checkDrawer(page, base) {
   await frame.locator('dialog:modal #noise').selectOption('clean');
   await frame.locator('#applyScanSettings').click();
   await frame.locator('dialog:modal').waitFor({state:'hidden'});
-  await frame.locator('#scanLink[href*="noise=clean"]').waitFor({state:'attached'});
+  await waitForSharedScan(frame,'noise','clean');
   assert.equal(new URL(page.url()).searchParams.has('step'),false);
 }

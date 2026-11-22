@@ -59,7 +59,9 @@ export function readPassages(roots) {
     if (tag === 'select') { add([...el.selectedOptions].map(option=>option.text).join(', ')); return; }
     if (tag === 'input') {
       if (el.type === 'checkbox' || el.type === 'radio') add(translate(el.checked ? 'selected' : 'unselected'));
-      else if (!['hidden','password','file'].includes(el.type)) add(el.value);
+      else if (el.type === 'range' && el.closest('label')?.querySelector('.labValue')) {
+        // Its visible value already includes the lesson's unit.
+      } else if (!['hidden','password','file'].includes(el.type)) add(el.getAttribute('aria-valuetext') || el.value);
       return;
     }
     if (tag === 'table') {

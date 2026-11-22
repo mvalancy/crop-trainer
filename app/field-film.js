@@ -1,3 +1,4 @@
+import {filmLessons} from './film-lessons.js';
 import {filmTiming} from './film-timing.js';
 import {language,translate} from './language.js';
 import {filmLines} from './language-core.js';
@@ -5,46 +6,67 @@ import {createFilmArt} from './field-film-art.js';
 import {createNarrationPlayer} from './narration-player.js';
 
 // The English voice tracks use Kokoro v1.0 (af_heart). The optional field ambience is synthesized wind and leaf rustle.
+const lessonScene = id => ({id, title:filmLessons[id].title[0], tab:filmLessons[id].tab[0],
+  action:filmLessons[id].action[0], destination:filmLessons[id].destination, description:filmLessons[id].line[0]});
 const scenes = [
-  {id:'leaf', title:'Where does the light land?',
+  {id:'leaf', tab:'Leaf', title:'Where does the light land?',
     action:'Try scanning a row', lesson:'sampleRow', description:'Four light pulses strike the curved canopy of a butterhead lettuce. The first surfaces they encounter send echoes back.'},
-  {id:'returns', title:'Where is the plant?',
+  {id:'returns', tab:'Returns', title:'Where is the plant?',
     action:'Place a pin', lesson:'placePin', description:'An illustrated scan sweeps across a lettuce, replacing its leaf surfaces with sample dots. A gold ring settles over its estimated center.'},
-  {id:'prediction', title:'Can height fool a detector?',
-    action:'Try one model update', lesson:'learnWeight', description:'A measuring line meets the lettuce and weed at the same height. One learning step raises both crop scores from 0.50 to 0.62.'}
+  lessonScene('labels'),
+  {id:'prediction', tab:'Prediction', title:'Can height fool a detector?',
+    action:'Try one model update', lesson:'learnWeight', description:'A measuring line meets the lettuce and weed at the same height. One learning step raises both crop scores from 0.50 to 0.62.'},
+  lessonScene('epoch'), lessonScene('validation'), lessonScene('cutoff')
 ];
 
-export function initFieldFilm(practice) {
+export function initFieldFilm(routeFor, openRoute) {
   const film = document.getElementById('film');
   const play = film.querySelector('#playFilm');
   const notice = film.querySelector('#filmAudioNotice');
-  const buttons = [...film.querySelectorAll('[data-shot-index]')];
+  const list = film.querySelector('.shotList');
+  const buttons = scenes.map((scene,i) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.dataset.shotIndex = i;
+    button.textContent = scene.tab;
+    list.append(button);
+    return button;
+  });
   const stage = film.querySelector('.filmStage');
   const draw = createFilmArt(stage);
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   let request;
   let index = 0, offset = 0, playing = false, finished = false;
 
-  // Sharing one grid cell reserves the tallest caption at the current width.
-  // Changing shots never moves the lens or the playback controls.
+  // A scrollable transcript shares the fixed scene area with the action row.
   const caption = film.querySelector('.filmCaption');
-  const first = caption.firstElementChild;
+  const transcript = caption.querySelector('.filmTranscript');
+  const first = transcript.firstElementChild;
   const actions = caption.querySelector('.filmActions');
   const firstLink = actions.querySelector('.tryShot');
+  // Intrinsic sizing reserves the widest playback word in the current language.
+  for (const word of ['Play','Pause','Resume','Replay']) {
+    const measure = document.createElement('span');
+    measure.className = 'playWidth';
+    measure.setAttribute('aria-hidden','true');
+    measure.textContent = word;
+    actions.append(measure);
+  }
   const pages = scenes.map((scene,i) => {
     const page = i ? first.cloneNode(true) : first;
     page.querySelector('.shotTitle').textContent = scene.title;
     page.querySelector('.shotText').textContent = filmLines[scene.id][0];
     const link = i ? firstLink.cloneNode(false) : firstLink;
     link.textContent = scene.action;
-    link.href = '?view=learn&step=lessons&open=' + encodeURIComponent('#' + scene.lesson);
+    const destination = scene.destination || '#' + scene.lesson;
+    link.href = routeFor(destination);
     link.addEventListener('click', event => {
       if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
       event.preventDefault();
       pause();
-      practice(scene.lesson);
+      openRoute(destination);
     });
-    if (i) {caption.insertBefore(page,actions);actions.append(link);}
+    if (i) {transcript.append(page);actions.append(link);}
     return {page,link};
   });
 
@@ -68,13 +90,18 @@ export function initFieldFilm(practice) {
     finished = false;
     const scene = scenes[index];
     film.dataset.shot = String(index);
+    film.dataset.scene = scene.id;
+    transcript.scrollTop = 0;
+    const tab = buttons[index];
+    const delta = tab.getBoundingClientRect(), strip = list.getBoundingClientRect();
+    list.scrollBy({left:delta.left < strip.left ? delta.left-strip.left : Math.max(0,delta.right-strip.right),behavior:'instant'});
     pages.forEach(({page,link},i) => { page.inert = link.inert = i !== index; });
     stage.setAttribute('aria-label', scene.description);
     draw(scene.id,1);
     buttons.forEach((button, i) => button.setAttribute('aria-pressed', String(i === index)));
   }
 
-  const duration=()=>filmTiming[language()][index];
+  const duration=()=>filmTiming[language()][scenes[index].id];
   function tick() {
     const scene = scenes[index];
     draw(scene.id,player.position()/duration());

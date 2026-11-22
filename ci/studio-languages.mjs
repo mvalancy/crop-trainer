@@ -7,6 +7,7 @@ export async function checkLanguages(browser,base) {
   try{
     await page.goto(new URL('studio/',base).href);
     const select=page.locator('#siteLanguage');
+    await select.waitFor();
     assert.deepEqual(await select.locator('option').allTextContents(),Object.values(languages));
     for(const lang of ['ar','es','zh','fr']){
       await select.selectOption(lang);

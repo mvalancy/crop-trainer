@@ -1,7 +1,7 @@
 import {installInstrument} from './studio-instrument.js';
 import {createStudioNarration} from './studio-narration.js';
 import {studioReading} from './studio-reading-context.js';
-import {initFieldFilm} from './field-film.js?v=play-first1';
+import {initFieldFilm} from './field-film.js?v=film-school2';
 // Keep each instrument's DOM, files, canvas and running worker alive while readers switch activities.
 const root = new URL('../', import.meta.url);
 const tasks = {
@@ -130,12 +130,12 @@ const inspectorShell = {
   remember() {
     if (!history.state?.studioDrawer) history.pushState({studioDrawer:true}, '', location.href);
   },
-  dismissed(source, wasModal) {
+  dismissed(source) {
     if (source !== currentInspector) return;
     reflectInspector();
     refreshReading();
     settingsButton.focus({preventScroll:true});
-    if (wasModal && history.state?.studioDrawer) history.back();
+    if (history.state?.studioDrawer) history.back();
     else if (Object.hasOwn(panelSteps,active.step)) navigate(address(active.view),'replace');
   }
 };
@@ -201,6 +201,13 @@ function mount(tool) {
     doc.defaultView.addEventListener('crop-language-change',refreshReading);
     if (document.documentElement.dataset.language) pane.frame.contentWindow.postMessage({type:'crop-language',code:document.documentElement.dataset.language},location.origin);
     if (tool === 'field') {
+      doc.addEventListener('crop-scan-address', event => {
+        const route = classify(event.detail.url,doc);
+        if (route) event.detail.url = shellURL(route);
+      });
+      const footer = doc.querySelector('.siteFoot');
+      footer.className = 'journalResources';
+      doc.getElementById('missions').append(footer);
       const tabs = doc.querySelector('#guide [role="tablist"]');
       new MutationObserver(() => {
         if (active?.step === 'lessons' && pane.frame.contentDocument === doc) refreshReading();
@@ -223,6 +230,18 @@ function mount(tool) {
       empty.innerHTML='<img src="../art/scan-learn-find.svg" alt="A field scan becomes measurements, then plant predictions."><h2>Score a fresh planting</h2><p>Fit a detector to see its matches, extra pins and missed plants here.</p><a href="#controls">Set up a training run</a>';
       const review=doc.querySelector('#runReview');
       review.after(empty);
+      const testFit = doc.createElement('a');
+      testFit.className = 'textLink';
+      testFit.href = '#testModelSource';
+      testFit.textContent = 'Test this detector on a plot';
+      testFit.addEventListener('click', event => {
+        if (event.button || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        const source = doc.getElementById('testModelSource');
+        if (source.disabled || source.querySelector('[value=current]').disabled) return;
+        source.value = 'current';
+        source.dispatchEvent(new Event('change',{bubbles:true}));
+      });
+      review.append(testFit);
       const update=() => {
         if (empty.hidden!==!review.hidden) empty.hidden=!review.hidden;
         const running=!doc.getElementById('cancel').disabled;
@@ -235,7 +254,10 @@ function mount(tool) {
     doc.addEventListener('click',event => {
       const link=event.target.closest?.('a[href]');
       if (!link || event.defaultPrevented || event.button || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || link.hasAttribute('download') || link.target==='_blank') return;
-      const url=new URL(link.href);
+      let url=new URL(link.href);
+      if (link.id==='scanLink' && url.pathname===new URL('studio/',root).pathname && url.searchParams.has('open')) {
+        url=new URL(url.searchParams.get('open'),root);
+      }
       const next=classify(url, url.pathname===doc.location.pathname ? doc : null);
       if (next) {
         if (link.id==='trainLayout' && !doc.getElementById('ply').disabled) {
@@ -373,7 +395,14 @@ window.addEventListener('popstate',()=>{
   }
   navigate(readAddress(),'restore');
 });
-const pauseFilm=initFieldFilm(id=>{
-  const route=address('learn','lessons');route.url.hash=id;navigate(route);
+function filmRoute(destination) {
+  const route = classify(new URL(destination,root));
+  const pane = panes.get(tasks[route.view].tool);
+  if (pane?.url && route.view !== 'docs') route.url.search = pane.url.search;
+  return route;
+}
+const pauseFilm = initFieldFilm(destination => shellURL(filmRoute(destination)), destination => {
+  navigate(filmRoute(destination));
+  document.getElementById('desk').focus({preventScroll:true});
 });
 navigate(readAddress(),'restore');

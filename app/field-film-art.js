@@ -77,6 +77,58 @@ export function createFilmArt(stage) {
     scores.forEach(text => { if (text.textContent !== value) text.textContent = value; });
   }
 
-  const frames = {leaf,returns,prediction};
+  const known = get('.knownMark'), guess = get('.guessMark'), gap = get('.labelGap');
+  function labels(t) {
+    attr(known,'opacity',ramp(t,.05,.25));
+    const arrival = ramp(t,.42,.72);
+    attr(guess,'opacity',arrival);
+    attr(guess,'transform',shift(34+35*(1-arrival),13-38*(1-arrival)));
+    attr(gap,'opacity',ramp(t,.73,.91));
+  }
+
+  // Two crop examples and two background examples make one complete practice pass.
+  const cards = get('.practiceCards');
+  const centers = [-141,-47,47,141];
+  cards.innerHTML = centers.map((x,i) => {
+    const crop = i === 0 || i === 3;
+    const plant = crop ? '<use href="#filmRosette" transform="scale(.23)"/>' :
+      (i === 1 ? '<use href="#filmWeed"/>' : '');
+    return '<g transform="'+shift(x,-29)+'"><rect x="-42" y="-49" width="84" height="98" rx="11" fill="url(#fieldEarth)"/><rect x="-42" y="-49" width="84" height="98" rx="11" fill="url(#furrows)"/>'+plant+
+      '<rect class="cardLight" x="-42" y="-49" width="84" height="98" rx="11" fill="none" stroke="#ffdf8c" stroke-width="2"/><g transform="translate(0 37)" stroke="#d3edc7" stroke-width="2"><path d="'+(crop?'M-4 0h8M0 -4v8':'M-4 0h8')+'"/></g></g>';
+  }).join('');
+  const network = get('.weightNetwork');
+  const outlines = [...cards.querySelectorAll('.cardLight')], signal = get('.trainingLight');
+  function epoch(t) {
+    const pass = 4*ramp(t,.08,.83);
+    outlines.forEach((outline,i) => attr(outline,'opacity',.12+.88*ramp(pass,i,i+.45)));
+    const card = Math.min(3,Math.floor(pass)), phase = pass-card;
+    attr(network,'stroke-width',1+.8*ramp(pass,0,4)+.9*Math.sin(Math.PI*phase)**2);
+    attr(signal,'cx',centers[card]*(1-ramp(phase,.28,.83)));
+    attr(signal,'cy',22+66*ramp(phase,0,.84));
+    attr(signal,'opacity',ramp(t,.03,.08)*(1-ramp(t,.84,.94)));
+  }
+
+  const references = get('.referenceMarks'), checks = [...get('.checkPins').children], outcome = get('.checkOutcome');
+  function validation(t) {
+    attr(references,'opacity',.15+.85*ramp(t,.04,.26));
+    checks.forEach((pin,i) => {
+      const lock = ramp(t,.31+.085*i,.49+.085*i);
+      attr(pin,'opacity',lock);
+      attr(pin,'r',13+17*(1-lock));
+    });
+    attr(outcome,'opacity',ramp(t,.66,.87));
+  }
+
+  const cutoffPins = get('.cutoffPins').children, gate = get('.cutoffGate');
+  function cutoff(t) {
+    // The previous shot's extra pin has the lowest score and the second match
+    // the middle score. Their marks vanish as the gate crosses each score.
+    const threshold = -135+208*ramp(t,.10,.56);
+    attr(gate,'transform',shift(threshold,0));
+    attr(cutoffPins[2],'opacity',.77*(1-ramp(threshold,-63,-51)));
+    attr(cutoffPins[1],'opacity',.85*(1-ramp(threshold,6,18)));
+  }
+
+  const frames = {leaf,returns,labels,prediction,epoch,validation,cutoff};
   return (id, progress) => frames[id](Math.max(0,Math.min(1,progress)));
 }

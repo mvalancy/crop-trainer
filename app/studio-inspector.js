@@ -17,6 +17,7 @@ export function createInspector(workbench, name, shell, onSelect) {
   let selected;
   let active = false;
   let docked = true;
+  let requested = false;
 
   function display(panel, focus = false) {
     selected = panel;
@@ -47,7 +48,7 @@ export function createInspector(workbench, name, shell, onSelect) {
     detail.id = panel.id + '-hint';
     button.setAttribute('aria-describedby', detail.id);
     button.setAttribute('aria-controls', panel.id);
-    button.addEventListener('click', () => display(panel, true));
+    button.addEventListener('click', () => { requested = true; display(panel,true); });
     panels.set(panel, button);
     topics.append(button);
     panel.append(...content);
@@ -60,13 +61,19 @@ export function createInspector(workbench, name, shell, onSelect) {
     if (!active || modal !== shell.compact.matches) {
       if (drawer.open) drawer.close();
     }
-    if (active && !shell.compact.matches && docked && !drawer.open) {
-      drawer.open = true;
+    if (active && !drawer.open) {
+      if (!shell.compact.matches && docked) drawer.open = true;
+      else if (shell.compact.matches && requested) {
+        drawer.showModal();
+        shell.remember();
+      }
+      if (requested && drawer.open) heading.focus({preventScroll:true});
     }
     if (active) shell.changed(api);
   }
   function open(panel = selected, remember = true) {
     if (!active) return;
+    requested = true;
     display(panel);
     if (shell.compact.matches) {
       if (!drawer.open) {
@@ -83,6 +90,7 @@ export function createInspector(workbench, name, shell, onSelect) {
   function dismiss() {
     if (!drawer.open) return;
     const wasModal = drawer.matches(':modal');
+    requested = false;
     if (!wasModal) docked = false;
     drawer.close();
     shell.dismissed(api, wasModal);
@@ -126,7 +134,7 @@ export function createInspector(workbench, name, shell, onSelect) {
   shell.compact.addEventListener('change', resize);
   doc.defaultView.addEventListener('pagehide', () => shell.compact.removeEventListener('change', resize), {once:true});
   const api = {drawer, addPanel, reveal, open, dismiss,
-    activate(value) { active = value; sync(); },
+    activate(value) { active = value; if (!value) requested = false; sync(); },
     get expanded() { return drawer.open; },
     get modal() { return drawer.matches(':modal'); }
   };

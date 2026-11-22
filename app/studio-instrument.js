@@ -106,7 +106,7 @@ export function installInstrument(doc, tool, reference, shell) {
     const ready = make('figure', 'firstRun');
     const caption = make('figcaption', '');
     caption.textContent = 'Two detectors see the same plantings. Compare the pins each places on fresh fields.';
-    ready.append(find('.benchContext img'), caption);
+    ready.append(make('img',''), caption);
     illustratedStart(ready,'compare','field-lab-quadrant','Four labeled lettuces and a weed on a shared illustration.','Explore the score cutoff →');
     stage.append(ready, watch.querySelector('.liveScene'));
     find('#run').textContent = 'Compare';
@@ -119,7 +119,9 @@ export function installInstrument(doc, tool, reference, shell) {
     addPanel('Setup', 'Choose the detectors and fields to compare.', find('#benchForm'));
     const presets = find('#benchExamples');
     presets.open = true;
-    addPanel('Presets', 'Start from a ready-made experiment.', presets);
+    const method = find('.benchContext');
+    // Preserve the original paired-field illustration and experiment rationale.
+    addPanel('Presets', 'Start from a ready-made experiment.', presets, method);
     addPanel('Scoreboard', 'See each detector’s scores as the seeds finish.', watch);
   } else if (scan) {
     const settings = find('#scan-settings');
@@ -167,7 +169,8 @@ export function installInstrument(doc, tool, reference, shell) {
     run.textContent = 'Start training';
     moveRunActions();
     readout.append(stageStatus.querySelector('#stage'), stageStatus.querySelector('#progress'));
-    addPanel('Setup', 'Choose a field and a training budget.', setup);
+    find('.introLinks a[href="#field-test"]').href = '#testModelSource';
+    addPanel('Setup', 'Choose a field and a training budget.', setup, find('.introLinks'));
     addPanel('Model', 'Explore how a detector turns measurements into a prediction.', find('#detector'));
     addPanel('Training plan', 'Set the schedule, datasets and detection rules.', find('.advancedPanel'));
     addPanel('Run notes', 'Read the fit estimate and progress messages.', find('#status'), find('#estimateText'), find('#reviewLink'), monitor.querySelector('.method'));

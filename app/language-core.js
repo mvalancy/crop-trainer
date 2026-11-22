@@ -1,3 +1,4 @@
+import {filmLessons} from './film-lessons.js';
 // Native names let people recover their preferred language from any translation.
 export const languages = {en:'English',ar:'العربية',es:'Español',zh:'简体中文',fr:'Français'};
 export const languageTags = {en:'en',ar:'ar',es:'es',zh:'zh-Hans',fr:'fr'};
@@ -129,11 +130,17 @@ export const filmLines = {
     '生菜和杂草都长到了同一条线。只用高度训练一次，它们的得分就一起从零点五零升到了零点六二。',
     'Une laitue et une mauvaise herbe atteignent la même ligne. Entraîne le modèle une fois avec la hauteur seule. Les deux scores passent de 0,50 à 0,62.']
 };
+for (const [id,lesson] of Object.entries(filmLessons)) {
+  filmLines[id] = lesson.line;
+  for (const words of [lesson.tab,lesson.title,lesson.action]) labels[words[0]] ??= words.slice(1);
+}
 for(const line of Object.values(filmLines))labels[line[0]]=line.slice(1);
 
 Object.assign(labels,{
  'Crop Trainer':['Crop Trainer','Crop Trainer','Crop Trainer','Crop Trainer'],
  'Follow one lettuce':['رحلة مع نبتة خسّ','Sigue una lechuga','跟随一棵生菜','Suivre une laitue'],
+ 'Film captions':['نصّ الفيلم','Subtítulos de la película','影片字幕','Sous-titres du film'],
+ 'Test this detector on a plot':['اختبر هذا الكاشف على قطعة أرض','Prueba este detector en una parcela','在地块上测试这个检测器','Tester ce détecteur sur une parcelle'],
  'Story audio':['صوت الفيلم','Audio de la película','影片音频','Son du film'],
  'Choose a scene':['اختر مشهدًا','Elegir una escena','选择场景','Choisir une scène'],
  'Four light pulses strike the curved canopy of a butterhead lettuce. The first surfaces they encounter send echoes back.':['تسقط أربع نبضات ضوئية على أوراق خسّة مستديرة. تعيد أول ورقة تصيبها كلّ نبضة صدى إلى الماسح.','Cuatro pulsos de luz alcanzan las hojas curvas de una lechuga. La primera superficie que toca cada pulso devuelve un eco.','四束光脉冲射向生菜弯曲的叶片。每束光遇到的第一个表面都会产生回波。','Quatre impulsions lumineuses frappent les feuilles courbes d’une laitue. Chaque première surface rencontrée renvoie un écho.'],

@@ -1,13 +1,14 @@
 """Render the optional film bed with NumPy, SciPy and ffmpeg. No tones or repeated samples."""
 from pathlib import Path
 import subprocess
+import sys
 import numpy as np
 from scipy.signal import butter, sosfilt
 
 root = Path(__file__).resolve().parents[2] / 'art/audio'
 rate = 24000
 rng = np.random.default_rng(25417)
-for scene in ('leaf', 'returns', 'prediction'):
+for scene in (sys.argv[1:] or ('leaf', 'returns', 'prediction', 'labels', 'epoch', 'validation', 'cutoff')):
     raw = subprocess.check_output(['ffmpeg', '-v', 'error', '-i', root / (scene+'-voice.mp3'),
                                    '-f', 'f32le', '-ar', str(rate), '-ac', '1', '-'])
     t = np.arange(len(raw)//4) / rate

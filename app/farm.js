@@ -137,14 +137,18 @@ $('copyScan').onclick = async () => {
   if (href === $('scanLink').href) $('shareStatus').textContent = message;
 };
 
+let appliedScanURL;
 function updateBoxLink() {
   $('focusPlant').disabled = !scan?.labels.boxes.length;
   $('focusPlant').textContent = $('highlight').value === '' ? 'Explore a plant' : 'Focus plant';
   if (!scan) return;
-  const url = new URL($('scanLink').href);
+  const url = new URL(appliedScanURL);
   if ($('highlight').value === '') url.searchParams.delete('box');
   else url.searchParams.set('box', $('highlight').value);
-  $('scanLink').href = url.href;
+  appliedScanURL = url;
+  const share = {url};
+  document.dispatchEvent(new CustomEvent('crop-scan-address',{detail:share}));
+  $('scanLink').href = share.url.href;
   $('shareStatus').textContent = '';
 }
 $('highlight').addEventListener('change', updateBoxLink);
@@ -202,7 +206,7 @@ function grow(checkReplay = false) {
   for(const [key,value] of Object.entries(plants)) url.searchParams.set(key,value);
   url.searchParams.set('budget', $('budget').value);
   if(recipe.infrastructure===false) url.searchParams.set('fixtures','off');
-  const previous = scan ? new URL($('scanLink').href) : new URL(location.href);
+  const previous = scan ? appliedScanURL : new URL(location.href);
   showScan(recipe, url, previous.searchParams.get('box'), previous.searchParams.get('tile'), checkReplay);
 }
 
@@ -282,7 +286,7 @@ function applyScan(value, recipe, url, selectedBox, expectedTile) {
   url.searchParams.set('ground', recipe.ground);
   url.searchParams.set('tile', scan.labels.tile_id);
   url.hash = 'field';
-  $('scanLink').href = url.href;
+  appliedScanURL = url;
   scanStudy.setScan(scan,url.href);
   $('copyScan').disabled = false;
   $('switchSoil').disabled = false;
@@ -361,7 +365,7 @@ function applyScan(value, recipe, url, selectedBox, expectedTile) {
 $('switchSoil').onclick = () => {
   const recipe = {...scan.p, ground:!scan.p.ground};
   $('ground').checked = recipe.ground;
-  showScan(recipe, new URL($('scanLink').href), $('highlight').value);
+  showScan(recipe, new URL(appliedScanURL), $('highlight').value);
 };
 growForm.onsubmit = event => {
   event.preventDefault();

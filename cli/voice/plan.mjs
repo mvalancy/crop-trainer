@@ -1,3 +1,4 @@
+import {filmLessons} from '../../app/film-lessons.js';
 // Print recording jobs. Optional input is a JSON array of additional passages in the chosen language.
 import {createHash} from 'node:crypto';
 import {readFileSync,writeFileSync} from 'node:fs';
@@ -17,7 +18,7 @@ function tr(text){
   return translated;
 }
 const jobs=[],prefix='art/audio/'+(lang==='en'?'':lang+'-');
-const titles={leaf:'Where does the light land?',returns:'Where is the plant?',prediction:'Can height fool a detector?'};
+const titles={...Object.fromEntries(Object.entries(filmLessons).map(([id,lesson])=>[id,lesson.title[0]])),leaf:'Where does the light land?',returns:'Where is the plant?',prediction:'Can height fool a detector?'};
 for(const [scene,lines] of Object.entries(filmLines)){
   const text=tr(titles[scene])+' '+lines[Object.keys(languages).indexOf(lang)];
   jobs.push({text,file:prefix+scene+'-voice.mp3',film:true});

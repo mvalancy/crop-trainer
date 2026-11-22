@@ -1,5 +1,35 @@
 import assert from 'node:assert/strict';
 
+// Missing SVG references can leave the pins visible on an entirely empty plot.
+async function checkBotanicalPlate(page,film) {
+  const stage=film.locator('.filmStage');
+  const plant=film.locator('#filmRosette');
+  for (const scene of ['Labels','Epoch','Validation','Cutoff']) {
+    await film.getByRole('button',{name:scene,exact:true}).click();
+    const withPlants=await stage.screenshot();
+    await plant.evaluate(el=>el.style.opacity='0');
+    const withoutPlants=await stage.screenshot();
+    await plant.evaluate(el=>el.style.removeProperty('opacity'));
+    const fraction=await page.evaluate(async images=>{
+      async function pixels(data) {
+        const image=new Image();
+        image.src='data:image/png;base64,'+data;
+        await image.decode();
+        const canvas=document.createElement('canvas');
+        canvas.width=image.width;canvas.height=image.height;
+        const ctx=canvas.getContext('2d');
+        ctx.drawImage(image,0,0);
+        return ctx.getImageData(0,0,canvas.width,canvas.height).data;
+      }
+      const [a,b]=await Promise.all(images.map(pixels));
+      let changed=0;
+      for(let i=0;i<a.length;i+=4) if(Math.abs(a[i+1]-b[i+1])>12) changed++;
+      return 4*changed/a.length;
+    },[withPlants,withoutPlants].map(bytes=>bytes.toString('base64')));
+    assert.ok(fraction>.005,scene+' must actually paint its lettuce illustration');
+  }
+}
+
 export async function checkFieldFilm(browser, base) {
   const page = await browser.newPage({viewport:{width:390,height:844}, reducedMotion:'reduce'});
   try {
@@ -44,7 +74,7 @@ export async function checkFieldFilm(browser, base) {
       await page.setViewportSize({width,height});
       await page.emulateMedia({colorScheme:width%3 ? 'dark' : 'light'});
       let lastStage;
-      for (const name of ['Leaf','Returns','Prediction']) {
+      for (const name of ['Leaf','Returns','Labels','Prediction','Epoch','Validation','Cutoff']) {
         await button(name).click();
         const layout = await film.evaluate((el,scene) => {
           const box = selector => el.querySelector(selector).getBoundingClientRect().toJSON();
@@ -53,7 +83,11 @@ export async function checkFieldFilm(browser, base) {
           const [selector,left,top,right,bottom] = {
             Leaf:['.leafCamera',-210,-137,210,137],
             Returns:['.scanCanopy',-134,-131,134,131],
-            Prediction:['.shotHeight',-200,-80,180,120]
+            Labels:['.shotLabels',-170,-112,170,112],
+            Prediction:['.shotHeight',-200,-80,180,120],
+            Epoch:['.shotEpoch',-184,-80,184,105],
+            Validation:['.shotValidation',-179,-112,179,112],
+            Cutoff:['.shotCutoff',-179,-112,179,143]
           }[scene];
           const matrix = el.querySelector(selector).getScreenCTM();
           const point = (x,y) => new DOMPoint(x,y).matrixTransform(matrix).toJSON();
@@ -64,6 +98,10 @@ export async function checkFieldFilm(browser, base) {
             overflow:el.scrollWidth-el.clientWidth};
         },name);
         const {pane,caption,controls,center,topLeft,bottomRight,target,marking} = layout;
+        assert.ok(await film.locator('#playFilm').evaluate(el=>{
+          const box=el.getBoundingClientRect();
+          return el.ownerDocument.elementFromPoint(box.x+box.width/2,box.y+box.height/2)===el;
+        }),name+' Play is covered at '+width+'×'+height);
         const playback=await film.locator('#playFilm').boundingBox();
         const practice=await film.locator('.tryShot:not([inert])').boundingBox();
         assert.ok(playback.y<=practice.y+practice.height && playback.x+playback.width<=practice.x+1,
@@ -82,15 +120,17 @@ export async function checkFieldFilm(browser, base) {
       }
     }
     await page.setViewportSize({width:390,height:844});
+    await checkBotanicalPlate(page,film);
     assert.equal(await page.evaluate(()=>window.filmMeters.length),0,'Opening a film or choosing a still must stay silent');
     assert.deepEqual(await film.locator('.scoreValue').allTextContents(),['0.62','0.62']);
     const ambience = film.getByLabel('Ambience',{exact:true});
     assert.equal(await ambience.isChecked(),false);
+    await button('Prediction').click();
     await button('Play').click();
     await page.waitForFunction(()=>window.filmMeters.length===2 && window.filmMeters[0]()>.001 && window.filmMeters[1]()===0);
     await ambience.check();
     await page.waitForFunction(()=>window.filmMeters[1]()>.001);
-    assert.equal(await film.getAttribute('data-shot'),'2','Play must start the chosen scene');
+    assert.equal(await film.getAttribute('data-scene'),'prediction','Play must start the chosen scene');
     assert.deepEqual(await film.locator('.scoreValue').allTextContents(),['0.62','0.62'],'Reduced motion keeps the explanatory final frame.');
     const voice = film.getByLabel('Narration',{exact:true});
     await voice.uncheck();
@@ -101,7 +141,9 @@ export async function checkFieldFilm(browser, base) {
     await button('Pause').click();
     await button('Resume').click();
     await page.waitForFunction(()=>window.filmStarts.at(-1)>.1);
-    await button('Replay').waitFor({timeout:18000});
+    await page.waitForFunction(()=>document.getElementById('film').dataset.scene==='epoch',{},{timeout:16000});
+    await button('Cutoff').click();
+    await button('Replay').waitFor({timeout:24000});
     await button('Replay').click();
     await page.waitForFunction(()=>document.querySelector('#film').dataset.shot==='1',{},{timeout:15000});
     await button('Prediction').click();
@@ -139,7 +181,7 @@ export async function checkFieldFilm(browser, base) {
     await button('Play').click();
     await film.getByRole('status').filter({hasText:'captions'}).waitFor();
     await page.waitForFunction(()=>document.querySelector('#film').dataset.shot==='1',{},{timeout:15000});
-    console.log('Verified both soundtrack channels, pause/resume, independent mutes, replay, caption fallback and static and moving frames for all three centered subjects at ten viewport sizes.');
+    console.log('Verified both soundtrack channels, pause/resume, independent mutes, replay, caption fallback and seven centered film compositions at ten viewport sizes.');
   } finally {
     await page.close();
   }

@@ -49,7 +49,8 @@ export function createStudioNarration(home) {
     player.setSpeed(Number(speed.value));
     try{localStorage.setItem('crop-narration-speed',speed.value);}catch{}
   });
-  function prepare() {
+  function prepare(preservePosition = false) {
+    const oldText = passages[index]?.text;
     const {cue, roots, anchor} = context;
     passages = readPassages(roots);
     if (cue && voiceovers[cue]) passages.unshift({heading:'Overview', text:translate(voiceovers[cue]), cue});
@@ -58,6 +59,11 @@ export function createStudioNarration(home) {
     select.replaceChildren(...sections.map(([i,label]) => new Option(label,String(i))));
     select.parentElement.hidden = sections.length === 1;
     const start = anchor && passages.findIndex(p=>p.heading === anchor);
+    if (preservePosition) {
+      index = Math.min(index,passages.length-1);
+      if (passages[index].text !== oldText) offset = 0;
+      return;
+    }
     index = typeof start === 'number' && start >= 0 ? start : 0;
     offset = 0;
     finished = false;
@@ -77,6 +83,7 @@ export function createStudioNarration(home) {
     }
   }
   function start() {
+    if (context?.live) prepare(true);
     const passage = passages[index];
     playing = follow = true;
     finished = false;
@@ -93,7 +100,8 @@ export function createStudioNarration(home) {
     index = i;
     offset = 0;
     playing = follow = finished = false;
-    if (continuePlaying) start(); else render();
+    if (continuePlaying) start();
+    else { if (context?.live) prepare(true); render(); }
   }
   function dismiss(focus = false) {
     player.stop();
@@ -107,7 +115,7 @@ export function createStudioNarration(home) {
   toggle.addEventListener('click',() => {
     if (!card.hidden) { minimizeCard(); return; }
     card.hidden = false;
-    if (engaged) { render(); return; }
+    if (engaged) { if (context?.live && !playing) prepare(true); render(); return; }
     engaged = true;
     prepare();
     start();

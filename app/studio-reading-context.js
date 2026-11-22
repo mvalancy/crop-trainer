@@ -6,7 +6,7 @@ export function studioReading(route, doc, inspector, defaultTitle) {
   const key = url.pathname + url.search + ':' + view + ':' + step + url.hash;
   if (step === 'explore') {
     const lesson = find('explore-' + view);
-    return {key,cue:'explore-'+view,title:lesson.querySelector('h2')?.textContent || 'Field experiment',roots:[lesson]};
+    return {key,live:true,cue:'explore-'+view,title:lesson.querySelector('h2')?.textContent || 'Field experiment',roots:[lesson]};
   }
   if (view === 'docs') {
     const figure = doc.querySelector('.guideFigureViewer[open]');
