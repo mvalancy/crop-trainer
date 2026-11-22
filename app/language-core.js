@@ -124,11 +124,11 @@ export const filmLines = {
     'Vista desde arriba, la lechuga se convierte en un grupo de puntos. Un anillo dorado marca el centro que estima el detector.',
     '从上往下看，叶片慢慢变成一个个小点。金色的圆圈表示电脑猜测的生菜中心。',
     'Cette laitue est vue du dessus. Les feuilles deviennent des points. Le cercle doré indique où se trouve probablement le centre de la plante.'],
-  prediction:['A lettuce and a weed reach the same line. Teach the model once using height alone. Both scores rise from 0.50 to 0.62.',
-    'تصل الخسّة والعشبة الضارّة إلى الخطّ نفسه. ندرّب النموذج مرّة واحدة باستخدام الارتفاع وحده، فترتفع الدرجتان معًا من 0.50 إلى 0.62.',
-    'Una lechuga y una mala hierba alcanzan la misma línea. Entrena al modelo una vez usando solo la altura. Ambas puntuaciones suben de 0,50 a 0,62.',
-    '生菜和杂草都长到了同一条线。只用高度训练一次，它们的得分就一起从零点五零升到了零点六二。',
-    'Une laitue et une mauvaise herbe atteignent la même ligne. Entraîne le modèle une fois avec la hauteur seule. Les deux scores passent de 0,50 à 0,62.']
+  prediction:['Height is a feature, a measurement the model uses. The lettuce and the weed are equally tall. Train once on the lettuce using only height. Both crop scores rise from 0.50 to 0.62.',
+    'الارتفاع سمة، أي قياس يستخدمه النموذج. للخسّة والعشبة الضارّة الارتفاع نفسه. ندرّب النموذج مرّة واحدة على الخسّة باستخدام الارتفاع وحده. فترتفع درجتا النبتتين معًا من 0.50 إلى 0.62.',
+    'La altura es una característica, una medida que usa el modelo. La lechuga y la mala hierba son igual de altas. Entrena una vez con la lechuga usando solo la altura. Ambas puntuaciones suben de 0,50 a 0,62.',
+    '高度是一个特征，也就是模型使用的一种测量值。生菜和杂草一样高。只看高度，用生菜训练一次，两者的作物得分就都从零点五零升到零点六二。',
+    'La hauteur est une caractéristique, une mesure utilisée par le modèle. La laitue et la mauvaise herbe ont la même hauteur. Entraîne le modèle une fois sur la laitue avec cette seule mesure. Les deux scores passent de 0,50 à 0,62.']
 };
 for (const [id,lesson] of Object.entries(filmLessons)) {
   filmLines[id] = lesson.line;

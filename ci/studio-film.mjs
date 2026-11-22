@@ -1,4 +1,7 @@
 import assert from 'node:assert/strict';
+import {filmTiming} from '../app/film-timing.js';
+
+const predictionTimeout = 1000 * filmTiming.en.prediction + 5000;
 
 // Missing SVG references can leave the pins visible on an entirely empty plot.
 async function checkBotanicalPlate(page,film) {
@@ -141,7 +144,7 @@ export async function checkFieldFilm(browser, base) {
     await button('Pause').click();
     await button('Resume').click();
     await page.waitForFunction(()=>window.filmStarts.at(-1)>.1);
-    await page.waitForFunction(()=>document.getElementById('film').dataset.scene==='epoch',{},{timeout:16000});
+    await page.waitForFunction(()=>document.getElementById('film').dataset.scene==='epoch',{},{timeout:predictionTimeout});
     await button('Cutoff').click();
     await button('Replay').waitFor({timeout:24000});
     await button('Replay').click();
@@ -173,7 +176,7 @@ export async function checkFieldFilm(browser, base) {
     await page.waitForFunction(previous => Number(document.querySelector('.scanReveal').getAttribute('width')) > Number(previous), stopped);
     await button('Prediction').click();
     await page.waitForFunction(() => document.querySelector('.scoreValue').textContent === '0.50');
-    await page.waitForFunction(() => [...document.querySelectorAll('.scoreValue')].every(el=>el.textContent === '0.62'),null,{timeout:13000});
+    await page.waitForFunction(() => [...document.querySelectorAll('.scoreValue')].every(el=>el.textContent === '0.62'),null,{timeout:predictionTimeout});
     await button('Pause').click();
     await button('Leaf').click();
     await page.route('**/art/audio/*.mp3',route=>route.abort());
