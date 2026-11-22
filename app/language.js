@@ -120,7 +120,11 @@ async function apply(code) {
     else address.searchParams.delete('lang');
     if(address.href!==location.href)history.replaceState(history.state,'',address);
   }
-  if(select){select.value=code;select.setAttribute('aria-label',translate('Language'));}
+  if(select){
+    select.value=code;
+    select.setAttribute('aria-label',translate('Language'));
+    select.title=translate('Language');
+  }
   observer?.disconnect();startArtLanguage(code,translate);scan(document.documentElement);
   if(code!=='en') observer.observe(document.documentElement,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:attrs});
   window.dispatchEvent(new CustomEvent('crop-language-change',{detail:code}));
@@ -130,8 +134,8 @@ export function installLanguages(theme) {
   document[Symbol.for('crop-original-text')]=(node,attr)=>originals.get(node)?.get(attr)?.source;
   const host=document.createElement('label');
   host.className='languageChoice';host.setAttribute('translate','no');
-  host.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4.2" ry="9"/><path d="M3 12h18"/></svg>';
-  select=document.createElement('select');select.id='siteLanguage';select.setAttribute('aria-label','Language');
+  host.innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4.2" ry="9"/><path d="M3 12h18"/></svg>';
+  select=document.createElement('select');select.id='siteLanguage';select.title='Language';select.setAttribute('aria-label','Language');
   for(const [code,name] of Object.entries(languages)){
     const option=new Option(name,code);option.lang=languageTags[code];option.dir=code==='ar'?'rtl':'ltr';select.add(option);
   }

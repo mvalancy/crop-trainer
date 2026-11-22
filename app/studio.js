@@ -183,12 +183,15 @@ function mount(tool) {
   frame.className = 'studioFrame'; frame.allowFullscreen = true;
   const pane = {tool,frame,ready:false,url:null};
   panes.set(tool,pane);
-  frame.addEventListener('load',() => {
+  function connectDocument() {
     const doc=frame.contentDocument;
-    if (!doc || !toolFor(new URL(doc.URL))) return;
+    if (!doc || pane.document===doc || toolFor(new URL(doc.URL))!==tool) return;
+    pane.document=doc;
     const css=doc.createElement('link');
     css.rel='stylesheet'; css.href=new URL('app/studio-frame.css',root);
-    css.addEventListener('load', () => {frame.dataset.styled='true';});
+    css.addEventListener('load', () => {
+      if (pane.document===doc && frame.contentDocument===doc) frame.dataset.styled='true';
+    });
     doc.head.append(css);
     const voiceStyle = doc.createElement('link');
     voiceStyle.rel = 'stylesheet';
@@ -272,7 +275,9 @@ function mount(tool) {
       if (resolved.step!==active.step || resolved.view!==active.view) {navigate(resolved,'replace');return;}
     }
     showFrame(pane);
-  });
+  }
+  frame.addEventListener('crop-document-ready',connectDocument);
+  frame.addEventListener('load',connectDocument);
   paneHost.append(frame);
   return pane;
 }
@@ -294,6 +299,7 @@ function navigate(route,historyMode='push') {
   closeActivityMenu();
   active=route;
   menuButton.querySelector('strong').textContent=tasks[view].label;
+  menuButton.title=tasks[view].label;
   remembered.set(view,route);
   if (historyMode!=='restore' && shellURL(route).href!==location.href) {
     history[historyMode==='replace'?'replaceState':'pushState'](null,'',shellURL(route));
@@ -304,7 +310,6 @@ function navigate(route,historyMode='push') {
   }
   document.title=config.title+' · Crop Trainer';
   document.getElementById('activityTitle').textContent=config.title;
-  const steps=document.getElementById('steps');
   steps.replaceChildren();
   for (const [key,[label]] of Object.entries(config.steps)) {
     if (Object.keys(config.steps).length===1) break;
@@ -315,6 +320,7 @@ function navigate(route,historyMode='push') {
     if (workStep===key) link.setAttribute('aria-current','location');
     steps.append(link);
   }
+  requestAnimationFrame(revealCurrentStep);
   if (isFilm) { narration.set(null); return; }
   const reload=!pane.url || pane.url.pathname!==url.pathname || pane.url.search!==url.search;
   pane.url=new URL(url);
@@ -328,6 +334,17 @@ for (const link of document.querySelectorAll('#activities a')) {
     const status=document.createElement('small');status.className='runIndicator';status.hidden=true;link.append(status);
   }
 }
+const steps=document.getElementById('steps');
+// Scroll just the section strip. Moving the document would also move the instrument.
+function revealCurrentStep() {
+  const current=steps.querySelector('[aria-current]');
+  if (!current || steps.scrollWidth<=steps.clientWidth) return;
+  const tab=current.getBoundingClientRect(), strip=steps.getBoundingClientRect();
+  const offset=tab.left<strip.left ? tab.left-strip.left : Math.max(0,tab.right-strip.right);
+  if (offset) steps.scrollBy({left:offset,behavior:'instant'});
+}
+new ResizeObserver(revealCurrentStep).observe(steps);
+window.addEventListener('crop-language-change',revealCurrentStep);
 const menuButton=document.getElementById('activityMenu');
 const navigation=document.getElementById('activities');
 function closeActivityMenu() {
@@ -356,7 +373,9 @@ document.addEventListener('click',event=>{
   if (link.dataset.step) navigate(address(active.view,link.dataset.step));
   else {
     const view=link.dataset.view;
-    const route=remembered.get(view) || address(view);
+    // Selecting an instrument from the activity menu always brings its main
+    // controls into view, even after visiting Explore or reading its results.
+    const route=['scan','train'].includes(view) ? address(view) : remembered.get(view) || address(view);
     // Learn and Scan share a planting. Train and Field test share the current fit.
     if (view!=='docs' && panes.get(tasks[view].tool)?.url) route.url.search=panes.get(tasks[view].tool).url.search;
     navigate(route);

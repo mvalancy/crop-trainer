@@ -1,17 +1,6 @@
-.languageChoice {position:relative;display:inline-flex;flex:0 0 auto;align-items:center;color:var(--ink);min-height:44px;}
-.languageChoice svg {position:absolute;inset-inline-start:.4rem;width:1.05rem;height:1.05rem;pointer-events:none;}
-.languageChoice select {color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:.4rem;font:inherit;min-height:44px;max-width:9.5rem;padding-inline-start:1.65rem;}
 :lang(ar) {letter-spacing:normal;}
 html[dir=rtl] :is(pre,code,kbd,.filmStage,.labPlate,.readingBar,canvas) {direction:ltr;unicode-bidi:isolate;}
 html[dir=rtl] :is(.shotTitle,.shotText,.labPage h2,.guideChapter h1,.guideChapter h2) {line-height:1.35;letter-spacing:normal;}
-@media(max-width:760px) {
-  .languageChoice {width:44px;}
-  .languageChoice svg {inset-inline-start:12px;width:20px;height:20px;}
-  .languageChoice select {width:44px;padding:0;color:transparent;appearance:none;background:transparent;}
-  .languageChoice option {color:var(--ink);background:var(--surface);}
-  .studioBar.barInner {gap:clamp(.15rem,1vw,.45rem);}
-}
-@media(forced-colors:active) {.languageChoice svg {color:ButtonText;}.languageChoice select:focus-visible {outline:2px solid Highlight;}}
 @media(orientation:landscape){
   html[dir=rtl] .filmScenery::after {transform:scaleX(-1);}
 }
@@ -27,28 +16,9 @@ html[dir=rtl] :is(.shotTitle,.shotText,.labPage h2,.guideChapter h1,.guideChapte
   html[dir=rtl] .filmCaption {padding-block:.15rem;}
 }
 @media(max-width:480px) {
-  .studio {position:relative;grid-template-rows:auto minmax(0,1fr);}
-  .studioBar.barInner {min-height:3.25rem;flex-wrap:wrap;row-gap:0;}
-  .studio #activities.isOpen {grid-area:desk;inset:0 auto auto;inset-inline-start:.5rem;}
-  .siteBar .barInner {
-    display:flex;flex-wrap:wrap;gap:0 .4rem;
-    width:calc(100% - 1rem);max-width:100%;
-  }
-  .siteBar .brand {min-width:0;max-width:100%;}
-  .siteBar nav {order:1;flex:1 1 100%;display:flex;flex-wrap:wrap;}
-  .siteBar nav a {flex:1 1 auto;padding-inline:.2rem;}
-  .siteBar .themeChoice {flex-direction:row;}
   .filmControls,.filmControls .shotList {display:flex;flex-wrap:wrap;}
   .filmControls .shotList,.filmControls .filmMix {min-width:0;max-width:100%;}
   .listenPlayback {flex-wrap:wrap;}
-}
-@media(min-width:741px) and (max-width:1150px) {
-  .siteBar .barInner {flex-wrap:wrap;row-gap:0;padding-block:.2rem;}
-  .siteBar nav {order:1;flex:1 1 100%;justify-content:space-between;flex-wrap:wrap;}
-}
-@media(max-width:760px) {
-  .studioBar #listenSlot:empty {display:block;flex:0 0 44px;}
-  .studioBar .studioListen .listenToggle {width:44px;padding-inline:0;}
 }
 @media(orientation:portrait) and (max-width:480px) and (max-height:710px) {
   /* Reserve space for the plant when longer captions or larger fonts need to scroll. */
@@ -56,4 +26,21 @@ html[dir=rtl] :is(.shotTitle,.shotText,.labPage h2,.guideChapter h1,.guideChapte
   .filmCaption {align-self:stretch;min-height:0;padding-block:.35rem;overflow-y:auto;overscroll-behavior:contain;}
   .sceneCaption {align-self:safe end;}
   #film .filmSeries {display:none;}
+}
+
+/* A translated label or a larger reading font can outgrow a narrow form. Let
+   the controls and their captions take another line without widening the page. */
+@media(max-width:600px) {
+  .siteFoot {grid-template-columns:minmax(0,1fr);}
+  .siteFoot div {display:flex;flex-wrap:wrap;}
+  .siteFoot > *,.hero h1,.scanFiles,.networkReadout {min-width:0;overflow-wrap:anywhere;}
+  .pageIntro h1,.advancedPanel h2 {overflow-wrap:anywhere;}
+  .scanSummary .scanFiles {grid-template-columns:minmax(0,1fr);}
+  .scanFiles .scanDownloads {grid-template-columns:repeat(auto-fit,minmax(min(100%,4.8rem),1fr));}
+  .scanFiles :is(.scanIdentity,.scanLinkActions),#grow .growActions {flex-wrap:wrap;}
+  #grow .growActions > * {min-width:0;max-width:100%;overflow-wrap:anywhere;}
+  .scanFiles :is(a,button,code),.testUpload :is(label,input) {min-width:0;max-width:100%;}
+  .testUpload .helpField > label {grid-template-columns:minmax(0,1fr);overflow-wrap:anywhere;}
+  #benchForm .action {display:flex;flex-wrap:wrap;}
+  #benchForm .action .helpAction {min-width:0;max-width:100%;overflow-wrap:anywhere;}
 }

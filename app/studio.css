@@ -94,6 +94,11 @@ html:has(.studio) {scroll-behavior:auto;}
   .shotText {font-size:.92rem;}
 }
 .studioFrame:not([data-styled]) {visibility:hidden;}
+.activityLoading {display:none;}
+#panes:has(.studioFrame:not([hidden],[data-styled])) .activityLoading {
+  position:absolute;inset:0;display:grid;place-items:center;margin:0;
+  padding:1rem;text-align:center;color:var(--ink);background:var(--paper);
+}
 #activityMenu {display:none;}
 @media(max-width:760px) {
   .studio {grid-template:"bar" 3.25rem "desk" minmax(0,1fr) / minmax(0,1fr);}

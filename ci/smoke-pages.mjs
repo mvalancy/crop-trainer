@@ -1,9 +1,10 @@
 import {checkLanguages} from './studio-languages.mjs';
+import {checkSiteHeader} from './site-header.mjs';
 // Serve only the built artifact at the same project path used by GitHub Pages.
 import {checkInvestigations} from './studio-investigations.mjs';
 import {checkStudioNarration} from './studio-narration.mjs';
 import {checkFieldFilm} from './studio-film.mjs';
-import {checkStudioLayout,checkDrawer,openSection,closeOverlay} from './studio-layout.mjs';
+import {checkStudioLayout,checkDrawer,openSection,closeOverlay,checkActivityMenu} from './studio-layout.mjs';
 import assert from 'node:assert/strict';
 import {readFile,stat} from 'node:fs/promises';
 import {createServer} from 'node:http';
@@ -149,6 +150,8 @@ try {
   await checkFieldFilm(browser,base);
   await checkStudioNarration(browser,base);
   await checkLanguages(browser,base);
+  await checkSiteHeader(browser,base);
+  await checkActivityMenu(browser,base);
   await checkInvestigations(browser,base);
 
   // The studio owns navigation and preserves each active instrument across task switches.

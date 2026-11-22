@@ -247,6 +247,7 @@
   "Will this detector work on my field?": "هل سيعمل هذا الكاشف في حقلي؟",
   "Work through one weight update with a pencil": "احسب تحديثًا واحدًا للوزن بالورقة والقلم",
   "Would it work on my farm?": "هل ستنجح هذه الطريقة في مزرعتي؟",
+  "Yes. Adjust both the first-layer weight and its bias to express exactly the same response in the new units. For each hidden unit, let w denote its incoming weights, b its bias, μ the training means and σ the stored spreads.": "نعم. اضبط وزن الطبقة الأولى وانحيازها معًا حتى تعطي الاستجابة نفسها بالوحدات الجديدة. لكل وحدة مخفية، يرمز w إلى الأوزان الداخلة إليها، وb إلى انحيازها، وμ إلى متوسطات التدريب، وσ إلى مقاييس التشتّت المحفوظة.",
   "You can do the whole tour in a browser. Each chapter has a small experiment, and the pictures also make sense as stills.": "يمكنك القيام بالجولة كلّها في المتصفّح. في كلّ فصل تجربة صغيرة، ويمكنك فهم الرسوم أيضًا وهي ساكنة.",
   "Young tomato": "شتلة طماطم",
   "Your farm journal remembers experiments on this device. Choose a stamp, follow its experiment, and come back to see what you earned.": "يعرض سجلّك ما أنجزته في هذه الجلسة. اختر نشاطًا لتعود إلى الحقل وتجرّب خطوة جديدة."

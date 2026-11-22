@@ -47,4 +47,4 @@ field-investigation .labPlate figcaption {box-sizing:border-box;justify-self:str
 .readingBar i,.readingKey span::before {background:var(--mark);}
 .readingKey {display:flex;flex-wrap:wrap;gap:.2rem .85rem;}
 .readingKey span {font:500 .84rem var(--sans);color:var(--ink);}
-.readingKey span::before {content:"";display:inline-block;width:.65rem;height:.65rem;margin-right:.3rem;border-radius:2px;}
+.readingKey span::before {content:"";display:inline-block;width:.65rem;height:.65rem;margin-inline-end:.3rem;border-radius:2px;}

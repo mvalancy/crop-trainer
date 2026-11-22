@@ -1,0 +1,109 @@
+/* Both shells use the same first row. Its controls keep their physical positions
+   during language changes; the navigation and the content retain the document direction. */
+.barInner.appBar {
+  --bar-edge:max(8px,2vw);
+  --bar-gap:clamp(4px,1vw,14px);
+  position:relative;direction:ltr;display:grid;align-items:center;align-content:start;
+  box-sizing:border-box;width:100%;max-width:none;margin:0;
+  padding:0 max(var(--bar-edge),env(safe-area-inset-right)) 0 max(var(--bar-edge),env(safe-area-inset-left));
+  gap:0 var(--bar-gap);
+}
+.siteBar .appBar {
+  grid-template:"brand nav source tools" minmax(56px,auto) / auto minmax(0,1fr) auto auto;
+}
+.studio .appBar {
+  grid-template:"identity source tools" minmax(55px,auto) / minmax(0,1fr) auto auto;
+}
+.studio {grid-template-rows:auto minmax(0,1fr);}
+html[dir=rtl] .appBar > :not(.siteTools),
+html[dir=rtl] .siteTools :is(label,.listenCard,.listenToggle) {direction:rtl;}
+html[dir=rtl] .appBar .headerIdentity {justify-content:flex-end;}
+.appBar > .brand {grid-area:brand;}
+.appBar > nav {grid-area:nav;display:flex;flex-wrap:wrap;justify-content:center;min-width:0;}
+.appBar > :is(.sourceLinks,.repoLink) {grid-area:source;margin:0;justify-self:end;}
+.appBar .sourceLinks .repoLink {margin:0;}
+.appBar .sourceLinks {max-width:100%;flex-wrap:wrap;justify-content:end;}
+.appBar > .headerIdentity {grid-area:identity;min-width:0;display:flex;align-items:center;gap:var(--bar-gap);}
+.headerIdentity .studioName {padding-inline-start:.8rem;padding-inline-end:0;border:0;border-inline-start:1px solid var(--line);}
+.studioBar .repoLink svg,.activityGlyph {display:none;}
+.appBar > .siteTools {
+  grid-area:tools;align-self:start;margin-top:6px;display:grid;direction:ltr;
+  grid-template-columns:44px 8rem 9rem;align-items:center;gap:4px;
+}
+.siteTools :is(#listenSlot,.pageListen) {grid-column:1;display:block;min-width:0;}
+.siteTools .studioListen .listenToggle {height:44px;width:44px;padding:0;}
+.siteTools .listenToggle span,.siteTools .preferenceLabel {
+  position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;
+}
+.siteTools .themeChoice {grid-column:2;}
+.siteTools .languageChoice {grid-column:3;}
+.siteTools :is(.themeChoice,.languageChoice) {
+  position:relative;display:grid;grid-row:1;align-items:center;width:100%;
+  height:44px;min-height:44px;gap:0;color:var(--ink);
+}
+.siteTools > label > svg {
+  position:absolute;z-index:1;inset-inline-start:10px;width:19px;height:19px;pointer-events:none;
+}
+.siteTools > label > select {
+  box-sizing:border-box;width:100%;min-width:0;max-width:100%;height:44px;min-height:44px;
+  padding-block:0;padding-inline:32px 4px;border:1px solid var(--line);border-radius:.5rem;
+  background-color:var(--surface);color:var(--ink);font:500 .9rem var(--sans);
+}
+.siteTools option {color:var(--ink);background:var(--surface);}
+.siteTools select:focus-visible {outline:3px solid var(--forest);outline-offset:2px;}
+@media(forced-colors:active) {
+  .siteTools > label > svg {color:ButtonText;}
+  .siteTools select:focus-visible {outline-color:Highlight;}
+}
+@media(max-width:1200px) {
+  .siteBar .appBar {
+    grid-template:"brand source tools" minmax(56px,auto) "nav nav nav" auto / minmax(28px,1fr) minmax(0,max-content) auto;
+  }
+  .siteBar .appBar > nav {
+    display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:2px;margin:0;
+  }
+  .siteBar .appBar nav a {min-width:0;min-height:44px;padding:.25rem;text-align:center;justify-content:center;overflow-wrap:anywhere;}
+}
+@media(max-width:960px) {
+  .appBar > .siteTools {grid-template-columns:repeat(3,44px);}
+  .siteTools > label > svg {inset-inline-start:12px;width:20px;height:20px;}
+  .siteTools > label > select {appearance:none;padding:0;color:transparent;}
+}
+@media(max-width:760px) {
+  .studio {position:relative;}
+  .studio #activities.isOpen {grid-area:desk;inset:0 auto auto var(--bar-edge,8px);}
+  .appBar .headerIdentity {container:identity / inline-size;}
+  .appBar #activityMenu {min-width:0;max-width:100%;height:44px;padding-inline:6px;gap:4px;}
+  #activityMenu strong {min-width:0;overflow-wrap:anywhere;font-size:.85rem;line-height:1.1;}
+  .appBar .headerIdentity .brand {font-size:0;gap:0;flex:none;}
+  .appBar .headerIdentity .brand img {width:28px;height:28px;}
+}
+@media(max-width:600px) {
+  .studioBar .repoLink {position:relative;display:grid;place-items:center;width:44px;height:44px;}
+  .studioBar .repoLink svg {display:block;}
+  .studioBar .repoLink span {
+    position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;
+  }
+  .siteBar .appBar > .brand {justify-self:start;min-width:0;font-size:0;gap:0;min-height:44px;}
+  .siteBar .appBar > .brand img {width:28px;height:28px;}
+  .siteBar .appBar .sourceLinks {gap:4px;white-space:nowrap;}
+}
+
+/* Anchor the reader to the full header, including when the chapter has a second navigation row. */
+.appBar .siteTools .pageListen {position:static;}
+.appBar .siteTools .listenCard {inset:50px var(--bar-edge) auto auto;width:min(22rem,calc(100% - 2 * var(--bar-edge)));}
+.siteBar:has(.listenCard:not([hidden])) {position:relative;z-index:5;}
+@media(max-width:600px) {
+  .deskHead #openSettings {position:relative;display:grid;place-items:center;width:44px;height:44px;padding:0;gap:0;}
+  .deskHead #openSettings[hidden] {display:none;}
+  .deskHead #openSettings span {position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;}
+  .deskHead #steps {flex:1;align-items:stretch;gap:2px;}
+  .deskHead #steps a {flex:1 0 min-content;min-width:44px;justify-content:center;text-align:center;white-space:normal;line-height:1.15;padding-inline:.3rem;}
+}
+
+@container identity (max-width:5.75rem) {
+  #activityMenu .activityGlyph {display:block;}
+  #activityMenu strong {position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);}
+  #activityMenu span {display:none;}
+  .appBar #activityMenu {width:44px;justify-content:center;}
+}

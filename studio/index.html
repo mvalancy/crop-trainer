@@ -10,7 +10,7 @@
 </head>
 <body class="studio">
 <a class="skip" href="#desk">Skip to activity</a>
-<header class="studioBar barInner"><a href="?view=learn" class="brand"><img src="../art/crop-mark.svg" alt="" width="32" height="32">Crop Trainer</a><button type="button" id="activityMenu" aria-label="Switch activity" aria-controls="activities" aria-expanded="false"><strong>Learn</strong><span aria-hidden="true">▾</span></button><span class="studioName">Learning studio</span><span id="listenSlot"></span><a class="repoLink" href="https://mvalancy.github.io/crop-trainer/">Live app</a></header>
+<header class="studioBar barInner"><div class="headerIdentity"><a href="?view=learn" class="brand"><img src="../art/crop-mark.svg" alt="" width="32" height="32">Crop Trainer</a><button type="button" id="activityMenu" aria-label="Switch activity" aria-controls="activities" aria-expanded="false" aria-describedby="currentActivityName"><svg class="activityGlyph" aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg><strong id="currentActivityName">Learn</strong><span aria-hidden="true">▾</span></button><span class="studioName">Learning studio</span></div><span id="listenSlot"></span><a class="repoLink" title="Live app" href="https://mvalancy.github.io/crop-trainer/"><svg aria-hidden="true" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="m3 11 9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg><span>Live app</span></a></header>
 <nav id="activities" aria-label="Studio activities">
 <a href="?view=learn" data-view="learn"><span aria-hidden="true">⌁</span>Learn</a>
 <a href="?view=scan" data-view="scan"><span aria-hidden="true">⌖</span>Scan</a>
@@ -19,7 +19,7 @@
 <a href="?view=test" data-view="test"><span aria-hidden="true">◎</span>Field test</a>
 <a href="?view=docs" data-view="docs"><span aria-hidden="true">▤</span>Docs</a>
 </nav>
-<main id="desk" tabindex="-1"><header class="deskHead"><button type="button" id="openSettings" aria-haspopup="dialog" aria-expanded="false" hidden><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M10 4v16M5.5 8h2M5.5 11h2"/></svg>Settings</button><h1 id="activityTitle">Field lessons</h1><nav id="steps" aria-label="Activity sections"></nav></header><div id="panes"><section id="film" aria-label="Follow one lettuce" data-shot="0">
+<main id="desk" tabindex="-1"><header class="deskHead"><button type="button" id="openSettings" aria-haspopup="dialog" aria-expanded="false" hidden><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M10 4v16M5.5 8h2M5.5 11h2"/></svg><span>Settings</span></button><h1 id="activityTitle">Field lessons</h1><nav id="steps" aria-label="Activity sections"></nav></header><div id="panes"><p class="activityLoading" role="status">Opening activity…</p><section id="film" aria-label="Follow one lettuce" data-shot="0">
 <div class="filmScreen"><div class="filmScenery"><div class="filmStage" role="img" aria-label="A laser pulse meets the canopy of one butterhead lettuce.">
 <svg class="shot shotField" viewBox="-260 -180 520 360" aria-hidden="true">
   <defs>

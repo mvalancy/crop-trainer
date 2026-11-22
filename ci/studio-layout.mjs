@@ -1,5 +1,53 @@
 import assert from 'node:assert/strict';
 
+export async function checkActivityMenu(browser,base) {
+  const page=await browser.newPage({viewport:{width:390,height:844},hasTouch:true});
+  const heldImages=[];
+  try {
+    // A nonessential image can stay in flight on mobile even after all the
+    // modules and controls have loaded. Exercise the real menu in that state.
+    await page.route('**/art/crop-mark.svg',route=>{
+      if (route.request().frame().parentFrame()) heldImages.push(route);
+      else return route.continue();
+    });
+    await page.goto(new URL('studio/?lang=ar',base).href);
+    const frame=page.frameLocator('iframe:not([hidden])');
+    for (const view of ['scan','train']) {
+      const choose=async()=>{
+        await page.locator('#activityMenu').tap();
+        await page.locator('#activities a[data-view="'+view+'"]').tap();
+      };
+      await choose();
+      const action=frame.locator(view==='scan'?'.instrumentAction [form=grow]':'.instrumentAction #run');
+      await action.waitFor();
+      assert.equal(heldImages.length,view==='scan'?1:2);
+      await page.locator('#steps a[data-step=explore]').tap();
+      await frame.locator('#explore-'+view).waitFor();
+      await choose();
+      if (view==='scan') {
+        await page.locator('#openSettings').tap();
+        await frame.locator('[aria-controls="field-inspector-planting"]').tap();
+        await frame.locator('#seed').fill('307');
+        await frame.locator('.inspectorClose:visible').tap();
+        await page.waitForFunction(()=>!history.state?.studioDrawer);
+      }
+      await action.tap();
+      if (view==='scan') {
+        await frame.locator('#scanLink[href*="seed=307"]').waitFor({state:'attached'});
+      } else {
+        await frame.locator('#cancel:enabled').waitFor();
+        await frame.locator('#cancel').tap();
+        await action.waitFor();
+        assert.ok(await action.isEnabled());
+      }
+    }
+    for (const route of heldImages) await route.continue();
+    await page.waitForFunction(()=>[...document.querySelectorAll('iframe')].every(f=>f.contentDocument.readyState==='complete'));
+    assert.equal(await frame.locator('[data-instrument=trainer]').count(),1);
+    console.log('Scan and Train opened from the touch menu and ran in Arabic while illustrations were still loading.');
+  } finally {await page.close();}
+}
+
 export async function openSection(page, frame, label) {
   const launcher = page.locator('#openSettings');
   if (await launcher.getAttribute('aria-expanded') !== 'true') await launcher.click();

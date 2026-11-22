@@ -40,5 +40,8 @@
     label.append(selector);
     document.querySelector('.barInner').append(label);
     import(languageModule.href).then(({installSiteAccess})=>installSiteAccess(label));
+    // Deferred instrument scripts have run. The studio can connect their controls
+    // while illustrations and other media are still downloading.
+    window.frameElement?.dispatchEvent(new Event('crop-document-ready'));
   });
 })();

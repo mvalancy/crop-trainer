@@ -2,6 +2,9 @@
 export const languages = {en:'English',ar:'العربية',es:'Español',zh:'简体中文',fr:'Français'};
 export const languageTags = {en:'en',ar:'ar',es:'es',zh:'zh-Hans',fr:'fr'};
 export const labels = {
+ 'GitHub':['GitHub','GitHub','GitHub','GitHub'],
+ 'WIP':['WIP','WIP','WIP','WIP'],
+ 'WIP: try the development workspace':['افتح مساحة العمل التجريبية','Abrir el espacio de trabajo experimental','打开开发中的工作区','Ouvrir l’espace de travail expérimental'],
  'Play':['تشغيل','Reproducir','播放','Lire'],
  'Pause':['إيقاف مؤقت','Pausar','暂停','Pause'],
  'Resume':['استئناف','Continuar','继续播放','Reprendre'],
@@ -9,6 +12,7 @@ export const labels = {
  'Stop':['إيقاف','Detener','停止','Arrêter'],
  'Theme':['المظهر','Tema','主题','Thème'],
  'Language':['اللغة','Idioma','语言','Langue'],
+ 'Opening activity…':['جارٍ فتح النشاط…','Abriendo la actividad…','正在打开活动…','Ouverture de l’activité…'],
  'Light':['فاتح','Claro','浅色','Clair'],
  'Dark':['داكن','Oscuro','深色','Sombre'],
  'System':['النظام','Sistema','跟随系统','Système'],

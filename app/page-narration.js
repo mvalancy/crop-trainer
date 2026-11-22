@@ -2,16 +2,14 @@ import {createStudioNarration} from './studio-narration.js';
 import {studioReading} from './studio-reading-context.js';
 
 // Standalone instruments and chapters share the studio player. Embedded pages use their host's player.
-export function installPageNarration() {
+export function installPageNarration(tools) {
   if(window!==window.top || document.querySelector('#listenSlot,.pageListen'))return;
   const chapter=document.querySelector('.guideChapter'), main=document.querySelector('main');
   if(!main)return;
   const home=document.createElement('div');
   home.className='pageListen';
-  const header=document.querySelector('.siteBar .barInner');
-  if(!header)return;
   const sheet=document.createElement('link');sheet.rel='stylesheet';sheet.href=new URL('./studio-narration.css',import.meta.url).href;document.head.append(sheet);
-  header.insertBefore(home,header.querySelector('.themeChoice'));
+  tools.append(home);
   const narration=createStudioNarration(home);
   function update(){
     const url=new URL(location.href);
