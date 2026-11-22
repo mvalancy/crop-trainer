@@ -34,7 +34,7 @@ html[dir=rtl] :is(.shotTitle,.shotText,.labPage h2,.guideChapter h1,.guideChapte
   .siteFoot {grid-template-columns:minmax(0,1fr);}
   .siteFoot div {display:flex;flex-wrap:wrap;}
   .siteFoot > *,.hero h1,.scanFiles,.networkReadout {min-width:0;overflow-wrap:anywhere;}
-  .pageIntro h1,.advancedPanel h2 {overflow-wrap:anywhere;}
+  main :is(h1,h2,h3) {overflow-wrap:anywhere;}
   .scanSummary .scanFiles {grid-template-columns:minmax(0,1fr);}
   .scanFiles .scanDownloads {grid-template-columns:repeat(auto-fit,minmax(min(100%,4.8rem),1fr));}
   .scanFiles :is(.scanIdentity,.scanLinkActions),#grow .growActions {flex-wrap:wrap;}

@@ -13,14 +13,15 @@ async function measureControls(page, context) {
     return {
       theme:rect(bar.querySelector('#siteTheme')),
       language:rect(bar.querySelector('#siteLanguage')),
-      controls, width:document.documentElement.clientWidth
+      controls, names:visible.map(el=>el.id || el.className || el.textContent.trim()), width:document.documentElement.clientWidth
     };
   });
   for (const [i,[x,y,w,h]] of positions.controls.entries()) {
     assert.ok(x >= -1 && x+w <= positions.width+1,context+' has an offscreen header control');
-    for (const [bx,by,bw,bh] of positions.controls.slice(i+1)) {
+    for (const [j,[bx,by,bw,bh]] of positions.controls.entries()) {
+      if (j<=i) continue;
       assert.ok(Math.min(x+w,bx+bw)-Math.max(x,bx)<=1 || Math.min(y+h,by+bh)-Math.max(y,by)<=1,
-        context+' has overlapping header controls');
+        context+' overlaps '+positions.names[i]+' and '+positions.names[j]);
     }
   }
   const [x,y,w,h] = positions.theme;
@@ -51,6 +52,8 @@ export async function checkSiteHeader(browser, base) {
           if (width===320) {
             await page.evaluate(()=>document.documentElement.style.fontSize='200%');
             assert.deepEqual(await measureControls(page,context+' at 200%'),reference);
+            assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),
+              context+' overflows the page with enlarged text');
             await page.evaluate(()=>document.documentElement.style.removeProperty('font-size'));
           }
           assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),context+' overflows the page');

@@ -86,6 +86,7 @@ html[dir=rtl] .appBar .headerIdentity {justify-content:flex-end;}
   }
   .siteBar .appBar > .brand {justify-self:start;min-width:0;font-size:0;gap:0;min-height:44px;}
   .siteBar .appBar > .brand img {width:28px;height:28px;}
+  .siteBar .appBar > .repoLink > span[aria-hidden=true] {display:none;}
   .siteBar .appBar .sourceLinks {gap:4px;white-space:nowrap;}
 }
 
