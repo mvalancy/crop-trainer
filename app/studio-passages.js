@@ -1,11 +1,18 @@
+import {translate} from './language.js';
 // Snapshot the visible lesson, controls and measurements when a reading starts.
 // A passage is also the transcript, pause/resume unit and target for section jumps.
 export function readPassages(roots) {
   const passages = [];
-  let words = [];
+  let words = [], sourceWords=[];
+  function add(value,node,key='text'){
+    words.push(value);
+    sourceWords.push(node?.ownerDocument[Symbol.for('crop-original-text')]?.(node,key) ?? value);
+  }
   function flush(heading) {
-    const text = words.join(' ').replace(/\s+/g, ' ').trim();
-    words = [];
+    const original=sourceWords.join(' ').replace(/\s+/g,' ').trim();
+    const localized=translate(original);
+    const text=localized!==original?localized:words.join(' ').replace(/\s+/g,' ').trim();
+    words=[];sourceWords=[];
     // Keep sentence endings intact where possible. Long paths and code samples
     // can have no spaces at all, so also bound the input to the voice engine.
     function emit(line) {
@@ -13,8 +20,9 @@ export function readPassages(roots) {
       passages.push({text:line, heading});
       heading = undefined;
     }
+    if(text.length<280){emit(text);return;}
     let line = '';
-    for (const sentence of text.split(/(?<=[.!?])\s+/)) {
+    for (const sentence of text.split(/(?<=[.!?])\s+|(?<=[؟。！？])\s*/u)) {
       const next = sentence.trim();
       if (!next) continue;
       if (line && line.length + next.length >= 280) {
@@ -34,24 +42,24 @@ export function readPassages(roots) {
     if (line) emit(line);
   }
   function visit(el) {
-    if (el.nodeType === 3) { words.push(el.nodeValue); return; }
+    if (el.nodeType === 3) { add(el.nodeValue,el); return; }
     if (el.nodeType !== 1 || el.matches('script,style,template,[hidden],[aria-hidden="true"],.helpTrigger,.helpDisabledProxy,.figureOpener,.studioListen,.listenCard')) return;
     if (!el.checkVisibility() && el.ownerDocument.defaultView.getComputedStyle(el).display !== 'contents') return;
     const tag = el.localName;
     if (tag === 'img' || tag === 'canvas' || tag === 'svg') {
       const description = el.getAttribute('alt') || el.getAttribute('aria-label') || el.querySelector('desc')?.textContent || el.querySelector('title')?.textContent;
-      if (description) { flush(); words.push(description); flush(); }
+      if (description) { flush(); add(description,el,el.hasAttribute('alt')?'alt':'aria-label'); flush(); }
       return;
     }
     // A separate ARIA label often carries the unit or name of a numeric control.
     if (['input','textarea','select'].includes(tag) && el.hasAttribute('aria-label')) {
-      words.push(el.getAttribute('aria-label'));
+      if(!el.closest('label'))add(el.getAttribute('aria-label'),el,'aria-label');
     }
-    if (tag === 'textarea') { words.push(el.value); return; }
-    if (tag === 'select') { words.push([...el.selectedOptions].map(option=>option.text).join(', ')); return; }
+    if (tag === 'textarea') { add(el.value); return; }
+    if (tag === 'select') { add([...el.selectedOptions].map(option=>option.text).join(', ')); return; }
     if (tag === 'input') {
-      if (el.type === 'checkbox' || el.type === 'radio') words.push(el.checked ? 'selected' : 'unselected');
-      else if (!['hidden','password','file'].includes(el.type)) words.push(el.value);
+      if (el.type === 'checkbox' || el.type === 'radio') add(translate(el.checked ? 'selected' : 'unselected'));
+      else if (!['hidden','password','file'].includes(el.type)) add(el.value);
       return;
     }
     if (tag === 'table') {
@@ -59,7 +67,7 @@ export function readPassages(roots) {
       const labels = [...el.tHead?.rows[0]?.cells || []].map(cell=>cell.innerText.trim());
       for (const row of el.rows) {
         if (row.parentElement === el.tHead || !row.checkVisibility()) continue;
-        words.push([...row.cells].map((cell,i)=>(labels[i] ? labels[i] + ': ' : '') + cell.innerText.trim()).join('. '));
+        add([...row.cells].map((cell,i)=>(labels[i] ? labels[i] + ': ' : '') + cell.innerText.trim()).join('. '));
         flush();
       }
       return;

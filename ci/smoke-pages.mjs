@@ -1,3 +1,4 @@
+import {checkLanguages} from './studio-languages.mjs';
 // Serve only the built artifact at the same project path used by GitHub Pages.
 import {checkInvestigations} from './studio-investigations.mjs';
 import {checkStudioNarration} from './studio-narration.mjs';
@@ -147,6 +148,7 @@ try {
 
   await checkFieldFilm(browser,base);
   await checkStudioNarration(browser,base);
+  await checkLanguages(browser,base);
   await checkInvestigations(browser,base);
 
   // The studio owns navigation and preserves each active instrument across task switches.
@@ -158,8 +160,8 @@ try {
     if (await menu.isVisible()) await menu.click();
     await activities.getByRole('link',{name,exact:true}).click();
   }
-  await page.getByRole('button',{name:'Play story'}).click();
-  await page.getByRole('button',{name:'Pause story'}).click();
+  await page.getByRole('button',{name:'Play'}).click();
+  await page.getByRole('button',{name:'Pause'}).click();
   await page.getByRole('button',{name:'Prediction',exact:true}).click();
   await page.getByRole('link',{name:'Try one model update'}).click();
   const instrument=()=>page.frameLocator('iframe:not([hidden])');

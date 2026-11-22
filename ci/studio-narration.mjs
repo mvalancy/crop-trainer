@@ -11,15 +11,9 @@ export async function checkStudioNarration(browser, base) {
     if (/\.(mp3|wasm)$/.test(response.url())) downloads.push(response.url());
   });
   try {
-    // Inspect the buffers that actually reach Web Audio, including synthesized speech.
     await page.addInitScript(() => {
-      window.spokenBuffers = [];
-      const start = AudioBufferSourceNode.prototype.start;
-      AudioBufferSourceNode.prototype.start = function(...args) {
-        const audible = this.buffer.getChannelData(0).some(sample => Math.abs(sample) > .01);
-        window.spokenBuffers.push({rate:this.buffer.sampleRate, audible, offset:args[1] || 0});
-        return start.apply(this,args);
-      };
+      const play=HTMLMediaElement.prototype.play;
+      HTMLMediaElement.prototype.play=function(...args){window.readingAudio=this;return play.apply(this,args);};
     });
     const voice = page.getByRole('button',{name:'Listen to this activity'});
     const card = page.getByRole('region',{name:'Narration player'});
@@ -28,11 +22,11 @@ export async function checkStudioNarration(browser, base) {
     await voice.waitFor();
     assert.deepEqual(downloads,[], 'The reader should load on demand.');
     await voice.click();
-    await page.waitForFunction(() => window.spokenBuffers.some(b => b.audible));
+    await page.waitForFunction(() => window.readingAudio?.currentSrc.endsWith('/guide-generate.mp3') && window.readingAudio.currentTime>.1);
     assert.ok(downloads.some(url => url.endsWith('/guide-generate.mp3')));
     await card.getByRole('button',{name:'Pause',exact:true}).click();
     await card.getByRole('button',{name:'Play',exact:true}).click();
-    await page.waitForFunction(() => window.spokenBuffers.some(b => b.offset > 0));
+    await page.waitForFunction(() => window.readingAudio.currentTime>.2);
 
     await card.getByRole('button',{name:'Minimize narration'}).click();
     await openSection(page,frame,'Planting');
@@ -43,7 +37,13 @@ export async function checkStudioNarration(browser, base) {
     await mobileCard.getByRole('button',{name:'Pause',exact:true}).click();
     await mobileCard.getByRole('button',{name:'Next passage'}).click();
     await mobileCard.getByRole('button',{name:'Play',exact:true}).click();
-    await page.waitForFunction(() => window.spokenBuffers.some(b => b.audible && b.rate === 16000));
+    await page.waitForFunction(() => window.readingAudio?.currentSrc.startsWith('blob:') && window.readingAudio.duration>.15 && window.readingAudio.currentTime>.1,null,{timeout:120000});
+    const peak=await page.evaluate(async()=>{
+      const sample=await (await fetch(window.readingAudio.currentSrc)).arrayBuffer();
+      const view=new DataView(sample);let peak=0;for(let i=44;i<view.byteLength;i+=2)peak=Math.max(peak,Math.abs(view.getInt16(i,true)));
+      return {hz:view.getUint32(24,true),peak};
+    });
+    assert.equal(peak.hz,24000);assert.ok(peak.peak>500);
     await mobileCard.getByRole('button',{name:'Close narration'}).click();
     await drawer.getByRole('button',{name:'Close settings'}).click();
 
@@ -58,9 +58,8 @@ export async function checkStudioNarration(browser, base) {
     assert.ok((await card.locator('.listenTranscript').textContent()).trim());
     await frame.locator('.guideChapter').getByRole('link',{name:'LiDAR lessons',exact:true}).click();
     await card.locator('header strong').filter({hasText:'How does a browser learn to spot lettuce?'}).waitFor();
-    const before = await page.evaluate(() => window.spokenBuffers.length);
     await card.getByRole('button',{name:'Play',exact:true}).click();
-    await page.waitForFunction(count => window.spokenBuffers.slice(count).some(b => b.audible && b.rate === 16000),before);
+    await page.waitForFunction(() => window.readingAudio?.currentSrc.includes('/art/audio/library/') && window.readingAudio.currentTime>.05,null,{timeout:45000});
     await activity('Train').click();
     await card.getByText(voiceovers.fit,{exact:true}).waitFor();
     await activity('Field test').click();
@@ -68,7 +67,7 @@ export async function checkStudioNarration(browser, base) {
     await activity('Compare').click();
     await card.getByText(voiceovers.experiment,{exact:true}).waitFor();
     await activity('Learn').click();
-    await page.getByRole('button',{name:'Play story'}).waitFor();
+    await page.getByRole('button',{name:'Play'}).waitFor();
     assert.equal(await voice.isVisible(),false);
 
     // Use the generated chapter index, so new chapters automatically join this check.

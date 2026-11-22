@@ -18,3 +18,11 @@
 
 .listenCard header strong {flex:1;min-width:0;}
 .listenToggle[data-playing="true"] {box-shadow:inset 0 -3px var(--forest);}
+.listenStatus {margin:.3rem 0;font-size:.9rem;}
+.listenStatus:empty {margin:0;}
+.listenCard select {min-height:44px;}
+.studioListen :focus-visible,.languageChoice :focus-visible {outline:3px solid var(--forest);outline-offset:2px;}
+@media(forced-colors:active){.studioListen :focus-visible,.languageChoice :focus-visible {outline-color:Highlight;}}
+.pageListen {position:relative;flex:0 0 auto;}
+.pageListen .listenCard {inset-inline-end:0;inset-inline-start:auto;width:min(22rem,calc(100vw - 1rem));max-height:min(26rem,65dvh);z-index:10;}
+@media(max-width:760px){.pageListen {position:static;}.siteBar:has(.pageListen) {position:relative;z-index:4;}.pageListen .listenCard {inset-inline-end:.45rem;}}

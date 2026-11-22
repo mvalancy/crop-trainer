@@ -1,5 +1,6 @@
 // Apply the saved palette before first paint, including on generated guide pages.
 (() => {
+  const languageModule = new URL('site-access.js',document.currentScript.src);
   const key = 'crop-trainer-theme';
   const modes = ['system', 'light', 'dark'];
   const system = matchMedia('(prefers-color-scheme: dark)');
@@ -38,5 +39,6 @@
     });
     label.append(selector);
     document.querySelector('.barInner').append(label);
+    import(languageModule.href).then(({installSiteAccess})=>installSiteAccess(label));
   });
 })();

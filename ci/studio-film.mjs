@@ -78,7 +78,7 @@ export async function checkFieldFilm(browser, base) {
     assert.deepEqual(await film.locator('.scoreValue').allTextContents(),['0.62','0.62']);
     const ambience = film.getByLabel('Ambience',{exact:true});
     assert.equal(await ambience.isChecked(),false);
-    await button('Play story').click();
+    await button('Play').click();
     await page.waitForFunction(()=>window.filmMeters.length===2 && window.filmMeters[0]()>.001 && window.filmMeters[1]()===0);
     await ambience.check();
     await page.waitForFunction(()=>window.filmMeters[1]()>.001);
@@ -90,11 +90,11 @@ export async function checkFieldFilm(browser, base) {
     await voice.check();
     await film.getByLabel('Ambience',{exact:true}).uncheck();
     await page.waitForFunction(()=>window.filmMeters[0]()>.01 && window.filmMeters[1]()<.0001);
-    await button('Pause story').click();
-    await button('Resume story').click();
+    await button('Pause').click();
+    await button('Resume').click();
     await page.waitForFunction(()=>window.filmStarts.at(-1)>.1);
-    await button('Replay story').waitFor({timeout:18000});
-    await button('Replay story').click();
+    await button('Replay').waitFor({timeout:18000});
+    await button('Replay').click();
     await page.waitForFunction(()=>document.querySelector('#film').dataset.shot==='1',{},{timeout:15000});
     await button('Prediction').click();
     await film.getByRole('link',{name:'Try one model update'}).click();
@@ -104,7 +104,7 @@ export async function checkFieldFilm(browser, base) {
     await page.goto(new URL('studio/',base).href);
     assert.equal(await film.getByLabel('Ambience',{exact:true}).isChecked(),false);
     await page.emulateMedia({reducedMotion:'no-preference'});
-    await button('Play story').click();
+    await button('Play').click();
     await page.waitForFunction(() => {
       const y = Number(document.querySelector('.photon').getAttribute('cy'));
       return y > -180 && y < -2;
@@ -115,20 +115,20 @@ export async function checkFieldFilm(browser, base) {
       const width = Number(document.querySelector('.scanReveal').getAttribute('width'));
       return width > 12 && width < 425;
     });
-    await button('Pause story').click();
+    await button('Pause').click();
     const stopped = await film.locator('.scanReveal').getAttribute('width');
     await page.evaluate(() => new Promise(done => requestAnimationFrame(() => requestAnimationFrame(done))));
     assert.equal(await film.locator('.scanReveal').getAttribute('width'),stopped);
-    await button('Resume story').click();
+    await button('Resume').click();
     await page.waitForFunction(previous => Number(document.querySelector('.scanReveal').getAttribute('width')) > Number(previous), stopped);
     await button('Prediction').click();
     await page.waitForFunction(() => document.querySelector('.scoreValue').textContent === '0.50');
     await page.waitForFunction(() => [...document.querySelectorAll('.scoreValue')].every(el=>el.textContent === '0.62'),null,{timeout:13000});
-    await button('Pause story').click();
+    await button('Pause').click();
     await button('Leaf').click();
     await page.route('**/art/audio/*.mp3',route=>route.abort());
     await page.goto(new URL('studio/',base).href);
-    await button('Play story').click();
+    await button('Play').click();
     await film.getByRole('status').filter({hasText:'captions'}).waitFor();
     await page.waitForFunction(()=>document.querySelector('#film').dataset.shot==='1',{},{timeout:15000});
     console.log('Verified both soundtrack channels, pause/resume, independent mutes, replay, caption fallback and static and moving frames for all three centered subjects at ten viewport sizes.');

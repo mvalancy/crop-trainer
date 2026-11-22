@@ -42,6 +42,8 @@ function address(view, step = firstStep(view)) {
 function shellURL(route) {
   const url = new URL('studio/',root);
   url.searchParams.set('view',route.view);
+  const lang=document.documentElement.dataset.language || new URLSearchParams(location.search).get('lang');
+  if(lang && lang!=='en')url.searchParams.set('lang',lang);
   if (route.step !== firstStep(route.view)) url.searchParams.set('step',route.step);
   const destination = route.url.href.slice(root.href.length);
   if (destination !== tasks[route.view].path + (tasks[route.view].steps[route.step][1] ? '#' + tasks[route.view].steps[route.step][1] : '')) {
@@ -193,6 +195,8 @@ function mount(tool) {
     voiceStyle.href = new URL('app/studio-narration.css',root);
     doc.head.append(voiceStyle);
     if (tool === 'docs') doc.addEventListener('guide-figure-change',refreshReading);
+    doc.defaultView.addEventListener('crop-language-change',refreshReading);
+    if (document.documentElement.dataset.language) pane.frame.contentWindow.postMessage({type:'crop-language',code:document.documentElement.dataset.language},location.origin);
     if (tool === 'field') {
       const tabs = doc.querySelector('#guide [role="tablist"]');
       new MutationObserver(() => {

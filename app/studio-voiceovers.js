@@ -1,5 +1,10 @@
 // Each key names a studio step, practice panel or settings panel and its matching recording.
 export const voiceovers = {
+  'explore-learn':'Slide across the lettuce. A photograph shows a whole leaf. A laser samples just the places its rays reach. Can you still find the center?',
+  'explore-scan':'There are two plants in this row. Start with a few rays and listen to the return count. Add more rays until the small seedling gives an echo.',
+  'explore-train':'The lettuce and the weed have the same height. Teach the model using one labeled lettuce. Listen to both scores and see whether height tells the plants apart.',
+  'explore-compare':'Keep all five guesses in place and raise the score cutoff. Listen for how many pins you keep, how many plants you miss, and how many extra pins remain.',
+  'explore-test':'Four lettuces have surveyed centers. Five pins are predictions. Widen the matching distance and hear how the same pins earn a different score.',
   sampleRow: 'Can light pass right by a seedling? Try the wide spacing, then the narrow spacing. Watch which rays touch a leaf and which reach the soil.',
   placePin: 'Look down on the field. Brighter dots are higher. Place a pin where you think a plant grows, then check it against the planting map.',
   learnWeight: 'A lettuce and a weed reach the same height. Teach the model that the lettuce is a crop. Watch both scores. What else would the model need to tell them apart?',

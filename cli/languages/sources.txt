@@ -1,0 +1,10 @@
+Crop Trainer language catalogs
+
+The English interface and published guides supply the source text. The film descriptions and common controls are maintained in app/language-core.js. Arabic activity introductions, chapter titles, field vocabulary and reviewed passages are in ar-reviewed.json. Keys are English source strings. New scientific results should keep their coordinates, counts, tolerances and scores across languages.
+
+For the longer reference material, initial translations were generated locally. Arabic uses the Helsinki-NLP OPUS-MT English–Arabic transformer-big model (2022-02-25, CC BY 4.0). Spanish uses the Argos English–Spanish 1.0 model, French the English–French 1.9 model and Simplified Chinese the English–Chinese 1.9 model. CTranslate2 and SentencePiece were used in preparation. These translation models are not downloaded by the app. User files and detector outputs stay in the browser.
+
+https://huggingface.co/Helsinki-NLP/opus-mt-tc-big-en-ar
+https://github.com/argosopentech/argospm-index
+https://github.com/argosopentech/argos-translate
+https://opennmt.net/CTranslate2/

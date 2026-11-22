@@ -1,8 +1,10 @@
+import {originalPlate,translatePlate} from './language-art.js';
+import {language,translate} from './language.js';
 // Magnify the original plate with its own stylesheet. CSS animations stay inside
 // the sandboxed SVG document, where the reader can pause or scrub their clocks.
 export function installFigureReader(chapter) {
   const art = new URL('../art/',import.meta.url).href;
-  const images = [...chapter.querySelectorAll('img')].filter(img=>img.src.startsWith(art) && new URL(img.src).pathname.endsWith('.svg'));
+  const images = [...chapter.querySelectorAll('img')].filter(img=>originalPlate(img).startsWith(art) && new URL(originalPlate(img)).pathname.endsWith('.svg'));
   if (!images.length) return;
   const dialog = document.createElement('dialog');
   dialog.className='guideFigureViewer';
@@ -56,6 +58,7 @@ export function installFigureReader(chapter) {
       const doc=frame.contentDocument;
       if (doc?.documentElement.localName!=='svg') return;
       const svg=doc.documentElement;
+      if(language()!=='en')translatePlate(svg,translate,language());
       svg.style.width='100vw'; svg.style.height='100vh'; svg.style.display='block';
       svg.getBoundingClientRect();
       animations=doc.getAnimations();
@@ -69,7 +72,7 @@ export function installFigureReader(chapter) {
       play.hidden=seek.parentElement.hidden=false;
       toggleMotion(true);
     });
-    frame.src=img.src;
+    frame.src=originalPlate(img);
     canvas.replaceChildren(frame);
     notify();
   }

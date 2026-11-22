@@ -33,6 +33,14 @@ The modal has a visible close control. Escape dismisses it, browser Back retrace
 
 Open **Field test → Explore** and watch the lower-right lettuce. Its predicted pin lies 14 cm from the center in this illustrated plot. At 10 cm it counts as an extra pin and the lettuce counts as missed. At 15 cm the two form one match. Try the same question in a scored field test using its **Match distance** control. The real report uses the references supplied for that scan. [Try the match-distance experiment](../trainer/#explore-test)
 
+## How can you hear what the scanner found?
+
+![A line measures fourteen centimeters from a lettuce center to a pin. A sound wave and two written labels describe the same distance.](../art/narrated-measurement.svg)
+
+Choose a language beside Theme. The list begins with English and العربية, followed by Español, 简体中文 and Français. Play starts the film. Its narrator names the objects, describes their movement and reads the change in score. The visible caption tells the same story. You can select any scene with a keyboard.
+
+Listen opens a transcript and reads the current activity or chapter. Choose a heading, replay a passage or adjust the speed. Escape closes the player and returns focus to Listen. Screen readers also have access to the headings, labels, image descriptions and live results with narration closed. A recording plays where available. For new text and run results the browser downloads the selected neural voice on demand and speaks locally. [W3C guidance on accessible audio and video](https://www.w3.org/WAI/media/av/)
+
 ## What should survive an edit?
 
 ![Two drawings of the same field keep the plant positions fixed while the detector pins change.](../art/paired-field.svg)
