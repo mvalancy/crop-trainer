@@ -14,8 +14,8 @@ export async function checkActivityMenu(browser,base) {
     const frame=page.frameLocator('iframe:not([hidden])');
     for (const view of ['scan','train']) {
       const choose=async()=>{
-        await page.locator('#activityMenu').tap();
-        await page.locator('#activities a[data-view="'+view+'"]').tap();
+        await page.locator('select#activityMenu').selectOption(view);
+        await page.waitForURL(url=>url.searchParams.get('view')===view && !url.searchParams.has('step'));
       };
       await choose();
       const action=frame.locator(view==='scan'?'.instrumentAction [form=grow]':'.instrumentAction #run');

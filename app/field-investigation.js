@@ -59,15 +59,13 @@ function survey(topic,value) {
   return {marks,reading:`${count} matched · ${extra} extra · ${missed} missed`,note};
 }
 
-function scanOverlay(id) {
-  return `<defs><pattern id="dots-${id}" width="5" height="5" patternUnits="userSpaceOnUse"><circle cx="2.5" cy="2.5" r="1.5" fill="white"/></pattern>
-    <mask id="sample-${id}"><rect width="400" height="400" fill="url(#dots-${id})"/></mask>
-    <clipPath id="sweep-${id}"><rect class="labSweep" height="400"/></clipPath></defs>
-    <g clip-path="url(#sweep-${id})"><rect width="400" height="400" fill="#102d29"/><use href="#lab-photo-${id}" mask="url(#sample-${id})"/></g>
+function scanOverlay() {
+  // The nested viewport reveals a fixed-size plate. Its dots stay registered
+  // to the original leaves even when the studio changes the frame's address.
+  return `<svg class="labSweep" height="400" overflow="hidden"><image class="labReturns" width="400" height="400"/></svg>
     <path class="labScanLine" d="M0 0v400" stroke="#ffe29b" stroke-width="2.5"/>`;
 }
 
-let sequence = 0;
 function frame(topic,value) {
   if (topic==='compare'||topic==='test') return survey(topic,value);
   if (topic==='scan') {
@@ -93,7 +91,7 @@ function frame(topic,value) {
 class FieldInvestigation extends HTMLElement {
   connectedCallback() {
     if (this.childElementCount || !topics[this.dataset.topic]) return;
-    const topic=this.dataset.topic, config=topics[topic], id=++sequence;
+    const topic=this.dataset.topic, config=topics[topic];
     const width=topic==='learn' ? 400 : 600;
     const src=new URL('art/'+config.image+'.webp',home).href;
     const destination=new URL(config.href,home);
@@ -101,7 +99,7 @@ class FieldInvestigation extends HTMLElement {
     const key = topic==='compare'||topic==='test'
       ? 'Illustrated 1.50 m plot · circles are surveyed crops · diamonds are detector pins'
       : {learn:'Illustrated overhead scan · dots mark sample locations',scan:'Illustrated side view · each dot is a first return',train:'Height-only model · both plants have a height input of 1'}[topic];
-    this.innerHTML=`<figure class="labPlate"><svg viewBox="0 0 ${width} 400" role="img" aria-label="${config.alt}"><image id="lab-photo-${id}" width="${width}" height="400" preserveAspectRatio="xMidYMid meet"/><g class="labMarks"></g></svg><figcaption>${key}</figcaption></figure>
+    this.innerHTML=`<figure class="labPlate"><svg viewBox="0 0 ${width} 400" role="img" aria-label="${config.alt}"><image width="${width}" height="400" preserveAspectRatio="xMidYMid meet"/><g class="labMarks"></g></svg><figcaption>${key}</figcaption></figure>
       <div class="labPage"><h2>${config.title}</h2><p>${config.instruction}</p>
       <label class="labControl">${config.control}<span class="labValue"></span><input type="range" aria-label="${config.control}" min="${config.min}" max="${config.max}" step="${config.step}" value="${config.start}"></label>
       <div class="labPresets">${config.presets.map(([n,label])=>`<button type="button" data-value="${n}">${label}</button>`).join('')}</div>
@@ -109,10 +107,13 @@ class FieldInvestigation extends HTMLElement {
       <a class="labContinue" href="${destination.href}">${config.action} →</a></div>`;
     const input=this.querySelector('input'), marks=this.querySelector('.labMarks'), value=this.querySelector('.labValue');
     const finding=this.querySelector('.labFinding'), buttons=[...this.querySelectorAll('button')];
-    if (topic==='learn') marks.innerHTML=scanOverlay(id);
+    if (topic==='learn') marks.innerHTML=scanOverlay();
     const photo=this.querySelector('image');
     const observer=new IntersectionObserver(entries=>{
-      if (entries.some(entry=>entry.isIntersecting)) { photo.setAttribute('href',src); observer.disconnect(); }
+      if (!entries.some(entry=>entry.isIntersecting)) return;
+      photo.setAttribute('href',src);
+      marks.querySelector('.labReturns')?.setAttribute('href',new URL('art/field-lab-canopy-returns.svg',home).href);
+      observer.disconnect();
     });
     observer.observe(this);
     function show() {

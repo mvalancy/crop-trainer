@@ -1,5 +1,41 @@
 import assert from 'node:assert/strict';
 
+// Sample the rendered canopy on either side of the sweep. An empty SVG mask can
+// still update every label and slider value correctly.
+async function checkVisibleReturns(lab,page) {
+  const plate=lab.locator('.labPlate > svg');
+  const slider=lab.getByRole('slider');
+  async function sample() {
+    const png=await plate.screenshot();
+    return page.evaluate(async encoded=>{
+      const image=new Image();
+      image.src='data:image/png;base64,'+encoded;
+      await image.decode();
+      const canvas=document.createElement('canvas');
+      canvas.width=image.width;canvas.height=image.height;
+      const ctx=canvas.getContext('2d');
+      ctx.drawImage(image,0,0);
+      return [.30,.66].map(center=>{
+        const {data}=ctx.getImageData((center-.045)*image.width,.33*image.height,.09*image.width,.34*image.height);
+        let bright=0;
+        for (let i=0;i<data.length;i+=4) {
+          const r=data[i],g=data[i+1],b=data[i+2];
+          if (g>152 && b>108 && g>r+13 && g>b+16) bright++;
+        }
+        return bright/(data.length/4);
+      });
+    },png.toString('base64'));
+  }
+  await slider.press('Home');
+  const leaves=await sample();
+  await lab.locator('button[data-value="85"]').click();
+  const swept=await sample();
+  assert.ok(swept.every((density,i)=>density>.10 && density>leaves[i]+.04),
+    'Returns must paint distinct bright samples across the lettuce: '+JSON.stringify({leaves,swept}));
+  await slider.press('End');
+  assert.deepEqual(await sample(),swept,'Moving the boundary must keep the sampled leaves in place.');
+}
+
 export async function checkInvestigations(browser,base) {
   const page=await browser.newPage({viewport:{width:390,height:844}});
   const errors=[];
@@ -19,6 +55,7 @@ export async function checkInvestigations(browser,base) {
       const lab=frame.locator('#explore-'+view+' field-investigation');
       await lab.getByRole('button',{name:preset,exact:true}).click();
       await lab.getByRole('status').filter({hasText:reading}).waitFor();
+      if (view==='learn') await checkVisibleReturns(lab,page);
       if (view==='scan') await lab.getByRole('status').filter({hasText:'The seedling caught'}).waitFor();
       const slider=lab.getByRole('slider');
       await slider.press('Home');
@@ -32,6 +69,7 @@ export async function checkInvestigations(browser,base) {
     }
     await page.goto(new URL('studio/?view=docs',base).href);
     const chapter=frame.locator('.guideChapter');
+    await checkVisibleReturns(chapter.locator('field-investigation[data-topic=learn]'),page);
     await chapter.getByRole('link',{name:'LiDAR lessons',exact:true}).click();
     const scan=chapter.locator('field-investigation');
     await scan.getByRole('button',{name:'Dense scan'}).click();

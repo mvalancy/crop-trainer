@@ -1,7 +1,7 @@
 import {installInstrument} from './studio-instrument.js';
 import {createStudioNarration} from './studio-narration.js';
 import {studioReading} from './studio-reading-context.js';
-import {initFieldFilm} from './field-film.js';
+import {initFieldFilm} from './field-film.js?v=play-first1';
 // Keep each instrument's DOM, files, canvas and running worker alive while readers switch activities.
 const root = new URL('../', import.meta.url);
 const tasks = {
@@ -296,10 +296,10 @@ function navigate(route,historyMode='push') {
   const pane=isFilm ? null : panes.get(config.tool) || mount(config.tool);
   document.getElementById('film').hidden=!isFilm;
   if (!isFilm) pauseFilm();
-  closeActivityMenu();
   active=route;
-  menuButton.querySelector('strong').textContent=tasks[view].label;
-  menuButton.title=tasks[view].label;
+  const atStart=step===firstStep(view);
+  activityPicker.options[0].textContent=atStart ? '' : config.label+' · '+config.steps[step][0];
+  activityPicker.value=atStart ? view : '';
   remembered.set(view,route);
   if (historyMode!=='restore' && shellURL(route).href!==location.href) {
     history[historyMode==='replace'?'replaceState':'pushState'](null,'',shellURL(route));
@@ -345,42 +345,23 @@ function revealCurrentStep() {
 }
 new ResizeObserver(revealCurrentStep).observe(steps);
 window.addEventListener('crop-language-change',revealCurrentStep);
-const menuButton=document.getElementById('activityMenu');
-const navigation=document.getElementById('activities');
-function closeActivityMenu() {
-  navigation.classList.remove('isOpen');
-  menuButton.setAttribute('aria-expanded','false');
+const activityPicker=document.getElementById('activityMenu');
+
+function openActivity(view) {
+  // Scan and Train return to their main controls. Both keep the active planting or fit.
+  const route=['scan','train'].includes(view) ? address(view) : remembered.get(view) || address(view);
+  if (view!=='docs' && panes.get(tasks[view].tool)?.url) route.url.search=panes.get(tasks[view].tool).url.search;
+  navigate(route);
+  document.getElementById('desk').focus({preventScroll:true});
 }
-menuButton.addEventListener('click',()=>{
-  const open=navigation.classList.toggle('isOpen');
-  menuButton.setAttribute('aria-expanded',String(open));
-  if (open) navigation.querySelector('[aria-current]')?.focus();
-});
-navigation.addEventListener('keydown',event=>{
-  if (event.key==='Escape') {closeActivityMenu();menuButton.focus();}
-});
-navigation.addEventListener('focusout',event=>{
-  if (!navigation.contains(event.relatedTarget) && event.relatedTarget!==menuButton) closeActivityMenu();
-});
-document.addEventListener('pointerdown',event=>{
-  if (!navigation.contains(event.target) && !menuButton.contains(event.target)) closeActivityMenu();
-});
-matchMedia('(max-width:760px)').addEventListener('change',closeActivityMenu);
 document.addEventListener('click',event=>{
   const link=event.target.closest('a[data-view],a[data-step]');
   if (!link || event.button || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+  if (link.dataset.step) {
+    navigate(address(active.view,link.dataset.step));
+    document.getElementById('desk').focus({preventScroll:true});
+  } else openActivity(link.dataset.view);
   event.preventDefault();
-  if (link.dataset.step) navigate(address(active.view,link.dataset.step));
-  else {
-    const view=link.dataset.view;
-    // Selecting an instrument from the activity menu always brings its main
-    // controls into view, even after visiting Explore or reading its results.
-    const route=['scan','train'].includes(view) ? address(view) : remembered.get(view) || address(view);
-    // Learn and Scan share a planting. Train and Field test share the current fit.
-    if (view!=='docs' && panes.get(tasks[view].tool)?.url) route.url.search=panes.get(tasks[view].tool).url.search;
-    navigate(route);
-  }
-  document.getElementById('desk').focus({preventScroll:true});
 });
 window.addEventListener('popstate',()=>{
   if (active && shellURL(active).search === location.search && !history.state?.studioDrawer && !panelSteps[active.step]) {

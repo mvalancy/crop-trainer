@@ -1,7 +1,7 @@
 field-investigation {display:grid;grid-template-columns:minmax(0,1.25fr) minmax(17rem,1fr);align-items:stretch;border:1px solid var(--line);border-radius:1rem;overflow:hidden;background:var(--surface);color:var(--ink);}
 .labPlate {display:grid;place-items:center;min-width:0;background:radial-gradient(ellipse at 50% 45%,#28463d,#112d28 72%);}
-.labPlate svg {display:block;width:100%;height:auto;max-height:64dvh;overflow:hidden;}
-field-investigation[data-topic=learn] .labPlate svg {cursor:ew-resize;touch-action:pan-y;}
+.labPlate > svg {display:block;width:100%;height:auto;max-height:64dvh;overflow:hidden;}
+field-investigation[data-topic=learn] .labPlate > svg {cursor:ew-resize;touch-action:pan-y;}
 .labPage {display:flex;flex-direction:column;align-items:stretch;justify-content:center;padding:clamp(1rem,3vw,2.8rem);min-width:0;}
 field-investigation .labPage h2 {font:500 clamp(1.75rem,3vw,3rem)/1.04 var(--serif);letter-spacing:-.03em;margin:0;color:var(--ink);}
 field-investigation .labPage p {font:400 1rem/1.5 var(--sans);margin:.65rem 0;color:var(--ink);}
@@ -25,10 +25,10 @@ field-investigation .labFinding p {font-size:.91rem;margin:.25rem 0 0;}
 .fieldLabSection {margin:clamp(1rem,3vw,3rem) auto;max-width:82rem;}
 .guideChapter field-investigation {margin:1.2rem 0 2rem;grid-template-columns:1fr;}
 .guideChapter .labPage {padding:clamp(1rem,3vw,2rem);}
-.guideChapter .labPlate svg {max-height:24rem;}
+.guideChapter .labPlate > svg {max-height:24rem;}
 @media(max-width:800px) {
   field-investigation {grid-template-columns:1fr;}
-  .labPlate svg {max-height:43dvh;}
+  .labPlate > svg {max-height:43dvh;}
 }
 @media (prefers-reduced-motion:no-preference) {
   .labMarks .rowRay {animation:lightSample .45s ease-out backwards;animation-delay:var(--arrival);}

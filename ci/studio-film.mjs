@@ -36,6 +36,10 @@ export async function checkFieldFilm(browser, base) {
     })));
     assert.ok(artwork.length === 3 && artwork.every(width=>width>=1000),'Each scene needs its complete botanical plate.');
     const button = name => film.getByRole('button',{name,exact:true});
+    await button('Play').focus();
+    await page.keyboard.press('Tab');
+    assert.ok(await film.locator('.tryShot:not([inert])').evaluate(link=>document.activeElement===link),
+      'The practice link should immediately follow Play in keyboard order.');
     for (const [width,height] of [[320,568],[390,844],[568,320],[667,375],[844,390],[768,1024],[1024,768],[1024,1366],[1366,768],[1920,1080]]) {
       await page.setViewportSize({width,height});
       await page.emulateMedia({colorScheme:width%3 ? 'dark' : 'light'});
@@ -60,6 +64,10 @@ export async function checkFieldFilm(browser, base) {
             overflow:el.scrollWidth-el.clientWidth};
         },name);
         const {pane,caption,controls,center,topLeft,bottomRight,target,marking} = layout;
+        const playback=await film.locator('#playFilm').boundingBox();
+        const practice=await film.locator('.tryShot:not([inert])').boundingBox();
+        assert.ok(playback.y<=practice.y+practice.height && playback.x+playback.width<=practice.x+1,
+          name+' must show playback before practice at '+width+'×'+height);
         const near = (a,b) => Math.abs(a-b) < 1.5;
         const message = name+' at '+width+'×'+height;
         assert.ok(near(center.x,pane.x+pane.width/2) && near(center.y,pane.y+pane.height/2),message);

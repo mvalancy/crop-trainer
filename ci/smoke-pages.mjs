@@ -158,10 +158,10 @@ try {
   await page.goto(new URL('studio/',base).href);
   const activities=page.getByRole('navigation',{name:'Studio activities'});
   const sections=page.getByRole('navigation',{name:'Activity sections'});
-  const menu=page.getByRole('button',{name:'Switch activity'});
+  const menu=page.getByRole('combobox',{name:'Switch activity'});
   async function switchActivity(name) {
-    if (await menu.isVisible()) await menu.click();
-    await activities.getByRole('link',{name,exact:true}).click();
+    if (await menu.isVisible()) await menu.selectOption({label:name});
+    else await activities.getByRole('link',{name,exact:true}).click();
   }
   await page.getByRole('button',{name:'Play'}).click();
   await page.getByRole('button',{name:'Pause'}).click();
@@ -193,9 +193,8 @@ try {
   for (const width of [320,1366]) {
     await page.setViewportSize({width,height:800});
     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
-    if (await menu.isVisible()) await menu.click();
-    assert.ok(await activities.getByRole('link',{name:'Docs'}).isVisible());
-    if (await menu.isVisible()) await page.keyboard.press('Escape');
+    if (await menu.isVisible()) assert.equal(await menu.locator('option[value=docs]').textContent(),'Docs');
+    else assert.ok(await activities.getByRole('link',{name:'Docs'}).isVisible());
   }
   await page.setViewportSize({width:390,height:844});
   await checkDrawer(page,base);

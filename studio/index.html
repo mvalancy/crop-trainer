@@ -4,13 +4,14 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Learning studio · Crop Trainer</title>
 <link rel="icon" href="../art/crop-mark.svg"><script src="../app/theme.js"></script>
-<link rel="stylesheet" href="../app/farm.css"><link rel="stylesheet" href="../app/theme.css"><link rel="stylesheet" href="../app/studio.css">
-<link rel="stylesheet" href="../app/studio-narration.css"><link rel="stylesheet" href="../app/field-film.css">
-<script type="module" src="../app/studio.js"></script>
+<link rel="stylesheet" href="../app/farm.css"><link rel="stylesheet" href="../app/theme.css"><link rel="stylesheet" href="../app/studio.css?v=native-picker1">
+<link rel="stylesheet" href="../app/studio-narration.css"><link rel="stylesheet" href="../app/field-film.css?v=play-first1">
+<script defer src="../app/activity-picker.js"></script>
+<script type="module" src="../app/studio.js?v=native-picker1"></script>
 </head>
 <body class="studio">
 <a class="skip" href="#desk">Skip to activity</a>
-<header class="studioBar barInner"><div class="headerIdentity"><a href="?view=learn" class="brand"><img src="../art/crop-mark.svg" alt="" width="32" height="32">Crop Trainer</a><button type="button" id="activityMenu" aria-label="Switch activity" aria-controls="activities" aria-expanded="false" aria-describedby="currentActivityName"><svg class="activityGlyph" aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg><strong id="currentActivityName">Learn</strong><span aria-hidden="true">▾</span></button><span class="studioName">Learning studio</span></div><span id="listenSlot"></span><a class="repoLink" title="Live app" href="https://mvalancy.github.io/crop-trainer/"><svg aria-hidden="true" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="m3 11 9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg><span>Live app</span></a></header>
+<header class="studioBar barInner"><div class="headerIdentity"><a href="?view=learn" class="brand"><img src="../art/crop-mark.svg" alt="" width="32" height="32">Crop Trainer</a><label class="activityPicker"><svg class="activityGlyph" aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg><select id="activityMenu" aria-label="Switch activity"><option value="" disabled hidden></option></select></label><span class="studioName">Learning studio</span></div><span id="listenSlot"></span><a class="repoLink" title="Live app" href="https://mvalancy.github.io/crop-trainer/"><svg aria-hidden="true" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="m3 11 9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg><span>Live app</span></a></header>
 <nav id="activities" aria-label="Studio activities">
 <a href="?view=learn" data-view="learn"><span aria-hidden="true">⌁</span>Learn</a>
 <a href="?view=scan" data-view="scan"><span aria-hidden="true">⌖</span>Scan</a>
@@ -83,8 +84,8 @@
 </svg>
 
 </div>
-</div><div class="filmCaption"><div class="sceneCaption"><p class="filmSeries">Follow one lettuce</p><h2 class="shotTitle">Where does the light land?</h2><p class="shotText">Four light pulses travel down toward a lettuce. Each stops at the first leaf it touches and sends an echo back.</p><a class="tryShot primary" href="?view=learn&amp;step=lessons">Try scanning a row</a></div></div></div>
-<div class="filmControls" role="group" aria-label="Film playback"><button type="button" id="playFilm">Play</button><div class="shotList" role="group" aria-label="Choose a scene"><button data-shot-index="0" aria-pressed="true">Leaf</button><button data-shot-index="1" aria-pressed="false">Returns</button><button data-shot-index="2" aria-pressed="false">Prediction</button></div>
+</div><div class="filmCaption"><div class="sceneCaption"><p class="filmSeries">Follow one lettuce</p><h2 class="shotTitle">Where does the light land?</h2><p class="shotText">Four light pulses travel down toward a lettuce. Each stops at the first leaf it touches and sends an echo back.</p></div><div class="filmActions"><button type="button" id="playFilm" class="primary">Play</button><a class="tryShot" href="?view=learn&amp;step=lessons">Try scanning a row</a></div></div></div>
+<div class="filmControls" role="group" aria-label="Film playback"><div class="shotList" role="group" aria-label="Choose a scene"><button data-shot-index="0" aria-pressed="true">Leaf</button><button data-shot-index="1" aria-pressed="false">Returns</button><button data-shot-index="2" aria-pressed="false">Prediction</button></div>
 <div class="filmMix" role="group" aria-label="Story audio"><label><input type="checkbox" data-audio-track="narration" checked>Narration</label><label><input type="checkbox" data-audio-track="ambience">Ambience</label></div>
 <span id="filmAudioNotice" role="status"></span></div>
 </section></div>

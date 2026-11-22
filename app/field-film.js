@@ -29,11 +29,13 @@ export function initFieldFilm(practice) {
   // Changing shots never moves the lens or the playback controls.
   const caption = film.querySelector('.filmCaption');
   const first = caption.firstElementChild;
+  const actions = caption.querySelector('.filmActions');
+  const firstLink = actions.querySelector('.tryShot');
   const pages = scenes.map((scene,i) => {
     const page = i ? first.cloneNode(true) : first;
     page.querySelector('.shotTitle').textContent = scene.title;
     page.querySelector('.shotText').textContent = filmLines[scene.id][0];
-    const link = page.querySelector('.tryShot');
+    const link = i ? firstLink.cloneNode(false) : firstLink;
     link.textContent = scene.action;
     link.href = '?view=learn&step=lessons&open=' + encodeURIComponent('#' + scene.lesson);
     link.addEventListener('click', event => {
@@ -42,8 +44,8 @@ export function initFieldFilm(practice) {
       pause();
       practice(scene.lesson);
     });
-    if (i) caption.append(page);
-    return page;
+    if (i) {caption.insertBefore(page,actions);actions.append(link);}
+    return {page,link};
   });
 
   const player = createNarrationPlayer({
@@ -66,7 +68,7 @@ export function initFieldFilm(practice) {
     finished = false;
     const scene = scenes[index];
     film.dataset.shot = String(index);
-    pages.forEach((page,i) => { page.inert = i !== index; });
+    pages.forEach(({page,link},i) => { page.inert = link.inert = i !== index; });
     stage.setAttribute('aria-label', scene.description);
     draw(scene.id,1);
     buttons.forEach((button, i) => button.setAttribute('aria-pressed', String(i === index)));

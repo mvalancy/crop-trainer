@@ -4492,7 +4492,7 @@
   "Labeled plants found only by the first contender on this scan.": "只有第一个竞争者在这个扫描中发现了标签植物。",
   "Labeled plants found only by the second contender on this scan.": "只有第二个竞争者在这个扫描中发现了标签植物。",
   "Labeled plants left without a matching pin at this distance.": "标记的植物在这距离上没有匹配的针头。",
-  "Labeled plants matched one to one to a remaining candidate or pin within 15 cm.": "标记的植物将一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个的比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个比一个的比一个比一个比一个比一个比一个比一个 15 摄像头:",
+  "Labeled plants matched one to one to a remaining candidate or pin within 15 cm.": "在 15 厘米范围内，与剩余候选点或预测标记一一匹配的已标注植株数。",
   "Labeled plants paired with a final pin within 15 cm after the model score and spacing rules.": "标志植物在模型得分和间隔规则后15厘米内与最后的针对齐.",
   "Labeled plants paired with a pin within this distance. Each pin and each plant can count once.": "标志植物在这段距离内与一个针对齐. 每个针头和每个植物可以计算一次.",
   "Labeled plants that neither detector matched on this scan.": "标记的植物探测器和扫描仪都匹配",
