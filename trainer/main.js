@@ -1,3 +1,4 @@
+import {paintReadings,matchReadings} from '../app/field-readings.js';
 import {plotPalette} from '../app/plot-palette.js';
 import {scanSession} from './generator/scan-session.js?v=plants3';
 import {setupPlantControls, setupValidationPlantForm, plantSettings} from './generator/plant-version.js?v=orchard4';
@@ -551,6 +552,7 @@ function display(v,settings){
   if(row)$('d'+id.slice(1)).textContent='Precision '+pc(row.precision)+' · Recall '+pc(row.recall);
  }
  const {tp,fp,fn}=v.scores.find(score=>score.cm===15);
+ paintReadings($('trainedReading'),matchReadings({tp,fp,fn}));
  $('matchStory').textContent='Across '+v.tiles.length+' new synthetic scans, your detector placed a pin within 15 cm of '+
   tp.toLocaleString()+' of '+(tp+fn).toLocaleString()+' labeled centers. That left '+fp.toLocaleString()+' extra pins and '+fn.toLocaleString()+' missed centers.';
  const recall=t=>{const {tp,fn}=t.byTolerance.at(-1);return tp/(tp+fn||1)};

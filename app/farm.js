@@ -1,3 +1,4 @@
+import {paintReadings} from './field-readings.js';
 import {encodePly} from '../trainer/field-test/ply.js?v=export1';
 import {setupFirstSteps} from './first-steps.js?v=context-help2';
 import {initScanStudy} from '../trainer/study/scan-study-ui.js?v=board-placement1';
@@ -317,6 +318,9 @@ function applyScan(value, recipe, url, selectedBox, expectedTile) {
     showReadings(composition, [...text,[damaged+' damaged','Damaged plants','Plants with simulated damage. Each of these plants is also counted under its growth form.']]);
   }
   const {zero, oneToFour, fiveOrMore} = scan.coverage;
+  paintReadings($('coverageReading'),[{label:'Plants in this scan',parts:[
+    {label:'No returns',count:zero,color:'soil'},{label:'1–4 returns',count:oneToFour,color:'amber'},
+    {label:'5+ returns',count:fiveOrMore,color:'leaf'}]}]);
   showReadings($('plantCoverage'), [
     [zero+' plants with zero crop returns','Plants with no crop returns','These plants have known centers even though no crop points survived in this scan.'],
     [oneToFour+' with 1–4','Plants with 1–4 crop returns','Only a few points describe each of these plants. Their centers can be hard to locate from the scan.'],

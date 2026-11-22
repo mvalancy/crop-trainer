@@ -1,7 +1,7 @@
 import {createFilmArt} from './field-film-art.js';
 import {createNarrationPlayer} from './narration-player.js';
 
-// The English voice tracks use Kokoro v1.0 (af_heart). The field and instrument sounds are original.
+// The English voice tracks use Kokoro v1.0 (af_heart). The optional field ambience is synthesized wind and leaf rustle.
 const scenes = [
   {id:'leaf', duration:8, title:'Where does the light land?',
     text:'A laser samples the first surface it meets. Trace a ray down to the edge of a leaf.',
@@ -108,7 +108,10 @@ export function initFieldFilm(practice) {
   for (const input of film.querySelectorAll('[data-audio-track]')) {
     const track = input.dataset.audioTrack;
     const key = 'crop-trainer-audio-' + track;
-    try { input.checked = localStorage.getItem(key) !== 'off'; } catch { /* Storage is optional. */ }
+    try {
+      const saved = localStorage.getItem(key);
+      if (saved !== null) input.checked = saved === 'on';
+    } catch { /* Storage is optional. */ }
     player.setEnabled(track, input.checked);
     input.addEventListener('change', () => {
       player.setEnabled(track, input.checked);

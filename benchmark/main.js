@@ -1,3 +1,4 @@
+import {paintReadings,matchReadings} from '../app/field-readings.js';
 import {backgroundLabels, backgroundFit, backgroundCutoff, backgroundWeights, prepareBackgroundPair, showBackgroundModels} from './background.js?v=scaling1';
 import {scaleDraws, scalingLabel, showScalingResults} from './scaling.js';
 import {setupCutoffControls, displayCutoffChanges} from './cutoffs.js';
@@ -313,6 +314,9 @@ function showOutcome(rows, comparison, crop) {
     count.dataset.helpLabel = entry.label + ' matches and extra pins';
     count.textContent = entry.matched.toLocaleString()+' of '+entry.labels.toLocaleString()+' centers found · '+entry.extra.toLocaleString()+' extra pins';
     item.append(title,count);
+    const chart=document.createElement('div');
+    paintReadings(chart,matchReadings({tp:entry.matched,fn:entry.labels-entry.matched,fp:entry.extra}));
+    item.append(chart);
     if (comparison === 'epochs') {
       const time = document.createElement('span');
       time.textContent = formatTime(entry.trainingMs)+' average fitting time';

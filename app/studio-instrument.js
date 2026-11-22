@@ -44,6 +44,17 @@ export function installInstrument(doc, tool, reference, shell) {
     }
   }
 
+  function illustratedStart(figure, view, art, alt, question) {
+    const image = figure.querySelector('img');
+    image.src = new URL('../art/'+art+'.webp', import.meta.url).href;
+    image.alt = alt;
+    figure.classList.add('illustratedStart');
+    const link = doc.createElement('a');
+    link.className = 'startExperiment';
+    link.href = '#explore-'+view;
+    link.textContent = question;
+    figure.append(link);
+  }
   if (tool === 'test') {
     const field = find('#field-test');
     const form = find('#fieldTestForm');
@@ -56,6 +67,7 @@ export function installInstrument(doc, tool, reference, shell) {
     const caption = make('figcaption', '');
     caption.textContent = field.querySelector('.sectionHead p').textContent;
     ready.append(picture, caption);
+    illustratedStart(ready,'test','field-lab-quadrant','Illustrated practice plot with four lettuces surrounding a weed.','Explore match distance →');
     stage.append(ready, map);
     const detect = find('#testDetect');
     detect.setAttribute('form', form.id);
@@ -66,7 +78,7 @@ export function installInstrument(doc, tool, reference, shell) {
     readout.append(find('#testStatus'));
     const example = find('#testTomatoExample');
     find('#testExample').setAttribute('form', form.id);
-    addPanel('Example', 'Try a measured tomato planting.', example);
+    addPanel('Example', 'Try a saved detector on a labeled synthetic tomato plot.', example);
     const inputs = addPanel('Your plot', 'Choose a scan and set its detection threshold.', form);
     const findings = addPanel('Findings', 'Inspect plant detections and export the pins.', results, find('.fieldEvidence'), find('.testGuides'));
     const jump = make('button', 'instrumentResult');
@@ -95,6 +107,7 @@ export function installInstrument(doc, tool, reference, shell) {
     const caption = make('figcaption', '');
     caption.textContent = 'Two detectors see the same plantings. Compare the pins each places on fresh fields.';
     ready.append(find('.benchContext img'), caption);
+    illustratedStart(ready,'compare','field-lab-quadrant','Four labeled lettuces and a weed on a shared illustration.','Explore the score cutoff →');
     stage.append(ready, watch.querySelector('.liveScene'));
     find('#run').textContent = 'Compare';
     moveRunActions('benchForm');
@@ -127,6 +140,7 @@ export function installInstrument(doc, tool, reference, shell) {
     addPanel('Findings', 'Explore scan coverage and download the field.', find('.scanSummary'));
   } else {
     const firstRun = find('#firstRun');
+    illustratedStart(firstRun,'train','field-film-height','A lettuce and a weed of equal height.','Explore one learning step →');
     const image = firstRun.querySelector('img');
     const caption = firstRun.querySelector('figcaption');
     const original = {src:image.src, alt:image.alt, caption:caption.textContent};

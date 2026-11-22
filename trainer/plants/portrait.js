@@ -162,3 +162,21 @@ export function compareSpecimens(intactCanvas, damagedCanvas) {
     paint(damaged,brokenShapes,camera);
   };
 }
+
+export function orbitSpecimens(canvases,angle,redraw) {
+  for (const canvas of canvases) {
+    let start;
+    canvas.addEventListener('pointerdown',event => {
+      if (!event.isPrimary || event.button!==0) return;
+      start={x:event.clientX,angle:Number(angle.value),id:event.pointerId};
+      canvas.setPointerCapture(event.pointerId);
+    });
+    canvas.addEventListener('pointermove',event => {
+      if (!start || event.pointerId!==start.id) return;
+      const degrees=start.angle-180*(event.clientX-start.x)/Math.max(1,canvas.clientWidth);
+      angle.value=String((Math.round(degrees/5)*5 % 360 + 360) % 360);
+      redraw();
+    });
+    canvas.addEventListener('lostpointercapture',() => {start=undefined;});
+  }
+}

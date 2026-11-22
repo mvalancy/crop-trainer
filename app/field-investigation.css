@@ -1,0 +1,50 @@
+field-investigation {display:grid;grid-template-columns:minmax(0,1.25fr) minmax(17rem,1fr);align-items:stretch;border:1px solid var(--line);border-radius:1rem;overflow:hidden;background:var(--surface);color:var(--ink);}
+.labPlate {display:grid;place-items:center;min-width:0;background:radial-gradient(ellipse at 50% 45%,#28463d,#112d28 72%);}
+.labPlate svg {display:block;width:100%;height:auto;max-height:64dvh;overflow:hidden;}
+field-investigation[data-topic=learn] .labPlate svg {cursor:ew-resize;touch-action:pan-y;}
+.labPage {display:flex;flex-direction:column;align-items:stretch;justify-content:center;padding:clamp(1rem,3vw,2.8rem);min-width:0;}
+field-investigation .labPage h2 {font:500 clamp(1.75rem,3vw,3rem)/1.04 var(--serif);letter-spacing:-.03em;margin:0;color:var(--ink);}
+field-investigation .labPage p {font:400 1rem/1.5 var(--sans);margin:.65rem 0;color:var(--ink);}
+.labControl {display:grid;grid-template-columns:1fr auto;align-items:center;gap:0 .5rem;margin:.8rem 0 .2rem;font:650 .96rem var(--sans);color:var(--ink);}
+.labValue {font:600 .95rem var(--mono);font-variant-numeric:tabular-nums;}
+.labControl input {grid-column:1/-1;width:100%;min-width:0;min-height:44px;margin:0;accent-color:var(--forest);cursor:pointer;}
+.labPresets {display:flex;flex-wrap:wrap;gap:.5rem;}
+.labPresets button {min-height:44px;padding:.4rem .8rem;background:var(--surface);color:var(--forest);border:1px solid var(--line);border-radius:.55rem;font:600 .9rem var(--sans);}
+.labPresets button[aria-pressed=true] {background:var(--wash);box-shadow:inset 0 -2px var(--forest);}
+.labFinding {margin:1rem 0;padding:.8rem 1rem;border-inline-start:3px solid var(--forest);background:var(--wash);}
+.labFinding strong {font-weight:700;font-variant-numeric:tabular-nums;}
+field-investigation .labFinding p {font-size:.91rem;margin:.25rem 0 0;}
+.labContinue {align-self:flex-start;display:inline-flex;align-items:center;min-height:44px;color:var(--forest);font-weight:650;}
+.labPlate .surveyTarget {fill:none;stroke:#ffe499;stroke-width:2;}
+.surveyTarget circle {stroke-dasharray:4 4;}
+.surveyTarget .assignment {stroke:#e0ffe3;stroke-width:2.5;}
+.labPlate .labPin {stroke:#122b25;stroke-width:2;}
+.labPin.matched {fill:#aef6e0;}.labPin.extra {fill:#ff987b;}
+.labPlate text {fill:#fff9dc;stroke:#17332d;stroke-width:4;paint-order:stroke fill;stroke-linejoin:round;font:650 17px var(--sans);}
+.labPlate .sameHeight {fill:none;stroke:#ffe499;stroke-width:2;stroke-dasharray:4 4;}
+.fieldLabSection {margin:clamp(1rem,3vw,3rem) auto;max-width:82rem;}
+.guideChapter field-investigation {margin:1.2rem 0 2rem;grid-template-columns:1fr;}
+.guideChapter .labPage {padding:clamp(1rem,3vw,2rem);}
+.guideChapter .labPlate svg {max-height:24rem;}
+@media(max-width:800px) {
+  field-investigation {grid-template-columns:1fr;}
+  .labPlate svg {max-height:43dvh;}
+}
+@media (prefers-reduced-motion:no-preference) {
+  .labMarks .rowRay {animation:lightSample .45s ease-out backwards;animation-delay:var(--arrival);}
+  @keyframes lightSample {from {opacity:.1;}to {opacity:1;}}
+}
+field-investigation .labPlate {margin:0;grid-template-rows:minmax(0,1fr) auto;padding:0;border:0;border-radius:0;}
+field-investigation .labPlate figcaption {box-sizing:border-box;justify-self:stretch;margin:0;padding:.55rem .9rem;background:#142e29;color:#e3edce;font:500 .83rem/1.4 var(--sans);}
+.fieldReadings {display:grid;gap:.65rem;padding:.75rem 0;min-width:0;}
+.fieldReadings[hidden] {display:none;}
+.readingChoice {display:flex;gap:.45rem;align-items:center;justify-self:start;color:var(--ink);font-size:.88rem;}
+.readingChoice select {width:auto;min-height:44px;}
+.fieldReadings figure {display:grid;gap:.32rem;margin:0;padding:0;background:none;border:0;}
+.fieldReadings figcaption {font:650 .91rem var(--sans);background:none;color:var(--ink);margin:0;padding:0;}
+.readingBar {display:flex;height:.75rem;border-radius:.24rem;overflow:hidden;background:var(--wash);}
+.fieldReadings .leaf {--mark:#448966;}.fieldReadings .soil {--mark:#9f7762;}.fieldReadings .amber {--mark:#cc9445;}
+.readingBar i,.readingKey span::before {background:var(--mark);}
+.readingKey {display:flex;flex-wrap:wrap;gap:.2rem .85rem;}
+.readingKey span {font:500 .84rem var(--sans);color:var(--ink);}
+.readingKey span::before {content:"";display:inline-block;width:.65rem;height:.65rem;margin-right:.3rem;border-radius:2px;}

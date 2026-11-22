@@ -1,3 +1,4 @@
+import {paintReadings,matchReadings} from '../../app/field-readings.js';
 import {plotPalette} from '../../app/plot-palette.js';
 import {scoreHelp, renderScoreTables} from './score-tables.js';
 import {initFeatureScale} from './feature-scale.js';
@@ -322,6 +323,8 @@ export function initFieldTest(downloadJSON) {
       message = score.tp+' of '+report.references.length+' reference centers matched within '+distance+' cm. '+
         score.fp+' extra '+(score.fp===1?'pin':'pins')+' · '+score.fn+' missed '+(score.fn===1?'center':'centers')+'.';
     }
+    const row=!showChanges && evaluation?.scores.find(item=>item.cm===distance);
+    paintReadings(byId('testedReading'),row ? matchReadings(row) : []);
     byId('testOutcome').textContent = message;
     const description = weedChanges ? 'Comparing random and half-difficult fits' : cutoffChanges ? 'Comparing both cutoffs' :
       'Showing '+method.label.toLowerCase()+' pins';

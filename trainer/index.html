@@ -13,6 +13,7 @@
 <link rel="stylesheet" href="./ui/network-diagram.css">
 <script type="module" src="../app/help.js?v=map-picking1"></script>
 <link rel="stylesheet" href="../app/theme.css">
+<link rel="stylesheet" href="../app/field-investigation.css"><script type="module" src="../app/field-investigation.js"></script>
 </head>
 <body class="shed"><a data-help="Move keyboard focus past navigation to the Training Shed." class="skip" href="#main">Skip to content</a>
 <header class="siteBar">
@@ -198,7 +199,7 @@
 <h2 id="resultsTitle">Run results</h2>
 <div id="scored" hidden>
 <p id="formStory" data-help-label="Plant forms in this run" data-help="The training form supplied labeled practice examples. The validation form grew on separate fields used to evaluate the fitted weights." class="fine" hidden></p>
-<p id="matchStory" data-help-label="Validation matches" data-help="Each predicted pin can match one labeled plant within 15 cm. Unmatched pins are extras. Labeled centers left without a match are misses."></p><a data-help="Jump to the map of a held-out field and trace the final pins against its labels." class="reviewLink" href="#fieldMapTitle">Explore a scored field ↓</a>
+<div id="trainedReading" hidden></div><p id="matchStory" data-help-label="Validation matches" data-help="Each predicted pin can match one labeled plant within 15 cm. Unmatched pins are extras. Labeled centers left without a match are misses."></p><a data-help="Jump to the map of a held-out field and trace the final pins against its labels." class="reviewLink" href="#fieldMapTitle">Explore a scored field ↓</a>
 <h3 class="scoreHeading" data-help-label="F1 score" data-help="If several pins land around a plant, only one can match. F1 rewards finding the plants while avoiding extra pins. A score of 1 means every plant and pin matched at that distance.">F1 by matching distance</h3>
 <p class="fine">Precision is the share of pins that found a plant. Recall is the share of plants that got a pin. F1 balances both. At 7.5 cm a pin must land closer to the center than at 15 cm.</p>
 <div class="cards" aria-label="Synthetic validation scores">
@@ -361,7 +362,7 @@
 <div id="testExtraControl" hidden><label class="check"><input id="testExtraOnly" aria-controls="testExtraInspector" type="checkbox" data-help-label="Inspect extra pins" data-help="Show predictions left over after pairing pins with surveyed plants. Tap a square on the map or use the pin navigator.">Inspect extra pins</label></div></div>
 <figure><canvas id="testMap" width="500" height="500" aria-label="Top view of the imported scan and plant detections" aria-describedby="testLegend testOutcome" role="img"></canvas>
 <figcaption id="testLegend"><span class="mapKey" id="testMatchedKey" hidden><span><i class="matchedPin"></i>Matched pin</span><span><i class="extraPin"></i>Extra pin</span><span><i class="matchedCenter"></i>Matched center</span><span><i class="missedCenter" aria-hidden="true">×</i>Missed center</span></span><span class="mapKey" id="testChangedKey" hidden><span><i class="gainedCenter" aria-hidden="true">+</i>Gained match</span><span><i class="lostCenter" aria-hidden="true">−</i>Lost match</span><span><i class="steadyCenter" aria-hidden="true"></i>Same status</span></span><span class="mapKey" id="testExtraKey" hidden><span><i class="extraPin"></i>Extra pin</span><span id="testSelectedExtraKey"><i class="selectedExtraPin"></i>Selected pin</span><span id="testSurveyKey"><i class="surveyPoint"></i>Surveyed center</span><span id="testNearestKey"><i class="matchedCenter"></i>Nearest surveyed center</span></span><span class="mapKey" id="testScaleKey" hidden><span><i class="inspectedPeak"></i>Peak in scaling example</span></span><span id="testUnscoredKey">Green dots mark predicted centers. Grey dots are laser returns.</span></figcaption></figure>
-<div class="testReadout"><p id="testOutcome" aria-live="polite"></p>
+<div class="testReadout"><p id="testOutcome" aria-live="polite"></p><div id="testedReading" hidden></div>
 <div id="testWeedPlants" hidden>
 <label>Highlight a changed seedling<select id="testWeedPlant" aria-describedby="testWeedDetail" data-help="Choose a planting label. The outline marks its surveyed position. Gained and lost always describe the change from the random fit to the half-difficult fit."><option value="">All seedlings</option><optgroup id="testWeedGained" label="Gained"></optgroup><optgroup id="testWeedLost" label="Lost"></optgroup></select></label>
 <p class="hint" id="testWeedDetail" aria-live="polite"></p>
@@ -438,6 +439,8 @@
 <a href="../guide/docs/evidence.html">When does training beat peak height?</a>
 <a href="../guide/docs/research-evidence.html">Read the crop detection papers</a></nav>
 </section>
+<section class="fieldLabSection" data-lab="train" id="explore-train"><field-investigation data-topic="train"></field-investigation></section>
+<section class="fieldLabSection" data-lab="test" id="explore-test"><field-investigation data-topic="test"></field-investigation></section>
 </main>
 <footer class="siteFoot"><span>Created by Matthew Valancy</span>
 <div><a data-help="Open commands and reproducibility instructions for an agent working with Crop Trainer." href="../guide/AGENTS.html">Agent quickstart</a><a data-help="View the farming challenges and achievements stored on this device." href="../#missions">Farm journal</a><a data-help="Read the terms for using and sharing Crop Trainer’s source code." href="../LICENSE">MIT license</a></div><small class="contextHint"><span class="hoverHint">Hover or focus a button or score for help.</span><span class="touchHint">Tap a score or hold a button for help. A quick tap runs the action.</span></small></footer>

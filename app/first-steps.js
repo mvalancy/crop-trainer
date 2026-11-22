@@ -1,57 +1,14 @@
 import {setupWeightLesson} from './weight-lesson.js';
 
-// The same two leaf silhouettes are both drawn and sampled in this side-view sketch.
-const plants = [
-  {x:132, size:1, leaves:[[-63,22,27],[56,24,26],[-27,52,19],[24,47,20],[-8,59,14]]},
-  {x:239, size:.62, leaves:[[-34,27,12],[37,34,11],[-8,36,8]]}
-];
-const soilY = 135;
-const svgNS = 'http://www.w3.org/2000/svg';
-
-function svgElement(name, attributes) {
-  const element = document.createElementNS(svgNS, name);
-  for (const [key, value] of Object.entries(attributes)) element.setAttribute(key, value);
-  return element;
-}
+import {rowPlate,sampleRow,rayMarks} from './row-sampling.js';
 
 function drawRow(count) {
   const svg = document.getElementById('rayRow');
-  const art = document.createDocumentFragment();
-  art.append(svgElement('path', {d:'M0 135H420V166H0Z', fill:'#314538'}));
-  const colors = ['#527950','#678a54','#72945b','#8eac6c','#97b570'];
-  for (const plant of plants) {
-    for (const [index,[width,tip,lift]] of plant.leaves.entries()) {
-      const w = width * plant.size, h = tip * plant.size, bulge = lift * plant.size;
-      const middle = plant.x + w/2;
-      const d = 'M'+plant.x+' '+soilY+' Q'+middle+' '+(soilY-h/2-2*bulge)+' '+(plant.x+w)+' '+(soilY-h)
-        +' Q'+middle+' '+(soilY-h/2+bulge*.4)+' '+plant.x+' '+soilY+'Z';
-      art.append(svgElement('path', {d,fill:colors[index],stroke:'#193b2e','stroke-width':1}));
-    }
-  }
-  art.append(svgElement('path', {d:'M0 135H420',stroke:'#89a388','stroke-width':1}));
-  const hits = new Set();
-  for (let i=0; i<count; i++) {
-    const x = (i+.5)*420/count;
-    let height = 0;
-    for (const plant of plants) {
-      for (const [width,tip,lift] of plant.leaves) {
-        const u = (x-plant.x)/(width*plant.size);
-        if (u<0 || u>1) continue;
-        height = Math.max(height, plant.size*(u*tip + 4*lift*u*(1-u)));
-        hits.add(plant);
-      }
-    }
-    const y = soilY-height;
-    const ray = svgElement('g', {class:'rowRay'});
-    ray.style.setProperty('--arrival', i/count*.65+'s');
-    ray.append(svgElement('path', {d:'M'+x+' 15V'+y,stroke:'#accabb','stroke-width':1,'stroke-dasharray':'3 3'}));
-    ray.append(svgElement('circle', {cx:x,cy:y,r:3.5,fill:'#f2ffae',stroke:'#152d23','stroke-width':1}));
-    art.append(ray);
-  }
-  svg.replaceChildren(art);
-  const finding = hits.size===2 ? 'Dots now reach both plants. The extra rays caught the small seedling.' :
-    'Only the larger plant has dots. The small seedling sits between two rays.';
-  document.getElementById('rayFinding').textContent = finding;
+  const rays = sampleRow(count);
+  svg.innerHTML = `<image href="${rowPlate}" width="600" height="400"/>` + rayMarks(rays);
+  document.getElementById('rayFinding').textContent = rays.some(ray=>ray.plant===1)
+    ? 'Dots now reach both plants. The extra rays caught the small seedling.'
+    : 'Only the larger plant has dots. The small seedling sits between two rays.';
 }
 
 export function setupFirstSteps(openPractice) {

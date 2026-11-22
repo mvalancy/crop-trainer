@@ -16,7 +16,7 @@ html[data-activity] {scroll-behavior:auto;}
 [data-activity=scan]:not([data-step=generate]) #field>:is(.lab,.scanSummary),
 [data-activity=scan]:not([data-step=recipe]) #advanced-scan,
 [data-activity=scan]:not([data-step=study]) #field>:is(#scan-study,.samplingGuide){display:none;}
-[data-activity=train] #field-test,[data-activity=test] #main>:not(#field-test) {display:none;}
+[data-activity=train] #field-test,[data-activity=test]:not([data-step=explore]) #main>:not(#field-test) {display:none;}
 [data-activity=train]:not([data-step=fit]) #controls>:is(.setupPanel,.monitorPanel),
 [data-activity=train]:not([data-step=model]) #detector,
 [data-activity=train]:not([data-step=settings]) #controls>.advancedPanel,
@@ -234,3 +234,16 @@ dialog.instrumentInspector:modal {
 [data-instrument=test] .instrumentReadout {grid-template-rows:minmax(0,1fr) auto;}
 .instrumentStage .sceneFooter {height:2.7rem;align-content:center;overflow:auto;}
 .instrumentStage .sceneFooter span {min-width:0;overflow:auto;white-space:nowrap;scrollbar-width:none;}
+
+html[data-activity] main > .fieldLabSection {display:none;}
+html[data-step=explore] main > :not(.fieldLabSection) {display:none !important;}
+html[data-step=explore][data-activity=learn] main > [data-lab=learn],
+html[data-step=explore][data-activity=scan] main > [data-lab=scan],
+html[data-step=explore][data-activity=train] main > [data-lab=train],
+html[data-step=explore][data-activity=compare] main > [data-lab=compare],
+html[data-step=explore][data-activity=test] #main > [data-lab=test] {display:block;}
+
+.instrumentStage .illustratedStart {background:#132f2b;}
+.instrumentStage .illustratedStart img {max-width:none;min-height:0;object-fit:contain;}
+.startExperiment {position:absolute;inset:.8rem auto auto .8rem;display:inline-flex;align-items:center;min-height:44px;padding:.45rem .8rem;border-radius:.55rem;background:#15332ef2;border:1px solid #92b69d;color:#fbf7da;text-decoration:none;font-weight:650;}
+.scanReference .startExperiment {display:none;}

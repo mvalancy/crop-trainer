@@ -19,6 +19,7 @@
 <link rel="stylesheet" href="app/scan-workspace.css?v=viewer-tools1">
 <script type="module" src="app/help.js?v=context-help2"></script>
 <link rel="stylesheet" href="app/theme.css">
+<link rel="stylesheet" href="app/field-investigation.css"><script type="module" src="app/field-investigation.js"></script>
 </head>
 <body class="farm"><a class="skip" href="#main" data-help="Jump past site navigation to the field, lessons and farm journal.">Skip to content</a>
 <header class="siteBar">
@@ -92,7 +93,7 @@
 <dl class="readouts" id="readouts" aria-label="Returns by class"></dl>
 </div>
 <div class="scanCoverage"><h4>Plant coverage</h4>
-<p id="plantCoverage"></p>
+<p id="plantCoverage"></p><div id="coverageReading" hidden></div>
 <p class="hint" id="plantComposition" hidden></p>
 <p class="hint" id="stemSummary" hidden></p>
 <p class="coverageKey" aria-label="Label centers in the viewer"><span class="pinKey missKey" aria-hidden="true">×</span> No crop returns <span class="pinKey hitKey" aria-hidden="true">○</span> At least one crop return</p>
@@ -227,7 +228,7 @@
 <p>LiDAR measures distance with light. In this side view, a dot marks where each laser ray hits a leaf or the soil.</p>
 <p>Will more rays find the small seedling?</p>
 </div>
-<figure class="rayFigure" aria-label="Laser rays reaching two plants and the soil"><svg id="rayRow" viewBox="0 0 420 166" role="img" aria-label="Side view of two plants beneath a row of simulated laser rays"></svg></figure>
+<figure class="rayFigure" aria-label="Laser rays reaching two plants and the soil"><svg id="rayRow" viewBox="0 0 600 400" role="img" aria-label="Side view of two plants beneath a row of simulated laser rays"></svg></figure>
 <div class="lessonTools rayControls"><fieldset class="rayChoice"><legend>Rays across this row</legend><label><input type="radio" name="rowDensity" value="7" data-help="Space seven rays along the row and look for a plant between the samples." checked>7 rays</label><label><input type="radio" name="rowDensity" value="28" data-help="Keep the plants fixed and sample the row more densely with 28 rays.">28 rays</label></fieldset>
 <p id="rayFinding" data-help="A plant appears in this lesson’s scan only when at least one ray intersects a leaf." data-help-label="Which plants did the rays reach?" role="status"></p></div><div class="lessonNext"><button class="primary" type="button" data-lesson-step="pinTab" data-help="Try marking a plant center yourself on a patch of the current scan.">Try placing a pin →</button></div></section>
 <section id="placePin" class="lessonPanel" role="tabpanel" aria-labelledby="pinTab" hidden>
@@ -245,7 +246,8 @@
 <svg class="clueScene" viewBox="0 0 400 188" role="img" aria-labelledby="clueDiagramTitle clueDiagramDesc">
 <title id="clueDiagramTitle">How a height clue changes two predictions</title>
 <desc id="clueDiagramDesc">A lettuce and a weed reach the same height. Only the lettuce supplies a training label. The dial in the middle controls the effect of height on both scores.</desc>
-<image href="art/height-clues.svg" width="400" height="188"/>
+<svg x="0" y="50" width="155" height="99" viewBox="12 86 314 202"><image href="art/field-film-height.webp" width="600" height="400"/></svg>
+<svg x="250" y="50" width="150" height="99" viewBox="278 84 300 198"><image href="art/field-film-height.webp" width="600" height="400"/></svg>
 <g class="clueType"><text x="76" y="28">Lettuce</text><text x="328" y="28">Weed</text></g>
 <g class="clueAnnotation"><text id="lessonPlantLabel" x="76" y="46">Labeled crop</text><text x="328" y="46">Unseen example</text></g>
 <g class="clueTrace"><path id="labelWire" d="M110 93h22q6 0 10 5l8 10q3 4 10 4h8"/>
@@ -281,6 +283,8 @@
 <p>Field experiments earn stamps in this browser.</p><ol class="missions"><li><b>First harvest</b><span>Finish training and score a field.</span><strong id="first" data-help="Complete a Training Shed run through validation to earn the stamp in this browser." data-help-label="First harvest stamp">Open</strong></li><li><b>Field scout</b><span>Finish a run with mixed scan patterns.</span><strong id="scout" data-help="Use the mixed scanner setting in the Training Shed and complete validation. This tries more than one sampling pattern." data-help-label="Field scout stamp">Open</strong></li><li><b>Seed saver</b><span>Complete runs with two different seeds.</span><strong id="saver" data-help="Finish Training Shed runs with two different starting seeds. Each seed produces a different set of plantings." data-help-label="Seed saver stamp">Open</strong></li><li><b>Cutoff scout</b><span>Compare missed plants and extra pins across three cutoffs.</span><div class="missionLinks"><a href="benchmark/?comparison=cutoffs" data-help="Test how changing a detector’s acceptance score trades missed plants for extra pins.">Start benchmark</a></div><strong id="cutoffScout" data-help="Run the cutoff benchmark and compare how many real plant centers were missed and how many extra pins each cutoff kept." data-help-label="Cutoff scout stamp">Open</strong></li><li><b>Model scout</b><span>Find a plant matched by only one detector, then open that box in 3D.</span><div class="missionLinks"><a href="benchmark/?comparison=models" data-help="Run the linear and neural detectors on matched plantings and inspect where their pins differ.">Compare models</a></div><strong id="modelScout" data-help="Run the model benchmark, select a plant matched by only one detector and open its box in the field viewer." data-help-label="Model scout stamp">Open</strong></li><li><b>Ray scout</b><span>Try two ray budgets on the same planting.</span><div class="missionLinks"><a href="#field" data-help="Try two ray budgets on the same planting to earn the Ray scout stamp.">Open generator</a> <a href="benchmark/?comparison=density&amp;sensor=os1-64&amp;validationRayBudget=60000" data-help="Compare fitting at different ray budgets on fields scored with a fixed OS1-64 validation scan.">Run density benchmark</a></div><strong id="rayScout" data-help="Grow the same recipe twice in succession at different ray budgets. Pick budgets that produce different sampled ray counts." data-help-label="Ray scout stamp">Open</strong></li>
 <li><b>Peak scout</b><span>Compare peak heights and identify which fit produced fewer extra pins.</span><div class="missionLinks"><a href="benchmark/?comparison=heights&amp;crop=tomato&amp;seed=2021&amp;validationSensor=os1-64&amp;validationRayBudget=12000&amp;sensor=mixed" data-help="Test two minimum peak heights on the same sparse tomato fields and compare their extra pins.">Compare peak heights</a></div><strong id="peakScout" data-help="Run the peak-height benchmark, read the extra-pin counts and pick the fit with fewer extras." data-help-label="Peak scout stamp">Open</strong></li></ol>
 </section>
+<section class="fieldLabSection" data-lab="learn" id="explore-learn"><field-investigation data-topic="learn"></field-investigation></section>
+<section class="fieldLabSection" data-lab="scan" id="explore-scan"><field-investigation data-topic="scan"></field-investigation></section>
 </main>
 <footer class="siteFoot"><span>Created by Matthew Valancy</span>
 <div><a href="guide/AGENTS.html" data-help="Find instructions for running reproducible experiments from the browser or command line.">Agent quickstart</a><a href="#missions" data-help="Jump to the stamps earned in this browser and the experiments that unlock them.">Farm journal</a><a href="LICENSE" data-help="Read the MIT terms for reusing and modifying the app.">MIT license</a></div><small class="contextHint"><span class="hoverHint">Hover or focus a button or score for help.</span><span class="touchHint">Tap a score or hold a button for help. A quick tap runs the action.</span></small></footer>

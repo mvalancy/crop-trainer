@@ -4,7 +4,7 @@ import {cropProfile} from '../generator/crops.js';
 import {makeRecipe} from '../models/data.js?v=plants3';
 import {plantingRow} from './planting.js';
 import {seededRandom} from './traits.js';
-import {specimenPair, compareSpecimens} from './portrait.js?v=field-desk1';
+import {specimenPair, compareSpecimens, orbitSpecimens} from './portrait.js?v=field-desk1';
 
 function lookFor(crop, form, dormant) {
   switch (crop) {
@@ -32,6 +32,17 @@ function firstPlantRadius(recipe, profile) {
     const first=plantingRow(recipe,profile,row,random).next().value;
     if (first) return first.radius;
   }
+}
+
+export function inspectFirstPlant(crop,version,form,condition,canopy,seed) {
+  const forms=formsFor(crop);
+  const recipe=makeRecipe(seed,true,null,crop,version,form,condition);
+  const radius=firstPlantRadius(recipe,cropProfile(crop));
+  if (!radius) return null;
+  const pair=specimenPair(crop,forms,{seed,form,canopy,radius,plantArchitecture:version});
+  const dormant=crop==='apple' && canopy==='dormant';
+  const name=forms.find(item=>item.id===pair.form).label;
+  return {pair,name,dormant,detail:lookFor(crop,pair.form,dormant)};
 }
 
 export function setupFieldPlants(params) {
@@ -70,15 +81,12 @@ export function setupFieldPlants(params) {
     el('plantGuide').href='guide/trainer/plants/'+guide+'.html';
     el('plantGuide').textContent=profile.name+' growing guide';
     if(card.hidden)return;
-    const forms=formsFor(crop.value);
-    const recipe=makeRecipe(Number(seed.value),true,null,crop.value,selectedVersion,form.value,condition.value);
-    const radius=firstPlantRadius(recipe,profile);
-    if (!radius) {card.hidden=true;return;}
-    pair=specimenPair(crop.value,forms,{seed:recipe.seed,form:form.value,canopy:canopy.value,radius,plantArchitecture:selectedVersion});
-    const name=forms.find(item => item.id===pair.form).label;
-    const dormant=apple && canopy.value==='dormant';
+    const specimen=inspectFirstPlant(crop.value,selectedVersion,form.value,condition.value,canopy.value,Number(seed.value));
+    if (!specimen) {card.hidden=true;return;}
+    pair=specimen.pair;
+    const {name,dormant}=specimen;
     el('specimenName').textContent=name+(dormant?' · leaf off':'');
-    el('specimenDetail').textContent=lookFor(crop.value,pair.form,dormant);
+    el('specimenDetail').textContent=specimen.detail;
     el('specimenContext').textContent=condition.value==='mixed' ? 'Your field mixes intact and damaged plants.'
       : condition.value==='damaged' ? 'Your field will grow damaged plants.' : 'Your field will grow intact plants.';
     intact.setAttribute('aria-label','Intact '+name.toLowerCase()+(dormant?' without foliage':''));
@@ -94,21 +102,7 @@ export function setupFieldPlants(params) {
     redraw();
   });
   el('anatomySettings').addEventListener('toggle',redraw);
-  for (const canvas of [intact,damaged]) {
-    let start;
-    canvas.addEventListener('pointerdown',event => {
-      if (!event.isPrimary || event.button!==0) return;
-      start={x:event.clientX,angle:Number(angle.value),id:event.pointerId};
-      canvas.setPointerCapture(event.pointerId);
-    });
-    canvas.addEventListener('pointermove',event => {
-      if (!start || event.pointerId!==start.id) return;
-      const degrees=start.angle-180*(event.clientX-start.x)/Math.max(1,canvas.clientWidth);
-      angle.value=String((Math.round(degrees/5)*5 % 360 + 360) % 360);
-      redraw();
-    });
-    canvas.addEventListener('lostpointercapture',() => {start=undefined;});
-  }
+  orbitSpecimens([intact,damaged],angle,redraw);
   update();
   return () => {
     return {...read(),...(crop.value==='apple' && Number(version.value)>=2?{appleCanopy:canopy.value}:{})};

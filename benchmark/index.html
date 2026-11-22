@@ -13,6 +13,7 @@
 <link rel="stylesheet" href="layout.css?v=feature-scale1">
 <script type="module" src="../app/help.js?v=context-help2"></script>
 <link rel="stylesheet" href="../app/theme.css">
+<link rel="stylesheet" href="../app/field-investigation.css"><script type="module" src="../app/field-investigation.js"></script>
 </head>
 <body class="benchmark"><a class="skip" href="#main" data-help="Jump past the navigation to the benchmark controls.">Skip to content</a>
 <header class="siteBar">
@@ -227,6 +228,7 @@
 <div class="reportActions"><button id="export" data-help="Save a JSON report with the settings, field recipes, timings and detection scores from this run." disabled="">Download benchmark JSON</button> <a id="replay" data-help="Open or copy this address to repeat the experiment. Run it again to produce scores and timings on your device." hidden="">Link to these settings</a></div>
 </section>
 <p>Use the <a href="../trainer/" data-help="Open the sandbox to train a single model and save its weights.">training shed</a> for individual runs, custom workloads, loss curves, weights and field-by-field overlays.</p>
+<section class="fieldLabSection" data-lab="compare" id="explore-compare"><field-investigation data-topic="compare"></field-investigation></section>
 </main>
 <footer class="siteFoot"><span>Created by Matthew Valancy</span>
 <div><a href="../guide/AGENTS.html" data-help="Read how to reproduce browser experiments and run the project from the command line.">Agent quickstart</a><a href="../#missions" data-help="Open the farm challenges and check your progress.">Farm journal</a><a href="../LICENSE" data-help="Read the permission and attribution terms for the Crop Trainer source code.">MIT license</a></div><small class="contextHint"><span class="hoverHint">Hover or focus a button or score for help.</span><span class="touchHint">Tap a score or hold a button for help. A quick tap runs the action.</span></small></footer>

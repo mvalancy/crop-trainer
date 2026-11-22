@@ -35,7 +35,7 @@ export function readPassages(roots) {
   }
   function visit(el) {
     if (el.nodeType === 3) { words.push(el.nodeValue); return; }
-    if (el.nodeType !== 1 || el.matches('script,style,template,[hidden],[aria-hidden="true"],.helpTrigger,.helpDisabledProxy,.studioListen,.listenCard')) return;
+    if (el.nodeType !== 1 || el.matches('script,style,template,[hidden],[aria-hidden="true"],.helpTrigger,.helpDisabledProxy,.figureOpener,.studioListen,.listenCard')) return;
     if (!el.checkVisibility() && el.ownerDocument.defaultView.getComputedStyle(el).display !== 'contents') return;
     const tag = el.localName;
     if (tag === 'img' || tag === 'canvas' || tag === 'svg') {

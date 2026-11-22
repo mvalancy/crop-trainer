@@ -27,6 +27,12 @@ On a phone, **Settings** opens a left sheet with one full-width choice per row. 
 
 The modal has a visible close control. Escape dismisses it, browser Back retraces opening it, and focus returns to Settings. An explicitly opened help hint takes the first Escape. These details let someone edit a recipe and return to the same task with a keyboard. [W3C modal dialog pattern](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/)
 
+## When does a nearby pin count?
+
+![Three detector pins sit above four reference centers. A pin can claim one plant inside the matching ring.](../art/lesson-matches.svg)
+
+Open **Field test → Explore** and watch the lower-right lettuce. Its predicted pin lies 14 cm from the center in this illustrated plot. At 10 cm it counts as an extra pin and the lettuce counts as missed. At 15 cm the two form one match. Try the same question in a scored field test using its **Match distance** control. The real report uses the references supplied for that scan. [Try the match-distance experiment](../trainer/#explore-test)
+
 ## What should survive an edit?
 
 ![Two drawings of the same field keep the plant positions fixed while the detector pins change.](../art/paired-field.svg)

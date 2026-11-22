@@ -12,6 +12,12 @@ const tasks = {
   test:{label:'Field test',title:'Field test', tool:'trainer', path:'trainer/', steps:{test:['Test a plot','field-test']}},
   docs:{label:'Docs',title:'Illustrated field guide', tool:'docs', path:'guide/', steps:{docs:['Chapters','']}}
 };
+// The illustrated experiment is a shareable section of its instrument.
+for (const view of ['learn','scan','train','compare','test']) {
+  const entries = Object.entries(tasks[view].steps);
+  entries.splice(view==='learn'?2:1,0,['explore',['Explore','explore-'+view]]);
+  tasks[view].steps = Object.fromEntries(entries);
+}
 const paths = {
   learn:'M3 4q5-2 9 1 4-3 9-1v14q-5-2-9 1-4-3-9-1z M12 5v14',
   scan:'M8 3H3v5m13-5h5v5M3 16v5h5m8 0h5v-5 M7 12h10m-5-5v10',
@@ -75,6 +81,8 @@ function classify(url, doc) {
   const id = url.hash.slice(1);
   const target = doc?.getElementById(id);
   const within = selector => target?.closest(selector);
+  const labView = id.startsWith('explore-') && id.slice(8);
+  if (tasks[labView]?.tool === tool && tasks[labView]?.steps.explore) return {view:labView,step:'explore',url};
   let view,step;
   if (tool === 'field') {
     view = ['guide','learnWeight','placePin','sampleRow','missions'].includes(id) || within('#guide,#missions') || (!id && !url.search) ? 'learn' : 'scan';
@@ -184,6 +192,7 @@ function mount(tool) {
     voiceStyle.rel = 'stylesheet';
     voiceStyle.href = new URL('app/studio-narration.css',root);
     doc.head.append(voiceStyle);
+    if (tool === 'docs') doc.addEventListener('guide-figure-change',refreshReading);
     if (tool === 'field') {
       const tabs = doc.querySelector('#guide [role="tablist"]');
       new MutationObserver(() => {

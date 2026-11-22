@@ -1,4 +1,5 @@
 // Serve only the built artifact at the same project path used by GitHub Pages.
+import {checkInvestigations} from './studio-investigations.mjs';
 import {checkStudioNarration} from './studio-narration.mjs';
 import {checkFieldFilm} from './studio-film.mjs';
 import {checkStudioLayout,checkDrawer,openSection,closeOverlay} from './studio-layout.mjs';
@@ -146,6 +147,7 @@ try {
 
   await checkFieldFilm(browser,base);
   await checkStudioNarration(browser,base);
+  await checkInvestigations(browser,base);
 
   // The studio owns navigation and preserves each active instrument across task switches.
   await page.goto(new URL('studio/',base).href);
@@ -632,6 +634,7 @@ try {
   assert.ok(await page.locator('#testMatchDistance').isHidden(),'scan-only predictions have no reference tolerance');
   assert.ok(await page.locator('#testExtraControl').isHidden(),'surveyed centers are required to call a pin extra');
   assert.ok(await page.locator('#testAlignment').isHidden(),'alignment checks need a survey');
+  assert.ok(await page.locator('#testedReading').isHidden());
   const exampleCounts=[[7.5,88,100,129],[10,117,71,100],[15,137,51,80]];
   for (const [link,type,extension] of [['#exampleCentersCsv','text/csv','.csv'],['#exampleLabelsJson','application/json','.json']]) {
     const referenceName=await uploadExample(link,'#testLabels',type);
@@ -649,6 +652,10 @@ try {
     assert.deepEqual(scoreRows,exampleCounts.map(([cm,...counts])=>[cm+' cm',...counts.map(String)]));
     await page.locator('#testMatchDistance').selectOption('7.5');
     assert.match(await page.locator('#testOutcome').textContent(),/88 of 217 reference centers matched within 7\.5 cm/);
+    const reading=page.locator('#testedReading');
+    await reading.getByRole('combobox').selectOption('percent');
+    assert.equal(await reading.locator('.readingKey span').first().textContent(),'Matched '+(88/217*100).toFixed(1)+'%');
+    await reading.getByRole('combobox').selectOption('count');
     assert.match(await page.locator('#testStageSummary').textContent(),/7\.5 cm/);
     assert.deepEqual(await page.locator('#testStageRows dd').allTextContents(),fieldReport.stagesAtCm['7.5'].map(s=>String(s.matched)));
     await page.locator('#testOverlay').selectOption('baseline');

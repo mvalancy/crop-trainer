@@ -76,8 +76,12 @@ export async function checkFieldFilm(browser, base) {
     await page.setViewportSize({width:390,height:844});
     assert.equal(await page.evaluate(()=>window.filmMeters.length),0,'Opening a film or choosing a still must stay silent');
     assert.deepEqual(await film.locator('.scoreValue').allTextContents(),['0.62','0.62']);
+    const ambience = film.getByLabel('Ambience',{exact:true});
+    assert.equal(await ambience.isChecked(),false);
     await button('Play story').click();
-    await page.waitForFunction(()=>window.filmMeters.length===2 && window.filmMeters.every(read=>read()>.001));
+    await page.waitForFunction(()=>window.filmMeters.length===2 && window.filmMeters[0]()>.001 && window.filmMeters[1]()===0);
+    await ambience.check();
+    await page.waitForFunction(()=>window.filmMeters[1]()>.001);
     assert.equal(await film.getAttribute('data-shot'),'2','Play must start the chosen scene');
     assert.deepEqual(await film.locator('.scoreValue').allTextContents(),['0.62','0.62'],'Reduced motion keeps the explanatory final frame.');
     const voice = film.getByLabel('Narration',{exact:true});

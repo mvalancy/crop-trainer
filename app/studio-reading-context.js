@@ -4,7 +4,14 @@ export function studioReading(route, doc, inspector, defaultTitle) {
   const find = id => doc.getElementById(id);
   const anchor = find(url.hash.slice(1));
   const key = url.pathname + url.search + ':' + view + ':' + step + url.hash;
+  if (step === 'explore') {
+    const lesson = find('explore-' + view);
+    return {key,title:lesson.querySelector('h2')?.textContent || 'Field experiment',roots:[lesson]};
+  }
   if (view === 'docs') {
+    const figure = doc.querySelector('.guideFigureViewer[open]');
+    if (figure) return {key:key+figure.querySelector('.figureHeading').textContent,title:'Study figure',
+      roots:[figure.querySelector('.figureExplanation')],host:figure.querySelector('.figureVoiceSlot')};
     const chapter = doc.querySelector('.guideChapter');
     return {key,title:chapter.querySelector('h1')?.textContent || defaultTitle,roots:[chapter],
       anchor:anchor?.matches('h1,h2,h3,h4,h5,h6') ? anchor.textContent.trim() : null};

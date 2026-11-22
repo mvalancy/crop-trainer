@@ -1,3 +1,5 @@
+import {matchCenters, matchingSlack} from './center-matching.js';
+export {matchCenters} from './center-matching.js';
 import {cropProfile} from '../generator/crops.js?v=systems1';
 import {field, returnBand} from '../generator/field.js?v=board-placement1';
 import {plantSettings} from '../generator/plant-version.js?v=plants3';
@@ -284,36 +286,6 @@ export async function rescanValidation(set, validationSensorMode, {generate, onS
  check(signal);
  return {...set, validation, stats:{...set.stats,validationSensorMode},
   manifest:[...set.manifest.filter(t=>t.split==='train'),...validation.map(t=>manifestTile(t,'validation'))]};
-}
-const matchingSlack = 1e-12;
-export function matchCenters(pins, truth, radius) {
- const radiusSquared = radius ** 2;
- const candidates = pins.map(([x, y]) => {
-  const boxes = [];
-  for (let box = 0; box < truth.length; box++) {
-   const [tx, ty] = truth[box];
-   if ((tx-x)**2 + (ty-y)**2 <= radiusSquared + matchingSlack) boxes.push(box);
-  }
-  return boxes;
- });
- const pinByBox = new Int32Array(truth.length).fill(-1);
- const visited = new Int32Array(truth.length).fill(-1);
- function assign(pin, visit) {
-  for (const box of candidates[pin]) {
-   if (visited[box] === visit) continue;
-   visited[box] = visit;
-   if (pinByBox[box] === -1 || assign(pinByBox[box], visit)) {
-    pinByBox[box] = pin;
-    return true;
-   }
-  }
-  return false;
- }
- let count = 0;
- for (let pin = 0; pin < pins.length; pin++) {
-  if (assign(pin, pin)) count++;
- }
- return {count, pinByBox};
 }
 export function matchedCount(pred, truth, radius) {
  return matchCenters(pred, truth, radius).count;
