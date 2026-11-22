@@ -56,10 +56,18 @@ try {
     const article = page.frameLocator('iframe:not([hidden])').locator('.guideChapter');
     await article.getByRole('heading',{name:'Crop Trainer field guide',exact:true}).waitFor();
     await Promise.all([
-      page.waitForResponse(r => r.url() === new URL('next/art/audio/reader/english.wasm',base).href && r.ok()),
+      page.waitForResponse(r => r.url().startsWith(new URL('next/art/audio/',base).href) && /\.(mp3|wasm)$/.test(r.url()) && r.ok()),
       page.getByRole('button',{name:'Listen to this activity'}).click()
     ]);
     await page.getByRole('button',{name:'Close narration'}).click();
+    if(await article.locator('h1').count() && await page.locator('#siteLanguage').count()){
+      await page.goto(new URL('guide/',base).href);
+      await page.locator('#siteLanguage').selectOption('ar');
+      await page.locator('html[lang=ar][dir=rtl]').waitFor({state:'attached'});
+      await page.getByRole('button',{name:'استمع إلى هذا النشاط'}).waitFor();
+      await page.locator('#siteLanguage').selectOption('en');
+      await page.locator('html[lang=en][dir=ltr]').waitFor({state:'attached'});
+    }
     await page.goto('about:blank');
     await page.unrouteAll({behavior:'wait'});
     console.log('All three WIP entrances resolved to the studio. Its Docs reader loaded the local voice from /next/.');
