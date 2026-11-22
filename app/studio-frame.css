@@ -272,6 +272,7 @@ html[data-step=explore][data-activity=test] #main > [data-lab=test] {display:blo
 .instrumentPanel .benchContext {display:block;margin-top:1rem;}
 .instrumentPanel .benchContext figure {max-width:100%;}
 @media(max-width:480px) {
-  [data-instrument=trainer] .instrumentReadout {height:100%;align-content:center;grid-template-rows:auto .38rem auto;}
+  [data-instrument=trainer] .instrumentTransport {padding-block:.3rem;}
+  [data-instrument=trainer] .instrumentReadout {height:3.75rem;align-content:start;grid-template-rows:2.15rem .38rem 1rem;}
   [data-instrument=trainer] #stage {white-space:normal;line-height:1.1;}
 }
