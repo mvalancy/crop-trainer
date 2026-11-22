@@ -51,8 +51,15 @@ try {
     }
     await page.getByRole('link',{name:'WIP: open the narrated learning studio'}).click();
     await page.waitForURL(stagedStudio);
-    await page.getByRole('button',{name:'Switch activity'}).click();
-    await page.getByRole('navigation',{name:'Studio activities'}).getByRole('link',{name:'Docs',exact:true}).click();
+    const picker=page.getByRole('combobox',{name:'Switch activity'});
+    if (await picker.count()) {
+      await picker.selectOption('docs');
+    } else {
+      // A previous verified studio may still be staged during a rollout.
+      await page.getByRole('button',{name:'Switch activity'}).click();
+      await page.getByRole('navigation',{name:'Studio activities'}).getByRole('link',{name:'Docs',exact:true}).click();
+    }
+    await page.waitForURL(url=>url.searchParams.get('view')==='docs');
     const article = page.frameLocator('iframe:not([hidden])').locator('.guideChapter');
     await article.getByRole('heading',{name:'Crop Trainer field guide',exact:true}).waitFor();
     await Promise.all([
